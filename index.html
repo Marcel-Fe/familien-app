@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FamilienApp — Hilfe für Alleinerziehende</title>
+  <meta name="description" content="Persönliche App für alleinerziehende Eltern: Zuschüsse, Anträge, Wohnungssuche, Umgebung und Spar-Tipps." />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4F46E5" />
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <!-- iOS / Apple -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FamilienApp" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png" />
+  <link rel="apple-touch-icon" sizes="144x144" href="icons/icon-144.png" />
+  <link rel="apple-touch-icon" sizes="128x128" href="icons/icon-128.png" />
+
+  <!-- Splash Screens iOS -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== Splash-Screen ===== -->
+  <div id="splash" class="splash-overlay">
+    <div class="splash-bg-illus">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="sunGlow" cx="75%" cy="18%" r="40%">
+            <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </radialGradient>
+          <linearGradient id="grassGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#34D399"/>
+            <stop offset="100%" stop-color="#059669"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Sun glow -->
+        <rect width="600" height="420" fill="url(#sunGlow)"/>
+
+        <!-- Stars -->
+        <circle cx="40" cy="35" r="2" fill="white" opacity=".7"/>
+        <circle cx="90" cy="18" r="1.5" fill="white" opacity=".6"/>
+        <circle cx="190" cy="45" r="2" fill="white" opacity=".5"/>
+        <circle cx="340" cy="28" r="1.5" fill="white" opacity=".7"/>
+        <circle cx="480" cy="55" r="2" fill="white" opacity=".6"/>
+        <circle cx="530" cy="22" r="1.2" fill="white" opacity=".5"/>
+        <circle cx="140" cy="70" r="1.2" fill="white" opacity=".6"/>
+        <circle cx="270" cy="32" r="2" fill="white" opacity=".5"/>
+        <circle cx="430" cy="80" r="1.5" fill="white" opacity=".55"/>
+        <circle cx="560" cy="90" r="1" fill="white" opacity=".5"/>
+
+        <!-- Moon -->
+        <circle cx="490" cy="65" r="28" fill="#FDE68A" opacity=".85"/>
+        <circle cx="506" cy="55" r="21" fill="#312E81" opacity=".9"/>
+
+        <!-- House outline (background, subtle) -->
+        <g opacity=".18" fill="white">
+          <polygon points="300,145 235,200 365,200"/>
+          <rect x="243" y="200" width="114" height="75"/>
+          <rect x="274" y="230" width="52" height="45"/>
+        </g>
+
+        <!-- Grass -->
+        <ellipse cx="300" cy="385" rx="260" ry="55" fill="url(#grassGrad)" opacity=".55"/>
+
+        <!-- ===== PARENT (left, taller) ===== -->
+        <!-- Hair -->
+        <ellipse cx="175" cy="205" rx="30" ry="17" fill="#7C3AED" opacity=".9"/>
+        <!-- Head -->
+        <circle cx="175" cy="220" r="29" fill="#FDDCB3"/>
+        <!-- Eyes -->
+        <ellipse cx="166" cy="217" rx="3.5" ry="4" fill="#1E293B"/>
+        <ellipse cx="184" cy="217" rx="3.5" ry="4" fill="#1E293B"/>
+        <circle cx="167" cy="215" r="1.2" fill="white"/>
+        <circle cx="185" cy="215" r="1.2" fill="white"/>
+        <!-- Smile -->
+        <path d="M166 228 Q175 237 184 228" stroke="#92400E" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Body/dress -->
+        <path d="M148 249 Q135 330 150 355 L200 355 Q215 330 202 249 Z" fill="#7C3AED" opacity=".9"/>
+        <!-- Collar -->
+        <circle cx="175" cy="249" r="6" fill="#A78BFA"/>
+        <!-- Arm left (extended to right toward child) -->
+        <path d="M200 280 Q225 295 238 300" stroke="#FDDCB3" stroke-width="9" fill="none" stroke-linecap="round"/>
+
+        <!-- ===== CHILD 1 (middle) ===== -->
+        <!-- Hair -->
+        <ellipse cx="295" cy="285" rx="25" ry="15" fill="#F97316" opacity=".9"/>
+        <!-- Head -->
+        <circle cx="295" cy="298" r="24" fill="#FDDCB3"/>
+        <!-- Eyes -->
+        <ellipse cx="287" cy="295" rx="3" ry="3.5" fill="#1E293B"/>
+        <ellipse cx="303" cy="295" rx="3" ry="3.5" fill="#1E293B"/>
+        <circle cx="288" cy="293" r="1" fill="white"/>
+        <circle cx="304" cy="293" r="1" fill="white"/>
+        <!-- Smile -->
+        <path d="M286 305 Q295 313 304 305" stroke="#92400E" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <!-- Body -->
+        <path d="M272 322 Q263 375 275 390 L315 390 Q327 375 318 322 Z" fill="#3B82F6" opacity=".9"/>
+        <!-- Collar -->
+        <circle cx="295" cy="322" r="5" fill="#93C5FD"/>
+        <!-- Arm right toward child 2 -->
+        <path d="M315 345 Q335 352 348 355" stroke="#FDDCB3" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+        <!-- ===== CHILD 2 (right, smaller) ===== -->
+        <!-- Hair -->
+        <ellipse cx="373" cy="308" rx="20" ry="13" fill="#92400E" opacity=".9"/>
+        <!-- Head -->
+        <circle cx="373" cy="319" r="20" fill="#FDDCB3"/>
+        <!-- Eyes -->
+        <ellipse cx="366" cy="317" rx="2.5" ry="3" fill="#1E293B"/>
+        <ellipse cx="380" cy="317" rx="2.5" ry="3" fill="#1E293B"/>
+        <circle cx="367" cy="315" r="1" fill="white"/>
+        <circle cx="381" cy="315" r="1" fill="white"/>
+        <!-- Smile -->
+        <path d="M366 326 Q373 333 380 326" stroke="#92400E" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <!-- Body -->
+        <path d="M354 339 Q347 385 358 398 L388 398 Q399 385 392 339 Z" fill="#EC4899" opacity=".9"/>
+        <!-- Collar -->
+        <circle cx="373" cy="339" r="4.5" fill="#F9A8D4"/>
+
+        <!-- ===== HEARTS ===== -->
+        <g fill="#F9A8D4" opacity=".85">
+          <path d="M105 170 C105 168 103 164 103 164 C103 161 107 159 107 162 C107 159 111 161 111 164 C111 164 109 168 105 170Z"/>
+          <path d="M445 130 C445 128 443 124 443 124 C443 121 447 119 447 122 C447 119 451 121 451 124 C451 124 449 128 445 130Z"/>
+        </g>
+        <!-- Stars/sparkles -->
+        <text x="80" y="140" font-size="18" opacity=".75" fill="#FDE68A">✦</text>
+        <text x="510" y="165" font-size="14" opacity=".65" fill="#FDE68A">✦</text>
+        <text x="395" y="100" font-size="11" opacity=".6" fill="white">✦</text>
+        <text x="230" y="115" font-size="10" opacity=".55" fill="white">✦</text>
+      </svg>
+    </div>
+
+    <div class="splash-content">
+      <div class="splash-logo-wrap">
+        <svg class="splash-logo-svg" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sLg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#A78BFA"/>
+              <stop offset="100%" stop-color="#F9A8D4"/>
+            </linearGradient>
+          </defs>
+          <path d="M30 8 L6 27 L10 27 L10 52 L50 52 L50 27 L54 27 Z" fill="url(#sLg)" rx="3"/>
+          <path d="M30 36 C30 36 24 30 24 26.5 C24 23.5 27 21.5 30 24 C33 21.5 36 23.5 36 26.5 C36 30 30 36 30 36Z" fill="white" opacity=".95"/>
+          <circle cx="23" cy="44" r="3.5" fill="white" opacity=".8"/>
+          <circle cx="30" cy="44" r="3.5" fill="white" opacity=".8"/>
+          <circle cx="37" cy="44" r="3.5" fill="white" opacity=".8"/>
+        </svg>
+      </div>
+      <h1 class="splash-titel">FamilienApp</h1>
+      <p class="splash-sub">Hilfe &amp; Unterstützung für alleinerziehende Eltern</p>
+      <div class="splash-pulse">
+        <span></span><span></span><span></span>
+      </div>
+      <button class="splash-skip" onclick="splashSchliessen()">App starten →</button>
+    </div>
+  </div>
+
+  <!-- ===== Registrierungs-Overlay (wird per JS gesteuert) ===== -->
+  <div id="reg-overlay" class="reg-overlay versteckt" role="dialog" aria-modal="true" aria-label="Registrierung">
+    <div class="reg-box">
+      <div class="reg-logo">🏠 FamilienApp</div>
+      <div id="reg-inhalt"><!-- wird per JS gefüllt --></div>
+    </div>
+  </div>
+
+  <!-- ===== App (nach Registrierung sichtbar) ===== -->
+  <div id="app" class="versteckt">
+
+    <!-- Header -->
+    <header class="header" id="header">
+      <div class="header-top">
+        <div class="logo" onclick="zuSektion('dashboard')" style="cursor:pointer">
+          <svg class="logo-icon" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="logoG" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#A78BFA"/>
+                <stop offset="100%" stop-color="#F9A8D4"/>
+              </linearGradient>
+            </defs>
+            <path d="M22 5 L4 19.5 L7.5 19.5 L7.5 39 L36.5 39 L36.5 19.5 L40 19.5 Z" fill="url(#logoG)"/>
+            <path d="M22 27 C22 27 17 21.5 17 18.5 C17 16 19.5 14.3 22 16.5 C24.5 14.3 27 16 27 18.5 C27 21.5 22 27 22 27Z" fill="white" opacity=".95"/>
+            <circle cx="17" cy="33" r="2.8" fill="white" opacity=".8"/>
+            <circle cx="22" cy="33" r="2.8" fill="white" opacity=".8"/>
+            <circle cx="27" cy="33" r="2.8" fill="white" opacity=".8"/>
+          </svg>
+          <span class="logo-text">FamilienApp</span>
+        </div>
+        <div class="header-rechts">
+          <div class="bundesland-wrapper">
+            <label for="bl-select">📍</label>
+            <select id="bl-select"><option value="">Bundesland</option></select>
+          </div>
+          <button class="suche-icon-btn" onclick="zuSektion('suche')" title="Suchen">🔍</button>
+          <button class="profil-btn" id="profil-btn" onclick="profilOeffnen()" title="Mein Profil">
+            <span id="profil-avatar">?</span>
+          </button>
+        </div>
+      </div>
+      <!-- Haupt-Gruppen -->
+      <nav class="nav-gruppen" id="nav-gruppen" role="navigation" aria-label="Hauptkategorien">
+        <button class="nav-g-btn" data-gruppe="start"   onclick="navGruppeWaehlen('start')">🏠 Start</button>
+        <button class="nav-g-btn" data-gruppe="geld"    onclick="navGruppeWaehlen('geld')">💶 Geld</button>
+        <button class="nav-g-btn" data-gruppe="ort"     onclick="navGruppeWaehlen('ort')">🗺️ Orte</button>
+        <button class="nav-g-btn" data-gruppe="familie" onclick="navGruppeWaehlen('familie')">👪 Familie</button>
+        <button class="nav-g-btn" data-gruppe="mehr"    onclick="navGruppeWaehlen('mehr')">✈️ Mehr</button>
+      </nav>
+      <!-- Unter-Tabs (erscheinen nach Klick auf Gruppe) -->
+      <nav class="nav-sub" id="nav-sub" role="navigation" aria-label="Unternavigation"></nav>
+    </header>
+
+    <!-- Hauptinhalt -->
+    <main class="main" id="content" role="main" aria-live="polite"></main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>🏠 FamilienApp · Alle Angaben ohne Gewähr · Daten bleiben auf Ihrem Gerät</p>
+    </footer>
+
+  </div><!-- /#app -->
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

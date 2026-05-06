@@ -1,0 +1,93 @@
+{
+  "name": "FamilienApp — Hilfe für Alleinerziehende",
+  "short_name": "FamilienApp",
+  "description": "Persönliche App für alleinerziehende Eltern: Zuschüsse, Anträge, Wohnungssuche, Umgebung, Sparen und mehr.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E1B4B",
+  "theme_color": "#4F46E5",
+  "lang": "de",
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "social", "finance"],
+  "icons": [
+    {
+      "src": "icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Zuschüsse",
+      "short_name": "Zuschüsse",
+      "description": "Wohngeld, Kita, Unterhalt",
+      "url": "/?sektion=leistungen",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Umgebung",
+      "short_name": "Karte",
+      "description": "Umgebungssuche starten",
+      "url": "/?sektion=umgebung",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Budgetrechner",
+      "short_name": "Budget",
+      "description": "Haushalt berechnen",
+      "url": "/?sektion=extras",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}
