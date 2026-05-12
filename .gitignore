@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+*.zip
+
+# Tunnel & Server Logs
+*.log
+cf-*.txt
+tunnel-*.txt
+serveo-*.txt
+cloudflared-output.txt
+cloudflared.exe
+
+# Test screenshots (root only, NICHT icons/)
+/*.png
+
+# Test- & Debug-Skripte
+/bn-*.mjs
+/count.mjs
+/funktionstest.mjs
+/multi-screenshot.mjs
+/screenshot.mjs
+/splash-test.mjs
+/ss*.mjs
+/test-*.mjs
+/ux-pruefung.mjs
+/surge-deploy.js
+
+# Privat / lokal
+_user_messages.txt
+Allein Erziehende App.md
+
+# OS
+Thumbs.db
+.DS_Store

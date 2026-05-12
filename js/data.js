@@ -289,6 +289,84 @@ const BUNDESWEITE_LEISTUNGEN = [
 // Detaillierte Anträge für den Formular-Assistenten
 const ANTRAEGE = [
   {
+    id: 'kindergeld',
+    name: 'Kindergeld',
+    emoji: '👶',
+    beschreibung: 'Monatliche Zahlung für jedes Kind bis 18 Jahre (bis 25 Jahre in Ausbildung/Studium). Sofort nach der Geburt beantragen — wird rückwirkend nur 6 Monate gezahlt.',
+    betrag: '255 € / Kind / Monat (Stand 2025)',
+    behoerde: 'Familienkasse (Bundesagentur für Arbeit)',
+    dauer: '4–6 Wochen bis zum ersten Bescheid',
+    voraussetzungen: [
+      'Sie wohnen in Deutschland (Hauptwohnsitz)',
+      'Kind lebt in Ihrem Haushalt',
+      'Kind unter 18 — oder unter 25 in Ausbildung/Studium',
+      'Deutsche Staatsangehörigkeit oder EU-Bürger mit Aufenthaltsrecht',
+      'Bei Drittstaatlern: Niederlassungserlaubnis oder erlaubnisfreier Aufenthalt'
+    ],
+    dokumente: [
+      'Geburtsurkunde des Kindes (Original oder beglaubigte Kopie)',
+      'Ihr Personalausweis oder Reisepass',
+      'Steuer-Identifikationsnummer (Steuer-ID) von Ihnen UND vom Kind',
+      'Bei Schulkindern ab 18: Schul-/Studienbescheinigung',
+      'Bei Drittstaatlern: Aufenthaltstitel',
+      'Bei getrennten Eltern: Nachweis wer die Kinder im Haushalt hat'
+    ],
+    schritte: [
+      {
+        nr: 1,
+        titel: 'Steuer-ID bereitlegen',
+        text: 'Sie brauchen die Steuer-Identifikationsnummer von SICH und vom KIND. Die Ihre steht auf der Lohnabrechnung oder im letzten Steuerbescheid. Die des Kindes kommt automatisch nach der Geburt per Post — sonst beim Bundeszentralamt für Steuern anfordern (online unter bzst.de).',
+        tipp: 'Ohne Steuer-ID kein Kindergeld — bei vermisster Steuer-ID des Kindes sofort online neu anfordern (kommt in 2–4 Wochen).'
+      },
+      {
+        nr: 2,
+        titel: 'Antrag online stellen (empfohlen)',
+        text: 'Auf arbeitsagentur.de → „Familie und Kinder" → „Kindergeld beantragen" gehen. Online-Antrag ausfüllen, mit BundID oder ELSTER signieren. Geht in 15 Minuten — schnellste und sicherste Methode.',
+        tipp: 'Direktlink: arbeitsagentur.de/familie-und-kinder/kindergeld-beantragen — Antrag KG 1 ausfüllen.'
+      },
+      {
+        nr: 3,
+        titel: 'Alternative: Papier-Antrag',
+        text: 'Falls kein Online-Zugang: Antragsformular KG 1 + KG 1 Anlage Kind auf arbeitsagentur.de herunterladen, ausdrucken, ausfüllen, unterschreiben. Per Post an die zuständige Familienkasse schicken (steht auf der Webseite je nach PLZ).',
+        tipp: 'Per Einschreiben verschicken — Quittung als Beleg. Kopien für sich behalten.'
+      },
+      {
+        nr: 4,
+        titel: 'Anlage Kind separat ausfüllen',
+        text: 'Für jedes Kind wird eine eigene „Anlage Kind" ausgefüllt. Mit Geburtsdatum, Steuer-ID des Kindes, Wohnsitz. Bei Kindern über 18: zusätzlich Ausbildungs-/Studien-Anlage.',
+        tipp: 'Bei 2 Kindern: 1 Hauptantrag KG 1 + 2 Anlagen Kind. Nicht vergessen!'
+      },
+      {
+        nr: 5,
+        titel: 'Eltern-Konstellation klären',
+        text: 'Wer das Kind im Haushalt hat, bekommt das Kindergeld. Bei getrennten Eltern: Der Elternteil mit Hauptwohnsitz des Kindes ist berechtigt. Bei Patchwork: Eltern können bestimmen, wer es bekommt (Vorrang-Erklärung beifügen).',
+        tipp: 'Streit um Kindergeld? Vorrang-Erklärung KG 3a wechselseitig ausfüllen — sonst entscheidet die Familienkasse.'
+      },
+      {
+        nr: 6,
+        titel: 'Auf Bescheid warten',
+        text: 'Nach 4–6 Wochen kommt der Bescheid. Auszahlung erfolgt monatlich auf Ihr Konto. Bei Verzögerung: Sachstands-Anfrage telefonisch unter 0800 4555530 (kostenlos).',
+        tipp: 'Kindergeld wird rückwirkend für max. 6 Monate ausgezahlt — sofort nach Geburt beantragen!'
+      },
+      {
+        nr: 7,
+        titel: 'Bei Veränderungen melden',
+        text: 'Schulwechsel, Auszug, Heirat des Kindes, Ausbildungsende — alle Änderungen sofort der Familienkasse melden. Sonst Rückforderung + Strafanzeige möglich.',
+        tipp: 'Online-Konto bei der Familienkasse: kindergeld.familienkasse.de — Änderungen direkt eingeben.'
+      }
+    ],
+    formularhilfe: [
+      { feld: 'Antragsteller-Daten (KG 1, Abschnitt 1)', erklaerung: 'Vollständiger Name, Geburtsdatum, Anschrift, Staatsangehörigkeit. Bei verheirateten/eingetragenen Lebenspartnern: auch Daten des Partners angeben.' },
+      { feld: 'Steuer-Identifikationsnummer (KG 1, Abschnitt 2)', erklaerung: '11-stellige Nummer ohne Leerzeichen, z.B. 12345678901. Steht auf der Lohnabrechnung, im Steuerbescheid oder im Schreiben vom Bundeszentralamt für Steuern.' },
+      { feld: 'Bankverbindung (KG 1, Abschnitt 5)', erklaerung: 'IBAN und BIC für Auszahlung. Konto muss auf den Antragsteller lauten. Gemeinsame Konten gehen auch, wenn der Antragsteller mitverfügt.' },
+      { feld: 'Anlage Kind — Angaben zum Kind', erklaerung: 'Geburtsname, Vorname, Geburtsdatum, Geburtsort, Steuer-ID des Kindes (11-stellig). Bei nicht-deutschen Kindern zusätzlich Staatsangehörigkeit und Aufenthaltsstatus.' },
+      { feld: 'Anlage Kind — Wohnsitz', erklaerung: 'Adresse, an der das Kind wohnt. „Bei welchem Elternteil lebt das Kind?" → Hier nur ankreuzen wenn die Eltern getrennt leben.' },
+      { feld: 'Anlage Kind — Ausbildung (ab 18)', erklaerung: 'Bei Kindern ab 18: Art der Ausbildung (Schule/Berufsausbildung/Studium/Praktikum), Beginn, voraussichtliches Ende. Bescheinigung der Einrichtung beilegen.' },
+      { feld: 'Vorrang-Erklärung (KG 3a)', erklaerung: 'Nur bei getrennten Eltern oder Patchwork-Familien: Welcher Elternteil bekommt das Kindergeld? Wird von beiden Elternteilen unterschrieben.' },
+      { feld: 'Schul-/Studienbescheinigung', erklaerung: 'Bei Kindern ab 18: Aktuelle Bescheinigung der Schule, Berufsschule, Hochschule. Muss Studiengang, Beginn und voraussichtliches Ende enthalten. Nicht älter als 3 Monate.' }
+    ]
+  },
+  {
     id: 'wohngeld',
     name: 'Wohngeld',
     emoji: '🏠',
@@ -745,6 +823,267 @@ const ANTRAEGE = [
       { feld: 'Eigenes Einkommen', erklaerung: 'Freibetrag für Verdienst neben dem Studium: 520 € / Monat. Darüber: BAföG wird anteilig gekürzt.' },
       { feld: 'Elterneinkommen', erklaerung: 'Eltern-Einkommen des vorletzten Jahres entscheidet. Falls Eltern nicht zahlen wollen: "elternunabhängiges BAföG" möglich ab 25 oder nach 5 Jahren Erwerbstätigkeit.' }
     ]
+  },
+  // ===== KITA-ANTRÄGE =====
+  {
+    id: 'kita-anmeldung',
+    name: 'Kita-Anmeldung',
+    emoji: '🏫',
+    behoerde: 'Kindertagesstätte / Stadt',
+    betrag: 'Einkommensabhängig (oft kostenlos)',
+    beschreibung: 'Anmeldung für Kindertagesbetreuung — Krippe (0-3 J.) oder Kindergarten (3-6 J.). Anspruch ab dem 1. Geburtstag (Bundesgesetz).',
+    dauer: '8-52 Wochen Wartezeit',
+    kategorie: 'kinder',
+    schritte: [
+      { nr:1, titel:'Frühzeitig planen', text:'In Großstädten (München, Berlin, Hamburg, Frankfurt) IDEALERWEISE 12 Monate vor gewünschtem Start anmelden. Auf dem Land oft kürzere Wartezeit.', tipp:'Tipp: schon in der Schwangerschaft anmelden — Plätze sind knapp!' },
+      { nr:2, titel:'Wunsch-Kita finden', text:'Online suchen: Stadt-Webseite oder kita.de. Kriterien prüfen: Öffnungszeiten, pädagogisches Konzept, Verkehrsanbindung, Kosten. Mehrere Kitas auf Liste setzen!' },
+      { nr:3, titel:'Besichtigungstermine', text:'Mehrere Kitas besuchen — Atmosphäre prüfen, Personal kennenlernen, andere Eltern fragen. Bauchgefühl ist wichtig.' },
+      { nr:4, titel:'Anmeldung einreichen', text:'Auf Wartelisten setzen lassen — meist gleichzeitig auf 3-5 Listen. In manchen Städten zentrales Anmeldesystem (z.B. Berlin: kita-navigator.de).', tipp:'Bestätigung der Anmeldung schriftlich einfordern.' },
+      { nr:5, titel:'Zusage abwarten', text:'Meist 3-6 Monate vor Beginn kommt die Zusage. Bei Absage: Widerspruch (Klage auf Kita-Platz möglich!) oder Tagesmutter als Alternative.' },
+      { nr:6, titel:'Eingewöhnung planen', text:'2-4 Wochen Eingewöhnung mit Begleitung — meist nach Berliner oder Münchner Modell. Urlaub einplanen!' }
+    ],
+    dokumente: [
+      'Geburtsurkunde des Kindes',
+      'Personalausweis der Eltern',
+      'Meldebescheinigung',
+      'Impfpass (Masern-Impfpflicht!)',
+      'U-Untersuchungsheft',
+      'Einkommensnachweis (für Beitragsstaffelung)',
+      'Bei Alleinerziehenden: Negativbescheinigung Vater/Mutter'
+    ],
+    voraussetzungen: [
+      'Kind hat Wohnsitz in der Stadt/Gemeinde',
+      'Mindestalter (meist 1 Jahr für Krippe, 3 Jahre für KiGa)',
+      'Masern-Impfung nachgewiesen (Pflicht seit 2020!)',
+      'Bei Vollzeitplatz: oft Berufstätigkeit beider Eltern erforderlich'
+    ],
+    formularhilfe: [
+      { feld:'Bedarfsstunden', erklaerung:'Halbtags (4-5h), 3/4-Tag (6-7h), Ganztag (8-10h). Berufstätigkeit angeben für Anspruch auf Ganztag.' },
+      { feld:'Mehrere Kitas anmelden', erklaerung:'Sehr empfohlen! Sie können auf vielen Listen sein. Erst zusagen wenn Sie sicher sind. Andere Listen dann absagen.' },
+      { feld:'Geschwisterkind', erklaerung:'Geschwisterregelung: Bei vorhandenem Kita-Kind oft Vorrang für Geschwister. Bei Anmeldung erwähnen!' },
+      { feld:'Berufstätigkeit Eltern', erklaerung:'Arbeitgeber-Bestätigung (Stunden, Arbeitszeit) erhöht Chance auf Ganztagsplatz.' }
+    ]
+  },
+  {
+    id: 'kita-gebuehrenermaessigung',
+    name: 'Kita-Gebühren-Befreiung',
+    emoji: '💶',
+    behoerde: 'Jugendamt / Stadt',
+    betrag: 'Bis 100% Erlass',
+    beschreibung: 'Befreiung oder Reduzierung der Kita-Gebühren bei niedrigem Einkommen. Bei Bürgergeld/Wohngeld meist 100% kostenlos.',
+    dauer: '4-8 Wochen',
+    kategorie: 'kinder',
+    schritte: [
+      { nr:1, titel:'Anspruch prüfen', text:'In allen Bundesländern unterschiedlich. Bei Bürgergeld/Wohngeld: meist automatisch kostenlos. Bei niedrigem Einkommen: gestaffelte Beiträge.', tipp:'Berlin: Kita kostenlos für alle (kein Antrag nötig). NRW: letztes Kita-Jahr kostenlos.' },
+      { nr:2, titel:'Antrag holen', text:'Beim Jugendamt oder direkt bei der Kita. Auch online auf der Webseite der Stadt verfügbar.' },
+      { nr:3, titel:'Einkommen nachweisen', text:'Letzte 3 Monate Lohnabrechnungen oder aktueller Steuerbescheid. Bei Bürgergeld: Bewilligungsbescheid.' },
+      { nr:4, titel:'Antrag einreichen', text:'An Jugendamt der Wohngemeinde — schriftlich oder per Mail mit allen Nachweisen.' },
+      { nr:5, titel:'Bescheid erhalten', text:'Innerhalb 4-8 Wochen. Befreiung gilt meist für 12 Monate, dann Folgeantrag.' }
+    ],
+    dokumente: [
+      'Kita-Vertrag',
+      'Lohnabrechnungen (letzte 3 Monate)',
+      'Mietvertrag + Mietnachweis',
+      'Bei Bürgergeld: Bewilligungsbescheid',
+      'Wohngeldbescheid (falls vorhanden)',
+      'Personalausweis',
+      'Bankverbindung'
+    ],
+    voraussetzungen: [
+      'Kita-Platz vorhanden',
+      'Einkommen unter Grenze (variiert nach Stadt)',
+      'Wohnsitz in der Gemeinde',
+      'Bei Alleinerziehenden: Höhere Einkommensgrenzen'
+    ],
+    formularhilfe: [
+      { feld:'Einkommensnachweis', erklaerung:'Brutto + Netto, alle Einkünfte! Auch Unterhalt, Kindergeld zählt mit zur Berechnung.' },
+      { feld:'Geschwister im Haushalt', erklaerung:'Pro Geschwisterkind erhöht sich Freibetrag. Mehrkindstaffel beachten — oft erstes Kind teuer, zweites halber Preis.' },
+      { feld:'Bürgergeld-Empfänger', erklaerung:'Mit Bürgergeld-Bescheid sofortige 100%-Befreiung. Auch Ferien-Betreuung kostenlos!' }
+    ]
+  },
+  // ===== SCHULFORMULARE =====
+  {
+    id: 'einschulung',
+    name: 'Schulanmeldung (Einschulung)',
+    emoji: '🎒',
+    behoerde: 'Grundschule im Schulbezirk',
+    betrag: 'Kostenlos',
+    beschreibung: 'Anmeldung an der Grundschule — Pflicht im Jahr vor der Einschulung (Kind wird bis 30.09. 6 Jahre alt).',
+    dauer: '1 Tag (Anmeldung) + Schuleignungstest',
+    kategorie: 'kinder',
+    schritte: [
+      { nr:1, titel:'Schulbezirk klären', text:'Sie sind dem Schulbezirk Ihrer Wohnadresse zugeordnet. Liste auf Stadt-Webseite oder Anruf beim Schulamt.', tipp:'Wechsel an andere Schule möglich? Antrag auf Gastschulgenehmigung.' },
+      { nr:2, titel:'Anmeldetermin wahrnehmen', text:'Im Herbst (Oktober/November) vor dem Einschulungs-Sommer. Schule schickt Einladung an Eltern (über Einwohnermeldeamt).', tipp:'Termin nicht verpassen — sonst zusätzlicher Aufwand.' },
+      { nr:3, titel:'Schuleignungstest', text:'Kinder werden auf Sprache, Motorik, Konzentration getestet. KEIN Leistungstest — nur Reife-Check.' },
+      { nr:4, titel:'Schulärztliche Untersuchung', text:'Termin beim Gesundheitsamt — Hör-, Seh-, Sprachtest, Impfschutz. Pflicht!' },
+      { nr:5, titel:'Schulranzen + Material', text:'Erst NACH Anmeldung — Schule gibt Liste mit benötigten Materialien.' },
+      { nr:6, titel:'Einschulung im August/September', text:'Erste Schulwoche meist halbtags zur Eingewöhnung. Schultüte, Foto, Familienfeier!' }
+    ],
+    dokumente: [
+      'Geburtsurkunde des Kindes',
+      'Stammbuch der Familie',
+      'Personalausweis Eltern',
+      'Meldebescheinigung',
+      'Impfpass (Masern-Impfpflicht!)',
+      'U-Untersuchungsheft (U9 muss aktuell sein)',
+      'Bei Trennung/Scheidung: Sorgerechtsbescheinigung'
+    ],
+    voraussetzungen: [
+      'Kind wohnt im Schulbezirk',
+      'Kind wird bis 30.09. 6 Jahre alt (Stichtag variiert leicht je Bundesland)',
+      'Schulreife (wird im Test geprüft)',
+      'Masern-Impfung'
+    ],
+    formularhilfe: [
+      { feld:'Wahl des Schultyps', erklaerung:'Grundschule ist Pflicht. Religionsunterricht: bei Anmeldung wählen (evangelisch, katholisch, Ethik, ggf. islamisch). Kann später geändert werden.' },
+      { feld:'Schulwechsel', erklaerung:'Gastschulgenehmigung — Antrag mit Begründung (Geschwisterkind, Arbeitsweg). Schule entscheidet, nicht garantiert.' },
+      { feld:'Zurückstellung', erklaerung:'Wenn Kind noch nicht reif scheint: Antrag auf Zurückstellung um 1 Jahr — meist mit Gutachten.' },
+      { feld:'Vorzeitige Einschulung', erklaerung:'Bei sehr begabten Kindern unter 6 — Eignungstest + Antrag.' }
+    ]
+  },
+  {
+    id: 'klassenfahrt-zuschuss',
+    name: 'Klassenfahrt-Zuschuss (BuT)',
+    emoji: '🚌',
+    behoerde: 'Jobcenter / Sozialamt',
+    betrag: 'Volle Übernahme der Kosten',
+    beschreibung: 'Bildungs- und Teilhabepaket: Übernahme von Klassenfahrten, Schulausflügen, Schulmaterial bei Bürgergeld/Wohngeld/Kinderzuschlag.',
+    dauer: '2-4 Wochen',
+    kategorie: 'kinder',
+    schritte: [
+      { nr:1, titel:'Anspruchsberechtigung prüfen', text:'BuT für Empfänger von: Bürgergeld, Sozialhilfe, Wohngeld, Kinderzuschlag, Asylbewerberleistungen. Auch bei niedrigem Einkommen ohne Leistungsbezug möglich.' },
+      { nr:2, titel:'Kostenvoranschlag holen', text:'Schule gibt schriftlichen Kostenvoranschlag — Klassenfahrt, Lernmaterial, Schulausflug, Schulranzen. Datum + Betrag wichtig.' },
+      { nr:3, titel:'Antrag stellen', text:'Beim Jobcenter (Bürgergeld) oder Wohngeldstelle. Online-Antrag oder Formular. Meist gleicher Antrag wie Bürgergeld-Antrag.', tipp:'Antrag VOR der Klassenfahrt — nachträglich oft Probleme!' },
+      { nr:4, titel:'Genehmigung abwarten', text:'2-4 Wochen Bearbeitungszeit. Bei dringenden Fällen: Eilantrag möglich.' },
+      { nr:5, titel:'Auszahlung', text:'Direkt an Schule oder Erstattung an Eltern (vorher klären, was Schule bevorzugt).' }
+    ],
+    dokumente: [
+      'Bürgergeld-/Wohngeld-Bescheid',
+      'Schulbescheinigung',
+      'Kostenvoranschlag der Schule',
+      'Klassenfahrt-Programm',
+      'Bankverbindung'
+    ],
+    voraussetzungen: [
+      'Empfänger von Bürgergeld, Wohngeld, Sozialhilfe oder Kinderzuschlag',
+      'Schulpflichtiges Kind',
+      'Klassenfahrt/Schulausflug ist von Schule organisiert'
+    ],
+    formularhilfe: [
+      { feld:'Was wird übernommen?', erklaerung:'150 €/Schuljahr für Lernmaterial (Schulranzen, Hefte). KOMPLETTE Klassenfahrt-Kosten. 15 €/Monat für Vereinsbeiträge. Mittagessen Schule. Nachhilfe bis 250 €/Monat.' },
+      { feld:'Bildungs-Karte', erklaerung:'Manche Städte: Karte für Kinder mit Guthaben für Sport, Musikschule, Kino. Beim Jobcenter erfragen.' }
+    ]
+  },
+  // ===== PFLEGEGRAD =====
+  {
+    id: 'pflegegrad',
+    name: 'Pflegegrad beantragen',
+    emoji: '🩺',
+    behoerde: 'Pflegekasse (bei Krankenkasse)',
+    betrag: '316–2.005 € / Monat (je nach Grad)',
+    beschreibung: 'Anerkennung von Pflegebedürftigkeit (Pflegegrad 1-5) für ältere Menschen, Behinderte oder schwer kranke Kinder. Rechtsanspruch auf Geld + Sachleistungen.',
+    dauer: '5 Wochen Bearbeitung + MD-Begutachtung',
+    kategorie: 'gesundheit',
+    schritte: [
+      { nr:1, titel:'Antrag bei Pflegekasse', text:'Formloser Antrag — telefonisch, schriftlich oder online. Wichtig: Antragsdatum zählt für Rückwirkung!', tipp:'Frühestmöglich beantragen — auch im Krankenhaus möglich!' },
+      { nr:2, titel:'Pflegetagebuch führen', text:'2-4 Wochen vor Begutachtung dokumentieren: Wann braucht die Person Hilfe? Wie lange? Wobei? Vorlage gibts bei Pflegekasse.', tipp:'Sehr wichtig — beweist Pflegebedarf objektiv!' },
+      { nr:3, titel:'Begutachtung MD', text:'Medizinischer Dienst (MD) kommt nach Hause oder ins Krankenhaus. Dauer 30-60 Min. Alle Helfer (Familie) sollten dabei sein.', tipp:'Nicht beschönigen! Schlechtester Tag schildern. Beratung beim Sozialverband VdK kostenlos!' },
+      { nr:4, titel:'Bescheid abwarten', text:'Pflegekasse entscheidet auf Basis des MD-Gutachtens. 5 Wochen Frist (außer Krankenhaus = 1 Woche).' },
+      { nr:5, titel:'Bei Ablehnung: Widerspruch', text:'Innerhalb 1 Monat Widerspruch einlegen. ÜBER 50% der Widersprüche erfolgreich! Sozialverbände helfen kostenlos.', tipp:'Niemals einfach hinnehmen — Widerspruch lohnt sich fast immer.' },
+      { nr:6, titel:'Leistungen beantragen', text:'Nach Anerkennung: Pflegegeld (Pflege durch Angehörige) oder Pflegesachleistung (Pflegedienst) wählen. Auch Pflegehilfsmittel (40 €/Monat), Hausnotruf, Kurzzeitpflege.' }
+    ],
+    dokumente: [
+      'Personalausweis',
+      'Krankenkassen-Karte',
+      'Bisherige Arzt-Atteste',
+      'Krankenhausberichte',
+      'Pflegetagebuch (selbst geführt)',
+      'Liste aller Medikamente',
+      'Bei Kindern: U-Heft + Schulbescheinigung'
+    ],
+    voraussetzungen: [
+      'Pflegeversichert (jeder gesetzlich/privat Versicherte)',
+      'Pflegebedürftigkeit voraussichtlich länger als 6 Monate',
+      'Erhebliche Beeinträchtigung der Selbständigkeit'
+    ],
+    formularhilfe: [
+      { feld:'Pflegegrade Übersicht', erklaerung:'Grad 1: Pflegegeld 316 € (geringe Beeinträchtigung). Grad 2: 545 €. Grad 3: 728 €. Grad 4: 1.000 €. Grad 5: 947 € (Pflegegeld) + bis 2.005 € (Pflegesachleistungen). Bei Demenz: gesonderte Bewertung.' },
+      { feld:'Pflegegeld vs. Sachleistung', erklaerung:'Pflegegeld: Sie pflegen selbst (oder Angehörige). Sachleistung: Pflegedienst kommt. Kombination möglich (beste Lösung oft).' },
+      { feld:'Verhinderungspflege', erklaerung:'Bis 1.612 €/Jahr extra für Vertretung wenn Hauptpfleger Urlaub braucht. + Kurzzeitpflege 1.774 €/Jahr (Heim für 8 Wochen).' },
+      { feld:'Kinder mit Behinderung', erklaerung:'Auch Kinder können Pflegegrad bekommen. Begutachtung berücksichtigt altersuntypische Hilfsbedürftigkeit.' },
+      { feld:'Wohnumfeldverbesserung', erklaerung:'Bis 4.000 € Zuschuss für Umbau (Treppenlift, ebenerdige Dusche, Türverbreiterung). VOR Umbau beantragen!' }
+    ]
+  },
+  {
+    id: 'schwerbehinderung',
+    name: 'Schwerbehindertenausweis',
+    emoji: '♿',
+    behoerde: 'Versorgungsamt',
+    betrag: 'Steuer- und Vergünstigungen',
+    beschreibung: 'Grad der Behinderung (GdB) ab 50 = Schwerbehindertenausweis. Vorteile: Steuerfreibetrag, Kündigungsschutz, Zusatzurlaub, ÖPNV vergünstigt, Parkausweis.',
+    dauer: '3-6 Monate',
+    kategorie: 'gesundheit',
+    schritte: [
+      { nr:1, titel:'Antrag holen', text:'Beim Versorgungsamt (Online oder schriftlich). In manchen Bundesländern: Landesamt für Soziales/Inklusion.' },
+      { nr:2, titel:'Ärztliche Befunde sammeln', text:'Alle relevanten Diagnosen, Befunde, Operationsberichte der letzten Jahre. Je vollständiger, desto besser!' },
+      { nr:3, titel:'Antrag ausfüllen', text:'Alle Erkrankungen + behandelnde Ärzte angeben. Nichts weglassen! Auch psychische Erkrankungen zählen.' },
+      { nr:4, titel:'Begutachtung', text:'Versorgungsamt holt Befunde ein, lässt prüfen. Manchmal eigener Untersuchungstermin.' },
+      { nr:5, titel:'Bescheid', text:'GdB von 0-100 in 10er-Schritten. Ab GdB 50 = Schwerbehindertenausweis.' },
+      { nr:6, titel:'Bei Ablehnung: Widerspruch', text:'Über 60% Widersprüche erfolgreich! Sozialverband VdK oder Anwalt für Sozialrecht helfen.' }
+    ],
+    dokumente: [
+      'Personalausweis',
+      'Krankenkassenkarte',
+      'Aktuelle Befunde aller Ärzte',
+      'Krankenhaus-Entlassungsberichte',
+      'Liste aller Medikamente',
+      'Bei Kindern: U-Heft, Förderbescheide'
+    ],
+    voraussetzungen: [
+      'Gesundheitsstörung von Dauer (> 6 Monate)',
+      'Auswirkung auf Teilhabe am gesellschaftlichen Leben',
+      'Wohnsitz in Deutschland'
+    ],
+    formularhilfe: [
+      { feld:'Merkzeichen', erklaerung:'aG: außergewöhnlich gehbehindert (Behindertenparkplatz). G: gehbehindert (ÖPNV vergünstigt). H: hilflos. B: Begleitperson kostenlos. Bl: blind. Gl: gehörlos. Bei Antrag mitbeantragen!' },
+      { feld:'Steuerfreibetrag', erklaerung:'GdB 50: 1.140 € steuerfrei. GdB 80: 2.120 €. GdB 100: 2.840 €. Bei Hilflosigkeit (Merkzeichen H): 7.400 €.' },
+      { feld:'Kündigungsschutz', erklaerung:'Mit Schwerbehinderten-Ausweis: besonderer Kündigungsschutz im Job. 5 Tage Zusatzurlaub.' }
+    ]
+  },
+  {
+    id: 'foerderbedarf-schule',
+    name: 'Sonderpädagogischer Förderbedarf',
+    emoji: '🎓',
+    behoerde: 'Schule + Schulamt',
+    betrag: 'Förderung kostenlos',
+    beschreibung: 'Feststellung von Förderbedarf für Kinder mit Lernschwierigkeiten, Behinderung oder Verhaltensauffälligkeiten — ermöglicht Sonderpädagogen, Schulbegleitung, Förderschule.',
+    dauer: '3-6 Monate',
+    kategorie: 'kinder',
+    schritte: [
+      { nr:1, titel:'Gespräch mit Lehrer', text:'Bei Auffälligkeiten zuerst mit Klassenlehrer sprechen. Beobachtungen sammeln, Bericht schreiben lassen.' },
+      { nr:2, titel:'Antrag stellen', text:'Eltern oder Schule können Antrag auf Feststellung des Förderbedarfs stellen. Beim Schulamt einreichen.', tipp:'Sozialverband oder Verein für Kinder mit Lernschwierigkeiten zur Beratung kontaktieren!' },
+      { nr:3, titel:'Diagnostik', text:'Sonderpädagoge testet das Kind: Intelligenztests, Sprachtest, Verhaltensbeobachtung. 2-4 Termine.' },
+      { nr:4, titel:'Förderkonferenz', text:'Schule + Schulamt + Eltern besprechen Ergebnisse. Festlegung: welcher Förderbedarf? Welche Schule?' },
+      { nr:5, titel:'Bescheid + Förderplan', text:'Schulamt bescheidet. Förderplan wird für Schuljahr erstellt. Wird jährlich überprüft.' }
+    ],
+    dokumente: [
+      'Schulzeugnisse',
+      'Beobachtungsbogen Lehrer',
+      'Vorhandene Diagnosen (z.B. ADHS, Autismus, LRS)',
+      'Schulgesundheitsamt-Berichte',
+      'Bei Bedarf: Entwicklungsbericht Kindergarten'
+    ],
+    voraussetzungen: [
+      'Schulpflichtiges Kind',
+      'Anhaltende Lernschwierigkeiten oder Verhaltensauffälligkeiten',
+      'Standard-Förderung in Klasse reicht nicht aus'
+    ],
+    formularhilfe: [
+      { feld:'Förderbedarfsarten', erklaerung:'Lernen, Sprache, emotional-soziale Entwicklung, geistige Entwicklung, körperliche Entwicklung, Hören, Sehen, kranke Kinder. Mehrfacher Förderbedarf möglich.' },
+      { feld:'Inklusion vs. Förderschule', erklaerung:'Inklusion: in Regelschule mit Sonderpädagoge. Förderschule: spezialisierte Schule. Eltern können wählen — aber Schulamt entscheidet bei Streit.' },
+      { feld:'Schulbegleitung', erklaerung:'Eigene Person für Ihr Kind in der Schule (Eingliederungshilfe). Über Sozialamt beantragen.' },
+      { feld:'Nachteilsausgleich', erklaerung:'Auch ohne Sonderbedarf: bei LRS, ADHS, Diabetes etc. — mehr Zeit, größerer Druck, Hilfsmittel. Antrag bei Schulleitung.' }
+    ]
   }
 ];
 
@@ -811,40 +1150,111 @@ const WOHNUNGSPORTALE = [
 // Beratung und Nützliche Links
 const BERATUNGSSTELLEN = [
   {
-    kategorie: 'Telefonberatung',
-    emoji: '📞',
+    kategorie: 'Notruf & Krise',
+    emoji: '🆘',
     stellen: [
-      { name: 'Familientelefon', tel: '0800 111 0 550', url: 'https://www.nummergegenkummer.de', beschreibung: 'Kostenlos, 24/7, anonym — für alle Familienfragen', kostenlos: true },
-      { name: 'Telefonseelsorge', tel: '0800 111 0 111', url: 'https://www.telefonseelsorge.de', beschreibung: 'Seelische Unterstützung in schwierigen Situationen', kostenlos: true },
-      { name: 'Bürgertelefon Bundesregierung', tel: '115', url: 'https://www.115.de', beschreibung: 'Fragen zu Behörden, Formularen und Leistungen', kostenlos: true }
+      { name: 'Notruf (Polizei, Feuerwehr, Rettung)', tel: '112', url: null, beschreibung: 'Lebensgefahr, schwere Unfälle, akute Notfälle — 24/7 kostenfrei', kostenlos: true },
+      { name: 'Ärztlicher Bereitschaftsdienst', tel: '116117', url: 'https://www.116117.de', beschreibung: 'Außerhalb der Sprechzeiten: Wegweiser zur richtigen ärztlichen Hilfe — 24/7', kostenlos: true },
+      { name: 'Telefonseelsorge', tel: '0800 111 0 111', url: 'https://www.telefonseelsorge.de', beschreibung: 'Bei seelischen Krisen, Suizidgedanken — 24/7 kostenlos & anonym', kostenlos: true },
+      { name: 'Hilfetelefon Gewalt gegen Frauen', tel: '116 016', url: 'https://www.hilfetelefon.de', beschreibung: '24/7 anonym, 18 Sprachen — bei häuslicher Gewalt, Bedrohung, Stalking', kostenlos: true },
+      { name: 'Hilfetelefon Gewalt an Männern', tel: '0800 123 99 00', url: 'https://www.maennerhilfetelefon.de', beschreibung: 'Männer als Opfer von Gewalt — anonym, vertraulich', kostenlos: true },
+      { name: 'Nummer gegen Kummer Kinder', tel: '116 111', url: 'https://www.nummergegenkummer.de', beschreibung: 'Kinder- & Jugend-Telefon: Mo-Sa 14–20 Uhr, anonym', kostenlos: true },
+      { name: 'Elterntelefon', tel: '0800 111 0 550', url: 'https://www.nummergegenkummer.de', beschreibung: 'Für Eltern in schwierigen Erziehungssituationen — Mo–Fr 9–17 Uhr', kostenlos: true },
+      { name: 'Giftnotruf Berlin', tel: '030 19240', url: 'https://www.giftnotruf.de', beschreibung: 'Vergiftungen, Medikamente, Pflanzen — 24/7 deutschlandweit', kostenlos: true }
     ]
   },
   {
-    kategorie: 'Online-Beratung',
-    emoji: '💻',
+    kategorie: 'Familie & Erziehung',
+    emoji: '👨‍👩‍👧',
     stellen: [
-      { name: 'Bundesfamilienportal', tel: null, url: 'https://www.familienportal.de', beschreibung: 'Alle Familienleistungen des Bundes im Überblick', kostenlos: true },
-      { name: 'Alleinerziehende Hilfe', tel: null, url: 'https://www.vamv.de', beschreibung: 'Verband alleinerziehender Mütter und Väter — Beratung & Vernetzung', kostenlos: true },
-      { name: 'Zuschuss.de', tel: null, url: 'https://www.zuschuss.de', beschreibung: 'Förderdatenbank für Familien und Alleinerziehende', kostenlos: true }
+      { name: 'Bundesfamilienportal', tel: null, url: 'https://www.familienportal.de', beschreibung: 'Alle Familienleistungen des Bundes — Wegweiser zu Anträgen und Hilfen', kostenlos: true },
+      { name: 'pro familia', tel: '030 398 974 80', url: 'https://www.profamilia.de', beschreibung: 'Familienplanung, Sexualberatung, Schwangerschaftsberatung — bundesweit', kostenlos: true },
+      { name: 'Erziehungsberatungsstellen (bke)', tel: null, url: 'https://www.bke-beratung.de', beschreibung: 'Online und vor Ort: bei Erziehungsfragen, Konflikten, Trennung', kostenlos: true },
+      { name: 'Caritas Familienberatung', tel: null, url: 'https://www.caritas.de/hilfeundberatung', beschreibung: 'Beratung in über 1000 Standorten — kostenfrei und konfessionsunabhängig', kostenlos: true },
+      { name: 'Diakonie Familienberatung', tel: null, url: 'https://www.diakonie.de/hilfe', beschreibung: 'Evangelische Sozial- und Familienberatung — für alle offen', kostenlos: true },
+      { name: 'VAMV — Alleinerziehende', tel: null, url: 'https://www.vamv.de', beschreibung: 'Verband alleinerziehender Mütter und Väter — Beratung, Vernetzung, Rechtshilfe', kostenlos: true },
+      { name: 'Mütterzentren bundesweit', tel: null, url: 'https://www.muetterzentren-bv.de', beschreibung: 'Treffpunkte, Beratung, Kinderbetreuung, Gemeinschaft vor Ort', kostenlos: true }
     ]
   },
   {
-    kategorie: 'Rechtliche Beratung',
+    kategorie: 'Schwangerschaft & Geburt',
+    emoji: '🤰',
+    stellen: [
+      { name: 'pro familia Schwangerschaft', tel: null, url: 'https://www.profamilia.de/themen/schwangerschaft', beschreibung: 'Schwangerschaftsberatung, Konfliktberatung, Sozialleistungen', kostenlos: true },
+      { name: 'Donum Vitae', tel: null, url: 'https://www.donumvitae.org', beschreibung: 'Schwangerschaftskonfliktberatung, anerkannt nach §219 StGB', kostenlos: true },
+      { name: 'Caritas Schwangerschaftsberatung', tel: null, url: 'https://www.caritas.de/hilfeundberatung/onlineberatung/schwangerschaftsberatung', beschreibung: 'Online und vor Ort — auch zu Bundesstiftung Mutter und Kind', kostenlos: true },
+      { name: 'Bundesstiftung Mutter und Kind', tel: '030 20655-555', url: 'https://www.bundesstiftung-mutter-und-kind.de', beschreibung: 'Finanzielle Hilfen für werdende Mütter in Not (Erstausstattung etc.)', kostenlos: true },
+      { name: 'Hebammen-Suchportal', tel: null, url: 'https://www.hebammenverband.de', beschreibung: 'Hebamme in der Nähe finden — kostenfrei über die Krankenkasse', kostenlos: true },
+      { name: 'Frühe Hilfen (NZFH)', tel: null, url: 'https://www.fruehehilfen.de', beschreibung: 'Familien-Hebammen und Sozialarbeit für Familien mit Babys/Kleinkindern', kostenlos: true }
+    ]
+  },
+  {
+    kategorie: 'Geld, Sozial & Schulden',
+    emoji: '💰',
+    stellen: [
+      { name: 'Bürgertelefon Bundesregierung', tel: '115', url: 'https://www.115.de', beschreibung: 'Fragen zu allen Behörden, Formularen, Leistungen — Mo–Fr 8–18 Uhr', kostenlos: true },
+      { name: 'Schuldnerberatung (Forum SBO)', tel: null, url: 'https://www.forum-schuldnerberatung.de', beschreibung: 'Suche nach kostenloser Schuldnerberatung in Ihrer Nähe', kostenlos: true },
+      { name: 'Verbraucherzentrale', tel: null, url: 'https://www.verbraucherzentrale.de', beschreibung: 'Beratung zu Verträgen, Versicherungen, Geldanlagen — kleine Gebühr', kostenlos: false },
+      { name: 'Beratungshilfe (Rechtsberatung)', tel: null, url: 'https://www.bmj.de/beratungshilfe', beschreibung: 'Kostenlose Rechtsberatung beim Anwalt — bei geringem Einkommen', kostenlos: true },
+      { name: 'VdK Sozialrechtsberatung', tel: null, url: 'https://www.vdk.de/beratung', beschreibung: 'Sozialrecht, Widersprüche, Klagen — Mitgliedschaft (~70 €/Jahr)', kostenlos: false },
+      { name: 'SoVD Sozialberatung', tel: null, url: 'https://www.sovd.de', beschreibung: 'Sozialverband — Renten-, Schwerbehinderten-, Sozialrecht', kostenlos: false },
+      { name: 'Zuschuss.de', tel: null, url: 'https://www.zuschuss.de', beschreibung: 'Förderdatenbank für Familien — alle Zuschüsse auf einen Blick', kostenlos: true }
+    ]
+  },
+  {
+    kategorie: 'Trennung, Scheidung, Sorgerecht',
     emoji: '⚖️',
     stellen: [
-      { name: 'Beratungshilfe (kostenlose Rechtsberatung)', tel: null, url: 'https://www.bmj.de/beratungshilfe', beschreibung: 'Bei geringem Einkommen: kostenlose Rechtsberatung beim Anwalt', kostenlos: true },
-      { name: 'VdK Sozialrechtsberatung', tel: null, url: 'https://www.vdk.de/beratung', beschreibung: 'Beratung zu Sozialrecht, Widersprüchen und Klagen', kostenlos: false },
-      { name: 'Caritas Rechts- & Sozialberatung', tel: null, url: 'https://www.caritas.de/beratungsangebote', beschreibung: 'Kostenlose Sozialberatung in vielen Städten', kostenlos: true }
+      { name: 'Jugendamt (Beistandschaft)', tel: null, url: 'https://www.bmfsfj.de', beschreibung: 'Hilfe bei Unterhalt, Sorgerecht, Beistandschaft — beim örtlichen Jugendamt', kostenlos: true },
+      { name: 'ISUV (Interessenverband Unterhalt)', tel: '0911 55 53 96 6', url: 'https://www.isuv.de', beschreibung: 'Beratung zu Trennung, Scheidung, Unterhalt — gerade auch für Väter', kostenlos: false },
+      { name: 'Väter ohne Rechte', tel: null, url: 'https://www.vaeter-ohne-rechte.de', beschreibung: 'Selbsthilfe und Beratung — Väter im Sorgerechtsstreit', kostenlos: true },
+      { name: 'Anwaltauskunft DAV', tel: null, url: 'https://anwaltauskunft.de', beschreibung: 'Fachanwalt für Familienrecht in der Nähe finden', kostenlos: true },
+      { name: 'Mediation (BM)', tel: null, url: 'https://www.bmev.de', beschreibung: 'Bundesverband Mediation — Konfliktlösung ohne Gerichtsverfahren', kostenlos: false }
     ]
   },
   {
-    kategorie: 'Lokale Beratung',
-    emoji: '🏘️',
+    kategorie: 'Sucht, Mental, Gewalt',
+    emoji: '🧠',
     stellen: [
-      { name: 'AWO (Arbeiterwohlfahrt)', tel: null, url: 'https://www.awo.org', beschreibung: 'Familien- und Sozialberatung vor Ort, deutschlandweit', kostenlos: true },
-      { name: 'Caritas', tel: null, url: 'https://www.caritas.de', beschreibung: 'Beratung und praktische Hilfe für Familien in Not', kostenlos: true },
-      { name: 'Diakonie', tel: null, url: 'https://www.diakonie.de', beschreibung: 'Evangelische Sozialberatung — auch für Nicht-Mitglieder', kostenlos: true },
-      { name: 'Mütterzentren', tel: null, url: 'https://www.muetterzentren-bv.de', beschreibung: 'Treffpunkte für Mütter und Familien, Beratung, Gemeinschaft', kostenlos: true }
+      { name: 'Sucht-Hilfe (Deutsche Hauptstelle)', tel: null, url: 'https://www.dhs.de', beschreibung: 'Beratungsstellen für Alkohol, Drogen, Medikamente, Glücksspiel', kostenlos: true },
+      { name: 'Suchthotline', tel: '01806 313031', url: null, beschreibung: '24/7 — anonym und vertraulich (14 ct/Min aus Festnetz)', kostenlos: false },
+      { name: 'Krisenchat (Jugendliche)', tel: null, url: 'https://krisenchat.de', beschreibung: 'Per WhatsApp/Web 24/7 — für Jugendliche in Krisen', kostenlos: true },
+      { name: 'Weißer Ring (Opferhilfe)', tel: '116 006', url: 'https://www.weisser-ring.de', beschreibung: 'Opferhilfe bei Gewalttaten — 7 Tage/Woche, 7–22 Uhr kostenlos', kostenlos: true },
+      { name: 'Frauenhauskoordinierung', tel: null, url: 'https://www.frauenhauskoordinierung.de', beschreibung: 'Frauenhäuser bundesweit — Schutz und Beratung bei Gewalt', kostenlos: true },
+      { name: 'Männerberatungsstellen', tel: null, url: 'https://www.bundesforum-maenner.de', beschreibung: 'Lokale Männerberatung — bei Gewalt, Krise, Trennung', kostenlos: true },
+      { name: 'BzgA Mental Health', tel: null, url: 'https://www.bzga.de', beschreibung: 'Bundeszentrale für gesundheitliche Aufklärung — Hilfen zu Sucht und Psyche', kostenlos: true }
+    ]
+  },
+  {
+    kategorie: 'Pflege, Behinderung, Senioren',
+    emoji: '♿',
+    stellen: [
+      { name: 'Pflegestützpunkte', tel: null, url: 'https://www.zqp.de/beratung-pflege', beschreibung: 'Wohnortnahe Pflegeberatung — Anträge, Leistungen, Entlastung', kostenlos: true },
+      { name: 'wir pflegen', tel: null, url: 'https://www.wir-pflegen.net', beschreibung: 'Verband pflegender Angehöriger — Selbsthilfe und Beratung', kostenlos: true },
+      { name: 'EUTB (Behinderung)', tel: null, url: 'https://www.teilhabeberatung.de', beschreibung: 'Ergänzende unabhängige Teilhabeberatung — bei Behinderung jeder Art', kostenlos: true },
+      { name: 'Demenz-Hilfe', tel: '030 25937 95 14', url: 'https://www.deutsche-alzheimer.de', beschreibung: 'Beratungstelefon für Demenz: Mo–Do 9–18 Uhr', kostenlos: true }
+    ]
+  },
+  {
+    kategorie: 'Arbeit, Wohnen, Bildung',
+    emoji: '💼',
+    stellen: [
+      { name: 'Arbeitsagentur Hotline', tel: '0800 4 555500', url: 'https://www.arbeitsagentur.de', beschreibung: 'Arbeitslosengeld, Vermittlung, Weiterbildung — Mo–Fr 8–18 Uhr', kostenlos: true },
+      { name: 'Familienkasse Hotline', tel: '0800 4 555530', url: 'https://www.familienkasse.de', beschreibung: 'Kindergeld, Kinderzuschlag — Mo–Fr 8–18 Uhr', kostenlos: true },
+      { name: 'Wohnungsnotfallhilfe', tel: null, url: 'https://www.bagw.de', beschreibung: 'Bundesarbeitsgemeinschaft Wohnungslosenhilfe — bei Obdachlosigkeit', kostenlos: true },
+      { name: 'Bildungsberatung Garantiefonds', tel: null, url: 'https://www.bildungsberatung-gfh.de', beschreibung: 'Beratung für junge Geflüchtete (12–27 Jahre) zu Schule, Beruf', kostenlos: true },
+      { name: 'KfW Studienkredit-Beratung', tel: '0800 539 9001', url: 'https://www.kfw.de', beschreibung: 'Kostenfreie Beratung zum KfW-Studienkredit', kostenlos: true }
+    ]
+  },
+  {
+    kategorie: 'Online-Chats & spezielle Hotlines',
+    emoji: '💬',
+    stellen: [
+      { name: 'Jugendnotmail (Online-Beratung)', tel: null, url: 'https://www.jugendnotmail.de', beschreibung: 'Online-Beratung für Jugendliche bei Sorgen, Mobbing, Krisen', kostenlos: true },
+      { name: 'bke Online-Eltern-Beratung', tel: null, url: 'https://eltern.bke-beratung.de', beschreibung: 'Anonymer Online-Chat und Mail-Beratung für Eltern', kostenlos: true },
+      { name: 'AWO Lebenslagen', tel: null, url: 'https://www.awo.org', beschreibung: 'Familien-, Sucht-, Schwangerschafts- und Senioren-Beratung deutschlandweit', kostenlos: true },
+      { name: 'Stiftung Lesen — Sprachförderung', tel: null, url: 'https://www.stiftunglesen.de', beschreibung: 'Sprachförderung Kinder, Vorlese-Tipps, Kita-Materialien', kostenlos: true },
+      { name: 'Aktion Mensch — Inklusion', tel: '0228 2092-368', url: 'https://www.aktion-mensch.de', beschreibung: 'Beratung zu Inklusion, Förderprogrammen, Behindertenrecht', kostenlos: true }
     ]
   }
 ];
@@ -968,38 +1378,6 @@ const LEBENSMITTEL_QUELLEN = [
     beschreibung: 'Viele Sozialkaufhäuser verkaufen Lebensmittel zu stark reduzierten Preisen für Bedürftige.',
     tipp: 'Google: "Sozialkaufhaus [Ihre Stadt]" — oft auch Kleidung und Haushaltswaren sehr günstig',
     kostenlos: false
-  }
-];
-
-// Spritpreise-Portale
-const SPRIT_PORTALE = [
-  {
-    name: 'clever-tanken.de',
-    url: 'https://www.clever-tanken.de',
-    emoji: '⛽',
-    beschreibung: 'Günstigste Tankstellen in Ihrer Nähe — PLZ eingeben und sofort Preise vergleichen. Sehr einfach zu bedienen.',
-    tipp: 'Dienstags und Mittwochs tanken ist in Deutschland meist am günstigsten (lt. ADAC-Statistik)'
-  },
-  {
-    name: 'Tankerkönig',
-    url: 'https://www.tankerkoenig.de',
-    emoji: '👑',
-    beschreibung: 'Echtzeit-Spritpreise auf interaktiver Karte — alle Tankstellen in Deutschland mit aktuellen Preisen.',
-    tipp: 'Morgens 6–9 Uhr und abends ab 18 Uhr sind Spritpreise meist am niedrigsten'
-  },
-  {
-    name: 'ADAC Spritpreise',
-    url: 'https://www.adac.de/tanken-reise-urlaub/tanken/kraftstoff-preise/',
-    emoji: '🚗',
-    beschreibung: 'ADAC-Übersicht über aktuelle Spritpreise und Tipps wann und wo Sie am günstigsten tanken.',
-    tipp: 'Laut ADAC: 5–10 km Umweg lohnt sich ab 3 Cent/Liter Unterschied bei 50-Liter-Tank'
-  },
-  {
-    name: 'mehr-tanken.de',
-    url: 'https://www.mehr-tanken.de',
-    emoji: '📊',
-    beschreibung: 'Preisverlauf und Tankzeitpunkt-Empfehlung — zeigt wann Sie am günstigsten tanken sollten.',
-    tipp: 'Preisvorhersage nutzen: "Soll ich jetzt tanken oder warten?" — beantwortet die App.'
   }
 ];
 
@@ -1127,16 +1505,6 @@ const SPAR_TIPPS = [
       { titel: 'BundesKulturPass', text: 'Jugendliche ab 18 Jahren bekommen 200 € Kulturbudget vom Staat für Konzerte, Kino, Bücher.' }
     ]
   },
-  {
-    kategorie: 'Tanken günstig',
-    emoji: '⛽',
-    tipps: [
-      { titel: 'Dienstags & Mittwochs tanken', text: 'Laut ADAC sind die Spritpreise dienstags und mittwochs deutschlandweit am günstigsten.' },
-      { titel: 'Abends zwischen 18–22 Uhr', text: 'Spritpreise sind abends fast immer günstiger als morgens — clever-tanken.de gibt die beste Zeit an.' },
-      { titel: 'Autobahnstationen meiden', text: 'Autobahn-Tankstellen kosten oft 20–30 Cent mehr pro Liter als Tankstellen in der Stadt.' },
-      { titel: 'App-Vergleich vor dem Tanken', text: 'Clever-tanken oder Tankerkönig öffnen: in 2 Minuten den günstigsten Preis in der Nähe finden.' }
-    ]
-  }
 ];
 
 // ===== ALLE FAMILIEN-TIPPS (80+) =====
@@ -1298,6 +1666,7 @@ const REZEPTE = [
     id: 'nudeln-tomate',
     name: 'Nudeln mit Tomatensoße',
     emoji: '🍝',
+    bild: 'https://images.unsplash.com/photo-1598866594230-a7c12756260f?w=600&q=75',
     kategorie: 'schnell',
     kategorieLabel: 'Schnell & Einfach',
     dauer: '20 Min.',
@@ -1311,6 +1680,7 @@ const REZEPTE = [
     id: 'pfannkuchen',
     name: 'Pfannkuchen (süß & herzhaft)',
     emoji: '🥞',
+    bild: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=75',
     kategorie: 'schnell',
     kategorieLabel: 'Schnell & Einfach',
     dauer: '25 Min.',
@@ -1324,6 +1694,7 @@ const REZEPTE = [
     id: 'omelett',
     name: 'Gemüse-Omelett',
     emoji: '🍳',
+    bild: 'https://images.unsplash.com/photo-1510693206972-df098062cb71?w=600&q=75',
     kategorie: 'schnell',
     kategorieLabel: 'Schnell & Einfach',
     dauer: '15 Min.',
@@ -1337,6 +1708,7 @@ const REZEPTE = [
     id: 'linsensuppe',
     name: 'Linsensuppe',
     emoji: '🥣',
+    bild: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=75',
     kategorie: 'guenstig',
     kategorieLabel: 'Besonders Günstig',
     dauer: '30 Min.',
@@ -1350,6 +1722,7 @@ const REZEPTE = [
     id: 'gebratener-reis',
     name: 'Gebratener Reis mit Gemüse',
     emoji: '🍚',
+    bild: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=75',
     kategorie: 'resteessen',
     kategorieLabel: 'Resteessen',
     dauer: '20 Min.',
@@ -1363,6 +1736,7 @@ const REZEPTE = [
     id: 'kartoffelsuppe',
     name: 'Kartoffelsuppe',
     emoji: '🥔',
+    bild: 'https://images.unsplash.com/photo-1547308283-b941de5747bf?w=600&q=75',
     kategorie: 'guenstig',
     kategorieLabel: 'Besonders Günstig',
     dauer: '35 Min.',
@@ -1376,6 +1750,7 @@ const REZEPTE = [
     id: 'tortilla-pizza',
     name: 'Tortilla-Pizza',
     emoji: '🍕',
+    bild: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=75',
     kategorie: 'kinder',
     kategorieLabel: 'Kinder-Liebling',
     dauer: '15 Min.',
@@ -1389,6 +1764,7 @@ const REZEPTE = [
     id: 'gemuese-curry',
     name: 'Gemüse-Curry mit Reis',
     emoji: '🍛',
+    bild: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&q=75',
     kategorie: 'guenstig',
     kategorieLabel: 'Besonders Günstig',
     dauer: '35 Min.',
@@ -1397,7 +1773,296 @@ const REZEPTE = [
     zutaten: ['400 ml Kokosmilch (Dose)', '1 Dose Kichererbsen', '1 Paprika, 1 Zucchini', '2 EL Curry-Pulver', '1 Zwiebel, 2 Knoblauchzehen', '300 g Reis', 'Salz, Pfeffer'],
     zubereitung: 'Zwiebel und Knoblauch anschwitzen, Curry-Pulver 1 Min. mitbraten. Gemüse und Kichererbsen dazu. Kokosmilch eingießen, 20 Min. köcheln. Mit gekochtem Reis servieren.',
     tipp: 'Sehr gut einfrierbar! Doppelte Menge kochen und portionsweise einfrieren.'
-  }
+  },
+  {
+    id: 'kaiserschmarrn',
+    name: 'Kaiserschmarrn',
+    emoji: '🥞',
+    bild: 'https://images.unsplash.com/photo-1554520735-0a6b8b6ce8b7?w=600&q=75',
+    kategorie: 'kinder',
+    kategorieLabel: 'Kinder-Liebling',
+    dauer: '25 Min.',
+    kosten: '≈ 1,20 €',
+    portionen: 4,
+    zutaten: ['250 g Mehl', '4 Eier', '500 ml Milch', '50 g Zucker', '1 Prise Salz', '50 g Rosinen', '50 g Butter', 'Puderzucker'],
+    zubereitung: 'Eigelb mit Zucker, Milch, Mehl und Salz verrühren. Eiweiß steif schlagen, unterheben. In Pfanne mit Butter ausbacken. Mit Gabel zerreißen, mit Puderzucker bestreuen. Mit Apfelmus servieren.',
+    tipp: 'Klassiker aus Österreich/Bayern — Kinder lieben es! Mit Kompott noch besser.'
+  },
+  {
+    id: 'milchreis',
+    name: 'Milchreis',
+    emoji: '🍚',
+    bild: 'https://images.unsplash.com/photo-1517093602195-b40af9688b78?w=600&q=75',
+    kategorie: 'kinder',
+    kategorieLabel: 'Kinder-Liebling',
+    dauer: '40 Min.',
+    kosten: '≈ 0,80 €',
+    portionen: 4,
+    zutaten: ['250 g Milchreis', '1 l Milch', '60 g Zucker', '1 Prise Salz', '1 Vanilleschote oder Zimt', 'Optional: Apfelmus, Zimt-Zucker'],
+    zubereitung: 'Milch mit Zucker und Salz aufkochen. Reis einrühren, bei niedriger Hitze 30 Min. unter gelegentlichem Rühren köcheln. Mit Vanille oder Zimt würzen. Heiß oder kalt servieren.',
+    tipp: 'Im Reiskocher noch einfacher! Reste am nächsten Tag mit Beeren oder Schoko-Soße.'
+  },
+  {
+    id: 'kaesespaetzle',
+    name: 'Käsespätzle',
+    emoji: '🧀',
+    bild: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&q=75',
+    kategorie: 'kinder',
+    kategorieLabel: 'Kinder-Liebling',
+    dauer: '30 Min.',
+    kosten: '≈ 1,80 €',
+    portionen: 4,
+    zutaten: ['500 g Spätzle (oder selbst gemacht)', '200 g geriebener Bergkäse', '2 große Zwiebeln', '50 g Butter', 'Salz, Pfeffer, Muskatnuss', 'Schnittlauch'],
+    zubereitung: 'Zwiebeln in Butter goldbraun rösten (15 Min.). Spätzle nach Packung kochen. Spätzle und Käse abwechselnd in Auflaufform schichten, mit Zwiebeln und Schnittlauch garnieren.',
+    tipp: 'Schwäbischer Klassiker — auch lecker als Auflauf 5 Min. überbacken bei 200 °C.'
+  },
+  {
+    id: 'flammkuchen',
+    name: 'Flammkuchen',
+    emoji: '🥧',
+    bild: 'https://images.unsplash.com/photo-1604152135912-04a022e23696?w=600&q=75',
+    kategorie: 'schnell',
+    kategorieLabel: 'Schnell & Einfach',
+    dauer: '25 Min.',
+    kosten: '≈ 1,40 €',
+    portionen: 4,
+    zutaten: ['1 Packung Flammkuchenteig', '200 g Crème fraîche', '200 g Speckwürfel', '2 große Zwiebeln', 'Salz, Pfeffer, Muskatnuss', 'Optional: Schnittlauch'],
+    zubereitung: 'Teig auf Blech ausrollen. Crème fraîche bestreichen, mit Salz, Pfeffer und Muskat würzen. Speck und Zwiebelringe drauf. Bei 220°C (Umluft) 12 Min. backen.',
+    tipp: 'Vegetarisch: Speck weglassen, dafür Kürbis oder Birne mit Walnüssen drauf.'
+  },
+  {
+    id: 'ofenkartoffeln',
+    name: 'Ofenkartoffeln mit Quark',
+    emoji: '🥔',
+    bild: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=75',
+    kategorie: 'guenstig',
+    kategorieLabel: 'Besonders Günstig',
+    dauer: '50 Min.',
+    kosten: '≈ 1,00 €',
+    portionen: 4,
+    zutaten: ['8 große Kartoffeln', '500 g Magerquark', '1 Bund Schnittlauch', '1 Zwiebel', 'Salz, Pfeffer', 'Olivenöl', 'Optional: Kümmel'],
+    zubereitung: 'Kartoffeln waschen, mit Gabel einstechen, mit Öl und Salz einreiben. Im Ofen bei 200°C 45 Min. backen. Quark mit Schnittlauch, gehackter Zwiebel, Salz und Pfeffer mischen. Servieren.',
+    tipp: 'Ein Berliner Klassiker — sättigend und fast geschenkt. Auch mit Sour Cream oder Joghurt.'
+  },
+  {
+    id: 'maultaschen',
+    name: 'Maultaschen in Brühe',
+    emoji: '🥟',
+    bild: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=75',
+    kategorie: 'schnell',
+    kategorieLabel: 'Schnell & Einfach',
+    dauer: '15 Min.',
+    kosten: '≈ 2,00 €',
+    portionen: 4,
+    zutaten: ['1 Packung Maultaschen (vorgefertigt)', '1 l Gemüsebrühe', '2 Karotten', '1 Lauchstange', '1 Bund Petersilie', 'Salz, Pfeffer'],
+    zubereitung: 'Brühe aufkochen, Karotten und Lauch in Scheiben schneiden, 5 Min. mitkochen. Maultaschen dazu, weitere 5 Min. köcheln. Mit Petersilie bestreut servieren.',
+    tipp: 'Schwäbischer Klassiker. Reste am nächsten Tag in der Pfanne mit Ei goldbraun anbraten.'
+  },
+  {
+    id: 'apfelpfannkuchen',
+    name: 'Apfelpfannkuchen',
+    emoji: '🍏',
+    bild: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=600&q=75',
+    kategorie: 'kinder',
+    kategorieLabel: 'Kinder-Liebling',
+    dauer: '20 Min.',
+    kosten: '≈ 1,00 €',
+    portionen: 4,
+    zutaten: ['250 g Mehl', '2 Eier', '500 ml Milch', '50 g Zucker', '1 Prise Salz', '4 Äpfel', '50 g Butter', 'Zimt-Zucker'],
+    zubereitung: 'Mehl, Eier, Milch, Zucker, Salz zu glattem Teig verrühren. Äpfel schälen, in Scheiben schneiden. In Pfanne mit Butter Apfelscheiben kurz andünsten, Teig drüber. Goldbraun backen, mit Zimt-Zucker servieren.',
+    tipp: 'Beliebter Familien-Klassiker — perfekt für Sonntag-Brunch. Hält warm im Backofen.'
+  },
+  {
+    id: 'auflauf-nudel',
+    name: 'Nudelauflauf mit Hackfleisch',
+    emoji: '🍲',
+    bild: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&q=75',
+    kategorie: 'guenstig',
+    kategorieLabel: 'Besonders Günstig',
+    dauer: '50 Min.',
+    kosten: '≈ 2,50 €',
+    portionen: 6,
+    zutaten: ['500 g Nudeln (Penne, Hörnchen)', '500 g Rinderhack', '2 Dosen Tomaten (á 400 g)', '1 Zwiebel, 2 Knoblauchzehen', '200 g geriebener Käse', 'Salz, Pfeffer, Oregano, Basilikum'],
+    zubereitung: 'Nudeln al dente kochen. Zwiebel und Hack anbraten, Tomaten dazu, 10 Min. köcheln. Nudeln untermischen, in Auflaufform geben, mit Käse bestreuen. Bei 200°C 20 Min. überbacken.',
+    tipp: 'Reicht für 6 Portionen — perfekt zum Einfrieren in Einzelportionen.'
+  },
+  {
+    id: 'gulasch',
+    name: 'Gulaschsuppe',
+    emoji: '🍲',
+    bild: 'https://images.unsplash.com/photo-1547308283-b941de5747bf?w=600&q=75',
+    kategorie: 'guenstig',
+    kategorieLabel: 'Besonders Günstig',
+    dauer: '90 Min.',
+    kosten: '≈ 2,00 €',
+    portionen: 6,
+    zutaten: ['500 g Gulaschfleisch (Rind)', '4 große Zwiebeln', '2 Paprika', '500 g Kartoffeln', '2 EL Paprikapulver edelsüß', '1 l Rinderbrühe', '1 EL Tomatenmark', 'Salz, Pfeffer, Kümmel, Majoran'],
+    zubereitung: 'Zwiebeln in Schmalz goldbraun rösten (15 Min.). Fleisch anbraten, Tomatenmark und Paprikapulver dazu. Mit Brühe ablöschen, 60 Min. köcheln. Kartoffeln und Paprika dazu, weitere 20 Min. kochen.',
+    tipp: 'Schmeckt am nächsten Tag aufgewärmt noch besser! Mit dunklem Brot servieren.'
+  },
+  {
+    id: 'haehnchengyros',
+    name: 'Hähnchen-Gyros mit Reis',
+    emoji: '🍗',
+    bild: 'https://images.unsplash.com/photo-1530469912745-a215c6b256ea?w=600&q=75',
+    kategorie: 'schnell',
+    kategorieLabel: 'Schnell & Einfach',
+    dauer: '25 Min.',
+    kosten: '≈ 2,20 €',
+    portionen: 4,
+    zutaten: ['600 g Hähnchenbrust', '3 EL Gyrosgewürz', '2 EL Olivenöl', '300 g Reis', '500 g Tzatziki (oder selbst: Joghurt + Gurke + Knoblauch)', '2 Tomaten, 1 Zwiebel'],
+    zubereitung: 'Hähnchen in Streifen schneiden, mit Gewürz und Öl marinieren (10 Min.). Reis kochen. Hähnchen in heißer Pfanne 8 Min. braten. Mit Reis, Tzatziki, Tomatenscheiben und Zwiebelringen servieren.',
+    tipp: 'Schnelles Gyros für Familien — Kinder lieben es! Mit Pita-Brot statt Reis als Wrap.'
+  },
+  {
+    id: 'pasta-aglio',
+    name: 'Spaghetti Aglio e Olio',
+    emoji: '🍝',
+    bild: 'https://images.unsplash.com/photo-1611270629569-8b357cb88da9?w=600&q=75',
+    kategorie: 'schnell',
+    kategorieLabel: 'Schnell & Einfach',
+    dauer: '15 Min.',
+    kosten: '≈ 1,00 €',
+    portionen: 4,
+    zutaten: ['500 g Spaghetti', '6 Knoblauchzehen', '6 EL Olivenöl', '1 Chili (oder TL Chiliflocken)', '1 Bund Petersilie', 'Salz, Pfeffer', 'Optional: Parmesan'],
+    zubereitung: 'Spaghetti in Salzwasser kochen. Knoblauch in Scheiben schneiden, in Öl mit Chili 2 Min. anbraten (nicht braun!). Spaghetti abgießen, mit Knoblauchöl und Petersilie mischen. Pfeffern.',
+    tipp: 'Italienisches Studentenrezept — billig, schnell und himmlisch! Knoblauch nicht verbrennen.'
+  },
+  {
+    id: 'gemuesepfanne',
+    name: 'Bunte Gemüsepfanne mit Ei',
+    emoji: '🍳',
+    bild: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=75',
+    kategorie: 'resteessen',
+    kategorieLabel: 'Resteessen',
+    dauer: '20 Min.',
+    kosten: '≈ 1,20 €',
+    portionen: 4,
+    zutaten: ['Verschiedene Gemüsereste (1 kg)', '4 Eier', '2 Knoblauchzehen', '2 EL Olivenöl', 'Salz, Pfeffer, Kräuter der Provence', 'Optional: Feta'],
+    zubereitung: 'Gemüse in mundgerechte Stücke schneiden (Hartes zuerst). Knoblauch in Öl anbraten, Gemüse 10 Min. unter Rühren braten. Mulden in das Gemüse drücken, Eier einschlagen, 5 Min. stocken lassen.',
+    tipp: 'Resteverwertung pur! Funktioniert mit fast jedem Gemüse. Mit Feta wird es noch leckerer.'
+  },
+  {
+    id: 'reisauflauf',
+    name: 'Süßer Reisauflauf mit Beeren',
+    emoji: '🥧',
+    bild: 'https://images.unsplash.com/photo-1517093602195-b40af9688b78?w=600&q=75',
+    kategorie: 'kinder',
+    kategorieLabel: 'Kinder-Liebling',
+    dauer: '60 Min.',
+    kosten: '≈ 1,30 €',
+    portionen: 6,
+    zutaten: ['200 g Milchreis', '750 ml Milch', '60 g Zucker', '3 Eier', '50 g Butter', '500 g Beeren (TK ok)', 'Vanillezucker, Zimt'],
+    zubereitung: 'Milchreis in Milch mit Zucker 25 Min. quellen lassen. Eier trennen, Eigelb mit Reis verrühren. Eiweiß steif schlagen, unterheben. Mit Beeren in Auflaufform geben. Bei 180°C 25 Min. backen.',
+    tipp: 'Kinderhit! Reste schmecken auch kalt. Mit Vanillesoße noch besser.'
+  },
+  {
+    id: 'brotsuppe',
+    name: 'Knödel-Brotsuppe',
+    emoji: '🍞',
+    bild: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=75',
+    kategorie: 'resteessen',
+    kategorieLabel: 'Resteessen',
+    dauer: '25 Min.',
+    kosten: '≈ 0,50 €',
+    portionen: 4,
+    zutaten: ['400 g altes Brot/Brötchen', '1 l Gemüsebrühe', '2 Eier', '1 Zwiebel', '1 Bund Petersilie', '50 g Butter', 'Salz, Pfeffer, Muskatnuss'],
+    zubereitung: 'Brot in Würfel schneiden, mit warmer Milch (200ml) übergießen, 10 Min. ziehen. Eier, Zwiebel, Petersilie unterrühren. Mit Esslöffel Klößchen formen. In köchelnder Brühe 10 Min. ziehen lassen.',
+    tipp: 'Klassische Resteküche — aus altem Brot wird ein Festmahl! Auch mit Schinken-Würfeln.'
+  },
+  // ===== FRÜHSTÜCK =====
+  { id:'bircher', name:'Bircher Müsli', emoji:'🥣', bild:'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=600&q=75', kategorie:'fruehstueck', kategorieLabel:'Frühstück', dauer:'10 Min. + Nacht', kosten:'≈ 0,80 €', portionen:4, zutaten:['200 g Haferflocken','400 ml Milch','2 Äpfel','100 g Joghurt','2 EL Honig','50 g Walnüsse','1 TL Zimt','Frische Beeren'], zubereitung:'Haferflocken mit Milch über Nacht einweichen. Morgens Apfel raspeln, Joghurt, Honig und Zimt unterrühren. Mit Walnüssen und Beeren servieren.', tipp:'Vorbereitung am Sonntag für die ganze Woche - 5 Portionen einfrieren' },
+  { id:'brot-aufstrich', name:'Frühstücksbrettchen', emoji:'🥖', bild:'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=75', kategorie:'fruehstueck', kategorieLabel:'Frühstück', dauer:'10 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['8 Scheiben Vollkornbrot','100 g Butter','100 g Käse','100 g Wurst','1 Tomate','1 Gurke','Frische Kresse'], zubereitung:'Brot mit Butter bestreichen. Belegen mit Käse, Wurst, Tomatenscheiben, Gurke. Mit Kresse garnieren.', tipp:'Mit Kindern gemeinsam belegen lassen - Spaß und sie essen mehr' },
+  { id:'rührei', name:'Rührei mit Schnittlauch', emoji:'🍳', bild:'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=75', kategorie:'fruehstueck', kategorieLabel:'Frühstück', dauer:'10 Min.', kosten:'≈ 1,00 €', portionen:2, zutaten:['4 Eier','3 EL Milch','1 EL Butter','1 Bund Schnittlauch','Salz, Pfeffer'], zubereitung:'Eier mit Milch, Salz und Pfeffer verquirlen. In Butter bei niedriger Hitze unter Rühren stocken lassen. Mit Schnittlauch bestreuen.', tipp:'Niedrige Hitze ist Geheimnis für cremige Konsistenz - nie heiß braten' },
+  { id:'spiegelei-speck', name:'Spiegelei mit Speck', emoji:'🍳', bild:'https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=600&q=75', kategorie:'fruehstueck', kategorieLabel:'Frühstück', dauer:'10 Min.', kosten:'≈ 1,20 €', portionen:2, zutaten:['4 Eier','100 g Speckwürfel','Salz, Pfeffer','Schnittlauch'], zubereitung:'Speck in Pfanne knusprig braten, Fett ablassen. Eier auf Speck schlagen, salzen, pfeffern. Bei mittlerer Hitze stocken lassen.', tipp:'Brot frisch vom Bäcker dazu - perfektes Sonntagsfrühstück' },
+  { id:'haferbrei', name:'Cremiger Haferbrei', emoji:'🥄', bild:'https://images.unsplash.com/photo-1495214783159-3503fd1b572d?w=600&q=75', kategorie:'fruehstueck', kategorieLabel:'Frühstück', dauer:'15 Min.', kosten:'≈ 0,50 €', portionen:4, zutaten:['200 g Haferflocken','750 ml Milch','3 EL Honig','1 TL Vanille','1 Banane','100 g Beeren','50 g Mandeln'], zubereitung:'Haferflocken in Milch unter Rühren 10 Min. köcheln. Mit Honig und Vanille süßen. Mit Banane, Beeren und Mandeln servieren.', tipp:'Auch lecker mit Apfel und Zimt - oder Schokolade für Kinder' },
+
+  // ===== SUPPEN =====
+  { id:'tomatencreme', name:'Tomatencremesuppe', emoji:'🍅', bild:'https://images.unsplash.com/photo-1547308283-b941de5747bf?w=600&q=75', kategorie:'suppe', kategorieLabel:'Suppen', dauer:'25 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['1 kg Tomaten','1 Zwiebel','2 Knoblauchzehen','500 ml Brühe','100 ml Sahne','2 EL Olivenöl','Basilikum, Salz, Pfeffer','1 TL Zucker'], zubereitung:'Zwiebel und Knoblauch anschwitzen. Tomaten dazu, Brühe angießen. 15 Min. köcheln. Pürieren, Sahne unterrühren, abschmecken. Mit Basilikum servieren.', tipp:'Mit altem Baguette und Käse als Crouton - perfekt' },
+  { id:'erbsensuppe', name:'Deftige Erbsensuppe', emoji:'🥬', bild:'https://images.unsplash.com/photo-1605478854296-bea3f6f8d6e0?w=600&q=75', kategorie:'suppe', kategorieLabel:'Suppen', dauer:'90 Min.', kosten:'≈ 1,00 €', portionen:6, zutaten:['500 g getrocknete Erbsen','2 Karotten','2 Kartoffeln','1 Zwiebel','200 g Speckwürfel','4 Wiener Würstchen','1 TL Majoran','Salz, Pfeffer'], zubereitung:'Erbsen über Nacht einweichen. Mit Speck, Zwiebel, Gemüse 90 Min. köcheln. Würstchen 10 Min. vor Ende dazu. Würzen mit Majoran.', tipp:'Schmeckt am 2. Tag noch besser - großer Topf macht Sinn' },
+  { id:'kuerbissuppe', name:'Kürbissuppe Hokkaido', emoji:'🎃', bild:'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?w=600&q=75', kategorie:'suppe', kategorieLabel:'Suppen', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['1 Hokkaido (1 kg)','1 Zwiebel','3 cm Ingwer','500 ml Brühe','200 ml Kokosmilch','Curry, Salz, Pfeffer','Kürbiskerne'], zubereitung:'Kürbis (mit Schale!) würfeln. Mit Zwiebel und Ingwer anbraten. Brühe und Kokosmilch dazu. 20 Min. köcheln, pürieren. Mit Kürbiskernen servieren.', tipp:'Hokkaido-Schale kann mitgegessen werden - spart Schälarbeit' },
+  { id:'huehnerbruehe', name:'Hühnerbrühe (Klassiker)', emoji:'🍲', bild:'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=75', kategorie:'suppe', kategorieLabel:'Suppen', dauer:'2 Std.', kosten:'≈ 4,00 €', portionen:6, zutaten:['1 Suppenhuhn','3 Karotten','1 Lauch','1/4 Sellerie','1 Zwiebel','Petersilie','Salz, Pfeffer, Lorbeer'], zubereitung:'Huhn mit kaltem Wasser bedecken, aufkochen, Schaum abnehmen. Gemüse dazu, 2h leise köcheln. Huhn rausnehmen, Brühe abseihen. Suppennudeln in Brühe kochen.', tipp:'Heilmittel bei Erkältung - Großmutters Geheimnis' },
+  { id:'soljanka', name:'Soljanka (DDR-Klassiker)', emoji:'🥘', bild:'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=600&q=75', kategorie:'suppe', kategorieLabel:'Suppen', dauer:'45 Min.', kosten:'≈ 3,00 €', portionen:6, zutaten:['200 g Salami','200 g Schinken','200 g Jagdwurst','1 Zwiebel','3 Gewürzgurken','100 g Tomatenmark','1 l Brühe','1 Zitrone','Saure Sahne'], zubereitung:'Wurst und Zwiebel würfeln, anbraten. Tomatenmark dazu. Mit Brühe ablöschen, Gurken klein schneiden, dazugeben. 30 Min. köcheln. Mit Zitrone und Sahne servieren.', tipp:'DDR-Original - mit Wurstresten perfekte Resteverwertung' },
+  { id:'champignonsuppe', name:'Champignoncremesuppe', emoji:'🍄', bild:'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=75', kategorie:'suppe', kategorieLabel:'Suppen', dauer:'25 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['500 g Champignons','1 Zwiebel','1 Knoblauchzehe','500 ml Brühe','200 ml Sahne','2 EL Mehl','Petersilie','Salz, Pfeffer'], zubereitung:'Champignons, Zwiebel, Knoblauch in Butter anbraten. Mehl dazu, Brühe angießen. 15 Min. köcheln. Pürieren oder stückig lassen. Sahne dazu, abschmecken.', tipp:'Mit Trüffelöl edler - oder Speckwürfel für deftig' },
+  { id:'spargelsuppe', name:'Spargelcremesuppe', emoji:'🥬', bild:'https://images.unsplash.com/photo-1605478854296-bea3f6f8d6e0?w=600&q=75', kategorie:'suppe', kategorieLabel:'Suppen', dauer:'30 Min.', kosten:'≈ 4,00 €', portionen:4, zutaten:['500 g weißer Spargel','1 l Spargelfond','100 ml Sahne','2 EL Butter','2 EL Mehl','Muskat, Salz, Zucker'], zubereitung:'Spargel schälen, Schalen 30 Min. zu Fond kochen. Spargel klein schneiden, kurz mitkochen. Mehlschwitze ansetzen, mit Fond ablöschen. Sahne, Spargelstücke, Würzen.', tipp:'Saison: April-Juni. Mit Pfannkuchen-Streifen im Suppenteller' },
+  { id:'gulaschsuppe-rind', name:'Gulaschsuppe Wiener Art', emoji:'🍲', bild:'https://images.unsplash.com/photo-1604152135912-04a022e23696?w=600&q=75', kategorie:'suppe', kategorieLabel:'Suppen', dauer:'2 Std.', kosten:'≈ 3,50 €', portionen:6, zutaten:['600 g Gulaschfleisch','3 große Zwiebeln','3 Paprika','3 Kartoffeln','3 EL Paprika edelsüß','1.5 l Brühe','1 EL Tomatenmark','Kümmel, Majoran, Salz'], zubereitung:'Zwiebeln in Schmalz goldbraun braten (15 Min!). Fleisch anbraten, Paprika und Tomatenmark dazu. Mit Brühe ablöschen, 90 Min. köcheln. Kartoffeln und Paprika 30 Min. vor Ende.', tipp:'Süßes Paprikapulver darf nicht angebrannt werden - wird sonst bitter' },
+
+  // ===== FLEISCHGERICHTE =====
+  { id:'wiener-schnitzel', name:'Wiener Schnitzel (Klassiker)', emoji:'🥩', bild:'https://images.unsplash.com/photo-1599921841143-819065a55cc6?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'30 Min.', kosten:'≈ 4,50 €', portionen:4, zutaten:['4 Kalbsschnitzel á 150g','100 g Mehl','2 Eier','150 g Semmelbrösel','Butterschmalz','Salz, Pfeffer','1 Zitrone','Petersilienkartoffeln'], zubereitung:'Schnitzel klopfen, salzen, pfeffern. Erst Mehl, dann Ei, dann Brösel - locker panieren! In viel Butterschmalz schwimmend goldbraun braten. Mit Zitrone servieren.', tipp:'Originale haben gewellte Panierung - Pfanne öfter schwenken' },
+  { id:'rouladen', name:'Rinder-Rouladen', emoji:'🥩', bild:'https://images.unsplash.com/photo-1606728035253-49e8a23146de?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'2 Std.', kosten:'≈ 5,00 €', portionen:4, zutaten:['4 Rinder-Rouladen','4 Scheiben Speck','2 saure Gurken','1 Zwiebel','Senf','Salz, Pfeffer','500 ml Rinderbrühe','100 ml Rotwein','2 EL Tomatenmark'], zubereitung:'Rouladen mit Senf bestreichen, salzen, pfeffern. Mit Speck, Gurke, Zwiebel füllen. Aufrollen, mit Garn fixieren. Anbraten, mit Brühe und Rotwein 90 Min. schmoren. Soße binden.', tipp:'Sonntagsbraten der deutschen Küche - mit Klößen und Rotkohl' },
+  { id:'sauerbraten', name:'Rheinischer Sauerbraten', emoji:'🥩', bild:'https://images.unsplash.com/photo-1559847844-d7c1c0e1eaef?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'3 Tage + 3 Std.', kosten:'≈ 6,00 €', portionen:6, zutaten:['1.5 kg Rinderbraten','500 ml Rotwein','500 ml Essig','Lorbeer, Wacholder, Nelken','3 Zwiebeln','100 g Rosinen','Pumpernickel','Salz, Pfeffer'], zubereitung:'3 Tage in Beize einlegen. Anbraten, mit Beize aufgießen, 3h schmoren. Rosinen und zerbröselten Pumpernickel dazu - bindet die Soße rheinisch.', tipp:'Original mit Apfelmus und Klößen - sonntäglicher Klassiker' },
+  { id:'frikadelle', name:'Frikadellen mit Kartoffeln', emoji:'🥩', bild:'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'40 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['500 g gemischtes Hack','1 altbackenes Brötchen','1 Ei','1 Zwiebel','1 EL Senf','Petersilie','Salz, Pfeffer, Paprika','1 kg Kartoffeln'], zubereitung:'Brötchen in Wasser einweichen, ausdrücken. Mit Hack, Ei, Zwiebeln, Senf und Gewürzen vermengen. Frikadellen formen, in Pfanne braten. Kartoffeln dazu kochen.', tipp:'Schmecken auch kalt am nächsten Tag - perfekte Reste' },
+  { id:'currywurst', name:'Currywurst Berliner Art', emoji:'🌭', bild:'https://images.unsplash.com/photo-1597503115161-c8be4c7a7c14?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'15 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['4 Bratwürste','200 ml Ketchup','100 ml Wasser','1 EL Currypulver','1 TL Paprika','1 Prise Cayenne','1 EL Worcestersauce','Pommes Frites'], zubereitung:'Würste anbraten oder grillen. Ketchup mit Wasser, Curry und Gewürzen erhitzen. Würste in Stücke schneiden, mit Sauce und Currypulver bestreuen.', tipp:'Berliner Klassiker - dazu Pommes Schranke (Mayo + Ketchup)' },
+  { id:'koenigsberger', name:'Königsberger Klopse', emoji:'🥩', bild:'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'45 Min.', kosten:'≈ 3,00 €', portionen:4, zutaten:['500 g Hackfleisch','1 Brötchen','1 Ei','1 Zwiebel','3 EL Kapern','500 ml Brühe','200 ml Sahne','2 EL Mehl','Zitrone, Salz, Pfeffer'], zubereitung:'Hackmasse wie für Frikadellen, Klopse formen. In Brühe ziehen lassen 15 Min. (nicht kochen!). Mehlschwitze, mit Brühe ablöschen, Sahne, Kapern, Zitrone dazu.', tipp:'Mit Kartoffeln und roter Bete - traditioneller Sonntagsklassiker' },
+  { id:'schwein-knoedel', name:'Schweinebraten mit Knödel', emoji:'🥩', bild:'https://images.unsplash.com/photo-1586672806791-3a67d24186c0?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'2.5 Std.', kosten:'≈ 4,00 €', portionen:6, zutaten:['1.5 kg Schweinekrustenbraten','3 Zwiebeln','3 Karotten','500 ml dunkles Bier','500 ml Brühe','1 EL Kümmel','Salz, Pfeffer','6 Semmelknödel'], zubereitung:'Schwarte rautenförmig einschneiden, salzen. 2h bei 180°C im Ofen, mit Bier und Brühe begießen. Letzte 20 Min. Schwarte knusprig braten. Semmelknödel separat.', tipp:'Bayerischer Klassiker - dazu Sauerkraut für die Verdauung' },
+  { id:'leberkaese', name:'Bayerischer Leberkäse', emoji:'🥩', bild:'https://images.unsplash.com/photo-1586672806791-3a67d24186c0?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'15 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['500 g Leberkäse-Scheiben','4 Spiegeleier','4 Brötchen','Senf','Süßer Senf','Saure Gurken','Brezenstangen'], zubereitung:'Leberkäse in Pfanne braten, mit Spiegelei belegen. Mit frischem Brötchen, Senf und Gurke servieren. Brezenstange dazu.', tipp:'Münchner Frühstücksklassiker - schnell und sättigend' },
+
+  // ===== FISCH =====
+  { id:'lachs-spinat', name:'Lachs mit Spinat', emoji:'🐟', bild:'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=75', kategorie:'fisch', kategorieLabel:'Fischgerichte', dauer:'25 Min.', kosten:'≈ 4,00 €', portionen:4, zutaten:['4 Lachsfilets','500 g Blattspinat','100 ml Sahne','2 Knoblauchzehen','30 g Butter','Zitrone, Salz, Pfeffer'], zubereitung:'Lachs salzen, pfeffern, in Butter braten. Spinat mit Knoblauch und Sahne 5 Min. dünsten. Mit Lachs und Zitronensaft servieren.', tipp:'Mit Reis oder Kartoffeln - Omega-3 Power-Mahlzeit' },
+  { id:'forelle-blau', name:'Forelle Blau', emoji:'🐟', bild:'https://images.unsplash.com/photo-1535140728325-a4d3707eee94?w=600&q=75', kategorie:'fisch', kategorieLabel:'Fischgerichte', dauer:'30 Min.', kosten:'≈ 3,50 €', portionen:4, zutaten:['4 Forellen','100 ml Essig','1 Bund Petersilie','1 Zitrone','100 g Butter','Salzkartoffeln'], zubereitung:'Forellen in heißem Salz-Essig-Sud 15 Min. ziehen lassen (NICHT kochen!). Mit zerlassener Butter und Petersilie servieren. Salzkartoffeln dazu.', tipp:'Frische ist alles! Augen müssen klar und Kiemen rot sein' },
+  { id:'matjes', name:'Matjes Hausfrauenart', emoji:'🐟', bild:'https://images.unsplash.com/photo-1535140728325-a4d3707eee94?w=600&q=75', kategorie:'fisch', kategorieLabel:'Fischgerichte', dauer:'15 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['8 Matjesfilets','200 g saure Sahne','100 g Joghurt','2 Äpfel','2 Gewürzgurken','1 rote Zwiebel','Pellkartoffeln'], zubereitung:'Matjes wässern. Apfel, Gurken, Zwiebel klein schneiden, mit Sahne und Joghurt mischen. Matjes mit Sauce übergießen, mit Pellkartoffeln servieren.', tipp:'Norddeutscher Klassiker - perfekt im Sommer kalt' },
+  { id:'fischstaebchen', name:'Selbst gemachte Fischstäbchen', emoji:'🐟', bild:'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=75', kategorie:'fisch', kategorieLabel:'Fischgerichte', dauer:'25 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['600 g Seelachsfilet','100 g Mehl','2 Eier','200 g Semmelbrösel','Öl zum Braten','Salz, Pfeffer','Pommes oder Kartoffelpüree'], zubereitung:'Fisch in Stäbchen schneiden, salzen, pfeffern. In Mehl, Ei, Brösel panieren. In Öl goldbraun braten. Mit Pommes oder Püree servieren.', tipp:'Kinderhit ohne Fertigprodukt-Zusätze - 100x besser als gekauft' },
+
+  // ===== VEGETARISCH =====
+  { id:'kuerbiscurry', name:'Kürbis-Curry mit Kichererbsen', emoji:'🥘', bild:'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'40 Min.', kosten:'≈ 1,80 €', portionen:4, zutaten:['1 Hokkaido','1 Dose Kichererbsen','400 ml Kokosmilch','2 Zwiebeln','3 Knoblauchzehen','3 EL Curry','1 EL Ingwer','Reis','Koriander'], zubereitung:'Kürbis würfeln. Zwiebel und Knoblauch anbraten. Curry und Ingwer dazu. Kürbis und Kichererbsen, mit Kokosmilch ablöschen. 25 Min. köcheln. Mit Reis servieren.', tipp:'Kürbisschale dranlassen - voll Vitamine' },
+  { id:'gemueselasagne', name:'Vegetarische Lasagne', emoji:'🍝', bild:'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'1 Std.', kosten:'≈ 3,00 €', portionen:6, zutaten:['10 Lasagne-Platten','2 Zucchini','1 Aubergine','500 g Tomatenpassata','2 Zwiebeln','3 Knoblauchzehen','500 ml Béchamel','200 g Mozzarella','Basilikum'], zubereitung:'Gemüse würfeln, mit Zwiebeln anbraten. Tomatenpassata dazu, würzen. Auflaufform: Sauce, Platten, Gemüse, Béchamel im Wechsel. Oben Mozzarella. 35 Min. bei 180°C.', tipp:'Vorabends zubereiten, am nächsten Tag noch besser' },
+  { id:'spinat-knoedel', name:'Spinatknödel', emoji:'🥬', bild:'https://images.unsplash.com/photo-1611330099022-3c4cb59ea29c?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['400 g Spinat','300 g altes Brot','3 Eier','200 ml Milch','100 g Parmesan','1 Zwiebel','Muskat, Salz, Pfeffer','Butter, Salbei'], zubereitung:'Spinat blanchieren, klein hacken. Brot mit Milch einweichen. Mit Eiern, Spinat, Parmesan, Zwiebeln vermengen. Knödel formen, 15 Min. ziehen lassen. Mit Salbeibutter servieren.', tipp:'Südtiroler Spezialität - mit Tomatensoße auch perfekt' },
+  { id:'gemueseauflauf', name:'Gemüse-Auflauf', emoji:'🥘', bild:'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'45 Min.', kosten:'≈ 2,50 €', portionen:6, zutaten:['1 kg gemischtes Gemüse','500 g Kartoffeln','200 g geriebener Käse','200 ml Sahne','3 Eier','2 Knoblauchzehen','Kräuter, Salz, Pfeffer'], zubereitung:'Gemüse und Kartoffeln in Scheiben. In Auflaufform schichten. Sahne mit Eiern und Gewürzen verquirlen, drüber. Mit Käse bedecken. 35 Min. bei 200°C.', tipp:'Resteverwertung perfekt - jedes Gemüse passt' },
+  { id:'champignon-pasta', name:'Champignon-Sahne-Pasta', emoji:'🍝', bild:'https://images.unsplash.com/photo-1611270629569-8b357cb88da9?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'20 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['500 g Pasta','500 g Champignons','200 ml Sahne','2 Knoblauchzehen','1 Zwiebel','100 g Parmesan','Petersilie','Salz, Pfeffer'], zubereitung:'Pasta kochen. Pilze, Zwiebel, Knoblauch in Butter anbraten. Sahne dazu, einkochen. Mit Pasta vermengen, Parmesan und Petersilie drüber.', tipp:'Mit gehackter Petersilie und Zitronenabrieb - frischer Touch' },
+  { id:'gemuesepfanne-mediterran', name:'Mediterrane Gemüsepfanne', emoji:'🥘', bild:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'25 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['2 Zucchini','1 Aubergine','2 Paprika','2 Tomaten','1 Zwiebel','3 Knoblauchzehen','100 g Feta','Olivenöl, Kräuter der Provence'], zubereitung:'Gemüse würfeln. In Olivenöl mit Knoblauch 15 Min. braten. Mit Kräutern würzen. Feta zerkrümeln, drüber servieren.', tipp:'Mit Couscous oder Brot - sommerliche Mittelmeer-Küche' },
+
+  // ===== KUCHEN & DESSERTS =====
+  { id:'apfelkuchen', name:'Versunkener Apfelkuchen', emoji:'🍎', bild:'https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?w=600&q=75', kategorie:'kuchen', kategorieLabel:'Kuchen', dauer:'1 Std.', kosten:'≈ 2,00 €', portionen:8, zutaten:['200 g Butter','200 g Zucker','4 Eier','300 g Mehl','1 Pck. Backpulver','4 Äpfel','1 Zitrone','Zimt-Zucker'], zubereitung:'Butter mit Zucker schaumig, Eier nach und nach. Mehl mit Backpulver unterrühren. In Springform. Äpfel achteln, leicht eindrücken. 50 Min. bei 180°C. Mit Zimt-Zucker bestreuen.', tipp:'Klassiker für Sonntag - frisch gebacken einfach unwiderstehlich' },
+  { id:'kaesekuchen', name:'Käsekuchen mit Quark', emoji:'🍰', bild:'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=75', kategorie:'kuchen', kategorieLabel:'Kuchen', dauer:'1.5 Std.', kosten:'≈ 4,00 €', portionen:12, zutaten:['250 g Butterkekse','100 g Butter','1 kg Magerquark','200 g Zucker','5 Eier','1 Pck. Vanillepudding-Pulver','200 ml Sahne','Zitrone'], zubereitung:'Kekse zerbröseln, mit Butter mischen, in Springform pressen. Quark mit Zucker, Eiern, Pudding, Sahne, Zitrone verrühren. Auf Boden geben. 60 Min. bei 175°C.', tipp:'Auskühlen lassen vor Anschneiden - sonst zerfällt' },
+  { id:'schwarzwaelder', name:'Schwarzwälder Kirschtorte', emoji:'🍒', bild:'https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&q=75', kategorie:'kuchen', kategorieLabel:'Kuchen', dauer:'2 Std.', kosten:'≈ 8,00 €', portionen:12, zutaten:['Schoko-Biskuitboden','500 ml Sahne','1 Glas Sauerkirschen','100 ml Kirschwasser','100 g Schokoraspeln','50 g Zucker','Vanille'], zubereitung:'Biskuit in 3 Böden teilen. Mit Kirschwasser tränken. Sahne steif schlagen. Böden mit Sahne und Kirschen schichten. Außen mit Sahne und Schokoraspeln verzieren.', tipp:'Klassiker aus dem Schwarzwald - mit echtem Kirschwasser' },
+  { id:'donauwelle', name:'Donauwelle', emoji:'🍰', bild:'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=75', kategorie:'kuchen', kategorieLabel:'Kuchen', dauer:'1.5 Std.', kosten:'≈ 5,00 €', portionen:12, zutaten:['250 g Butter','250 g Zucker','5 Eier','300 g Mehl','1 Pck. Backpulver','3 EL Kakao','1 Glas Sauerkirschen','Buttercreme','200 g Schokokuvertüre'], zubereitung:'Teig teilen: 1/3 dunkel mit Kakao. Hellen Teig auf Blech, dunklen drüber, Kirschen einlegen. 30 Min. bei 175°C. Buttercreme drauf, Schokokuvertüre überziehen, Wellen ziehen.', tipp:'Auch Marmorkuchen vom Blech genannt - immer ein Hit' },
+  { id:'apfelstrudel', name:'Wiener Apfelstrudel', emoji:'🍏', bild:'https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=600&q=75', kategorie:'kuchen', kategorieLabel:'Kuchen', dauer:'1.5 Std.', kosten:'≈ 3,00 €', portionen:8, zutaten:['1 Pck. Strudelteig','1 kg Äpfel','100 g Rosinen','100 g Mandeln','100 g Butter','100 g Brösel','1 TL Zimt','Zucker','Vanillesoße'], zubereitung:'Äpfel würfeln, mit Rosinen, Mandeln, Zimt, Zucker mischen. Teig ausrollen, mit Bröseln und Butter bestreichen. Füllung darauf, einrollen. Mit Butter bestreichen. 30 Min. bei 180°C.', tipp:'Mit Vanillesoße oder Vanilleeis - Wiener Klassiker' },
+  { id:'marmorkuchen', name:'Klassischer Marmorkuchen', emoji:'🍰', bild:'https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=600&q=75', kategorie:'kuchen', kategorieLabel:'Kuchen', dauer:'1 Std.', kosten:'≈ 2,00 €', portionen:12, zutaten:['250 g Butter','250 g Zucker','4 Eier','500 g Mehl','1 Pck. Backpulver','100 ml Milch','3 EL Kakao','100 g Zartbitterschokolade'], zubereitung:'Butter mit Zucker schaumig schlagen, Eier nach und nach. Mehl, Backpulver, Milch unter heben. 1/3 mit Kakao mischen. In Kastenform abwechselnd schichten, mit Gabel marmorieren. 60 Min. bei 175°C.', tipp:'Schokolade noch warm darüber gießen - kommt immer gut an' },
+  { id:'rote-gruetze', name:'Rote Grütze', emoji:'🍓', bild:'https://images.unsplash.com/photo-1601001435957-4b8b09e3a1f0?w=600&q=75', kategorie:'dessert', kategorieLabel:'Desserts', dauer:'15 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['500 g rote Beeren (TK ok)','100 g Zucker','2 EL Speisestärke','100 ml Saft','Vanillesoße'], zubereitung:'Beeren mit Zucker und etwas Saft erhitzen. Stärke in kaltem Saft auflösen, einrühren, kurz aufkochen. Abkühlen lassen. Mit Vanillesoße servieren.', tipp:'Norddeutscher Sommer-Klassiker - auch mit Sahne perfekt' },
+  { id:'milchreis-zimt', name:'Milchreis mit Zimt-Zucker', emoji:'🥄', bild:'https://images.unsplash.com/photo-1517093602195-b40af9688b78?w=600&q=75', kategorie:'dessert', kategorieLabel:'Desserts', dauer:'45 Min.', kosten:'≈ 1,00 €', portionen:4, zutaten:['250 g Milchreis','1 l Milch','60 g Zucker','1 Vanilleschote','Salz','Zimt-Zucker','Apfelmus'], zubereitung:'Milch mit Zucker, Vanille, Salz aufkochen. Reis dazu, 30 Min. unter Rühren bei niedriger Hitze köcheln. Mit Zimt-Zucker und Apfelmus servieren.', tipp:'Auch kalt am nächsten Tag perfekt - Hauptmahlzeit für Kinder' },
+  { id:'pflaumenkuchen', name:'Zwetschgenkuchen', emoji:'🍑', bild:'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=600&q=75', kategorie:'kuchen', kategorieLabel:'Kuchen', dauer:'1 Std.', kosten:'≈ 3,00 €', portionen:12, zutaten:['Hefeteig (500 g Mehl)','1 kg Zwetschgen','100 g Streusel (Butter, Zucker, Mehl)','Zimt-Zucker','Sahne'], zubereitung:'Hefeteig auf Blech ausrollen. Zwetschgen entkernen, halbieren, eng dachziegelartig auflegen. Streusel verteilen. 35 Min. bei 200°C. Mit Sahne servieren.', tipp:'Spätsommer-Klassiker - alle 4 Wochen sammeln' },
+
+  // ===== SALATE =====
+  { id:'kartoffelsalat-bayer', name:'Bayerischer Kartoffelsalat', emoji:'🥗', bild:'https://images.unsplash.com/photo-1519183071298-a2962be96f83?w=600&q=75', kategorie:'salat', kategorieLabel:'Salate', dauer:'30 Min.', kosten:'≈ 1,50 €', portionen:6, zutaten:['1 kg festkochende Kartoffeln','500 ml Brühe','1 Zwiebel','5 EL Essig','3 EL Öl','Senf','Salz, Pfeffer','Schnittlauch'], zubereitung:'Kartoffeln pellen, in Scheiben schneiden. Heiße Brühe mit Essig, Senf, Zwiebel über Kartoffeln. 1h ziehen lassen. Mit Öl und Schnittlauch abschmecken.', tipp:'Original ohne Mayo - mit Wiener Würstchen perfekter Sommerklassiker' },
+  { id:'kartoffelsalat-mayo', name:'Norddeutscher Kartoffelsalat', emoji:'🥗', bild:'https://images.unsplash.com/photo-1519183071298-a2962be96f83?w=600&q=75', kategorie:'salat', kategorieLabel:'Salate', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:6, zutaten:['1 kg Kartoffeln','200 g Mayonnaise','100 g Joghurt','3 Gewürzgurken','100 g Schinkenwürfel','3 Eier','1 Zwiebel','Senf, Salz, Pfeffer'], zubereitung:'Kartoffeln kochen, würfeln. Eier hart kochen, würfeln. Mit Gurken, Schinken, Zwiebel mischen. Mayo, Joghurt, Senf einrühren. 1h kalt stellen.', tipp:'Mit Frikadellen und Brötchen - Picknick-Klassiker' },
+  { id:'gurkensalat', name:'Klassischer Gurkensalat', emoji:'🥗', bild:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=75', kategorie:'salat', kategorieLabel:'Salate', dauer:'15 Min.', kosten:'≈ 1,00 €', portionen:4, zutaten:['1 Salatgurke','1 Zwiebel','100 ml saure Sahne','3 EL Essig','1 EL Zucker','Salz, Pfeffer','Dill'], zubereitung:'Gurke hobeln, salzen, 15 Min. Wasser ziehen lassen, ausdrücken. Mit Zwiebel, saurer Sahne, Essig, Zucker und Dill mischen.', tipp:'Schmeckt am besten kühl - perfekte Sommerbeilage' },
+  { id:'krautsalat', name:'Bayerischer Krautsalat', emoji:'🥗', bild:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=75', kategorie:'salat', kategorieLabel:'Salate', dauer:'20 Min. + 30 Min. ziehen', kosten:'≈ 1,50 €', portionen:6, zutaten:['1 kg Weißkohl','3 EL Essig','3 EL Öl','1 EL Kümmel','100 g Speckwürfel','Salz, Pfeffer, Zucker'], zubereitung:'Kohl fein hobeln, salzen, mit Händen kneten 5 Min. Mit Essig, Öl, Kümmel, Pfeffer mischen. 30 Min. ziehen. Speck knusprig braten, drüber.', tipp:'In Bayern unverzichtbar zu Schweinebraten' },
+
+  // ===== BEILAGEN =====
+  { id:'kartoffelpueree', name:'Cremiges Kartoffelpüree', emoji:'🥔', bild:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=75', kategorie:'beilage', kategorieLabel:'Beilagen', dauer:'30 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['1 kg mehlige Kartoffeln','200 ml Milch','100 g Butter','Muskat, Salz, Pfeffer'], zubereitung:'Kartoffeln schälen, kochen. Milch und Butter erhitzen. Kartoffeln stampfen, heiße Milch-Butter-Mischung dazu. Mit Muskat, Salz, Pfeffer würzen.', tipp:'Niemals mit Mixer - sonst wird Püree gummig' },
+  { id:'rotkohl', name:'Rotkohl wie bei Oma', emoji:'🥬', bild:'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&q=75', kategorie:'beilage', kategorieLabel:'Beilagen', dauer:'1.5 Std.', kosten:'≈ 1,50 €', portionen:6, zutaten:['1 Rotkohl (1 kg)','2 Äpfel','1 Zwiebel','100 ml Rotwein','3 EL Apfelessig','3 EL Zucker','2 Lorbeer','5 Nelken','Salz, Pfeffer'], zubereitung:'Rotkohl hobeln, mit Äpfeln und Zwiebel würzen. In Topf mit Wein, Essig, Zucker, Gewürzen. 90 Min. unter Rühren köcheln.', tipp:'Schmeckt am 2. Tag noch besser - Vorratsklassiker' },
+  { id:'sauerkraut', name:'Sauerkraut Frankfurter Art', emoji:'🥬', bild:'https://images.unsplash.com/photo-1601001435957-4b8b09e3a1f0?w=600&q=75', kategorie:'beilage', kategorieLabel:'Beilagen', dauer:'45 Min.', kosten:'≈ 1,00 €', portionen:6, zutaten:['1 kg Sauerkraut','200 g Speckwürfel','1 Zwiebel','200 ml Apfelsaft','100 ml Weißwein','1 EL Zucker','Wacholder, Lorbeer'], zubereitung:'Speck und Zwiebel in Topf anbraten. Sauerkraut dazu, mit Apfelsaft und Wein ablöschen. Gewürze und Zucker. 30 Min. köcheln.', tipp:'Apfelsaft macht es kindgerechter - schmeckt Erwachsenen auch' },
+  { id:'spaetzle', name:'Schwäbische Spätzle', emoji:'🍝', bild:'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&q=75', kategorie:'beilage', kategorieLabel:'Beilagen', dauer:'30 Min.', kosten:'≈ 1,00 €', portionen:4, zutaten:['400 g Mehl','4 Eier','100 ml Wasser','1 TL Salz','Muskat'], zubereitung:'Mehl, Eier, Wasser, Salz, Muskat zu glattem Teig schlagen (mit Kochlöffel) bis Blasen wirft. Durch Spätzlepresse oder Brett in kochendes Salzwasser. Mit Sieb abfischen.', tipp:'Mit Soße, Linsen oder als Käsespätzle - vielseitiger Klassiker' },
+  { id:'bratkartoffeln', name:'Bratkartoffeln', emoji:'🥔', bild:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=75', kategorie:'beilage', kategorieLabel:'Beilagen', dauer:'30 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['1 kg festkochende Kartoffeln','200 g Speckwürfel','1 Zwiebel','3 EL Butterschmalz','Salz, Pfeffer, Kümmel','Petersilie'], zubereitung:'Kartoffeln am Vortag kochen, pellen, in Scheiben. In Schmalz braten bis goldbraun. Speck und Zwiebel dazu. Würzen, mit Petersilie servieren.', tipp:'Vom Vortag kochen - werden so noch knuspriger' },
+  { id:'reibekuchen', name:'Reibekuchen Rheinisch', emoji:'🥔', bild:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=75', kategorie:'beilage', kategorieLabel:'Beilagen', dauer:'30 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['1 kg Kartoffeln','1 Zwiebel','2 Eier','3 EL Mehl','Salz, Pfeffer, Muskat','Öl zum Braten','Apfelmus'], zubereitung:'Kartoffeln und Zwiebel reiben. Mit Eiern, Mehl, Gewürzen vermengen. Wasser ausdrücken. In heißem Öl flach braten. Mit Apfelmus servieren.', tipp:'Im Karneval mit Lachs oder Apfelmus - Kölner Tradition' },
+
+  // ===== BACKWAREN =====
+  { id:'broetchen', name:'Sonntags-Brötchen', emoji:'🥐', bild:'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=75', kategorie:'backwaren', kategorieLabel:'Brot & Brötchen', dauer:'2 Std.', kosten:'≈ 1,00 €', portionen:10, zutaten:['500 g Mehl','1 Pck. Trockenhefe','300 ml warmes Wasser','1 TL Salz','1 EL Zucker','1 EL Olivenöl','Sesam/Mohn'], zubereitung:'Hefe in warmem Wasser auflösen. Mit Mehl, Salz, Zucker, Öl zu Teig kneten 10 Min. 1h gehen lassen. Brötchen formen, mit Sesam bestreuen. 20 Min. bei 220°C.', tipp:'Sonntag früh aufstehen, frische Brötchen ohne zum Bäcker laufen' },
+  { id:'brezel', name:'Schwäbische Brezeln', emoji:'🥨', bild:'https://images.unsplash.com/photo-1620404789543-0e0fd6d52089?w=600&q=75', kategorie:'backwaren', kategorieLabel:'Brot & Brötchen', dauer:'1.5 Std.', kosten:'≈ 1,50 €', portionen:8, zutaten:['500 g Mehl','1 Pck. Hefe','250 ml Wasser','1 TL Salz','25 g Butter','3 EL Natron','grobes Salz'], zubereitung:'Hefeteig zubereiten, gehen lassen. Brezeln formen. Natron in Wasser auflösen, Brezeln kurz eintauchen. Mit grobem Salz bestreuen. 15 Min. bei 220°C.', tipp:'Mit Butter und Senf - bayerisches Frühstück' },
+  { id:'vollkornbrot', name:'Vollkornbrot', emoji:'🍞', bild:'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=75', kategorie:'backwaren', kategorieLabel:'Brot & Brötchen', dauer:'2 Std.', kosten:'≈ 2,00 €', portionen:10, zutaten:['400 g Vollkornmehl','100 g Roggenmehl','1 Pck. Trockenhefe','350 ml Wasser','2 TL Salz','100 g Sonnenblumenkerne','Kümmel'], zubereitung:'Mehle, Hefe, Salz, Wasser zu festem Teig. Kerne unterkneten. 1.5h gehen. In Kastenform. 1h bei 200°C.', tipp:'Mit eigener Sauerteig-Kultur noch aromatischer' },
+
+  // ===== WEITERE HAUPTGERICHTE & VARIATIONEN =====
+  { id:'wrisp-knoedel', name:'Bayerische Semmelknödel', emoji:'🥟', bild:'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=75', kategorie:'beilage', kategorieLabel:'Beilagen', dauer:'45 Min.', kosten:'≈ 1,50 €', portionen:6, zutaten:['500 g altbackene Brötchen','3 Eier','300 ml Milch','1 Zwiebel','Petersilie','Salz, Pfeffer, Muskat','Butter'], zubereitung:'Brötchen würfeln, mit warmer Milch und Eiern vermengen. Zwiebel anschwitzen, dazu. 15 Min. ziehen. Knödel formen. In Salzwasser ziehen lassen 20 Min. (nicht kochen!).', tipp:'Reste am nächsten Tag in Pfanne mit Ei goldbraun braten' },
+  { id:'gruene-bohnen', name:'Grüne Bohnen mit Speck', emoji:'🥬', bild:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=75', kategorie:'beilage', kategorieLabel:'Beilagen', dauer:'25 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['500 g grüne Bohnen','200 g Speckwürfel','1 Zwiebel','Bohnenkraut','Salz, Pfeffer','Butter'], zubereitung:'Bohnen putzen, in Salzwasser 8 Min. blanchieren. Speck und Zwiebel anbraten. Bohnen dazu, mit Bohnenkraut würzen. 5 Min. mitschmoren.', tipp:'Bohnenkraut ist DAS Gewürz - macht den Unterschied' },
+  { id:'hackbraten', name:'Hackbraten mit Ei', emoji:'🥩', bild:'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'1.5 Std.', kosten:'≈ 4,00 €', portionen:6, zutaten:['1 kg gemischtes Hack','2 Brötchen','3 Eier (1 fürs Brötchen)','1 Zwiebel','Senf, Paprika, Salz','Speck','Sauce: Brühe + Sahne'], zubereitung:'Hackmasse zubereiten. In Form streichen, 2 Eier in der Mitte. Mit Speck umwickeln. 60 Min. bei 180°C. Soße aus Bratensud zubereiten.', tipp:'Falscher Hase genannt - Sonntag-Klassiker mit Klößen' },
+  { id:'fleisch-eintopf', name:'Pichelsteiner Eintopf', emoji:'🥘', bild:'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'1.5 Std.', kosten:'≈ 3,00 €', portionen:6, zutaten:['500 g gemischtes Fleisch (Rind, Lamm, Schwein)','3 Karotten','3 Kartoffeln','1 Lauch','1 Sellerie','1 Zwiebel','1 l Brühe','Petersilie, Lorbeer, Salz'], zubereitung:'Fleisch anbraten. Gemüse würfeln, dazu. Mit Brühe bedeckt, 90 Min. köcheln. Würzen mit Petersilie.', tipp:'Bayerischer Klassiker - alle Reste im einem Topf' },
+  { id:'leberwurst-brot', name:'Leberwurstbrot mit Apfel', emoji:'🍞', bild:'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=75', kategorie:'schnell', kategorieLabel:'Schnell & Einfach', dauer:'5 Min.', kosten:'≈ 1,00 €', portionen:2, zutaten:['4 Scheiben Roggenbrot','100 g Leberwurst','1 Apfel','1 Zwiebel (rot)','Senf','Schnittlauch'], zubereitung:'Brot mit Leberwurst bestreichen. Mit dünnen Apfelscheiben und Zwiebelringen belegen. Mit Schnittlauch und etwas Senf garnieren.', tipp:'Klassiker zum Abendessen - rote Zwiebel ist Geheimnis' },
+  { id:'eier-senfsoße', name:'Eier in Senfsoße', emoji:'🥚', bild:'https://images.unsplash.com/photo-1517093602195-b40af9688b78?w=600&q=75', kategorie:'schnell', kategorieLabel:'Schnell & Einfach', dauer:'25 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['8 Eier','500 ml Milch','30 g Butter','30 g Mehl','3 EL mittelscharfer Senf','1 EL Honig','Petersilie','Salz, Pfeffer','Salzkartoffeln'], zubereitung:'Eier hart kochen. Mehlschwitze: Butter schmelzen, Mehl, mit Milch ablöschen. Senf, Honig, Gewürze einrühren. Eier halbieren, mit Sauce übergießen.', tipp:'DDR-Klassiker - mit Salzkartoffeln und grünem Salat' },
+  { id:'kassler-sauerkraut', name:'Kassler mit Sauerkraut', emoji:'🥩', bild:'https://images.unsplash.com/photo-1559847844-d7c1c0e1eaef?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'1.5 Std.', kosten:'≈ 4,00 €', portionen:4, zutaten:['1 kg Kasslerbraten','1 kg Sauerkraut','2 Zwiebeln','100 g Speckwürfel','3 Kartoffeln','Apfelsaft, Wacholder','Salzkartoffeln'], zubereitung:'Kassler in Brühe 60 Min. ziehen lassen. Sauerkraut wie oben zubereiten. Kassler aufschneiden, mit Sauerkraut und Salzkartoffeln servieren.', tipp:'Bayerischer Klassiker - mit dunklem Bier perfekt' },
+  { id:'haehnchen-schnitzel', name:'Hähnchenschnitzel', emoji:'🍗', bild:'https://images.unsplash.com/photo-1599921841143-819065a55cc6?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'25 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['4 Hähnchenbrustfilets','100 g Mehl','2 Eier','150 g Semmelbrösel','Salz, Pfeffer','Öl','Pommes oder Salat'], zubereitung:'Filets klopfen, salzen, pfeffern. Panieren in Mehl, Ei, Bröseln. In Öl goldbraun braten. Mit Pommes oder Salat servieren.', tipp:'Mit Cornflakes-Brösel statt Semmelbrösel - extra knusprig' },
+  { id:'flammkuchen-classic', name:'Elsässer Flammkuchen', emoji:'🥧', bild:'https://images.unsplash.com/photo-1604152135912-04a022e23696?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['1 Flammkuchenteig','200 g Crème fraîche','200 g Speckwürfel','2 Zwiebeln','Salz, Pfeffer, Muskat','Schnittlauch'], zubereitung:'Teig dünn ausrollen. Crème fraîche bestreichen, Speck und Zwiebel drauf. 12 Min. bei 220°C. Mit Schnittlauch servieren.', tipp:'Vegetarisch: mit Lachs oder Birne+Walnuss kreieren' },
+  { id:'haehnchen-curry', name:'Asia-Hähnchen-Curry', emoji:'🍗', bild:'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'30 Min.', kosten:'≈ 3,50 €', portionen:4, zutaten:['600 g Hähnchenbrust','400 ml Kokosmilch','2 EL Currypaste','1 Paprika','1 Zucchini','1 Zwiebel','Reis','Koriander'], zubereitung:'Hähnchen würfeln, anbraten. Currypaste dazu, kurz mitbraten. Gemüse und Kokosmilch dazu. 15 Min. köcheln. Mit Reis und Koriander servieren.', tipp:'Auch mit Tofu vegetarisch perfekt' },
+  { id:'pasta-bolo', name:'Spaghetti Bolognese', emoji:'🍝', bild:'https://images.unsplash.com/photo-1598866594230-a7c12756260f?w=600&q=75', kategorie:'fleisch', kategorieLabel:'Fleischgerichte', dauer:'1.5 Std.', kosten:'≈ 2,50 €', portionen:6, zutaten:['500 g Spaghetti','500 g Hackfleisch','2 Dosen Tomaten','2 Zwiebeln','3 Knoblauchzehen','100 g Speck','100 ml Rotwein','Oregano, Basilikum, Salz','Parmesan'], zubereitung:'Speck, Zwiebel, Knoblauch anbraten. Hack dazu. Mit Wein ablöschen, Tomaten und Gewürze. 60 Min. köcheln. Mit Spaghetti und Parmesan servieren.', tipp:'Lange köcheln macht den Unterschied - 1h ist Minimum' },
+  { id:'tortellini-sahne', name:'Tortellini in Sahnesauce', emoji:'🍝', bild:'https://images.unsplash.com/photo-1611270629569-8b357cb88da9?w=600&q=75', kategorie:'schnell', kategorieLabel:'Schnell & Einfach', dauer:'15 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['500 g Tortellini','200 ml Sahne','100 g Schinkenwürfel','100 g Erbsen (TK)','100 g Parmesan','Petersilie','Salz, Pfeffer'], zubereitung:'Tortellini kochen. Schinken und Erbsen anbraten. Sahne dazu, einkochen. Mit Tortellini, Parmesan und Petersilie servieren.', tipp:'Schnellgericht in 15 Minuten - immer im Vorrat haben' },
+  { id:'spinat-lasagne', name:'Spinat-Lasagne', emoji:'🍝', bild:'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'1 Std.', kosten:'≈ 3,50 €', portionen:6, zutaten:['10 Lasagne-Platten','1 kg Blattspinat','500 ml Béchamel','200 g Mozzarella','100 g Parmesan','Knoblauch','Muskat'], zubereitung:'Spinat dünsten. Béchamel ansetzen. Schichten: Béchamel, Platten, Spinat im Wechsel. Oben Mozzarella und Parmesan. 30 Min. bei 200°C.', tipp:'Mit Pinienkernen und Rosinen nordafrikanisch raffiniert' },
+  { id:'gemueseschnitzel', name:'Sellerieschnitzel paniert', emoji:'🥬', bild:'https://images.unsplash.com/photo-1599921841143-819065a55cc6?w=600&q=75', kategorie:'vegetarisch', kategorieLabel:'Vegetarisch', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['1 großer Knollensellerie','100 g Mehl','3 Eier','150 g Semmelbrösel','Öl','Salz, Pfeffer','Zitrone'], zubereitung:'Sellerie schälen, in Scheiben schneiden, vorkochen 5 Min. Panieren wie Schnitzel. In Öl goldbraun braten. Mit Zitrone servieren.', tipp:'Vegetarische Schnitzel-Alternative - überrascht alle' },
+
+  // ===== KINDERGERICHTE EXTRA =====
+  { id:'pommes-selbst', name:'Selbstgemachte Pommes', emoji:'🍟', bild:'https://images.unsplash.com/photo-1576107232684-1279f390859f?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'40 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['1 kg Kartoffeln','3 EL Olivenöl','Salz, Paprika','Rosmarin','Ketchup, Mayo'], zubereitung:'Kartoffeln in Stäbchen schneiden, 30 Min. wässern. Trocknen, mit Öl und Gewürzen mischen. Bei 220°C 25 Min. backen, einmal wenden.', tipp:'Mit Kartoffel-Sorte Bintje oder Annabelle - werden besonders knusprig' },
+  { id:'kinder-pizza', name:'Mini-Pizza für Kinder', emoji:'🍕', bild:'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'25 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['1 Pizzateig','200 g Tomatenmark','200 g geriebener Käse','Salami','Schinken','Gemüse zum Belegen','Oregano'], zubereitung:'Teig in 8 Mini-Pizzen ausrollen. Tomatenmark, Belag, Käse. Kinder lieben es selber zu belegen! 12 Min. bei 220°C.', tipp:'Belegen lassen ist Programm und Spaß zugleich' },
+  { id:'gemuese-nuggets', name:'Gemüse-Nuggets', emoji:'🥦', bild:'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['1 Brokkoli','2 Karotten','1 Zucchini','100 g Cheddar','2 Eier','100 g Semmelbrösel','Salz, Pfeffer','Öl'], zubereitung:'Gemüse fein hacken, kurz kochen, ausdrücken. Mit Käse, Eiern, Bröseln vermengen. Nuggets formen, in Öl goldbraun braten.', tipp:'Sneak Vegetables in Kinder-Bauch - Pommes-Form macht es leichter' },
+  { id:'pancakes-amerikanisch', name:'Amerikanische Pancakes', emoji:'🥞', bild:'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'25 Min.', kosten:'≈ 1,00 €', portionen:4, zutaten:['250 g Mehl','3 Eier','300 ml Milch','1 EL Backpulver','3 EL Zucker','1 Prise Salz','Butter','Ahornsirup, Beeren'], zubereitung:'Trockene und feuchte Zutaten getrennt mischen, dann zusammen. Pfanne einfetten, kleine Pancakes braten. Mit Sirup und Beeren servieren.', tipp:'Sonntagmorgen-Hit - Kinder helfen beim Wenden' },
+  { id:'haehnchen-nuggets', name:'Hähnchen-Nuggets selbstgemacht', emoji:'🍗', bild:'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'25 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['600 g Hähnchenbrust','100 g Mehl','3 Eier','150 g Cornflakes','Salz, Pfeffer, Paprika','Öl','Pommes, Ketchup'], zubereitung:'Hähnchen in Würfel. Cornflakes zerbröseln. Hähnchen würzen, panieren in Mehl, Ei, Cornflakes. In heißem Öl braten.', tipp:'Cornflakes sind Geheimtrick für extra Knusprig - viel besser als gekauft' }
 ];
 
 const CATERING_PORTALE = [

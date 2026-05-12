@@ -1,13 +1,18 @@
 {
-  "name": "FamilienApp — Hilfe für Alleinerziehende",
+  "name": "FamilienApp — Für die ganze Familie",
   "short_name": "FamilienApp",
-  "description": "Persönliche App für alleinerziehende Eltern: Zuschüsse, Anträge, Wohnungssuche, Umgebung, Sparen und mehr.",
-  "start_url": "/",
+  "description": "App für die ganze Familie: Zuschüsse, Anträge, Kalender, Rezepte, Gesundheit, Umgebung, Sparen und mehr.",
+  "id": "/",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#1E1B4B",
   "theme_color": "#4F46E5",
   "lang": "de",
+  "dir": "ltr",
   "orientation": "portrait-primary",
+  "prefer_related_applications": false,
   "categories": ["lifestyle", "social", "finance"],
   "icons": [
     {
