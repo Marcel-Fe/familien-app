@@ -39,13 +39,18 @@ const state = {
   suchQuery: '', terminAddOffen: false,
   wohnungOrt: '', wohnungPlz: '', wohnungRadius: 10,
   tippsKat: 'alle',
+  sparTippsKat: 'alle',
   budgetTab: 'rechner',
   gesundheitTab: 'fieber',
+  haushaltTab: 'haushalt',
+  haushaltSuche: '',
+  gesundheitSuche: '',
   veranstaltungKat: 'alle', veranstaltungOrte: [], veranstaltungLaden: false,
   vertraegeKat: null,
   urlaubTab: 'angebote', urlaubFilter: 'strand',
   jobsOrt: '', jobsWas: '', jobsErgebnisse: [], jobsLaden: false, jobsGeladen: false,
   routeZiel: '', routeDaten: null, routeLaden: false, umgebungRouteModus: false,
+  navi: null,
   einstellungen: null
 };
 
@@ -93,6 +98,23 @@ function installBannerAusblenden() {
   einst.installBannerWeg = true;
   einstellungenSpeichern(einst);
   render();
+}
+
+// App-Link teilen — per Teilen-Dialog (Handy) oder Zwischenablage (Desktop)
+async function appTeilen() {
+  const url = location.origin + location.pathname;
+  const text = 'FamilienApp — kostenlose Hilfe für die ganze Familie: Zuschüsse, Rezepte, Gesundheit, Kalender und mehr. Einfach öffnen und auf den Startbildschirm legen.';
+  if (navigator.share) {
+    try { await navigator.share({ title: 'FamilienApp', text, url }); }
+    catch (e) { /* vom Nutzer abgebrochen */ }
+  } else {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast('✓ App-Link kopiert — jetzt z. B. per WhatsApp einfügen');
+    } catch (e) {
+      toast('App-Link: ' + url);
+    }
+  }
 }
 
 // Demo-Modus für Screenshots (URL-Parameter ?demo=1)
@@ -226,14 +248,24 @@ function zeigeRegistrierung() {
 
 // ===== NAVIGATION =====
 const NAV = {
-  start:    [{s:'dashboard',  l:'Übersicht'}],
-  geld:     [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'}],
-  formulare:[{s:'formular',   l:'Alle Formulare'}],
-  ort:      [{s:'umgebung',   l:'Umgebung'},{s:'wohnung', l:'Wohnung'}],
-  familie:  [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'beratung', l:'Beratung'}],
-  kinder:   [{s:'basteln', l:'Bastelideen'},{s:'hausaufgaben', l:'Hausaufgaben'}],
-  gesund:   [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'},{s:'schwangerschaft', l:'Schwangerschaft'},{s:'kochbuch', l:'Mein Kochbuch'}],
-  mehr:     [{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'urlaub', l:'Urlaub'},{s:'jobs', l:'Jobs'},{s:'tipps', l:'Tipps'},{s:'einstellungen', l:'Einstellungen'},{s:'suche', l:'Suche'}]
+  start:        [{s:'dashboard',  l:'Übersicht'}],
+  geld:         [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'}],
+  formulare:    [{s:'formular',   l:'Alle Formulare'}],
+  ort:          [{s:'umgebung',   l:'Umgebung'},{s:'wohnung', l:'Wohnung'}],
+  familie:      [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'beratung', l:'Beratung'}],
+  kinder:       [{s:'basteln', l:'Bastelideen'},{s:'hausaufgaben', l:'Hausaufgaben'}],
+  gesund:       [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'}],
+  schwangerschaft: [{s:'schwangerschaft', l:'Schwangerschaft'}],
+  erziehung:    [{s:'erziehung', l:'Erziehungshilfe'}],
+  senioren:     [{s:'senioren', l:'Senioren'}],
+  album:        [{s:'album', l:'Familien-Album'}],
+  kontakte:     [{s:'kontakte', l:'Kontakte'}],
+  haushalt:     [{s:'haushalt', l:'Haushalt'}],
+  kochbuch:     [{s:'kochbuch', l:'Mein Kochbuch'}],
+  einkaufsliste:[{s:'einkaufsliste', l:'Einkaufsliste'}],
+  tipps:        [{s:'tipps', l:'Tipps'}],
+  einstellungen:[{s:'einstellungen', l:'Einstellungen'}],
+  mehr:         [{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'urlaub', l:'Urlaub'},{s:'jobs', l:'Jobs'},{s:'suche', l:'Suche'}]
 };
 
 function sektionZuGruppe(s) {
@@ -246,6 +278,1646 @@ function navGruppeWaehlen(g) {
   // Einzel-Gruppen (Start) navigieren direkt, ohne renderNavButtons
   if (items.length === 1) { zuSektion(items[0].s); return; }
   renderNavButtons();
+}
+
+// ===== DASHBOARD: Freizeit/Events in der Nähe =====
+let _freizeitCache = null;
+let _freizeitZeit = 0;
+let _freizeitKoord = '';
+
+function dashboardFreizeitInNaehe() {
+  setTimeout(() => { if (typeof initDashFreizeit === 'function') initDashFreizeit(); }, 200);
+  return `
+  <div class="dash-widget" id="dash-freizeit-widget">
+    <div class="dash-widget-kopf">
+      <span class="dash-widget-emoji">🎠</span>
+      <div class="dash-widget-titel-block">
+        <div class="dash-widget-titel">Freizeit in der Nähe</div>
+        <div class="dash-widget-sub">Spielplätze, Parks, Museen — live aus OpenStreetMap</div>
+      </div>
+      <button class="dash-news-refresh" onclick="_freizeitCache=null;initDashFreizeit()" title="Aktualisieren">🔄</button>
+    </div>
+    <div id="dash-freizeit-liste">
+      <div class="dash-news-laden">
+        <div class="spinner" style="width:20px;height:20px"></div>
+        <span style="font-size:.82rem;color:var(--g700)">Suche Orte…</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function initDashFreizeit() {
+  const liste = el('dash-freizeit-liste');
+  if (!liste) return;
+  const u = getUser() || {};
+  const lat = state.umgebungStandort?.lat || u.lat;
+  const lng = state.umgebungStandort?.lng || u.lng;
+  if (!lat || !lng) {
+    liste.innerHTML = `
+      <div style="padding:.85rem 1rem;background:var(--g50);border-radius:var(--r);text-align:center">
+        <div style="font-size:.85rem;color:var(--g700);margin-bottom:.5rem">📍 Standort fehlt</div>
+        <button class="btn btn-outline btn-sm" onclick="profilOeffnen()">Profil ergänzen</button>
+      </div>`;
+    return;
+  }
+
+  const koord = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+  const jetzt = Date.now();
+  if (_freizeitCache && _freizeitKoord === koord && (jetzt - _freizeitZeit) < 30 * 60 * 1000) {
+    liste.innerHTML = _freizeitHtmlBauen(_freizeitCache);
+    return;
+  }
+
+  try {
+    const q = `[out:json][timeout:10];(
+      node["leisure"="playground"](around:3000,${lat},${lng});
+      node["leisure"="park"](around:5000,${lat},${lng});
+      node["leisure"~"swimming_pool|sports_centre"](around:8000,${lat},${lng});
+      node["tourism"~"museum|zoo|attraction|aquarium"](around:15000,${lat},${lng});
+      node["amenity"="cinema"](around:15000,${lat},${lng});
+    );out body 30;`;
+    const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const orte = (data.elements || [])
+      .filter(o => o.tags?.name)
+      .map(o => {
+        const dist = _haversineMeter(lat, lng, o.lat, o.lon);
+        let typ = '📍', kat = 'Ort';
+        if (o.tags.leisure === 'playground')      { typ='🎠'; kat='Spielplatz'; }
+        else if (o.tags.leisure === 'park')       { typ='🌳'; kat='Park'; }
+        else if (o.tags.leisure?.includes('swimming')) { typ='🏊'; kat='Schwimmbad'; }
+        else if (o.tags.leisure?.includes('sports'))   { typ='⚽'; kat='Sportzentrum'; }
+        else if (o.tags.tourism === 'museum')     { typ='🏛️'; kat='Museum'; }
+        else if (o.tags.tourism === 'zoo')        { typ='🦁'; kat='Zoo'; }
+        else if (o.tags.tourism === 'aquarium')   { typ='🐠'; kat='Aquarium'; }
+        else if (o.tags.tourism === 'attraction') { typ='✨'; kat='Sehenswürdigkeit'; }
+        else if (o.tags.amenity === 'cinema')     { typ='🎬'; kat='Kino'; }
+        return { name: o.tags.name, dist, typ, kat, lat: o.lat, lng: o.lon };
+      })
+      .sort((a,b) => a.dist - b.dist)
+      .slice(0, 5);
+
+    if (orte.length === 0) throw new Error('keine Orte');
+    _freizeitCache = orte;
+    _freizeitZeit = jetzt;
+    _freizeitKoord = koord;
+    liste.innerHTML = _freizeitHtmlBauen(orte);
+  } catch (e) {
+    liste.innerHTML = `
+      <div class="info-box orange" style="margin:0;font-size:.82rem">
+        <span class="ib-icon">⚠️</span>
+        <div class="ib-text">Keine Live-Orte gefunden. <button class="btn btn-sm" style="margin-left:.35rem" onclick="zuSektion('umgebung')">Karte öffnen</button></div>
+      </div>`;
+  }
+}
+
+function _freizeitHtmlBauen(orte) {
+  return `
+    <div class="freizeit-liste">
+      ${orte.map(o => {
+        const distStr = o.dist < 1000 ? Math.round(o.dist) + ' m' : (o.dist/1000).toFixed(1) + ' km';
+        return `
+        <button class="freizeit-eintrag" onclick="zuSektion('umgebung');state.umgebungStandort=state.umgebungStandort||{};setTimeout(()=>{if(state.karte)state.karte.flyTo([${o.lat},${o.lng}],15)},800)">
+          <span class="freizeit-emoji">${o.typ}</span>
+          <span class="freizeit-text">
+            <span class="freizeit-name">${esc(o.name)}</span>
+            <span class="freizeit-sub">${esc(o.kat)} · ${distStr}</span>
+          </span>
+          <span class="freizeit-pfeil">→</span>
+        </button>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:.4rem;margin-top:.55rem;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="zuSektion('umgebung')">📍 Karte öffnen</button>
+      <button class="btn btn-outline btn-sm" onclick="zuSektion('veranstaltungen')">🎪 Veranstaltungen</button>
+    </div>`;
+}
+
+// ===== BENACHRICHTIGUNGEN =====
+// Hinweis: Echte Push wenn App komplett zu ist braucht Backend.
+// Was hier funktioniert: Notification API beim App-Start + im Hintergrund (wenn PWA installiert)
+async function notificationsBerechtigung() {
+  if (!('Notification' in window)) { toast('⚠️ Browser unterstützt keine Benachrichtigungen'); return false; }
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') {
+    toast('⚠️ Benachrichtigungen sind blockiert — in Browser-Einstellungen erlauben');
+    return false;
+  }
+  const result = await Notification.requestPermission();
+  if (result === 'granted') {
+    toast('✓ Benachrichtigungen aktiviert');
+    return true;
+  }
+  return false;
+}
+
+async function notificationZeigen(titel, optionen = {}) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const opts = {
+    icon: 'icons/icon-192.png',
+    badge: 'icons/icon-72.png',
+    lang: 'de',
+    vibrate: [200, 100, 200],
+    ...optionen,
+    data: { zuSektion: optionen.zuSektion || null }
+  };
+  // Bevorzugt über den Service Worker — nur so funktionieren Benachrichtigungen auf Android
+  try {
+    const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+    if (reg && reg.showNotification) {
+      await reg.showNotification(titel, opts);
+      return;
+    }
+  } catch(e) { /* fällt unten auf Desktop-Fallback zurück */ }
+  // Fallback für Desktop-Browser ohne aktiven Service Worker
+  try {
+    const n = new Notification(titel, opts);
+    n.onclick = () => { window.focus(); n.close(); if (optionen.zuSektion) zuSektion(optionen.zuSektion); };
+  } catch(e) { /* ignore */ }
+}
+
+// Beim App-Start: heute fällige Erinnerungen prüfen und ggf. anzeigen
+function erinnerungenPruefen() {
+  const einst = einstellungenLaden();
+  if (Notification.permission !== 'granted') return;
+  if (einst.notifAus === true) return;
+
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  const ds = `${heute.getFullYear()}-${String(heute.getMonth()+1).padStart(2,'0')}-${String(heute.getDate()).padStart(2,'0')}`;
+  const morgen = new Date(heute); morgen.setDate(morgen.getDate()+1);
+  const dsm = `${morgen.getFullYear()}-${String(morgen.getMonth()+1).padStart(2,'0')}-${String(morgen.getDate()).padStart(2,'0')}`;
+
+  // Schon heute gesendet? (sonst spammen wir bei jedem Reload)
+  const heutGesendet = localStorage.getItem('notif_gesendet') === ds;
+  if (heutGesendet) return;
+
+  const termine = (typeof getTermine === 'function') ? getTermine() : [];
+  const heuteTermine = termine.filter(t => t.datum === ds && t.erinnerung);
+  const morgenMuell  = termine.filter(t => t.datum === dsm && t.typ && t.typ.startsWith('muell_'));
+
+  // Müll für morgen (separate Erinnerung am Vorabend)
+  if (einst.notifMuell !== false && morgenMuell.length > 0) {
+    const liste = morgenMuell.map(t => t.titel).join(', ');
+    notificationZeigen('🗑️ Morgen ist Müllabfuhr', {
+      body: liste + ' — heute Abend rausstellen!',
+      tag: 'muell-' + dsm,
+      zuSektion: 'kalender'
+    });
+  }
+
+  // Heutige Termine
+  if (einst.notifTermine !== false && heuteTermine.length > 0) {
+    const erstes = heuteTermine[0];
+    const rest = heuteTermine.length > 1 ? ` + ${heuteTermine.length - 1} weitere` : '';
+    notificationZeigen(`📅 Heute: ${erstes.titel}`, {
+      body: (erstes.uhrzeit ? erstes.uhrzeit + ' Uhr' : 'Heute') + rest,
+      tag: 'termin-' + ds,
+      zuSektion: 'kalender'
+    });
+  }
+
+  // Offene To-dos
+  if (einst.notifTodo !== false) {
+    const todos = (typeof todoLaden === 'function') ? todoLaden() : [];
+    const wichtig = todos.filter(t => !t.erledigt && t.prio === 'hoch');
+    if (wichtig.length > 0) {
+      notificationZeigen(`✅ ${wichtig.length} wichtige Aufgabe${wichtig.length>1?'n':''}`, {
+        body: wichtig.slice(0,3).map(t => t.text).join(' · '),
+        tag: 'todo-' + ds,
+        zuSektion: 'todo'
+      });
+    }
+  }
+
+  localStorage.setItem('notif_gesendet', ds);
+}
+
+// Zeitbasierte To-Do-Erinnerungen: läuft regelmäßig, solange die App offen ist,
+// und holt beim nächsten Öffnen verpasste Erinnerungen nach.
+function erinnerungenTick() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const einst = einstellungenLaden();
+  if (einst.notifAus === true || einst.notifTodo === false) return;
+
+  const jetzt = Date.now();
+  let gefeuert = [];
+  try { gefeuert = JSON.parse(localStorage.getItem('notif_gefeuert') || '[]'); } catch {}
+
+  const todos = (typeof todoLaden === 'function') ? todoLaden() : [];
+  let geaendert = false;
+
+  todos.forEach(t => {
+    if (t.erledigt || !t.erinnerung) return;
+    const zeit = new Date(t.erinnerung).getTime();
+    if (isNaN(zeit) || zeit > jetzt) return;          // noch nicht fällig
+    if (gefeuert.includes(t.id)) return;              // schon erinnert
+    notificationZeigen('⏰ Erinnerung: ' + t.text, {
+      body: 'Tippe, um deine To-Do-Liste zu öffnen',
+      tag: 'todo-erinnerung-' + t.id,
+      zuSektion: 'todo',
+      requireInteraction: true
+    });
+    gefeuert.push(t.id);
+    geaendert = true;
+  });
+
+  if (geaendert) {
+    // Aufräumen: nur Erinnerungen offener To-dos behalten — verhindert unbegrenztes Wachsen
+    const aktiveIds = todos.filter(t => !t.erledigt && t.erinnerung).map(t => t.id);
+    gefeuert = gefeuert.filter(id => aktiveIds.includes(id));
+    localStorage.setItem('notif_gefeuert', JSON.stringify(gefeuert));
+  }
+}
+
+// Heute-Übersicht für das Dashboard (immer sichtbar, unabhängig von Notification-Permission)
+function dashboardHeuteUebersicht() {
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  const ds = `${heute.getFullYear()}-${String(heute.getMonth()+1).padStart(2,'0')}-${String(heute.getDate()).padStart(2,'0')}`;
+  const morgen = new Date(heute); morgen.setDate(morgen.getDate()+1);
+  const dsm = `${morgen.getFullYear()}-${String(morgen.getMonth()+1).padStart(2,'0')}-${String(morgen.getDate()).padStart(2,'0')}`;
+
+  const termine = (typeof getTermine === 'function') ? getTermine() : [];
+  const heuteT = termine.filter(t => t.datum === ds).sort((a,b) => (a.uhrzeit||'00:00').localeCompare(b.uhrzeit||'00:00'));
+  const morgenMuell = termine.filter(t => t.datum === dsm && t.typ && t.typ.startsWith('muell_'));
+  const todos = (typeof todoLaden === 'function') ? todoLaden().filter(t => !t.erledigt) : [];
+
+  if (heuteT.length === 0 && morgenMuell.length === 0 && todos.length === 0) return '';
+
+  const typen = (typeof getAlleTerminTypen === 'function') ? getAlleTerminTypen() : {};
+  const eintraege = [];
+  morgenMuell.forEach(t => {
+    const typ = typen[t.typ] || { icon:'🗑️', farbe:'#1F2937' };
+    eintraege.push({ icon: typ.icon, farbe: typ.farbe, titel: 'Morgen: ' + t.titel, sub: 'Heute Abend rausstellen', aktion: `zuSektion('kalender')` });
+  });
+  heuteT.forEach(t => {
+    const typ = typen[t.typ] || { icon:'📅', farbe:'#64748B' };
+    eintraege.push({ icon: typ.icon, farbe: typ.farbe, titel: t.titel, sub: t.uhrzeit ? t.uhrzeit + ' Uhr' : 'Heute', aktion: `zuSektion('kalender')` });
+  });
+  todos.slice(0, 3).forEach(t => {
+    eintraege.push({ icon: t.prio==='hoch'?'🔥':'✅', farbe: t.prio==='hoch'?'#DC2626':'#4F46E5', titel: t.text, sub: t.prio==='hoch'?'Wichtig':'To-do', aktion: `zuSektion('todo')` });
+  });
+  if (eintraege.length === 0) return '';
+
+  return `
+  <div class="dash-widget">
+    <div class="dash-widget-kopf">
+      <span class="dash-widget-emoji">⏰</span>
+      <div class="dash-widget-titel-block">
+        <div class="dash-widget-titel">Heute zu tun</div>
+        <div class="dash-widget-sub">${eintraege.length} ${eintraege.length === 1 ? 'Eintrag' : 'Einträge'}</div>
+      </div>
+    </div>
+    <div class="heute-liste">
+      ${eintraege.slice(0, 6).map(e => `
+      <button class="heute-eintrag" onclick="${e.aktion}" style="--he-farbe:${e.farbe}">
+        <span class="heute-eintrag-icon">${e.icon}</span>
+        <span class="heute-eintrag-text">
+          <span class="heute-eintrag-titel">${esc(e.titel)}</span>
+          <span class="heute-eintrag-sub">${esc(e.sub)}</span>
+        </span>
+        <span class="heute-eintrag-pfeil">→</span>
+      </button>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ===== MÜLLKALENDER-ASSISTENT =====
+const MUELL_ARTEN = [
+  { id:'muell_rest',   icon:'🗑️', label:'Restmüll (schwarz)',     farbe:'#1F2937' },
+  { id:'muell_bio',    icon:'🌱',  label:'Biomüll (braun)',         farbe:'#65A30D' },
+  { id:'muell_papier', icon:'📄',  label:'Papier (blau)',           farbe:'#2563EB' },
+  { id:'muell_gelb',   icon:'♻️',  label:'Gelber Sack / Gelbe Tonne',farbe:'#FBBF24' },
+  { id:'muell_glas',   icon:'🍾',  label:'Glas (Container)',        farbe:'#10B981' }
+];
+const WOCHENTAGE = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+function muellAssistentOeffnen() { state.muellAssistent = true; render(); setTimeout(()=>el('muell-assistent')?.scrollIntoView({behavior:'smooth',block:'center'}), 100); }
+function muellAssistentSchliessen() { state.muellAssistent = false; render(); }
+
+function muellTermineGenerieren() {
+  // Daten aus Formular lesen
+  const auswahl = MUELL_ARTEN.map(art => {
+    const checkbox = el(`muell-aktiv-${art.id}`);
+    if (!checkbox?.checked) return null;
+    const wochentag = parseInt(el(`muell-tag-${art.id}`)?.value || '3');
+    const rhythmus = parseInt(el(`muell-rhythmus-${art.id}`)?.value || '14');
+    const start = el(`muell-start-${art.id}`)?.value;
+    if (!start) return null;
+    return { ...art, wochentag, rhythmus, startDatum: start };
+  }).filter(Boolean);
+
+  if (auswahl.length === 0) { toast('⚠️ Bitte mindestens eine Müllart auswählen'); return; }
+
+  const erinnerung = el('muell-erinnerung')?.checked || false;
+  const vorabend  = el('muell-vorabend')?.checked || false;
+  const termine = getTermine();
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  const endeJahr = new Date(heute); endeJahr.setMonth(endeJahr.getMonth() + 12);
+  let generiert = 0;
+
+  auswahl.forEach(art => {
+    // Start-Datum auf nächstpassenden Wochentag bringen falls nötig
+    let aktuell = new Date(art.startDatum + 'T00:00:00');
+    while (aktuell <= endeJahr) {
+      const ds = `${aktuell.getFullYear()}-${String(aktuell.getMonth()+1).padStart(2,'0')}-${String(aktuell.getDate()).padStart(2,'0')}`;
+      // Doppelte verhindern: gleicher Typ am gleichen Datum
+      const existiert = termine.some(t => t.typ === art.id && t.datum === ds);
+      if (!existiert && aktuell >= heute) {
+        // Hauptmüll-Tag
+        termine.push({
+          id: Date.now() + Math.floor(Math.random()*100000),
+          titel: art.label + ' rausstellen',
+          datum: ds,
+          uhrzeit: '07:00',
+          typ: art.id,
+          person: 'Haushalt',
+          wiederholung: art.rhythmus === 7 ? 'woechentlich' : (art.rhythmus === 14 ? 'zweiwoechentlich' : 'monatlich'),
+          ort: '',
+          erinnerung: erinnerung,
+          notiz: `Müllkalender · alle ${art.rhythmus} Tage (selbst eingetragen)`
+        });
+        generiert++;
+        // Optional Vorabend-Erinnerung (Tag davor 18 Uhr)
+        if (vorabend) {
+          const vor = new Date(aktuell); vor.setDate(vor.getDate()-1);
+          const vorDS = `${vor.getFullYear()}-${String(vor.getMonth()+1).padStart(2,'0')}-${String(vor.getDate()).padStart(2,'0')}`;
+          if (!termine.some(t => t.typ === art.id && t.datum === vorDS && t.titel.includes('Vorabend'))) {
+            termine.push({
+              id: Date.now() + Math.floor(Math.random()*100000),
+              titel: art.label + ' — Vorabend (rausstellen!)',
+              datum: vorDS,
+              uhrzeit: '18:00',
+              typ: art.id,
+              person: 'Haushalt',
+              wiederholung: 'einmalig',
+              ort: '',
+              erinnerung: erinnerung,
+              notiz: 'Heute Abend rausstellen, morgen früh Abholung'
+            });
+            generiert++;
+          }
+        }
+      }
+      aktuell.setDate(aktuell.getDate() + art.rhythmus);
+    }
+  });
+
+  saveTermine(termine);
+  state.muellAssistent = false;
+  toast(`✓ ${generiert} Müll-Termine für 12 Monate angelegt`);
+  render();
+}
+
+// PLZ-Präfix → typische lokale Müll-Rhythmen deutscher Großstädte
+// Quelle: typische Abfuhr-Pläne der jeweiligen Kommunen (kann pro Adresse leicht abweichen)
+const _MUELL_STADTE = [
+  // Berlin (BSR) — typisch: Rest 14T, Bio wöchentlich, Papier 4 Wochen, Gelb 14T
+  { plzPrefix:'10', stadt:'Berlin', linkUrl:'https://www.bsr.de/abfuhrkalender-20520.php', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:1,rhythmus:14} },
+  { plzPrefix:'11', stadt:'Berlin', linkUrl:'https://www.bsr.de/abfuhrkalender-20520.php', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:1,rhythmus:14} },
+  { plzPrefix:'12', stadt:'Berlin', linkUrl:'https://www.bsr.de/abfuhrkalender-20520.php', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:1,rhythmus:14} },
+  { plzPrefix:'13', stadt:'Berlin', linkUrl:'https://www.bsr.de/abfuhrkalender-20520.php', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:1,rhythmus:14} },
+  { plzPrefix:'14', stadt:'Berlin', linkUrl:'https://www.bsr.de/abfuhrkalender-20520.php', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:1,rhythmus:14} },
+  // Hamburg (Stadtreinigung) — Rest wöchentlich, Bio 14T, Papier 4 Wochen, Gelb 14T
+  { plzPrefix:'20', stadt:'Hamburg', linkUrl:'https://www.stadtreinigung.hamburg/privatkunden/abfuhrkalender/', rest:{tag:1,rhythmus:7}, bio:{tag:2,rhythmus:14}, papier:{tag:3,rhythmus:28}, gelb:{tag:4,rhythmus:14} },
+  { plzPrefix:'21', stadt:'Hamburg', linkUrl:'https://www.stadtreinigung.hamburg/privatkunden/abfuhrkalender/', rest:{tag:1,rhythmus:7}, bio:{tag:2,rhythmus:14}, papier:{tag:3,rhythmus:28}, gelb:{tag:4,rhythmus:14} },
+  { plzPrefix:'22', stadt:'Hamburg', linkUrl:'https://www.stadtreinigung.hamburg/privatkunden/abfuhrkalender/', rest:{tag:1,rhythmus:7}, bio:{tag:2,rhythmus:14}, papier:{tag:3,rhythmus:28}, gelb:{tag:4,rhythmus:14} },
+  // München (AWM) — Rest 14T, Bio wöchentlich, Papier 4 Wochen, Gelb 14T
+  { plzPrefix:'80', stadt:'München', linkUrl:'https://www.awm-muenchen.de/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  { plzPrefix:'81', stadt:'München', linkUrl:'https://www.awm-muenchen.de/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  { plzPrefix:'85', stadt:'München (Umland)', linkUrl:'https://www.awm-muenchen.de/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  // Köln (AWB Köln)
+  { plzPrefix:'50', stadt:'Köln', linkUrl:'https://www.awbkoeln.de/abfuhrtermine', rest:{tag:4,rhythmus:14}, bio:{tag:2,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:3,rhythmus:14} },
+  { plzPrefix:'51', stadt:'Köln', linkUrl:'https://www.awbkoeln.de/abfuhrtermine', rest:{tag:4,rhythmus:14}, bio:{tag:2,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:3,rhythmus:14} },
+  // Frankfurt am Main (FES)
+  { plzPrefix:'60', stadt:'Frankfurt a.M.', linkUrl:'https://www.fes-frankfurt.de/abfuhrkalender', rest:{tag:2,rhythmus:14}, bio:{tag:5,rhythmus:7}, papier:{tag:3,rhythmus:28}, gelb:{tag:4,rhythmus:14} },
+  // Stuttgart (AWS)
+  { plzPrefix:'70', stadt:'Stuttgart', linkUrl:'https://service.stuttgart.de/lhs-services/aws/abfuhrtermine', rest:{tag:2,rhythmus:14}, bio:{tag:1,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:3,rhythmus:14} },
+  // Düsseldorf (Awista)
+  { plzPrefix:'40', stadt:'Düsseldorf', linkUrl:'https://www.awista.de/abfuhrtermine', rest:{tag:3,rhythmus:14}, bio:{tag:5,rhythmus:7}, papier:{tag:2,rhythmus:28}, gelb:{tag:1,rhythmus:14} },
+  // Dortmund (EDG)
+  { plzPrefix:'44', stadt:'Dortmund', linkUrl:'https://www.edg.de/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:5,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  // Essen (EBE)
+  { plzPrefix:'45', stadt:'Essen', linkUrl:'https://www.ebe-essen.de/abfuhrkalender', rest:{tag:4,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  // Leipzig
+  { plzPrefix:'04', stadt:'Leipzig', linkUrl:'https://www.stadtreinigung-leipzig.de/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:5,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:1,rhythmus:14} },
+  // Dresden
+  { plzPrefix:'01', stadt:'Dresden', linkUrl:'https://www.dresden.de/de/leben/umwelt/abfall/abfuhrkalender.php', rest:{tag:2,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:3,rhythmus:14} },
+  // Hannover (Aha)
+  { plzPrefix:'30', stadt:'Hannover', linkUrl:'https://www.aha-region.de/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  // Nürnberg
+  { plzPrefix:'90', stadt:'Nürnberg', linkUrl:'https://online-service.nuernberg.de/abfallkalender/', rest:{tag:2,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:3,rhythmus:14} },
+  // Bremen
+  { plzPrefix:'28', stadt:'Bremen', linkUrl:'https://www.die-bremer-stadtreinigung.de/abfuhrkalender', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:5,rhythmus:14} }
+];
+
+function _muellStadtFinden(plz) {
+  if (!plz) return null;
+  const p = String(plz).trim();
+  if (p.length < 2) return null;
+  return _MUELL_STADTE.find(e => p.startsWith(e.plzPrefix)) || null;
+}
+
+// PLZ → konkretes Standard-Setup für die Region (mit nächsten Daten)
+function _muellAutoVorschlag(plz) {
+  if (!plz) return null;
+  const stadt = _muellStadtFinden(plz);
+  // Defaults wenn Stadt nicht bekannt: typische deutsche Standards
+  const defaults = {
+    rest:   { tag: 3, rhythmus: 14 },  // Mi alle 14T
+    bio:    { tag: 4, rhythmus: 7 },   // Do wöchentlich
+    papier: { tag: 5, rhythmus: 28 },  // Fr alle 4 Wo
+    gelb:   { tag: 5, rhythmus: 14 }   // Fr alle 14T
+  };
+  const cfg = stadt || defaults;
+  // Nächstes Vorkommen jedes Wochentags berechnen
+  const heute = new Date();
+  const naechsterTag = (wTag) => {
+    const d = new Date(heute);
+    const diff = (wTag - heute.getDay() + 7) % 7 || 7;
+    d.setDate(heute.getDate() + diff);
+    return d.toISOString().split('T')[0];
+  };
+  return {
+    _stadt: stadt?.stadt || null,
+    _link:  stadt?.linkUrl || null,
+    muell_rest:   { aktiv: true,  tag: cfg.rest.tag,   rhythmus: cfg.rest.rhythmus,   start: naechsterTag(cfg.rest.tag) },
+    muell_bio:    { aktiv: true,  tag: cfg.bio.tag,    rhythmus: cfg.bio.rhythmus,    start: naechsterTag(cfg.bio.tag) },
+    muell_papier: { aktiv: true,  tag: cfg.papier.tag, rhythmus: cfg.papier.rhythmus, start: naechsterTag(cfg.papier.tag) },
+    muell_gelb:   { aktiv: true,  tag: cfg.gelb.tag,   rhythmus: cfg.gelb.rhythmus,   start: naechsterTag(cfg.gelb.tag) },
+    muell_glas:   { aktiv: false }
+  };
+}
+
+// AUTO-EINTRAGUNG: ohne UI direkt in Kalender schreiben (für Standort-Updates)
+function muellAutoEintragen(user, opts = {}) {
+  if (!user || !user.plz) return { generiert: 0, geloescht: 0, stadt: null };
+  if (typeof getTermine !== 'function' || typeof saveTermine !== 'function') return { generiert: 0, geloescht: 0, stadt: null };
+
+  const vorschlag = _muellAutoVorschlag(user.plz);
+  if (!vorschlag) return { generiert: 0, geloescht: 0, stadt: null };
+
+  let termine = getTermine();
+  // 1. Alte Auto-Müll-Termine entfernen (kenntlich an notiz "Automatisch durch Müllkalender")
+  const vorher = termine.length;
+  termine = termine.filter(t => !(t.notiz && t.notiz.includes('Automatisch durch Müllkalender')));
+  const geloescht = vorher - termine.length;
+
+  // 2. Neue Termine generieren — 12 Monate
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  const endeJahr = new Date(heute); endeJahr.setMonth(endeJahr.getMonth() + 12);
+  let generiert = 0;
+  const vorabend = opts.vorabend !== false; // default an
+  const erinnerung = opts.erinnerung !== false;
+
+  MUELL_ARTEN.forEach(art => {
+    const cfg = vorschlag[art.id];
+    if (!cfg || !cfg.aktiv) return;
+    let aktuell = new Date(cfg.start + 'T00:00:00');
+    while (aktuell <= endeJahr) {
+      if (aktuell >= heute) {
+        const ds = `${aktuell.getFullYear()}-${String(aktuell.getMonth()+1).padStart(2,'0')}-${String(aktuell.getDate()).padStart(2,'0')}`;
+        termine.push({
+          id: Date.now() + Math.floor(Math.random()*1000000),
+          titel: art.label + ' rausstellen',
+          datum: ds,
+          uhrzeit: '07:00',
+          typ: art.id,
+          person: 'Haushalt',
+          wiederholung: cfg.rhythmus === 7 ? 'woechentlich' : (cfg.rhythmus === 14 ? 'zweiwoechentlich' : 'monatlich'),
+          ort: '',
+          erinnerung,
+          notiz: `Automatisch durch Müllkalender · ${vorschlag._stadt || 'Standard-Rhythmus'} · alle ${cfg.rhythmus} Tage`
+        });
+        generiert++;
+        if (vorabend) {
+          const vor = new Date(aktuell); vor.setDate(vor.getDate() - 1);
+          const vorDS = `${vor.getFullYear()}-${String(vor.getMonth()+1).padStart(2,'0')}-${String(vor.getDate()).padStart(2,'0')}`;
+          termine.push({
+            id: Date.now() + Math.floor(Math.random()*1000000),
+            titel: art.label + ' — Vorabend rausstellen!',
+            datum: vorDS,
+            uhrzeit: '18:00',
+            typ: art.id,
+            person: 'Haushalt',
+            wiederholung: 'einmalig',
+            ort: '',
+            erinnerung,
+            notiz: `Automatisch durch Müllkalender · Vorabend-Erinnerung`
+          });
+          generiert++;
+        }
+      }
+      aktuell.setDate(aktuell.getDate() + cfg.rhythmus);
+    }
+  });
+
+  saveTermine(termine);
+  return { generiert, geloescht, stadt: vorschlag._stadt, link: vorschlag._link };
+}
+
+function muellSofortEintragen() {
+  const user = getUser();
+  if (!user || !user.plz) { toast('⚠️ Bitte erst Standort im Profil eintragen'); return; }
+  const ergebnis = muellAutoEintragen(user, { vorabend: true, erinnerung: true });
+  if (ergebnis.generiert > 0) {
+    state.muellAssistent = false;
+    toast(`✓ ${ergebnis.generiert} Müll-Termine für ${ergebnis.stadt || 'deutsche Standards'} im Kalender`);
+    render();
+  } else {
+    toast('⚠️ Konnte keine Termine erstellen');
+  }
+}
+
+function muellAutoVorschlagAnwenden() {
+  const u = getUser() || {};
+  const plz = u.plz || '';
+  const v = _muellAutoVorschlag(plz);
+  if (!v) { toast('⚠️ Bitte PLZ im Profil eintragen'); return; }
+  // Felder befüllen
+  MUELL_ARTEN.forEach(art => {
+    const v_a = v[art.id] || {};
+    const cb = el(`muell-aktiv-${art.id}`); if (cb) cb.checked = !!v_a.aktiv;
+    const tag = el(`muell-tag-${art.id}`); if (tag && v_a.tag !== undefined) tag.value = v_a.tag;
+    const rh = el(`muell-rhythmus-${art.id}`); if (rh && v_a.rhythmus !== undefined) rh.value = v_a.rhythmus;
+    const st = el(`muell-start-${art.id}`); if (st && v_a.start) st.value = v_a.start;
+  });
+  toast('✓ Standard-Werte für deutsche Müllabfuhr eingetragen — anpassen falls nötig');
+}
+
+function muellGeschaetzteEntfernen() {
+  if (typeof getTermine !== 'function') return;
+  const termine = getTermine();
+  const behalten = termine.filter(t => !(t.notiz && t.notiz.includes('Automatisch durch Müllkalender')));
+  const entfernt = termine.length - behalten.length;
+  if (entfernt === 0) { toast('Keine automatisch geschätzten Müll-Termine gefunden'); return; }
+  if (!confirm(`${entfernt} automatisch geschätzte Müll-Termine aus dem Kalender entfernen?\n\nSelbst eingetragene Termine bleiben erhalten.`)) return;
+  saveTermine(behalten);
+  toast(`✓ ${entfernt} geschätzte Müll-Termine entfernt`);
+  render();
+}
+
+function renderMuellAssistent() {
+  const heute = new Date().toISOString().split('T')[0];
+  const jahr = new Date().getFullYear();
+  const u = getUser() || {};
+  const plz = u.plz || '';
+  const ort = u.ort || '';
+  const stadt = plz ? _muellStadtFinden(plz) : null;
+  const suchBegriff = (ort || plz || 'meine Stadt') + ' Müllkalender ' + jahr;
+  const sucheUrl = 'https://www.google.com/search?q=' + encodeURIComponent(suchBegriff);
+  return `
+  <div class="muell-assistent" id="muell-assistent">
+    <div class="muell-assistent-kopf">
+      <div>
+        <div style="font-size:1.1rem;font-weight:800">🗑️ Müllkalender einrichten</div>
+        <div style="font-size:.82rem;color:var(--g700);margin-top:.15rem">Hol dir die echten Abfuhrtermine deiner Stadt und trage sie in den Kalender ein</div>
+      </div>
+      <button class="iframe-modal-btn iframe-modal-close" onclick="muellAssistentSchliessen()">✕</button>
+    </div>
+
+    <div class="info-box orange" style="margin:1rem 0">
+      <span class="ib-icon">⚠️</span>
+      <div class="ib-text"><strong>Wichtig:</strong> Die Müllabfuhr ist je Stadt und oft sogar je Straße unterschiedlich — es gibt keine deutschlandweite Quelle. Die einzigen <strong>fehlerfreien</strong> Termine stehen im offiziellen Kalender deiner Kommune.</div>
+    </div>
+
+    <div class="block-title">1. Offiziellen Müllkalender öffnen</div>
+    ${stadt && stadt.linkUrl ? `
+    <a href="${stadt.linkUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%;margin-bottom:.5rem;text-decoration:none">🔗 Offizieller Müllkalender — ${esc(stadt.stadt)}</a>` : ''}
+    <a href="${sucheUrl}" target="_blank" rel="noopener" class="btn ${stadt && stadt.linkUrl ? 'btn-outline' : 'btn-primary'}" style="width:100%;margin-bottom:1rem;text-decoration:none">🔎 Müllkalender für ${esc(ort || plz || 'meine Stadt')} suchen</a>
+    <div class="info-box blau" style="margin-bottom:1rem;font-size:.8rem"><span class="ib-icon">💡</span><div class="ib-text">Auf der Seite deiner Kommune deine Straße eingeben. Viele bieten einen <strong>iCal-/ICS-Download</strong> an — diese Datei kannst du im Kalender unter <strong>📥 Importieren</strong> direkt einlesen, dann stimmt alles automatisch.</div></div>
+
+    <div class="block-title">2. Deine echten Abfuhrtage eintragen</div>
+    <div class="info-box blau" style="margin:.5rem 0 1rem"><span class="ib-icon">📋</span><div class="ib-text">Übertrage die Tage aus dem offiziellen Kalender: Müll-Art aktivieren, Wochentag und Rhythmus wählen und als „Nächste Abholung" den nächsten echten Termin eintragen.</div></div>
+
+    <div class="muell-arten-liste">
+      ${MUELL_ARTEN.map(art => `
+      <div class="muell-art-zeile">
+        <label class="muell-art-kopf">
+          <input type="checkbox" id="muell-aktiv-${art.id}" />
+          <span class="muell-art-icon" style="background:${art.farbe}20;color:${art.farbe}">${art.icon}</span>
+          <span class="muell-art-label">${esc(art.label)}</span>
+        </label>
+        <div class="muell-art-felder">
+          <label class="muell-feld">
+            <span>Wochentag</span>
+            <select id="muell-tag-${art.id}" class="reg-select">
+              ${WOCHENTAGE.map((t,i) => `<option value="${i}" ${i===3?'selected':''}>${t}</option>`).join('')}
+            </select>
+          </label>
+          <label class="muell-feld">
+            <span>Rhythmus</span>
+            <select id="muell-rhythmus-${art.id}" class="reg-select">
+              <option value="7">Wöchentlich</option>
+              <option value="14" selected>Alle 14 Tage</option>
+              <option value="28">Alle 4 Wochen</option>
+              <option value="30">Monatlich</option>
+            </select>
+          </label>
+          <label class="muell-feld">
+            <span>Nächste Abholung</span>
+            <input type="date" id="muell-start-${art.id}" class="reg-input" value="${heute}" />
+          </label>
+        </div>
+      </div>`).join('')}
+    </div>
+
+    <div class="muell-optionen">
+      <label class="muell-opt"><input type="checkbox" id="muell-erinnerung" checked /> 🔔 Erinnerung aktivieren</label>
+      <label class="muell-opt"><input type="checkbox" id="muell-vorabend" checked /> 🌙 Zusätzlich Vorabend-Erinnerung (18 Uhr)</label>
+    </div>
+
+    <div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="muellTermineGenerieren()">✓ In Kalender eintragen (12 Monate)</button>
+      <button class="btn btn-outline" onclick="muellAssistentSchliessen()">Abbrechen</button>
+    </div>
+
+    <div class="info-box gruen" style="margin-top:1rem">
+      <span class="ib-icon">🧹</span>
+      <div class="ib-text"><strong>Alte geschätzte Termine entfernen:</strong> Frühere App-Versionen haben Müll-Termine automatisch anhand der Postleitzahl geschätzt — diese waren oft falsch. Falls solche Einträge in deinem Kalender stehen, kannst du sie hier entfernen. Selbst eingetragene Termine bleiben erhalten.<br>
+      <button class="btn btn-sm btn-outline" style="margin-top:.5rem" onclick="muellGeschaetzteEntfernen()">🧹 Geschätzte Müll-Termine entfernen</button></div>
+    </div>
+  </div>`;
+}
+
+// ===== ERZIEHUNGSHILFE =====
+const ERZIEHUNG_DATEN = {
+  trotz: {
+    icon:'😤', label:'Trotzphase (1-4 J.)', farbe:'#DC2626', bg:'#FEE2E2',
+    intro:'Wutanfälle sind ganz normal — Kinder lernen ihre starken Gefühle zu regulieren. Wichtig: nicht dagegen kämpfen, sondern begleiten.',
+    tipps:[
+      { titel:'Augenhöhe einnehmen', text:'Kniend auf Augenhöhe gehen, ruhig bleiben. Allein das verändert die Situation oft sofort.', tipp:'Tief atmen vor dem Reagieren — 3 Atemzüge' },
+      { titel:'Gefühl benennen', text:'"Du bist gerade richtig wütend, weil…" — anerkennen ohne zu bewerten. Kinder beruhigen sich, wenn ihre Gefühle gespiegelt werden.', tipp:'Niemals während des Anfalls über Konsequenzen reden' },
+      { titel:'Sicheren Rahmen geben', text:'Bei körperlichem Anfall sicheren Ort wählen. Kind festhalten nur wenn Gefahr besteht — sonst Distanz mit Anwesenheit.', tipp:'"Ich bin da, wenn du mich brauchst" — und warten' },
+      { titel:'Routinen + Vorwarnung', text:'80% der Wutanfälle haben Auslöser: Hunger, Müdigkeit, Reizüberflutung. Feste Tagesabläufe + Vorwarnung bei Übergängen ("In 5 Min gehen wir").', tipp:'Wutanfall-Tagebuch 1 Woche — Muster sichtbar' },
+      { titel:'Nicht in Öffentlichkeit kämpfen', text:'Im Supermarkt: ruhig rausgehen, draußen die Wut ausleben lassen. Nicht peinlich berührt sein — andere Eltern verstehen es.', tipp:'Vorab zum Kind: "Wenn du tobst, gehen wir kurz raus"' },
+      { titel:'Nach dem Sturm reflektieren', text:'Wenn beide ruhig sind: kurz besprechen was passiert ist. Kein Vortrag — nur gemeinsam verstehen.', tipp:'"Wie können wir das nächste Mal anders machen?"' },
+      { titel:'Wahl-Optionen geben', text:'Statt "Zieh die Jacke an!" → "Die rote oder die blaue Jacke?" Kontrolle gibt Kindern Sicherheit.', tipp:'Funktioniert ab ca. 2 Jahren'},
+      { titel:'Eigene Wut kontrollieren', text:'Schreien zurück oder Schimpfen verstärkt den Anfall. Ruhig bleiben ist Übungssache — und das wichtigste Vorbild.', tipp:'Bei eigenem Wutgefühl: 10 Sek raus aus dem Raum'},
+      { titel:'Wenn nichts hilft: aushalten', text:'Manchmal müssen Kinder den Sturm einfach durchleben. 3-15 Minuten — dann fällt die Welle. Sie brauchen nur deine ruhige Anwesenheit.', tipp:'Stoppuhr im Kopf: nach 10 Min ist meist Schluss' }
+    ]
+  },
+  grenzen: {
+    icon:'🚧', label:'Grenzen setzen', farbe:'#D97706', bg:'#FEF3C7',
+    intro:'Kinder brauchen Grenzen, um sich sicher zu fühlen. Liebevoll aber konsequent — das ist die Kunst.',
+    tipps:[
+      { titel:'Wenige Regeln, klar formuliert', text:'Max. 5 Familien-Regeln. Konkret + positiv: "Wir reden ruhig" statt "Nicht schreien!". Kinder können nur wenige Regeln gleichzeitig verinnerlichen.', tipp:'Regeln visuell als Plakat aufhängen — auch für kleine Kinder' },
+      { titel:'Konsequenzen statt Strafen', text:'Logische Konsequenz: "Du wirfst Spielzeug, dann gehört es heute weg." Nicht: "Strafarbeit schreiben." Konsequenz hängt direkt mit dem Verhalten zusammen.', tipp:'Konsequenz vorher ankündigen, dann konsequent durchziehen' },
+      { titel:'Konsistenz beider Eltern', text:'Wenn Mama Süßes verbietet und Papa erlaubt — Kind testet aus. Eltern müssen sich vorher abstimmen, vor dem Kind einig auftreten.', tipp:'Wöchentlich 10 Min Eltern-Abgleich über Erziehungsfragen' },
+      { titel:'Aushandeln OK, aber Grenzen klar', text:'Wann darf das Kind mitentscheiden, wann nicht? Sachen mit Sicherheits-Bezug (Verkehr, Medikamente): nicht verhandelbar. Anziehen, Essen: oft Spielraum.', tipp:'Liste: "Diese 5 Dinge sind nie verhandelbar"' },
+      { titel:'Nein sagen lernen — bei Eltern!', text:'Kinder testen Grenzen. Wenn du "Nein" sagst und nachgibst → Kind lernt: laut + lange genug = ich bekomme alles. Bleib bei deinem ersten Nein.', tipp:'Vor dem Antworten kurz nachdenken — lieber später korrigieren' },
+      { titel:'Niemals leere Drohungen', text:'"Wenn du jetzt nicht kommst, fahre ich ohne dich!" → kannst du nicht durchziehen. Kind merkt das, glaubt dir nicht mehr. Nur Konsequenzen ansagen die du auch wirklich durchziehst.', tipp:'Im Zweifel weniger drohen, mehr handeln' },
+      { titel:'Kinder verstehen lassen warum', text:'Statt "Weil ich es sage" → "Weil sonst dein Bruder weint" oder "Weil das gefährlich ist". Verstehen macht Akzeptanz leichter.', tipp:'Bei kleinen Kindern: ganz kurze Begründung' },
+      { titel:'Verbote machen attraktiv', text:'"Nicht im Schrank essen!" → genau das wird gemacht. Stattdessen positiv formulieren: "Bonbons gibt es an der Theke."', tipp:'Wenn ein Verbot nicht nötig ist, weglassen' }
+    ]
+  },
+  schlaf: {
+    icon:'😴', label:'Schlafprobleme Kinder', farbe:'#7C3AED', bg:'#EDE9FE',
+    intro:'Schlaf ist das größte Familien-Thema. Die gute Nachricht: 95% der Probleme lassen sich mit Routine und Geduld lösen.',
+    tipps:[
+      { titel:'Feste Schlafenszeit', text:'Wochentage UND Wochenenden gleiche Zeit. Innere Uhr stabilisiert sich nach 2-3 Wochen. Babys/Kleinkinder: 19-20 Uhr, Schulkinder: 20-21 Uhr.', tipp:'Wochenende max. 30 Min Abweichung — sonst Montag-Schock' },
+      { titel:'Bett-Ritual 30 Min', text:'Immer gleiche Reihenfolge: Pyjama → Zähneputzen → Geschichte → Lied → Gute-Nacht-Kuss. Gehirn schaltet auf Schlaf um.', tipp:'Niemals Bildschirm im Ritual — Blaulicht hemmt Schlafhormon' },
+      { titel:'Dunkles, kühles Zimmer', text:'16-19°C ist optimal. Verdunkelungs-Rollos investieren — wirkt Wunder. Keine Nachtlichter heller als ein schwaches Nachtlicht (max. 7W).', tipp:'Schlafmaske bei Babys nicht — bei älteren Kindern OK' },
+      { titel:'Wenn das Kind kommt: konsequent', text:'Nachts kommt das Kind ins Elternbett? Sanft, aber konsequent zurück ins eigene Bett. Erste Nächte hart, nach 5-7 Nächten meist erledigt.', tipp:'Wegtragen wirkt besser als jedes Mal aufstehen' },
+      { titel:'Mittagsschlaf-Regel', text:'1-3 Jahre: 1-2 Std. 3-5 Jahre: ggf. wegfallen lassen wenn Kind abends nicht müde wird. Nach 15 Uhr keinen Mittagsschlaf mehr.', tipp:'Bei längerem Mittagsschlaf: später ins Bett' },
+      { titel:'Albträume managen', text:'Bei Schreckmomenten: Licht an, beruhigen, kurzes Trinken. Nicht zu lange wach werden lassen. Nicht erzählen lassen, sondern beruhigen.', tipp:'Bei wiederkehrenden Albträumen: vor dem Schlaf positive Geschichten' },
+      { titel:'Kinder schlafen anders', text:'Babys: 14-17h/Tag. Kleinkinder: 11-14h. Schulkinder: 9-12h. Wer weniger braucht, ist nicht "schwierig" sondern individuell.', tipp:'Schlaf-Tagebuch 1 Woche zeigt eigene Norm' },
+      { titel:'Co-Sleeping bewusst', text:'Familienbett ist OK — aber bewusste Entscheidung. Vor- und Nachteile abwägen. Wechsel zum eigenen Bett irgendwann nötig (meist mit 3-5 Jahren).', tipp:'Bei SIDS-Risiko (Frühchen, Rauchen): nicht im Elternbett' }
+    ]
+  },
+  geschwister: {
+    icon:'👫', label:'Geschwisterstreit', farbe:'#0EA5E9', bg:'#E0F2FE',
+    intro:'Geschwisterstreit ist sozial extrem wertvoll — Kinder lernen Konflikte zu lösen. Eltern sollen begleiten, nicht entscheiden.',
+    tipps:[
+      { titel:'Nicht den Schiedsrichter spielen', text:'Kinder können meist selbst lösen, wenn du ihnen Raum gibst. Nur bei körperlicher Gewalt oder Eskalation eingreifen.', tipp:'"Ich glaube, ihr findet eine Lösung" — und warten' },
+      { titel:'Beide hören, keiner ist "schuld"', text:'Bei Eingriff: beide Sichten anhören. "Was ist passiert?" — ohne Urteil. Kein "Wer hat angefangen?".', tipp:'Beide Seiten gleich ernst nehmen — keine Bevorzugung' },
+      { titel:'Lösung gemeinsam finden', text:'"Was würde euch beiden helfen?" Kinder denken oft kreative Lösungen die Eltern nicht sehen.', tipp:'Eltern bei Bedarf moderieren, nicht entscheiden' },
+      { titel:'Eifersucht ernst nehmen', text:'Bei neuem Geschwister: ältere Kinder regrediert (Daumenlutschen, nachts wach, "Babysprache"). Normal — extra Kuschelzeit hilft.', tipp:'Pro Kind 15 Min exklusive Eltern-Zeit pro Tag' },
+      { titel:'Kein direkter Vergleich', text:'"Schau wie ordentlich dein Bruder das macht!" → Geschwisterhass. Stattdessen jedes Kind individuell loben.', tipp:'Stärken pro Kind hervorheben, nicht im Vergleich' },
+      { titel:'Geheimnisse erlauben', text:'Kinder dürfen Geheimnisse voreinander haben — gerade ältere. Stärkt Selbstwert. Eltern müssen nicht alles wissen.', tipp:'Privatsphäre für jedes Kind (eigene Ecke, Schublade)' },
+      { titel:'Familien-Konferenz', text:'Wöchentlich 15 Min alle zusammen: Was war schön? Was nervt? Was wollen wir nächste Woche? Demokratie statt Hierarchie.', tipp:'Ältestes Kind moderiert reihum — wertet auf' },
+      { titel:'Streit als Lernchance', text:'Eltern modellieren: "Ich war wütend, weil… Ich entschuldige mich, weil…" Kinder lernen durch Beispiel mehr als durch Predigt.', tipp:'Eigene Streit-Lösungen vor den Kindern sichtbar machen' }
+    ]
+  },
+  bildschirm: {
+    icon:'📱', label:'Bildschirmzeit & Medien', farbe:'#059669', bg:'#D1FAE5',
+    intro:'Medien sind nicht böse, aber gestaltet werden müssen. Klare Regeln helfen, Kämpfe zu vermeiden.',
+    tipps:[
+      { titel:'WHO-Empfehlungen kennen', text:'U2 Jahre: kein Bildschirm. 2-5 J: max. 1h/Tag. 6-12 J: max. 2h. 13+: gemeinsame Vereinbarung. Echte Studien-Empfehlungen, nicht Bauchgefühl.', tipp:'Pro Kind verhandelt — Familienkontext beachten' },
+      { titel:'Kein Bildschirm 1h vor Schlaf', text:'Blaulicht hemmt Melatonin = Einschlafprobleme. Auch E-Reader-Apps mit Nachtmodus zählen. Reserviere Abendzeit für Bücher/Reden.', tipp:'Handy nicht im Schlafzimmer laden — Versuchung weg' },
+      { titel:'Inhalte > Zeit', text:'1h aktives Lernen (Anton-App, Khan Academy) ≠ 1h TikTok-Scrollen. Was das Kind tut, ist wichtiger als wie lang.', tipp:'Co-Watching: Mitmachen, drüber reden' },
+      { titel:'Kein TV beim Essen', text:'Mahlzeiten ohne Bildschirm fördern Gespräche und gesundes Essen. Familienritual schützen — wichtiger als jedes Programm.', tipp:'Handys in Box bei Mahlzeiten — alle (auch Eltern!)' },
+      { titel:'Bildschirmzeit verdienen', text:'Bildschirm als Belohnung nach Hausaufgaben/Pflichten. Vermeidet ständige Kämpfe. Aber: nicht zu sehr ritualisieren.', tipp:'Zeit-Token (5 Min Zettel) ab 6 Jahren' },
+      { titel:'Vorbild Eltern', text:'Wenn Eltern ständig auf Handy schauen, Kinder kopieren das. Bildschirm-frei-Zonen für die ganze Familie.', tipp:'Eltern auch 1h vor Schlaf kein Handy' },
+      { titel:'YouTube Kids einrichten', text:'Eigene App mit kuratierten Inhalten. Algorithmus weniger gefährlich als Haupt-YouTube. Trotzdem Eltern-Kontrolle wichtig.', tipp:'Suchfunktion deaktivieren bei kleinen Kindern' },
+      { titel:'Erste Smartphone-Phase', text:'Empfohlen ab 12-14 J. Vorher mit Tabletten/Family-Watches. Nicht zu früh = weniger Sucht-Anfälligkeit.', tipp:'Erst gebrauchtes Handy ohne Internet bei jüngeren' }
+    ]
+  },
+  schule: {
+    icon:'🎒', label:'Schule unterstützen', farbe:'#2563EB', bg:'#DBEAFE',
+    intro:'Schul-Erfolg hängt mehr von Eltern-Haltung ab als von Intelligenz. Begleiten statt überwachen, motivieren statt unter Druck setzen.',
+    tipps:[
+      { titel:'Hausaufgaben: nicht für, sondern MIT', text:'Eltern erklären, Kind macht selbst. Bei Fehlern: Frage stellen statt Antwort geben. Selbstständigkeit ist das Lernziel.', tipp:'"Wie kommst du darauf?" statt Korrektur' },
+      { titel:'Lern-Routine etablieren', text:'Immer gleiche Zeit + gleicher Platz. Z.B. nach Snack/Spielen 15-16 Uhr Hausaufgaben. Wird automatisch wie Zähneputzen.', tipp:'Pomodoro: 25 Min lernen, 5 Min Pause' },
+      { titel:'Erfolg loben, nicht Talent', text:'"Du hast hart gearbeitet!" statt "Du bist so klug!" — fördert Wachstumsdenken. Kinder probieren mehr, geben weniger schnell auf.', tipp:'Carol Dweck: "Mindset" — Buch lesen wenn Zeit' },
+      { titel:'Mobbing erkennen', text:'Plötzlicher Rückzug, Schulangst, Bauchschmerzen, schlechtere Noten = Warnsignal. Direkt mit Klassenlehrer sprechen, nicht warten.', tipp:'Nummer gegen Kummer Kinder: 116111 (kostenlos)' },
+      { titel:'Schul-Stress nicht ignorieren', text:'Bei Überforderung: Schulpsychologe nutzen (kostenlos, anonym). Niemals zur Schule schleppen wenn echte Angst — Symptom des Problems.', tipp:'Vertrauen aufbauen — Kind erzählt erst dann ehrlich' },
+      { titel:'Eigenverantwortung früh', text:'Ab Klasse 3: Schultasche selbst packen. Vergessen = Konsequenz erleben. Nicht ständig retten.', tipp:'Pro Klasse mehr Eigenverantwortung — Stufenplan' },
+      { titel:'Lehrer-Kontakt aktiv halten', text:'Elternabende, Sprechstunden nutzen. Nicht nur wenn Probleme sind. Lehrer-Beziehung ist Gold wert.', tipp:'Wenn Online-Anbindung möglich: WhatsApp-Klassenchat' },
+      { titel:'Noten nicht überbewerten', text:'Eine 4 in Mathe ist kein Familien-Drama. Kinder mit überzogenem Druck entwickeln Leistungsangst — Note wird schlechter, nicht besser.', tipp:'Frage: "Was hast du gelernt?" statt "Welche Note?"' }
+    ]
+  },
+  pubertaet: {
+    icon:'🌪️', label:'Pubertät überleben', farbe:'#BE185D', bg:'#FCE7F3',
+    intro:'Pubertät ist Trennungsschmerz auf beiden Seiten. Das Kind sucht Identität, Eltern müssen loslassen. Konflikte sind Entwicklungs-Aufgabe.',
+    tipps:[
+      { titel:'Nicht persönlich nehmen', text:'"Ich hasse dich!" bedeutet "Ich teste, ob du mich auch dann liebst." Antwort: "Schade, ich liebe dich trotzdem."', tipp:'Tagebuch wie Eltern: Frustration ablassen' },
+      { titel:'Pferd länger an der Leine', text:'Privatsphäre respektieren (Zimmertür zu, Tagebuch heilig). Vertrauen aufbauen — wer kontrolliert, verliert die Beziehung.', tipp:'Anklopfen lernen — auch wenn schwer' },
+      { titel:'Wenige aber harte Grenzen', text:'Drogen, Schule, Sicherheit = nicht verhandelbar. Kleidung, Haarfarbe, Musik = lass los. Battles wählen!', tipp:'5 Hauptgrenzen aufschreiben — Rest egal' },
+      { titel:'Verbote schaffen Reiz', text:'"Nie Alkohol!" → kontrolliert experimentieren wäre besser. Aufklärung statt Verbot — bei Drogen, Sex, Risiko.', tipp:'Ehrlich erzählen: eigene Fehler, eigene Lehren' },
+      { titel:'Aktiv zuhören', text:'Wenn Teenager redet — Handy weg, hinsetzen, nicht unterbrechen. Selten genug — diese Momente sind GOLD.', tipp:'Autofahrten sind beste Gespräche-Möglichkeit' },
+      { titel:'Identität durch Distanz', text:'Teenager grenzen sich ab — das ist gesund. "Ich bin nicht wie Mama/Papa" ist Entwicklungsaufgabe.', tipp:'Eigene Identität auch ohne Kind aufrechterhalten' },
+      { titel:'Frühe Aufklärung über Sex', text:'Lieber zu früh als zu spät. Mit 8-9 grundlegende Aufklärung, mit 11-12 Pubertät erklären, mit 14 Verhütung.', tipp:'Buch "Klär mich auf" als Türöffner' },
+      { titel:'Mental Health wachsam', text:'15-20% Jugendliche haben psychische Probleme. Schlafmangel, Rückzug, Selbstverletzung, plötzliche Wesensänderung: Profi suchen!', tipp:'Krisenchat.de — anonym, 24/7, für Teenager' }
+    ]
+  },
+  bindung: {
+    icon:'❤️', label:'Bindung stärken', farbe:'#EC4899', bg:'#FCE7F3',
+    intro:'Sichere Bindung ist die wichtigste Eltern-Aufgabe. Sie schützt das Kind ein Leben lang vor seelischen Problemen.',
+    tipps:[
+      { titel:'Bedürfnisse zuverlässig erkennen', text:'Baby: Bei Schreien promptes Reagieren ≠ Verwöhnen. Es ist Grundlage von Urvertrauen. Erst ab 6 Monaten kann man Routine etablieren.', tipp:'In 1. Lebensjahr: immer reagieren' },
+      { titel:'Augenkontakt + Körpernähe', text:'Babys brauchen Gesicht. Spielzeug ist Bonus. Tragen, kuscheln, ansehen — das ist die Eltern-Arbeit Nr. 1.', tipp:'Bildschirmzeit der Eltern reduzieren — Baby sieht Handy statt Gesicht' },
+      { titel:'Qualitätszeit > Quantität', text:'30 Min ungeteilte Aufmerksamkeit (kein Handy!) ist wertvoller als 3h nebenbei. Kleine Rituale prägen.', tipp:'1 Stunde am Tag echt da sein — schaffbar' },
+      { titel:'Emotionen spiegeln', text:'"Ich sehe, du bist traurig" — Kinder lernen ihre Gefühle benennen. Grundlage für Empathie und Selbstregulation.', tipp:'Auch eigene Emotionen vor den Kindern zeigen' },
+      { titel:'Reparieren ist Bindung', text:'Eltern werden wütend, machen Fehler — das ist OK. Wichtig: hinterher entschuldigen, erklären. "Ich war wütend, das tut mir leid."', tipp:'Beziehung wird durch Reparatur stärker, nicht schwächer' },
+      { titel:'Rituale schaffen Wurzeln', text:'Samstag-Pancakes, jeden Abend ein Buch, Geburtstags-Rituale. Kinder erinnern sich Jahrzehnte später an diese.', tipp:'1 Familien-Ritual pro Saison ist genug' },
+      { titel:'Kuschelzeit auch bei großen Kindern', text:'10-Jährige brauchen noch Umarmungen. Niemals "Du bist zu alt dafür!" sagen — körperliche Nähe lebenslang heilsam.', tipp:'Pro Tag mindestens 1× lange Umarmung' },
+      { titel:'Beim Einschlafen begleiten', text:'Auch große Kinder profitieren von kurzem Bett-Gespräch. 5 Min "Wie war dein Tag?" — Goldene Bonding-Zeit.', tipp:'Diese Zeit nicht durch Handys verdrängen' }
+    ]
+  },
+  kommunikation: {
+    icon:'💬', label:'Gut mit dem Kind reden', farbe:'#0D9488', bg:'#CCFBF1',
+    intro:'Wie du sprichst, entscheidet ob dein Kind zuhört oder dichtmacht. Diese Methoden ersetzen Schimpfen durch echte Verständigung.',
+    tipps:[
+      { titel:'Ich-Botschaften statt Vorwürfe', text:'"Ich ärgere mich, wenn die Schuhe im Weg liegen" statt "Du bist so unordentlich!". Methode nach Thomas Gordon — beschreibt das Problem, ohne das Kind abzuwerten.', tipp:'Aufbau: Ich fühle … wenn … weil …' },
+      { titel:'Aktives Zuhören', text:'Bevor du eine Lösung gibst, spiegle das Gefühl: "Du bist enttäuscht, weil dein Turm umgefallen ist." Das Kind fühlt sich verstanden und beruhigt sich schneller.', tipp:'Erst zuhören, dann lösen — nicht umgekehrt' },
+      { titel:'Kurz und klar sprechen', text:'Ein Auftrag pro Satz, wenige Worte. "Bitte Zähne putzen" statt langer Erklärungen. Kleine Kinder verlieren sich in langen Sätzen.', tipp:'Je jünger das Kind, desto kürzer der Satz' },
+      { titel:'Auf Augenhöhe + Name zuerst', text:'Hinknien, Blickkontakt suchen, das Kind beim Namen ansprechen — DANN die Bitte. Aus dem Nebenzimmer gerufene Anweisungen kommen nicht an.', tipp:'Erst Kontakt, dann Inhalt' },
+      { titel:'Positiv formulieren', text:'"Geh bitte langsam" statt "Lauf nicht!". Das Gehirn überhört das Wort "nicht" — gesagt wird, was das Kind tun SOLL.', tipp:'Sag, was du willst — nicht, was du nicht willst' },
+      { titel:'Übergänge ankündigen', text:'"In 5 Minuten räumen wir auf" statt plötzlichem Abbruch. Vorwarnung gibt dem Kind Zeit, sich innerlich umzustellen — verhindert viele Konflikte.', tipp:'Sanduhr oder Timer macht Zeit für Kinder sichtbar' },
+      { titel:'Leiser statt lauter werden', text:'Wenn du explodieren willst: bewusst flüstern oder kurz pausieren. Bei leiser Stimme hören Kinder oft genauer hin als bei Geschrei.', tipp:'Schreien gewöhnt sich das Kind an — Flüstern nicht' },
+      { titel:'Fragen statt befehlen', text:'"Was brauchst du noch, bevor wir losgehen?" macht das Kind zum Mitdenker statt zum Befehlsempfänger — und es kooperiert lieber.', tipp:'Echte Fragen, keine versteckten Befehle' }
+    ]
+  },
+  gefuehle: {
+    icon:'🎭', label:'Gefühle & Wut begleiten', farbe:'#9333EA', bg:'#F3E8FF',
+    intro:'Kinder müssen erst lernen, mit starken Gefühlen umzugehen. Du bist ihr Trainer — mit diesen Methoden des Emotionscoachings.',
+    tipps:[
+      { titel:'Emotionscoaching in 5 Schritten', text:'Methode nach John Gottman: 1. Gefühl beim Kind bemerken, 2. als Nähe-Chance sehen, 3. zuhören, 4. Gefühl benennen, 5. gemeinsam eine Lösung suchen.', tipp:'Schritt 4 nie überspringen — Benennen beruhigt' },
+      { titel:'Gefühls-Thermometer', text:'Mit Farben (grün-gelb-rot) lernt das Kind, seine Anspannung früh zu erkennen — bevor sie zum Ausbruch wird.', tipp:'Gemeinsam ein Thermometer-Bild basteln und aufhängen' },
+      { titel:'Gefühl erlauben, Verhalten begrenzen', text:'"Du darfst wütend sein — aber hauen ist nicht erlaubt." Das Gefühl ist nie falsch, nur manche Handlung. Beides klar trennen.', tipp:'Nie sagen "Sei nicht traurig" — Gefühle abzuwerten verstärkt sie' },
+      { titel:'Wut-Werkzeugkiste', text:'Legt gemeinsam fest, was bei Wut hilft: Kissen boxen, stampfen, tief atmen, bis 10 zählen. Geübt, BEVOR die Wut kommt.', tipp:'Werkzeuge auf Karten malen — Kind wählt selbst' },
+      { titel:'Ruhe-Ecke statt Strafecke', text:'Ein gemütlicher Platz mit Kissen und Büchern zum Runterkommen — freiwillig, nicht als Bestrafung. So lernt das Kind Selbstberuhigung.', tipp:'Geh anfangs mit — Beruhigen lernt man zu zweit' },
+      { titel:'Ängste ernst nehmen', text:'Nicht "Stell dich nicht an". Angst benennen, begleiten und in kleinen Schritten üben — etwa erst mit Licht, dann mit Nachtlicht schlafen.', tipp:'Mut wächst in Mini-Schritten, nicht durch Zwang' },
+      { titel:'Gefühle vorleben', text:'Sag selbst "Ich bin gerade gestresst" oder "Das macht mich froh". Kinder lernen den Umgang mit Gefühlen am Modell der Eltern.', tipp:'Auch zeigen, wie du dich wieder beruhigst' },
+      { titel:'Erst trösten, dann reden', text:'Im aufgewühlten Zustand kann ein Kind nicht lernen. Erst Nähe und Beruhigung — das Gespräch über Lösungen kommt viel später.', tipp:'Lernen geht nur im ruhigen Gehirn' }
+    ]
+  },
+  essen: {
+    icon:'🍽️', label:'Essen ohne Stress', farbe:'#16A34A', bg:'#DCFCE7',
+    intro:'Essens-Kämpfe machen niemanden satt. Mit der richtigen Aufgaben-Teilung wird der Familientisch wieder entspannt.',
+    tipps:[
+      { titel:'Aufgaben-Teilung beim Essen', text:'Satter-Methode: Eltern entscheiden WAS, WANN und WO gegessen wird — das Kind entscheidet OB und WIE VIEL es isst. Das beendet Macht-Kämpfe.', tipp:'Dein Job endet beim Anbieten' },
+      { titel:'Kein Zwang, kein Bestechen', text:'"Noch drei Bissen, dann gibts Nachtisch" macht Gemüse unattraktiv und Süßes zur Belohnung. Druck und Deals komplett rausnehmen.', tipp:'Ein gezwungenes Kind isst weniger, nicht mehr' },
+      { titel:'Neues 10- bis 15-mal anbieten', text:'Kinder brauchen viele Begegnungen mit einem Lebensmittel, bevor sie es mögen. Immer wieder anbieten — ganz ohne Kommentar und Drama.', tipp:'Ablehnung heute heißt nicht Ablehnung für immer' },
+      { titel:'Mitmachen lassen', text:'Kinder essen viel eher, was sie selbst gewaschen, gerührt oder dekoriert haben. Kochen ist die beste Vorbereitung aufs Probieren.', tipp:'Schon Kleine dürfen waschen und umrühren' },
+      { titel:'Feste Mahlzeiten + 2 Snacks', text:'Kein Dauer-Snacken zwischendurch. Wer den ganzen Tag nascht, hat zur Mahlzeit keinen Hunger. Hunger ist der beste Koch.', tipp:'Wasser ist zwischendurch immer erlaubt' },
+      { titel:'Familientisch ohne Bildschirm', text:'Gemeinsam essen, reden, und das Kind sieht: Mama und Papa essen auch Gemüse. Vorbild wirkt stärker als jede Aufforderung.', tipp:'Handys während der Mahlzeit in eine Box' },
+      { titel:'Immer etwas Vertrautes dabei', text:'Stell neben Neues immer eine Komponente, die das Kind sicher mag (z. B. Brot oder Nudeln). So bleibt der Teller ohne Angst.', tipp:'Sicheres Essen + Neues nebeneinander' },
+      { titel:'Süßes klug einplanen', text:'Komplettes Verbot macht Süßes nur reizvoller. Besser: als normalen, begrenzten Teil einplanen — etwa eine feste Nasch-Portion am Tag.', tipp:'Erlaubtes Süßes verliert seinen Sonderreiz' }
+    ]
+  },
+  selbststaendig: {
+    icon:'🦸', label:'Selbstständigkeit fördern', farbe:'#EA580C', bg:'#FFEDD5',
+    intro:'Jedes "Ich kann das selbst!" stärkt das Selbstvertrauen. Deine Aufgabe: Gelegenheiten schaffen und die Hände in den Schoß legen.',
+    tipps:[
+      { titel:'Hilf mir, es selbst zu tun', text:'Dieser Montessori-Leitsatz heißt: lieber 10 Minuten warten als selbst machen. Jede Tätigkeit, die das Kind übernimmt, lässt es wachsen.', tipp:'Übernimm nur, was das Kind WIRKLICH noch nicht kann' },
+      { titel:'Altersgerechte Aufgaben', text:'3 Jahre: Tisch decken. 6 Jahre: Brot schmieren. 10 Jahre: Wäsche falten. Steigere die Verantwortung Stück für Stück.', tipp:'Lieber eine Aufgabe zuverlässig als fünf halbe' },
+      { titel:'Umgebung kindgerecht machen', text:'Haken in Kinderhöhe, ein kleiner Hocker am Waschbecken, Geschirr im unteren Schrank. Eine vorbereitete Umgebung macht Selbstständigkeit erst möglich.', tipp:'Was das Kind erreicht, kann es auch selbst tun' },
+      { titel:'Mehr Zeit einplanen', text:'Wer es eilig hat, macht alles selbst. 15 Minuten früher aufstehen schafft den Raum, in dem das Kind sich selbst anziehen darf.', tipp:'Übung braucht Puffer im Tagesplan' },
+      { titel:'Fehler gehören dazu', text:'Verschütteter Saft ist Lernen, kein Drama. "Macht nichts — hol dir den Lappen." So bleibt das Kind mutig genug, es weiter zu versuchen.', tipp:'Ruhig bleiben bei Missgeschicken' },
+      { titel:'Nicht sofort retten', text:'Klemmt der Reißverschluss, frag erst "Magst du es nochmal probieren?" statt gleich einzugreifen. Durchhalten will geübt sein.', tipp:'Eine kleine Frust-Dosis ist gesund' },
+      { titel:'Echte Familienämter', text:'Jedes Kind hat eine sichtbare, echte Aufgabe für die Familie — Pflanzen gießen, Tisch abwischen. Das stärkt Zugehörigkeit und Stolz.', tipp:'Ämter reihum wechseln' },
+      { titel:'Entscheidungen üben lassen', text:'Kleine tägliche Wahlmöglichkeiten ("Apfel oder Banane?", "rote oder blaue Socken?") trainieren den Entscheidungs-Muskel fürs Leben.', tipp:'Zwei Optionen reichen — zu viele überfordern' }
+    ]
+  },
+  loben: {
+    icon:'🌟', label:'Loben & motivieren', farbe:'#CA8A04', bg:'#FEF9C3',
+    intro:'Falsches Lob macht abhängig vom Applaus, richtiges Lob macht stark. Es kommt darauf an, WIE du lobst.',
+    tipps:[
+      { titel:'Anstrengung loben, nicht Talent', text:'"Du hast lange geübt" statt "Du bist so schlau" — Forschung von Carol Dweck. Wer fürs Bemühen gelobt wird, gibt seltener auf.', tipp:'Lob den Weg, nicht das Ergebnis' },
+      { titel:'Konkret statt pauschal', text:'"Du hast die Farben schön gemischt" wirkt stärker als ein beiläufiges "Toll gemacht!". Das Kind merkt, dass du wirklich hingesehen hast.', tipp:'Beschreibe genau, was dir auffällt' },
+      { titel:'Ermutigen statt bewerten', text:'"Du hast es geschafft — wie fühlt sich das an?" lenkt den Blick auf die eigene Freude statt auf das Urteil der Eltern.', tipp:'Frage nach dem Gefühl des Kindes' },
+      { titel:'Beschreiben statt urteilen', text:'Sag einfach, was du siehst: "Du hast alle Schuhe in einer Reihe aufgestellt." Das Kind zieht den stolzen Schluss selbst.', tipp:'Zeigen, was ist — nicht "brav" oder "super"' },
+      { titel:'Belohnungssysteme sparsam', text:'Sticker-Pläne nur für EIN konkretes Ziel und zeitlich begrenzt. Sonst lernt das Kind: ohne Belohnung tue ich gar nichts.', tipp:'Belohnung ausschleichen, sobald die Routine sitzt' },
+      { titel:'Nicht für Selbstverständliches loben', text:'Dauerlob nutzt sich ab und wird wertlos. Würdige gezielt das, was dem Kind wirklich Mühe gemacht hat.', tipp:'Echtes Lob darf selten sein' },
+      { titel:'Zutrauen aussprechen', text:'"Ich weiß, das schaffst du" motiviert weit mehr als Druck oder Drohung. Dein Vertrauen wird zum Vertrauen des Kindes in sich selbst.', tipp:'Glaube an das Kind — laut und hörbar' },
+      { titel:'Inneren Antrieb stärken', text:'Frag "Bist du selbst zufrieden damit?". Das Kind soll nicht für Applaus handeln, sondern aus eigenem Stolz und Interesse.', tipp:'Ziel ist ein Kind, das sich selbst genug ist' }
+    ]
+  },
+  sauber: {
+    icon:'🚽', label:'Sauber & trocken werden', farbe:'#0284C7', bg:'#E0F2FE',
+    intro:'Trockenwerden ist Reifung, kein Trainingserfolg. Mit Geduld und ohne Druck klappt es ganz von allein.',
+    tipps:[
+      { titel:'Auf Bereitschaft warten', text:'Meist zwischen 2 und 3 Jahren. Zeichen: Windel bleibt länger trocken, Interesse am Klo, das Kind kann die Hose selbst herunterziehen.', tipp:'Reife kann man nicht beschleunigen' },
+      { titel:'Kein Druck, kein Termin', text:'Sauberwerden lässt sich nicht erzwingen — Stress führt zu Rückschritten und Verstopfung. Lass das Kind das Tempo bestimmen.', tipp:'Kein Vergleich mit anderen Kindern' },
+      { titel:'Töpfchen sichtbar machen', text:'Stell das Töpfchen in den Wohnbereich. Das Kind darf es in Ruhe erkunden und ausprobieren — auch erst mal angezogen.', tipp:'Vertrautheit nimmt die Scheu' },
+      { titel:'Lockere, einfache Kleidung', text:'Hosen mit Gummibund, die das Kind allein herunterzieht. Keine Bodys, keine Knöpfe, keine Latzhosen in dieser Phase.', tipp:'Selbst ausziehen können = rechtzeitig schaffen' },
+      { titel:'Routine statt Dauerfragen', text:'Feste Töpfchen-Zeiten — nach dem Aufwachen, vor dem Rausgehen — statt ständigem "Musst du mal?". Das nervt und erzeugt Trotz.', tipp:'Angebot machen, nicht ausfragen' },
+      { titel:'Unfälle ruhig nehmen', text:'"Macht nichts" sagen und gemeinsam aufwischen. Schimpfen oder Enttäuschung zeigen verlängert die Phase nur.', tipp:'Pannen sind ein normaler Teil des Lernens' },
+      { titel:'Nachts dauert länger', text:'Trockene Nächte kommen oft erst Monate später — gesteuert von einem Hormon, nicht vom Willen. Windel nachts ist bis etwa 5 Jahre normal.', tipp:'Tag und Nacht getrennt betrachten' },
+      { titel:'Erfolge ruhig würdigen', text:'Ein Lächeln und "Du hast es selbst gemerkt!" reicht völlig. Eine große Jubel-Party macht aus dem Töpfchen ein Leistungs-Thema.', tipp:'Anerkennen ja, Druck durch Lob nein' }
+    ]
+  },
+  eingewoehnung: {
+    icon:'🏫', label:'Kita- & Schulstart', farbe:'#4F46E5', bg:'#E0E7FF',
+    intro:'Der erste Abschied ist für alle schwer. Eine sanfte, verlässliche Eingewöhnung legt den Grundstein für ein sicheres Kind.',
+    tipps:[
+      { titel:'Sanfte Eingewöhnung', text:'Berliner Modell: erst kurz mit Elternteil dabei, dann erste kurze Trennungen, langsam steigern. Das Tempo bestimmt das Kind.', tipp:'Tage nicht überspringen, auch wenn es gut läuft' },
+      { titel:'Kurzes, klares Abschiedsritual', text:'Immer gleich: ein Kuss, "Tschüss, ich hole dich nach dem Mittagessen", gehen. Wiederholung gibt Halt — endlose Verabschiedungen nicht.', tipp:'Ritual festlegen und jeden Tag gleich machen' },
+      { titel:'Niemals heimlich verschwinden', text:'Wegschleichen zerstört das Vertrauen — das Kind bleibt dann ständig angespannt. Immer verabschieden, auch wenn kurz Tränen kommen.', tipp:'Tränen beim Abschied sind erlaubt und normal' },
+      { titel:'Übergangsobjekt mitgeben', text:'Ein Kuscheltier, ein Familienfoto oder ein Tuch, das nach Mama riecht, gibt Sicherheit in der fremden Umgebung.', tipp:'Ein Stück Zuhause reist mit' },
+      { titel:'Eigene Anspannung verbergen', text:'Kinder spüren die Unsicherheit der Eltern sofort. Tritt ruhig und zuversichtlich auf — auch wenn es dir innerlich schwerfällt.', tipp:'Deine Ruhe wird zur Ruhe des Kindes' },
+      { titel:'Verlässlich pünktlich abholen', text:'Wer kommt wie versprochen, baut tiefes Urvertrauen auf. In der Eingewöhnung lieber etwas zu früh als zu spät da sein.', tipp:'Versprochene Zeit unbedingt einhalten' },
+      { titel:'Nach dem Tag Zeit lassen', text:'Müde, quengelig und anhänglich nach Kita oder Schule zu sein ist völlig normal. Plane einen ruhigen Nachmittag mit viel Nähe.', tipp:'Kein volles Programm nach dem Kita-Tag' },
+      { titel:'Im Team mit den Erziehern', text:'Tauscht euch regelmäßig kurz aus. Erzieher sehen Dinge, die dir entgehen — und du kennst dein Kind am besten.', tipp:'Bring- und Abholzeit für ein kurzes Update nutzen' }
+    ]
+  },
+  luegen: {
+    icon:'🎣', label:'Lügen & Schwindeln', farbe:'#B45309', bg:'#FEF3C7',
+    intro:'Lügen ist meist ein Zeichen von Angst, nicht von schlechtem Charakter. Verstehe das Warum — dann findest du den richtigen Weg.',
+    tipps:[
+      { titel:'Entwicklung verstehen', text:'Bis etwa 4 Jahre mischen Kinder Fantasie und Wirklichkeit — das ist noch kein echtes Lügen, sondern lebhafte Vorstellungskraft.', tipp:'Bei Kleinen: Fantasie würdigen, nicht bestrafen' },
+      { titel:'Keine Lügen-Falle stellen', text:'Frag nicht "Hast du das gemacht?", wenn du es schon weißt. Das lädt das Kind regelrecht zum Lügen ein. Sprich die Tat direkt an.', tipp:'Statt Verhör: "Ich sehe, der Saft ist umgekippt — lass uns aufwischen."' },
+      { titel:'Die Wahrheit sicher machen', text:'"Erzähl es mir ehrlich, dann finden wir gemeinsam eine Lösung." Wenn Wahrheit nicht hart bestraft wird, lohnt sich Lügen nicht.', tipp:'Angst vor der Reaktion erzeugt die Lüge' },
+      { titel:'Ehrlichkeit ausdrücklich loben', text:'Wenn das Kind die Wahrheit sagt, würdige genau das — auch wenn die Tat selbst falsch war. So wird Ehrlichkeit zur sicheren Wahl.', tipp:'"Danke, dass du ehrlich warst" zuerst sagen' },
+      { titel:'Den Grund suchen', text:'Kinder lügen aus Angst, Scham oder um zu gefallen. Verstehe die Ursache hinter der Lüge, statt nur die Lüge zu bestrafen.', tipp:'Frag dich: Wovor hat mein Kind Angst?' },
+      { titel:'Klauen ruhig klären', text:'Jüngeren Kindern fehlt noch das Verständnis für Eigentum. Ohne Drama: das Genommene zurückbringen und die Entschuldigung begleiten.', tipp:'Begleiten statt beschämen' },
+      { titel:'Selbst Vorbild sein', text:'Keine kleinen Notlügen vor dem Kind ("Sag, ich bin nicht da"). Kinder kopieren genau diese Alltags-Schwindeleien.', tipp:'Ehrlichkeit beginnt bei den Eltern' },
+      { titel:'Beziehung wirkt stärker als Strafe', text:'Wer hart bestraft, erzieht vor allem geschicktere Lügner. Eine vertrauensvolle Beziehung und ruhige Konsequenz wirken nachhaltiger.', tipp:'Verbindung schlägt Kontrolle' }
+    ]
+  },
+  alleinerziehend: {
+    icon:'💪', label:'Alleinerziehend stark', farbe:'#7C3AED', bg:'#EDE9FE',
+    intro:'Alleinerziehend zu sein ist anstrengend, aber Kinder von Alleinerziehenden sind nicht im Nachteil — wenn Eltern auf sich achten.',
+    tipps:[
+      { titel:'Netzwerk aufbauen', text:'Familie, Freunde, Nachbarn, Andere Alleinerziehende (VAMV) — niemand schafft das alleine. Hilfe annehmen ist Stärke, nicht Schwäche.', tipp:'Babysitting im Tausch — günstigste Lösung' },
+      { titel:'Selbstfürsorge ist Pflicht', text:'Wer nichts gibt, kann nichts geben. 1h pro Woche nur für dich = unverhandelbar. Spazieren, Buch, Bad — egal was.', tipp:'Mama-/Papa-Pause im Kalender als "Termin"' },
+      { titel:'Geld-Hilfen voll nutzen', text:'Unterhaltsvorschuss (bis 395€), Mehrbedarf Alleinerziehend (36%), Steuerklasse 2 (bis 350€/Jahr), Wohngeld. Alle prüfen + beantragen.', tipp:'Beratung kostenlos: VAMV, Caritas, Pro Familia' },
+      { titel:'Den anderen Elternteil nicht schlecht reden', text:'Egal wie schlimm — vor dem Kind nichts Negatives über Ex sagen. Kind fühlt sich selbst halbiert. Frust mit Freunden besprechen.', tipp:'Therapie wenn Wut zu groß — auch für Kind wichtig' },
+      { titel:'Routinen geben Sicherheit', text:'Klare Tagesabläufe ersetzen den fehlenden zweiten Elternteil. Vorhersagbarkeit = Geborgenheit für Kinder.', tipp:'Visueller Wochenplan an Wand' },
+      { titel:'Männliche/Weibliche Bezugspersonen', text:'Wenn ein Elternteil fehlt: Onkel, Großvater, Sportlehrer als zusätzliche Bezugsperson. Kinder profitieren von beiden Geschlechtern.', tipp:'Pate / "Familienfreund" bewusst pflegen' },
+      { titel:'Schuldgefühle ablegen', text:'"Mein Kind hat es schlechter weil…" → Forschung zeigt: Kinder Alleinerziehender sind nicht weniger glücklich. Liebe + Stabilität reichen.', tipp:'Therapie bei chronischen Schuldgefühlen' },
+      { titel:'Mit dem Kind ehrlich sein', text:'Altersgerecht erklären warum es so ist. Kinder spüren Wahrheit. Nicht romantisieren oder verharmlosen.', tipp:'"Manchmal lieben Eltern sich nicht mehr — aber dich lieben wir beide"' },
+      { titel:'Eigenes Liebesleben', text:'Du hast Recht auf eigene Beziehung — aber nicht jeden vorstellen. Neue Partner erst nach 6 Monaten Beziehung den Kindern zeigen.', tipp:'Eigene Wohnung behalten falls möglich — Übergang sanfter' },
+      { titel:'Notfall-Plan bereit', text:'Wenn ICH krank werde: Liste mit 3 Personen die einspringen. Schul-Notfallkontakte aktualisieren. Geheimer Notgroschen.', tipp:'Vorsorgevollmacht für Patin/Großmutter — wichtig!' }
+    ]
+  },
+  methoden: {
+    icon:'📚', label:'Erziehungs-Methoden', farbe:'#0891B2', bg:'#CFFAFE',
+    intro:'Verschiedene Erziehungsstile haben verschiedene Effekte. Forschung zeigt klar: "Autoritativ" — also liebevoll UND mit Regeln — ist optimal.',
+    tipps:[
+      { titel:'Autoritativ (empfohlen)', text:'Hohe Wärme + hohe Anforderungen. Regeln gibt es, sind begründet. Kinder fühlen sich geliebt UND wissen Grenzen. Beste Studienlage seit 60 Jahren.', tipp:'Baumrind-Studie: höchstes Selbstwertgefühl bei diesen Kindern' },
+      { titel:'Autoritär (nicht empfohlen)', text:'Hohe Anforderungen, niedrige Wärme. "Weil ich es sage!" Kinder werden ängstlich, unselbstständig oder rebellisch. Heutiger Forschungs-Konsens: schädlich.', tipp:'Wenn so erzogen: bewusst gegensteuern — schaffbar' },
+      { titel:'Permissiv (nicht empfohlen)', text:'Hohe Wärme, keine Regeln. "Mach was du willst!" Kinder werden impulsiv, ungeduldig, leistungsschwach. Modern, aber nicht klug.', tipp:'Regeln sind Liebe — Forschung zeigt das deutlich' },
+      { titel:'Bedürfnisorientierte Erziehung', text:'Inspiriert von Bowlby/Maslow. Kindliche Bedürfnisse ernst nehmen — aber Eltern-Bedürfnisse genauso. Nicht "Kind über alles" — sondern "Familie als System".', tipp:'Buch: "Auch kleine Kinder haben schon große Gefühle"' },
+      { titel:'Montessori-Prinzip', text:'Selbsttätigkeit fördern. "Hilf mir, es selbst zu tun." Material auf Augenhöhe, Kinder probieren aus. Lange Konzentrations-Phasen schützen.', tipp:'Kita-Wahl: Montessori-Kitas oft sehr gut' },
+      { titel:'Pikler-Pädagogik', text:'Bei Babys/Kleinkindern: freie Bewegungs- und Spielentwicklung. Eltern beobachten, intervenieren wenig. Sehr förderliche frühe Selbstregulation.', tipp:'Statt Babywippe: Decke auf Boden, freie Bewegung' },
+      { titel:'Demokratische Erziehung', text:'Kinder dürfen mitbestimmen (altersangemessen). Familien-Konferenzen, gemeinsame Regel-Findung. Trainiert für Demokratie und Eigenverantwortung.', tipp:'Ab 4 Jahren in Mini-Entscheidungen einbeziehen' },
+      { titel:'Bindungsorientiert (Attachment Parenting)', text:'Maximale Nähe in ersten Jahren. Tragen, Stillen lange, Familienbett. Bildet starke Bindung — kann aber für Eltern erschöpfend sein.', tipp:'Nicht alles muss befolgt werden — sich nicht unter Druck setzen' },
+      { titel:'Positive Disziplin (Nelsen)', text:'Konsequenzen statt Strafen. Augenhöhe + Klarheit. Eines der besten Bücher: "Positive Discipline" von Jane Nelsen.', tipp:'Bei Verhaltensproblemen: dieses Buch lesen' },
+      { titel:'Adlerianische Erziehung', text:'Kinder als gleichwertig sehen (nicht "klein und doof"). Ermutigung statt Lob. Familienkonferenzen. Sehr modern, oft mit Positive Discipline kombiniert.', tipp:'"Kinder fordern uns heraus" — Klassiker-Buch von Dreikurs' }
+    ]
+  }
+};
+
+function erziehungTabWaehlen(t) { state.erziehungTab = t; render(); }
+
+function renderErziehung() {
+  const aktivId = state.erziehungTab && ERZIEHUNG_DATEN[state.erziehungTab] ? state.erziehungTab : 'trotz';
+  const aktiv = ERZIEHUNG_DATEN[aktivId];
+  const total = Object.values(ERZIEHUNG_DATEN).reduce((s, k) => s + k.tipps.length, 0);
+
+  return `
+  <div class="bereich-hero">
+    <div class="bereich-hero-titel">🧸 Erziehungshilfe</div>
+    <div class="bereich-hero-sub">${total} Tipps · ${Object.keys(ERZIEHUNG_DATEN).length} Themen</div>
+    <div class="bereich-hero-sub-2">Praktische Methoden und Hilfen für jede Erziehungsfrage — von Trotzphase bis Pubertät</div>
+  </div>
+
+  <div class="info-box lila"><span class="ib-icon">💡</span><div class="ib-text"><strong>Frag den Familien-Assistenten</strong>: Hast du eine spezifische Erziehungsfrage? Geh auf Start → KI-Assistent — er kennt diese Tipps und passt sie auf deine Situation an.</div></div>
+
+  <div class="ges-tabs">
+    ${Object.entries(ERZIEHUNG_DATEN).map(([id, k]) => `
+    <button class="ges-tab ${aktivId===id?'aktiv':''}"
+      onclick="erziehungTabWaehlen('${id}')"
+      style="${aktivId===id?`background:${k.farbe};border-color:${k.farbe};color:white;`:''}">
+      ${k.icon} ${k.label}
+    </button>`).join('')}
+  </div>
+
+  <div class="info-box gruen" style="margin-bottom:1rem"><span class="ib-icon">${aktiv.icon}</span><div class="ib-text"><strong>${esc(aktiv.label)}:</strong> ${esc(aktiv.intro)}</div></div>
+
+  <div class="ges-tipp-grid">
+    ${aktiv.tipps.map((t, i) => `
+    <div class="ges-tipp-karte" style="--ges-farbe:${aktiv.farbe};--ges-bg:${aktiv.bg}">
+      <div class="ges-tipp-header">
+        <div class="ges-tipp-icon">${aktiv.icon}</div>
+        <div class="ges-tipp-titel">${esc(t.titel)}</div>
+        <div class="ges-tipp-nr">${i+1}</div>
+      </div>
+      <div class="ges-tipp-text">${esc(t.text)}</div>
+      ${t.tipp ? `<div class="ges-tipp-bottom"><span class="ges-tipp-icon-klein">💡</span><span class="ges-tipp-hinweis">${esc(t.tipp)}</span></div>` : ''}
+    </div>`).join('')}
+  </div>
+
+  <div class="info-box blau" style="margin-top:1rem"><span class="ib-icon">📖</span><div class="ib-text"><strong>Weitere Hilfe</strong>: Bei tieferen Problemen helfen Erziehungsberatungsstellen kostenlos. Auch online über bke-beratung.de — anonym und sofort verfügbar.</div></div>`;
+}
+
+// ===== SENIOREN =====
+function seniorenTabWaehlen(t) { state.seniorenTab = t; render(); }
+
+function renderSenioren() {
+  const aktivId = state.seniorenTab && SENIOREN_DATEN[state.seniorenTab] ? state.seniorenTab : 'rente';
+  const aktiv = SENIOREN_DATEN[aktivId];
+  const total = Object.values(SENIOREN_DATEN).reduce((s, k) => s + k.tipps.length, 0);
+
+  return `
+  <div class="bereich-hero">
+    <div class="bereich-hero-titel">👵 Senioren</div>
+    <div class="bereich-hero-sub">${total} Tipps · ${Object.keys(SENIOREN_DATEN).length} Themen</div>
+    <div class="bereich-hero-sub-2">Alles für ein gutes Leben im Alter — Rente, Pflege, Gesundheit, aktiv bleiben und Sicherheit</div>
+  </div>
+
+  <div class="info-box gruen"><span class="ib-icon">🚶</span><div class="ib-text"><strong>Aktiv und unterwegs:</strong> Parks, Cafés, Spazierwege und Ausflugsziele in deiner Nähe findest du auf der Karte.</div></div>
+  <button class="btn btn-primary" style="width:100%;margin-bottom:1rem" onclick="zuSektion('umgebung')">🗺️ Umgebung & Ausflugsziele entdecken</button>
+
+  <div class="ges-tabs">
+    ${Object.entries(SENIOREN_DATEN).map(([id, k]) => `
+    <button class="ges-tab ${aktivId===id?'aktiv':''}"
+      onclick="seniorenTabWaehlen('${id}')"
+      style="${aktivId===id?`background:${k.farbe};border-color:${k.farbe};color:white;`:''}">
+      ${k.icon} ${k.label}
+    </button>`).join('')}
+  </div>
+
+  <div class="info-box gruen" style="margin-bottom:1rem"><span class="ib-icon">${aktiv.icon}</span><div class="ib-text"><strong>${esc(aktiv.label)}:</strong> ${esc(aktiv.intro)}</div></div>
+
+  <div class="ges-tipp-grid">
+    ${aktiv.tipps.map((t, i) => `
+    <div class="ges-tipp-karte" style="--ges-farbe:${aktiv.farbe};--ges-bg:${aktiv.bg}">
+      <div class="ges-tipp-header">
+        <div class="ges-tipp-icon">${aktiv.icon}</div>
+        <div class="ges-tipp-titel">${esc(t.titel)}</div>
+        <div class="ges-tipp-nr">${i+1}</div>
+      </div>
+      <div class="ges-tipp-text">${esc(t.text)}</div>
+      ${t.tipp ? `<div class="ges-tipp-bottom"><span class="ges-tipp-icon-klein">💡</span><span class="ges-tipp-hinweis">${esc(t.tipp)}</span></div>` : ''}
+    </div>`).join('')}
+  </div>
+
+  <div class="info-box blau" style="margin-top:1rem"><span class="ib-icon">📞</span><div class="ib-text"><strong>Beratung:</strong> Der Pflegestützpunkt und das Seniorenbüro deiner Stadt beraten kostenlos zu allen Fragen rund ums Alter.</div></div>`;
+}
+
+// ===== Wetter-Widget (Open-Meteo, kein API-Key nötig) =====
+let _wetterCache = null;
+let _wetterZeit = 0;
+let _wetterKoord = '';
+
+const WETTER_CODES = {
+  0:  { emoji:'☀️',  label:'Sonnig', farbe1:'#FBBF24', farbe2:'#F59E0B' },
+  1:  { emoji:'🌤️',  label:'Überwiegend sonnig', farbe1:'#FCD34D', farbe2:'#FBBF24' },
+  2:  { emoji:'⛅',   label:'Teils bewölkt', farbe1:'#94A3B8', farbe2:'#64748B' },
+  3:  { emoji:'☁️',  label:'Bedeckt', farbe1:'#64748B', farbe2:'#475569' },
+  45: { emoji:'🌫️',  label:'Nebel', farbe1:'#94A3B8', farbe2:'#64748B' },
+  48: { emoji:'🌫️',  label:'Eisnebel', farbe1:'#94A3B8', farbe2:'#64748B' },
+  51: { emoji:'🌦️',  label:'Leichter Nieselregen', farbe1:'#60A5FA', farbe2:'#3B82F6' },
+  53: { emoji:'🌦️',  label:'Nieselregen', farbe1:'#60A5FA', farbe2:'#3B82F6' },
+  55: { emoji:'🌧️',  label:'Starker Nieselregen', farbe1:'#3B82F6', farbe2:'#1E40AF' },
+  56: { emoji:'🌧️',  label:'Gefrierender Niesel', farbe1:'#3B82F6', farbe2:'#1E40AF' },
+  57: { emoji:'🌧️',  label:'Starker gefr. Niesel', farbe1:'#3B82F6', farbe2:'#1E40AF' },
+  61: { emoji:'🌧️',  label:'Leichter Regen', farbe1:'#60A5FA', farbe2:'#2563EB' },
+  63: { emoji:'🌧️',  label:'Regen', farbe1:'#3B82F6', farbe2:'#1E40AF' },
+  65: { emoji:'🌧️',  label:'Starker Regen', farbe1:'#1E40AF', farbe2:'#1E3A8A' },
+  66: { emoji:'🌨️',  label:'Gefrierender Regen', farbe1:'#3B82F6', farbe2:'#1E40AF' },
+  67: { emoji:'🌨️',  label:'Starker gefr. Regen', farbe1:'#3B82F6', farbe2:'#1E40AF' },
+  71: { emoji:'🌨️',  label:'Leichter Schneefall', farbe1:'#BFDBFE', farbe2:'#60A5FA' },
+  73: { emoji:'❄️',   label:'Schneefall', farbe1:'#93C5FD', farbe2:'#3B82F6' },
+  75: { emoji:'❄️',   label:'Starker Schneefall', farbe1:'#60A5FA', farbe2:'#2563EB' },
+  77: { emoji:'❄️',   label:'Schneegriesel', farbe1:'#BFDBFE', farbe2:'#60A5FA' },
+  80: { emoji:'🌦️',  label:'Leichte Regenschauer', farbe1:'#60A5FA', farbe2:'#2563EB' },
+  81: { emoji:'🌧️',  label:'Regenschauer', farbe1:'#3B82F6', farbe2:'#1E40AF' },
+  82: { emoji:'⛈️',  label:'Heftige Regenschauer', farbe1:'#1E40AF', farbe2:'#1E3A8A' },
+  85: { emoji:'🌨️',  label:'Leichte Schneeschauer', farbe1:'#BFDBFE', farbe2:'#60A5FA' },
+  86: { emoji:'🌨️',  label:'Starke Schneeschauer', farbe1:'#60A5FA', farbe2:'#2563EB' },
+  95: { emoji:'⛈️',  label:'Gewitter', farbe1:'#6D28D9', farbe2:'#4C1D95' },
+  96: { emoji:'⛈️',  label:'Gewitter mit Hagel', farbe1:'#6D28D9', farbe2:'#4C1D95' },
+  99: { emoji:'⛈️',  label:'Schweres Gewitter', farbe1:'#4C1D95', farbe2:'#2E1065' }
+};
+
+function wetterInfo(code) { return WETTER_CODES[code] || WETTER_CODES[3]; }
+
+function dashboardWetter() {
+  setTimeout(() => { if (typeof initDashWetter === 'function') initDashWetter(); }, 200);
+  return `
+  <div class="wetter-karte" id="dash-wetter-widget">
+    <div class="wetter-laden" id="wetter-laden">
+      <div class="spinner" style="width:20px;height:20px;border-color:rgba(255,255,255,.3);border-top-color:white"></div>
+      <span style="color:white;font-size:.9rem">Wetter wird geladen…</span>
+    </div>
+  </div>`;
+}
+
+async function initDashWetter() {
+  const u = getUser() || {};
+  const lat = state.umgebungStandort?.lat || u.lat;
+  const lng = state.umgebungStandort?.lng || u.lng;
+  const ort = state.umgebungStandort?.name || u.ort || 'Standort unbekannt';
+  const widget = el('dash-wetter-widget');
+  if (!widget) return;
+
+  if (!lat || !lng) {
+    widget.innerHTML = `
+      <div class="wetter-leer">
+        <div class="wetter-leer-emoji">📍</div>
+        <div class="wetter-leer-titel">Standort fehlt</div>
+        <div class="wetter-leer-text">Gib deinen Wohnort im Profil oder unter „Orte → Umgebung" ein — dann zeigen wir dir das Wetter.</div>
+        <button class="btn btn-outline btn-sm" style="margin-top:.5rem" onclick="profilOeffnen()">Profil öffnen</button>
+      </div>`;
+    return;
+  }
+
+  const koord = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+  const jetzt = Date.now();
+  if (_wetterCache && _wetterKoord === koord && (jetzt - _wetterZeit) < 30 * 60 * 1000) {
+    widget.innerHTML = _wetterHtmlBauen(_wetterCache, ort);
+    return;
+  }
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=14`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('Wetter-API Fehler');
+    const data = await res.json();
+    _wetterCache = data;
+    _wetterZeit = jetzt;
+    _wetterKoord = koord;
+    widget.innerHTML = _wetterHtmlBauen(data, ort);
+  } catch (e) {
+    widget.innerHTML = `
+      <div class="wetter-leer">
+        <div class="wetter-leer-emoji">⚠️</div>
+        <div class="wetter-leer-titel">Wetter nicht verfügbar</div>
+        <div class="wetter-leer-text">Internet prüfen oder später erneut versuchen.</div>
+        <button class="btn btn-outline btn-sm" style="margin-top:.5rem" onclick="initDashWetter()">🔄 Neu laden</button>
+      </div>`;
+  }
+}
+
+function _wetterHtmlBauen(data, ort) {
+  const cur = data.current || {};
+  const dly = data.daily || {};
+  const code = cur.weather_code ?? 3;
+  const info = wetterInfo(code);
+  const temp = Math.round(cur.temperature_2m ?? 0);
+  const tempGefuehlt = Math.round(cur.apparent_temperature ?? temp);
+  const max = Math.round(dly.temperature_2m_max?.[0] ?? temp);
+  const min = Math.round(dly.temperature_2m_min?.[0] ?? temp);
+  const regen = (dly.precipitation_sum?.[0] ?? 0).toFixed(1);
+  const wind = Math.round(cur.wind_speed_10m ?? 0);
+  const luft = Math.round(cur.relative_humidity_2m ?? 0);
+  const isDay = cur.is_day === 1;
+  const heute = new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+
+  // Sonnenauf-/-untergang
+  const sa = dly.sunrise?.[0] ? new Date(dly.sunrise[0]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
+  const su = dly.sunset?.[0]  ? new Date(dly.sunset[0]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
+
+  return `
+  <div class="wetter-bg" style="background:linear-gradient(135deg, ${info.farbe1} 0%, ${info.farbe2} 100%)">
+    <div class="wetter-deko"></div>
+    <div class="wetter-haupt">
+      <div class="wetter-emoji">${info.emoji}</div>
+      <div class="wetter-temp-block">
+        <div class="wetter-temp">${temp}°</div>
+        <div class="wetter-label">${esc(info.label)}</div>
+        <div class="wetter-ort">📍 ${esc(ort)} · ${heute}</div>
+      </div>
+    </div>
+    <div class="wetter-zusatz">
+      <div class="wetter-info-item">
+        <div class="wetter-info-icon">↑↓</div>
+        <div class="wetter-info-text">
+          <div class="wetter-info-wert">${max}° / ${min}°</div>
+          <div class="wetter-info-label">Max / Min</div>
+        </div>
+      </div>
+      <div class="wetter-info-item">
+        <div class="wetter-info-icon">🌡️</div>
+        <div class="wetter-info-text">
+          <div class="wetter-info-wert">${tempGefuehlt}°</div>
+          <div class="wetter-info-label">Gefühlt</div>
+        </div>
+      </div>
+      <div class="wetter-info-item">
+        <div class="wetter-info-icon">💧</div>
+        <div class="wetter-info-text">
+          <div class="wetter-info-wert">${regen} mm</div>
+          <div class="wetter-info-label">Niederschlag</div>
+        </div>
+      </div>
+      <div class="wetter-info-item">
+        <div class="wetter-info-icon">💨</div>
+        <div class="wetter-info-text">
+          <div class="wetter-info-wert">${wind} km/h</div>
+          <div class="wetter-info-label">Wind</div>
+        </div>
+      </div>
+      ${luft ? `<div class="wetter-info-item">
+        <div class="wetter-info-icon">💦</div>
+        <div class="wetter-info-text">
+          <div class="wetter-info-wert">${luft} %</div>
+          <div class="wetter-info-label">Luftfeuchte</div>
+        </div>
+      </div>` : ''}
+      ${sa && su ? `<div class="wetter-info-item">
+        <div class="wetter-info-icon">${isDay ? '🌅' : '🌇'}</div>
+        <div class="wetter-info-text">
+          <div class="wetter-info-wert" style="font-size:.78rem">${sa} / ${su}</div>
+          <div class="wetter-info-label">Auf / Unter</div>
+        </div>
+      </div>` : ''}
+    </div>
+
+    ${dly.weather_code && dly.weather_code.length > 1 ? `
+    <div class="wetter-14tage">
+      <div class="wetter-14tage-titel">14-Tage-Vorschau</div>
+      <div class="wetter-14tage-scroll">
+        ${dly.weather_code.map((wc, i) => {
+          if (i === 0) return ''; // heute schon oben
+          const datum = new Date(dly.time[i]);
+          const tag = datum.toLocaleDateString('de-DE', { weekday:'short' });
+          const tagZahl = datum.getDate();
+          const monat = datum.toLocaleDateString('de-DE', { month:'short' });
+          const tmax = Math.round(dly.temperature_2m_max[i]);
+          const tmin = Math.round(dly.temperature_2m_min[i]);
+          const regen = (dly.precipitation_sum[i] || 0).toFixed(1);
+          const winfo = wetterInfo(wc);
+          return `
+          <div class="wetter-tag-karte">
+            <div class="wetter-tag-name">${tag}</div>
+            <div class="wetter-tag-datum">${tagZahl}. ${monat}</div>
+            <div class="wetter-tag-emoji">${winfo.emoji}</div>
+            <div class="wetter-tag-temp"><strong>${tmax}°</strong><span>${tmin}°</span></div>
+            ${regen > 0.1 ? `<div class="wetter-tag-regen">💧 ${regen} mm</div>` : '<div class="wetter-tag-regen wetter-tag-trocken">trocken</div>'}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+    <button class="wetter-refresh" onclick="_wetterCache=null;initDashWetter()" title="Aktualisieren">🔄</button>
+  </div>`;
+}
+
+function motivNeu() {
+  if (typeof MOTIVATIONS_ZITATE === 'undefined' || !MOTIVATIONS_ZITATE.length) return;
+  const neu = MOTIVATIONS_ZITATE[Math.floor(Math.random() * MOTIVATIONS_ZITATE.length)];
+  const el2 = el('motiv-text');
+  if (el2) {
+    el2.style.opacity = '0';
+    setTimeout(() => {
+      el2.textContent = neu;
+      el2.style.opacity = '1';
+    }, 200);
+  }
+}
+
+// ===== Dashboard-Widgets (rotierend pro Tag) =====
+function _tagDesJahres() {
+  const d = new Date();
+  const start = new Date(d.getFullYear(), 0, 0);
+  return Math.floor((d - start) / 86400000);
+}
+
+function dashboardTagesRezept() {
+  const liste = (typeof REZEPTE !== 'undefined' ? REZEPTE : []).concat(typeof FIT_REZEPTE !== 'undefined' ? FIT_REZEPTE : []);
+  if (!liste.length) return '';
+  const r = liste[_tagDesJahres() % liste.length];
+  return `
+  <div class="dash-widget">
+    <div class="dash-widget-kopf">
+      <span class="dash-widget-emoji">🍽️</span>
+      <div class="dash-widget-titel-block">
+        <div class="dash-widget-titel">Tages-Rezept</div>
+        <div class="dash-widget-sub">Heute empfohlen · wechselt täglich</div>
+      </div>
+    </div>
+    <button class="dash-rezept-karte" onclick="rezeptOeffnen('${r.id}')">
+      <div class="dash-rezept-bild" style="background-image:url('${r.bild || ''}')"></div>
+      <div class="dash-rezept-text">
+        <div class="dash-rezept-name">${esc(r.name)}</div>
+        <div class="dash-rezept-meta">⏱️ ${esc(r.dauer || '')} · 🍽️ ${r.portionen || 4} P. · ${esc(r.kosten || '')}</div>
+        <div class="dash-rezept-cta">Rezept öffnen →</div>
+      </div>
+    </button>
+  </div>`;
+}
+
+function dashboardTagesTipp() {
+  let alleTipps = [];
+  if (typeof FAMILIEN_TIPPS_ALLE !== 'undefined') {
+    FAMILIEN_TIPPS_ALLE.forEach(k => (k.tipps||[]).forEach(t => alleTipps.push({...t, kat:k.kategorie, emoji:k.emoji})));
+  }
+  if (typeof GESUNDHEIT_DATEN !== 'undefined') {
+    Object.values(GESUNDHEIT_DATEN).forEach(k => (k.tipps||[]).forEach(t => alleTipps.push({...t, kat:k.label, emoji:k.icon})));
+  }
+  if (!alleTipps.length) return '';
+  const t = alleTipps[_tagDesJahres() % alleTipps.length];
+  return `
+  <div class="dash-widget">
+    <div class="dash-widget-kopf">
+      <span class="dash-widget-emoji">💡</span>
+      <div class="dash-widget-titel-block">
+        <div class="dash-widget-titel">Tipp des Tages</div>
+        <div class="dash-widget-sub">${esc(t.kat)} ${t.emoji||''}</div>
+      </div>
+    </div>
+    <div class="dash-tipp-karte">
+      <div class="dash-tipp-titel">${esc(t.titel)}</div>
+      <div class="dash-tipp-text">${esc(t.text || '')}</div>
+      ${t.tipp ? `<div class="dash-tipp-extra">💡 ${esc(t.tipp)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function dashboardAusflugTipp() {
+  const tipps = [
+    { titel:'Spielplatz besuchen', emoji:'🎠', text:'Schau auf der Karte unter „Orte → Umgebung" — Spielplätze in deiner Nähe.', action:`state.umgebungKat='spielplatz';zuSektion('umgebung')` },
+    { titel:'Bibliothek entdecken', emoji:'📚', text:'Bücher kostenlos leihen + viele bieten Kinderprogramme an.', action:`state.umgebungKat='museum';zuSektion('umgebung')` },
+    { titel:'Park-Picknick', emoji:'🌳', text:'Decke, Brote, Apfel — kostenlose Stunden im Grünen.', action:`state.umgebungKat='park';zuSektion('umgebung')` },
+    { titel:'Museum am freien Tag', emoji:'🏛️', text:'Viele Museen sind 1× monatlich gratis. Website prüfen!', action:`state.umgebungKat='museum';zuSektion('umgebung')` },
+    { titel:'Schwimmbad-Abkühlung', emoji:'🏊', text:'Sommer: Freibad ab 2-4€. Im Winter Hallenbad.', action:`state.umgebungKat='freibad';zuSektion('umgebung')` },
+    { titel:'Bastel-Nachmittag', emoji:'🎨', text:'40+ Ideen mit Schritten warten auf dich — drinnen + günstig.', action:`zuSektion('basteln')` },
+    { titel:'Stadt-Rallye selbst', emoji:'🗺️', text:'5-7 Aufgaben in der Stadt verstecken — Schatzsuche!', action:`zuSektion('familie')` },
+    { titel:'Bowling oder Minigolf', emoji:'🎳', text:'Indoor-Spaß für Regentage. Kategorien-Karte öffnen.', action:`state.umgebungKat='bowling';zuSektion('umgebung')` },
+    { titel:'Tag der Familie', emoji:'👨‍👩‍👧', text:'Brettspiele, gemeinsam kochen, ein Film zusammen — kostet 0 €.', action:`zuSektion('familie')` },
+    { titel:'Kletterhalle', emoji:'🧗', text:'Bewegung + Mut — Kinder ab 4 dürfen meist mit Gurt klettern.', action:`state.umgebungKat='klettern';zuSektion('umgebung')` },
+    { titel:'Naturmandala legen', emoji:'🌿', text:'Im Wald Naturmaterial sammeln, Mandala legen — kostenlos.', action:`state.bastelnKat='natur';zuSektion('basteln')` },
+    { titel:'Wochenmarkt schlendern', emoji:'🛒', text:'Erkunden + saisonal einkaufen — günstiger als Supermarkt.', action:`state.umgebungKat='baeckerei';zuSektion('umgebung')` }
+  ];
+  const t = tipps[_tagDesJahres() % tipps.length];
+  return `
+  <div class="dash-widget">
+    <div class="dash-widget-kopf">
+      <span class="dash-widget-emoji">${t.emoji}</span>
+      <div class="dash-widget-titel-block">
+        <div class="dash-widget-titel">Ausflugs-Vorschlag</div>
+        <div class="dash-widget-sub">Heute mit der Familie</div>
+      </div>
+    </div>
+    <div class="dash-ausflug-karte">
+      <div class="dash-ausflug-titel">${esc(t.titel)}</div>
+      <div class="dash-ausflug-text">${esc(t.text)}</div>
+      <button class="btn btn-primary btn-sm" onclick="${t.action}">Sektion öffnen →</button>
+    </div>
+  </div>`;
+}
+
+function dashboardNewsHeadlines() {
+  // Echte Schlagzeilen werden asynchron geladen (initDashNews)
+  setTimeout(() => { if (typeof initDashNews === 'function') initDashNews(); }, 200);
+  return `
+  <div class="dash-widget" id="dash-news-widget">
+    <div class="dash-widget-kopf">
+      <span class="dash-widget-emoji">📰</span>
+      <div class="dash-widget-titel-block">
+        <div class="dash-widget-titel">Aktuelle News</div>
+        <div class="dash-widget-sub">Schlagzeilen aus Deutschland</div>
+      </div>
+      <button class="dash-news-refresh" onclick="initDashNews()" title="Aktualisieren">🔄</button>
+    </div>
+    <div id="dash-news-liste" class="dash-news-liste">
+      <div class="dash-news-laden">
+        <div class="spinner" style="width:20px;height:20px"></div>
+        <span style="font-size:.82rem;color:var(--g700)">Lade Schlagzeilen…</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:.4rem;margin-top:.65rem;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="zuSektion('news')">📰 Alle News</button>
+      <button class="btn btn-outline btn-sm" onclick="state.newsKategorie='regional';zuSektion('news')">📍 Regional</button>
+    </div>
+  </div>`;
+}
+
+let _dashNewsCache = null;
+let _dashNewsZeit = 0;
+
+async function initDashNews() {
+  const liste = el('dash-news-liste');
+  if (!liste) return;
+
+  const jetzt = Date.now();
+  if (_dashNewsCache && (jetzt - _dashNewsZeit) < 10 * 60 * 1000) {
+    liste.innerHTML = _dashNewsHtmlBauen(_dashNewsCache);
+    return;
+  }
+
+  liste.innerHTML = '<div class="dash-news-laden"><div class="spinner" style="width:20px;height:20px"></div><span style="font-size:.82rem;color:var(--g700)">Lade Schlagzeilen…</span></div>';
+
+  // Quellen mit Bildern bevorzugt — Spiegel ✓ (enclosure), Zeit ✓, FAZ ✓ (media:content), Tagesschau ✗ (keine Bilder)
+  const quellen = [
+    { name:'Spiegel',     url:'https://www.spiegel.de/schlagzeilen/index.rss' },
+    { name:'Zeit Online', url:'https://newsfeed.zeit.de/index' },
+    { name:'FAZ',         url:'https://www.faz.net/rss/aktuell/' },
+    { name:'Tagesschau',  url:'https://www.tagesschau.de/index~rss2.xml' }
+  ];
+
+  for (const q of quellen) {
+    try {
+      const xml = (typeof fetchRssMultiProxy === 'function') ? await fetchRssMultiProxy(q.url) : null;
+      if (!xml) continue;
+      const doc = new DOMParser().parseFromString(xml, 'text/xml');
+      const items = Array.from(doc.querySelectorAll('item, entry')).slice(0, 6);
+      const artikel = items.map(item => {
+        const titel = item.querySelector('title')?.textContent?.trim() || '';
+        let link = '';
+        item.querySelectorAll('link').forEach(l => {
+          if (link) return;
+          const t = l.textContent?.trim();
+          if (t && t.startsWith('http')) link = t;
+          else { const h = l.getAttribute('href'); if (h && h.startsWith('http')) link = h; }
+        });
+        const datum = item.querySelector('pubDate, published, updated')?.textContent?.trim() || '';
+        let beschreibung = item.querySelector('description, summary')?.textContent?.trim() || '';
+        beschreibung = beschreibung.replace(/<[^>]*>/g, '').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim().substring(0, 140);
+
+        // Bild aus mehreren möglichen Quellen extrahieren
+        let bild = '';
+        // 1. enclosure mit type=image/*
+        const enclosures = item.querySelectorAll('enclosure');
+        for (const e of enclosures) {
+          const typ = e.getAttribute('type') || '';
+          if (typ.startsWith('image')) { bild = e.getAttribute('url'); break; }
+        }
+        // 2. media:content / media:thumbnail (Namespace-aware)
+        if (!bild) {
+          const mc = item.getElementsByTagName('media:content')[0]
+                  || item.getElementsByTagName('media:thumbnail')[0]
+                  || item.getElementsByTagNameNS('*','content')[0]
+                  || item.getElementsByTagNameNS('*','thumbnail')[0];
+          if (mc) bild = mc.getAttribute('url');
+        }
+        // 3. itunes:image
+        if (!bild) {
+          const it = item.getElementsByTagName('itunes:image')[0];
+          if (it) bild = it.getAttribute('href');
+        }
+        // 4. img-Tag in description/content
+        if (!bild) {
+          const allContent = (item.querySelector('description, summary, content')?.innerHTML || item.querySelector('description, summary, content')?.textContent || '');
+          const imgMatch = allContent.match(/<img[^>]+src=["']([^"']+)/i) || allContent.match(/(https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp|gif))/i);
+          if (imgMatch) bild = imgMatch[1];
+        }
+        return titel && link ? { titel, link, datum, beschreibung, bild, quelle: q.name } : null;
+      }).filter(Boolean);
+
+      // Nimm Erstes mit Bild — oder erstes überhaupt
+      const mitBild = artikel.find(a => a.bild);
+      const finale = mitBild ? [mitBild, ...artikel.filter(a => a !== mitBild)] : artikel;
+
+      if (finale.length > 0) {
+        _dashNewsCache = finale;
+        _dashNewsZeit = jetzt;
+        liste.innerHTML = _dashNewsHtmlBauen(finale);
+        return;
+      }
+    } catch(e) { /* nächste Quelle */ }
+  }
+
+  // Alle Quellen fehlgeschlagen
+  liste.innerHTML = `
+  <div class="info-box orange" style="margin:0">
+    <span class="ib-icon">⚠️</span>
+    <div class="ib-text" style="font-size:.82rem"><strong>News-Server nicht erreichbar.</strong> Internet prüfen oder später erneut versuchen. <button class="btn btn-sm" style="margin-left:.5rem" onclick="initDashNews()">🔄 Neu laden</button></div>
+  </div>`;
+}
+
+function _dashNewsHtmlBauen(artikel) {
+  // Nur die neueste Schlagzeile — groß mit Bild
+  const a = artikel.find(x => x.bild) || artikel[0];
+  if (!a) return '';
+  const datum = a.datum ? new Date(a.datum).toLocaleDateString('de-DE', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+  const bildHtml = a.bild
+    ? `<div class="dash-news-bild-gross" style="background-image:url('${a.bild.replace(/"/g,'%22')}')"></div>`
+    : `<div class="dash-news-bild-gross dash-news-bild-leer">📰</div>`;
+  return `
+  <a href="${a.link}" target="_blank" data-extern="1" rel="noopener noreferrer" class="dash-news-item-gross">
+    ${bildHtml}
+    <div class="dash-news-text-gross">
+      <div class="dash-news-quelle">${esc(a.quelle || 'News')}${datum?' · '+datum:''}</div>
+      <div class="dash-news-titel-gross">${esc(a.titel)}</div>
+      ${a.beschreibung ? `<div class="dash-news-beschr">${esc(a.beschreibung)}…</div>` : ''}
+      <span class="dash-news-cta">Artikel lesen →</span>
+    </div>
+  </a>`;
+}
+
+function dashboardPinnwandVorschau() {
+  const notizen = (typeof notizenLaden === 'function') ? notizenLaden() : [];
+  return `
+  <div class="dash-widget">
+    <div class="dash-widget-kopf">
+      <span class="dash-widget-emoji">📌</span>
+      <div class="dash-widget-titel-block">
+        <div class="dash-widget-titel">Familien-Pinnwand</div>
+        <div class="dash-widget-sub">${notizen.length} Notiz${notizen.length === 1 ? '' : 'en'}</div>
+      </div>
+    </div>
+    ${notizen.length === 0 ? `
+    <div class="dash-pinnwand-leer">
+      <div style="font-size:.85rem;color:var(--g700);margin-bottom:.5rem">Lasst euch gegenseitig Nachrichten da — direkt auf der Pinnwand.</div>
+      <button class="btn btn-primary btn-sm" onclick="zuSektion('notizen')">📌 Pinnwand öffnen</button>
+    </div>
+    ` : `
+    <div class="dash-pinnwand-vorschau">
+      ${notizen.slice(0, 2).map(n => `
+      <div class="dash-pinnwand-notiz" style="background:${n.farbe}">
+        <div class="dash-pinnwand-text">${esc((n.text || '').slice(0,90))}${(n.text || '').length>90?'…':''}</div>
+        <div class="dash-pinnwand-autor">— ${esc(n.autor)}</div>
+      </div>`).join('')}
+    </div>
+    <button class="btn btn-outline btn-sm" style="width:100%;margin-top:.5rem" onclick="zuSektion('notizen')">📌 Alle Notizen ansehen</button>
+    `}
+  </div>`;
+}
+
+// ===== App teilen (Web Share API mit Fallback) =====
+function appTeilen() {
+  const url = location.origin + location.pathname;
+  const titel = 'FamilienApp — Für die ganze Familie';
+  const text = 'Schau mal: FamilienApp — Zuschüsse, Kalender, Rezepte, Gesundheit & viel mehr für die ganze Familie!\n\n' + url;
+
+  if (navigator.share) {
+    navigator.share({ title: titel, text: text, url: url })
+      .then(() => toast('✓ Geteilt!'))
+      .catch(() => {});
+    return;
+  }
+
+  // Fallback: Modal mit verschiedenen Teilen-Optionen
+  appTeilenModal(url, text);
+}
+
+function appTeilenModal(url, text) {
+  const html = `
+  <div class="modal-overlay" id="teilen-modal" onclick="if(event.target===this)teilenModalSchliessen()">
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-titel">🔗 FamilienApp teilen</div>
+      <div style="font-size:.85rem;color:var(--g700);margin-bottom:1rem">Wähle, wie du die App weiterempfehlen möchtest:</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <a href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" class="btn btn-primary" style="display:flex;align-items:center;gap:.5rem;justify-content:flex-start">💬 WhatsApp</a>
+        <a href="mailto:?subject=${encodeURIComponent('FamilienApp')}&body=${encodeURIComponent(text)}" class="btn btn-outline" style="display:flex;align-items:center;gap:.5rem;justify-content:flex-start">✉️ E-Mail</a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" class="btn btn-outline" style="display:flex;align-items:center;gap:.5rem;justify-content:flex-start">👍 Facebook</a>
+        <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}" target="_blank" class="btn btn-outline" style="display:flex;align-items:center;gap:.5rem;justify-content:flex-start">🐦 Twitter / X</a>
+        <a href="https://telegram.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent('FamilienApp')}" target="_blank" class="btn btn-outline" style="display:flex;align-items:center;gap:.5rem;justify-content:flex-start">✈️ Telegram</a>
+        <button class="btn btn-outline" onclick="appLinkKopieren('${url.replace(/'/g,"\\'")}')">📋 Link kopieren</button>
+      </div>
+      <button class="btn" style="width:100%;margin-top:1rem" onclick="teilenModalSchliessen()">Schließen</button>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+function teilenModalSchliessen() {
+  const m = el('teilen-modal');
+  if (m) m.remove();
+}
+function appLinkKopieren(url) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      toast('✓ Link kopiert!');
+      teilenModalSchliessen();
+    });
+  } else {
+    toast('⚠️ Kopieren nicht unterstützt');
+  }
+}
+
+// ===== In-App-Iframe-Modal — externe Links im App-Overlay öffnen =====
+let _iframeAktuelleUrl = '';
+let _iframeLadeTimer = null;
+let _iframeGeladen = false;
+
+function inAppOeffnen(url, titel) {
+  if (!url) return;
+  // Lokale Datei-Downloads oder mailto/tel: direkt durchreichen
+  if (/^(mailto:|tel:|blob:|data:)/i.test(url)) { window.open(url, '_blank'); return; }
+  _iframeAktuelleUrl = url;
+  _iframeGeladen = false;
+  const modal = el('iframe-modal');
+  const frame = el('iframe-modal-frame');
+  const fehler = el('iframe-modal-fehler');
+  const titelEl = el('iframe-modal-titel');
+  let host = '';
+  try { host = new URL(url).hostname.replace(/^www\./,''); } catch {}
+  if (titelEl) titelEl.textContent = titel || host || 'Externe Seite';
+  if (fehler) fehler.classList.add('versteckt');
+  if (el('iframe-fehler-host')) el('iframe-fehler-host').textContent = host;
+  if (frame) {
+    frame.style.display = 'block';
+    frame.src = url;
+  }
+  if (modal) modal.classList.remove('versteckt');
+  document.body.style.overflow = 'hidden';
+
+  // Wenn nach 1.8s kein 'load' Event → wahrscheinlich blockiert
+  clearTimeout(_iframeLadeTimer);
+  _iframeLadeTimer = setTimeout(() => {
+    if (!_iframeGeladen) iframeFehlerZeigen();
+  }, 1800);
+
+  if (frame) {
+    frame.onload = () => {
+      _iframeGeladen = true;
+      clearTimeout(_iframeLadeTimer);
+      // Manche Seiten blockieren mit Inhalt: leere Seite oder X-Frame-Options
+      // Hier können wir nicht zuverlässig prüfen wegen Cross-Origin — wir vertrauen auf 'load'
+    };
+    frame.onerror = () => iframeFehlerZeigen();
+  }
+}
+
+function iframeFehlerZeigen() {
+  const fehler = el('iframe-modal-fehler');
+  const frame = el('iframe-modal-frame');
+  if (fehler) fehler.classList.remove('versteckt');
+  if (frame) frame.style.display = 'none';
+}
+
+function iframeSchliessen() {
+  const modal = el('iframe-modal');
+  const frame = el('iframe-modal-frame');
+  if (frame) { frame.src = 'about:blank'; }
+  if (modal) modal.classList.add('versteckt');
+  document.body.style.overflow = '';
+  clearTimeout(_iframeLadeTimer);
+}
+
+function iframeNeuLaden() {
+  if (_iframeAktuelleUrl) inAppOeffnen(_iframeAktuelleUrl, el('iframe-modal-titel')?.textContent || '');
+}
+
+function iframeExternOeffnen() {
+  if (_iframeAktuelleUrl) window.open(_iframeAktuelleUrl, '_blank', 'noopener,noreferrer');
+  iframeSchliessen();
+}
+
+// Globalen Klick-Handler: alle <a target="_blank"> abfangen und durchs Modal schicken
+// Ausnahmen: mailto, tel, Maps-Routenplaner (sollen natives Verhalten), Cloudflare-Eigene-Tunnel
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('a[target="_blank"]');
+  if (!a) return;
+  const href = a.getAttribute('href') || '';
+  if (!href || href.startsWith('#')) return;
+  if (/^(mailto:|tel:|blob:|data:)/i.test(href)) return;
+  // mailto/tel: extern lassen
+  // Maps-Deep-Links (mobile öffnen native App)
+  if (a.dataset.extern === '1') return;
+  e.preventDefault();
+  e.stopPropagation();
+  inAppOeffnen(href, a.title || a.textContent.trim().slice(0,80));
+}, true);
+
+// ===== Menü-Drawer (Hauptmenü) =====
+function menuOeffnen() {
+  el('menu-backdrop')?.classList.add('offen');
+  el('menu-drawer')?.classList.add('offen');
+  document.body.style.overflow = 'hidden';
+  menuAktivMarkieren();
+}
+function menuSchliessen() {
+  el('menu-backdrop')?.classList.remove('offen');
+  el('menu-drawer')?.classList.remove('offen');
+  document.body.style.overflow = '';
+}
+function menuKlick(gruppe) {
+  navGruppeWaehlen(gruppe);
+  menuSchliessen();
+}
+function menuAktivMarkieren() {
+  const aktiv = state.navGruppe || sektionZuGruppe(state.sektion);
+  document.querySelectorAll('.menu-eintrag').forEach(b => {
+    b.classList.toggle('aktiv', b.dataset.gruppe === aktiv);
+  });
 }
 
 function renderNavButtons() {
@@ -320,9 +1992,15 @@ function render() {
     case 'suche':          content.innerHTML = renderSuche(); break;
     case 'tipps':          content.innerHTML = renderTippsTab(); break;
     case 'notizen':        content.innerHTML = renderNotizen(); break;
+    case 'haushalt':       content.innerHTML = renderHaushalt(); break;
+    case 'erziehung':      content.innerHTML = renderErziehung(); break;
+    case 'senioren':       content.innerHTML = renderSenioren(); break;
+    case 'album':          content.innerHTML = renderAlbum(); break;
+    case 'kontakte':       content.innerHTML = renderKontakte(); break;
+    case 'einkaufsliste':  content.innerHTML = renderEinkaufslisteSektion(); break;
     default:           content.innerHTML = renderDashboard();
   }
-  if (state.sektion === 'sparen' && state.sparTab === 'liste') renderListeInhalt();
+  if (state.sektion === 'einkaufsliste') renderListeInhalt();
   // IP für Handy-Zugriff anzeigen
   const urlEl = el('install-url');
   if (urlEl) {
@@ -381,17 +2059,6 @@ function renderDashboard() {
     <button class="install-banner-btn" onclick="dashboardInstallStarten()">Installieren</button>
     <button class="install-banner-zu" onclick="installBannerAusblenden()" title="Ausblenden">✕</button>
   </div>` : ''}
-
-  <!-- GLOBALE SUCHE -->
-  <div class="dash-suche-box">
-    <div class="dash-suche-icon">🔍</div>
-    <input type="search" class="dash-suche-input"
-      placeholder="Was suchen Sie? Leistungen, Rezepte, Tipps, Jobs..."
-      value="${esc(state.dashSuche || '')}"
-      oninput="dashSucheAendern(this.value)" autocomplete="off" />
-    ${state.dashSuche ? `<button class="dash-suche-clear" onclick="dashSucheAendern('');document.querySelector('.dash-suche-input').value=''">✕</button>` : ''}
-  </div>
-  <div id="dash-such-ergebnisse" class="dash-such-ergebnisse" style="display:${state.dashSuche?'block':'none'}"></div>
 
   <!-- HERO mit echtem Familien-Foto (austauschbar in Einstellungen) -->
   <div class="dash-hero">
@@ -464,7 +2131,6 @@ function renderDashboard() {
     <div class="hero-deko1"></div><div class="hero-deko2"></div><div class="hero-deko3"></div>
     <div class="hero-tag">${tageszeit()} ${tagesEmoji()}</div>
     <div class="hero-name">${user.vorname ? `Hallo ${esc(user.vorname)}!` : 'Willkommen!'}</div>
-    ${motivationsZitat() ? `<div class="hero-zitat">„${motivationsZitat()}"</div>` : ''}
     <div class="hero-ort">
       ${bl ? `📍 ${esc(bl.name)}` : ''}
       ${kinder.length > 0 ? ` · 👶 ${kinder.length} ${kinder.length===1?'Kind':'Kinder'}` : ''}
@@ -484,9 +2150,31 @@ function renderDashboard() {
     </div>
   </div>
 
+  ${!einst.zitateAus && motivationsZitat() ? `
+  <div class="motiv-karte">
+    <div class="motiv-glanz"></div>
+    <div class="motiv-anfuehrung-links">„</div>
+    <div class="motiv-inhalt">
+      <div class="motiv-label">✨ Motivation für heute</div>
+      <div class="motiv-text" id="motiv-text">${esc(motivationsZitat())}</div>
+    </div>
+    <div class="motiv-anfuehrung-rechts">"</div>
+    <button class="motiv-refresh" onclick="motivNeu()" title="Neuer Spruch">🔄</button>
+  </div>` : ''}
+
+  ${z('zeigWetter', true) ? dashboardWetter() : ''}
+  ${z('zeigHeuteBox', true) ? dashboardHeuteUebersicht() : ''}
+  ${z('zeigFreizeit', true) ? dashboardFreizeitInNaehe() : ''}
+
   ${kiSuchBox('dashboard')}
 
-  ${(() => {
+  ${z('zeigTagesRezept', true) ? dashboardTagesRezept() : ''}
+  ${z('zeigTagesTipp', true) ? dashboardTagesTipp() : ''}
+  ${z('zeigAusflugTipp', true) ? dashboardAusflugTipp() : ''}
+  ${z('zeigNewsHeadlines', true) ? dashboardNewsHeadlines() : ''}
+  ${z('zeigPinnwand', true) ? dashboardPinnwandVorschau() : ''}
+
+  ${z('zeigHeuteTermine', true) ? (() => {
     // Kommende Termine + Erinnerungen aus Kalender
     const heute = new Date();
     const heute0 = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
@@ -536,7 +2224,7 @@ function renderDashboard() {
       }).join('')}
     </div>
   </div>`;
-  })()}
+  })() : ''}
 
   ${lieblinge.length > 0 ? `
   <!-- LIEBLINGS-BEREICHE -->
@@ -676,6 +2364,54 @@ function renderDashboard() {
     </div>
   </div>` : ''}
 
+  ${z('zeigSocialMedia', true) ? `
+  <!-- SOCIAL MEDIA + APP TEILEN -->
+  <div class="block-title">📱 Folgen & Teilen</div>
+  <div class="social-grid">
+    <a href="https://www.instagram.com/explore/tags/familienleben/" target="_blank" class="social-karte" style="--sk:#E1306C">
+      <div class="social-icon">📷</div>
+      <div class="social-text">
+        <div class="social-name">Instagram</div>
+        <div class="social-sub">#familienleben · Inspiration</div>
+      </div>
+    </a>
+    <a href="https://www.facebook.com/search/top?q=familien%20tipps" target="_blank" class="social-karte" style="--sk:#1877F2">
+      <div class="social-icon">👍</div>
+      <div class="social-text">
+        <div class="social-name">Facebook</div>
+        <div class="social-sub">Familien-Gruppen</div>
+      </div>
+    </a>
+    <a href="https://www.tiktok.com/tag/familie" target="_blank" class="social-karte" style="--sk:#000000">
+      <div class="social-icon">🎵</div>
+      <div class="social-text">
+        <div class="social-name">TikTok</div>
+        <div class="social-sub">Familien-Hacks</div>
+      </div>
+    </a>
+    <a href="https://www.youtube.com/results?search_query=familien+tipps+deutsch" target="_blank" class="social-karte" style="--sk:#FF0000">
+      <div class="social-icon">▶️</div>
+      <div class="social-text">
+        <div class="social-name">YouTube</div>
+        <div class="social-sub">Familien-Tipps</div>
+      </div>
+    </a>
+    <a href="https://www.pinterest.de/search/pins/?q=familien%20ideen" target="_blank" class="social-karte" style="--sk:#E60023">
+      <div class="social-icon">📌</div>
+      <div class="social-text">
+        <div class="social-name">Pinterest</div>
+        <div class="social-sub">Bastelideen & Rezepte</div>
+      </div>
+    </a>
+    <button class="social-karte social-share-btn" style="--sk:linear-gradient(135deg,#6366F1,#EC4899);background:var(--sk)" onclick="appTeilen()">
+      <div class="social-icon">🔗</div>
+      <div class="social-text">
+        <div class="social-name" style="color:white">App teilen</div>
+        <div class="social-sub" style="color:rgba(255,255,255,.9)">An Familie & Freunde</div>
+      </div>
+    </button>
+  </div>` : ''}
+
   <!-- RECHTLICHER FOOTER -->
   <div class="recht-footer">
     <div class="recht-footer-titel">FamilienApp · ${istPremium()?'Premium':'Kostenlose Version'}</div>
@@ -708,6 +2444,7 @@ function renderUmgebung() {
     { id:'imbiss',     label:'🍔 Imbiss',         farbe:'#F59E0B', radius:3000 },
     { id:'baeckerei',  label:'🥖 Bäckereien',    farbe:'#D97706', radius:2000 },
     { id:'tankstelle', label:'⛽ Tankstellen',    farbe:'#D97706', radius:5000 },
+    { id:'parken',     label:'🅿️ Parkplätze',     farbe:'#1D4ED8', radius:1500 },
     { id:'friseur',    label:'✂️ Friseure',       farbe:'#7C3AED', radius:3000 },
     { id:'kleidung',   label:'👕 Bekleidung',     farbe:'#EC4899', radius:3000 },
     { id:'apotheke',   label:'💊 Apotheken',      farbe:'#DC2626', radius:3000 },
@@ -944,6 +2681,7 @@ const OVERPASS_KAT = {
   imbiss:     { query: 'node["amenity"="fast_food"](around:{r},{lat},{lng});', r:3000, farbe:'#F59E0B', bg:'#FEF3C7', icon:'🍔' },
   baeckerei:  { query: 'node["shop"~"bakery|pastry|confectionery"](around:{r},{lat},{lng});', r:2000, farbe:'#D97706', bg:'#FEF3C7', icon:'🥖' },
   tankstelle:  { query: 'node["amenity"="fuel"](around:{r},{lat},{lng});', r:5000, farbe:'#D97706', bg:'#FEF3C7', icon:'⛽' },
+  parken:      { query: 'nwr["amenity"="parking"]["access"!~"private|no"](around:{r},{lat},{lng});', r:1500, farbe:'#1D4ED8', bg:'#DBEAFE', icon:'🅿️' },
   friseur:     { query: 'node["shop"="hairdresser"](around:{r},{lat},{lng});', r:3000, farbe:'#7C3AED', bg:'#EDE9FE', icon:'✂️' },
   kleidung:    { query: 'node["shop"~"clothes|shoes|boutique|second_hand"](around:{r},{lat},{lng});', r:3000, farbe:'#EC4899', bg:'#FCE7F3', icon:'👕' },
   apotheke:    { query: 'node["amenity"="pharmacy"](around:{r},{lat},{lng});', r:3000, farbe:'#DC2626', bg:'#FEE2E2', icon:'💊' },
@@ -957,6 +2695,24 @@ const OVERPASS_KAT = {
   klettern:    { query: 'node["leisure"~"climbing|climbing_wall"](around:{r},{lat},{lng});node["sport"~"climbing"](around:{r},{lat},{lng});', r:15000, farbe:'#B45309', bg:'#FEF3C7', icon:'🧗' },
   kino:        { query: 'node["amenity"="cinema"](around:{r},{lat},{lng});', r:15000, farbe:'#BE185D', bg:'#FCE7F3', icon:'🎬' }
 };
+
+// Park-spezifische Detailzeilen aus OSM-Tags aufbereiten
+function parkenInfo(tags) {
+  if (!tags) return [];
+  const zeilen = [];
+  const typMap = { surface:'Parkplatz (ebenerdig)', underground:'Tiefgarage', 'multi-storey':'Parkhaus', rooftop:'Dachparkplatz', street_side:'Parken am Straßenrand', lane:'Parkstreifen' };
+  if (tags.parking && typMap[tags.parking]) zeilen.push('🏗️ ' + typMap[tags.parking]);
+  if (tags.fee === 'yes')      zeilen.push('💶 Gebührenpflichtig' + (tags.charge ? ' — ' + tags.charge : ''));
+  else if (tags.fee === 'no')  zeilen.push('✅ Kostenlos');
+  if (tags.capacity && /^\d+$/.test(tags.capacity)) zeilen.push('🚗 ' + tags.capacity + ' Stellplätze');
+  if (tags['capacity:disabled'] && /^\d+$/.test(tags['capacity:disabled'])) zeilen.push('♿ ' + tags['capacity:disabled'] + ' Behindertenparkplätze');
+  if (tags.maxstay)              zeilen.push('⏱️ Höchstparkdauer: ' + tags.maxstay);
+  if (tags.access === 'customers') zeilen.push('🛒 Nur für Kunden');
+  else if (tags.access === 'permit') zeilen.push('🎫 Nur mit Genehmigung');
+  if (tags.opening_hours && tags.opening_hours !== '24/7') zeilen.push('🕐 ' + tags.opening_hours);
+  else if (tags.opening_hours === '24/7') zeilen.push('🕐 Rund um die Uhr geöffnet');
+  return zeilen;
+}
 
 function initKarte() {
   const mapEl = el('karte');
@@ -1006,7 +2762,7 @@ async function ladeOrte(karte) {
   const { lat, lng } = state.umgebungStandort;
   const radius = state.umgebungRadius || kat.r;
   const query = kat.query.replace(/\{r\}/g, radius).replace(/\{lat\}/g, lat).replace(/\{lng\}/g, lng);
-  const overpassQ = `[out:json][timeout:25];(${query});out body;`;
+  const overpassQ = `[out:json][timeout:25];(${query});out center;`;
 
   // Loading-State in Sidebar
   const liste = el('ort-liste');
@@ -1018,6 +2774,8 @@ async function ladeOrte(karte) {
     const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQ)}`);
     const daten = await res.json();
     const orte = daten.elements || [];
+    // Flächen (ways/relations, z.B. Parkplätze) liefern die Koordinate als center
+    orte.forEach(o => { if (o.lat == null && o.center) { o.lat = o.center.lat; o.lon = o.center.lon; } });
 
     // Marker hinzufügen
     if (state.markerSchicht) state.markerSchicht.clearLayers();
@@ -1031,7 +2789,7 @@ async function ladeOrte(karte) {
       })).sort((a,b) => a.distanz - b.distanz).slice(0,30);
 
     mitEntfernung.forEach(o => {
-      const name = o.tags?.name || o.tags?.brand || 'Unbekannt';
+      const name = o.tags?.name || o.tags?.brand || (state.umgebungKat==='parken' ? 'Parkplatz' : 'Unbekannt');
       const icon = L.divIcon({
         html: `<div style="background:${kat.farbe};color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid white">${kat.icon}</div>`,
         iconSize: [32,32], iconAnchor: [16,16], className: ''
@@ -1049,6 +2807,7 @@ async function ladeOrte(karte) {
       const popup = `<div class="popup-name">${esc(name)}</div>
         <div class="popup-info">${o.distanz < 1000 ? o.distanz+'m' : (o.distanz/1000).toFixed(1)+'km'} entfernt</div>
         ${o.tags?.['addr:street'] ? `<div class="popup-info">${esc(o.tags['addr:street'])} ${esc(o.tags['addr:housenumber']||'')}</div>` : ''}
+        ${state.umgebungKat==='parken' ? parkenInfo(o.tags).map(z=>`<div class="popup-info">${esc(z)}</div>`).join('') : ''}
         ${kueche ? `<div class="popup-info">🍴 ${esc(kueche.replace(/;/g,', '))}</div>` : ''}
         ${oeffnung ? `<div class="popup-info">🕐 ${esc(oeffnung)}</div>` : ''}
         ${phone ? `<a href="tel:${esc(phone.replace(/\s/g,''))}" class="popup-link">📞 ${esc(phone)}</a>` : ''}
@@ -1068,7 +2827,7 @@ async function ladeOrte(karte) {
       } else {
         const istGastro = ['restaurant','cafe','imbiss','baeckerei'].includes(state.umgebungKat);
         liste.innerHTML = mitEntfernung.map(o => {
-          const name = o.tags?.name || o.tags?.brand || 'Unbekannt';
+          const name = o.tags?.name || o.tags?.brand || (state.umgebungKat==='parken' ? 'Parkplatz' : 'Unbekannt');
           const strasse = o.tags?.['addr:street'] ? `${o.tags['addr:street']} ${o.tags['addr:housenumber']||''}` : '';
           const dist = o.distanz < 1000 ? `${o.distanz} m` : `${(o.distanz/1000).toFixed(1)} km`;
           const website = o.tags?.website || o.tags?.['contact:website'] || '';
@@ -1085,6 +2844,7 @@ async function ladeOrte(karte) {
               <div class="ort-info">
                 <div class="ort-name">${esc(name)}</div>
                 ${strasse ? `<div class="ort-adresse">${esc(strasse)}</div>` : ''}
+                ${state.umgebungKat==='parken' ? parkenInfo(o.tags).map(z=>`<div class="ort-adresse">${esc(z)}</div>`).join('') : ''}
                 ${kueche ? `<div class="ort-adresse">🍴 ${esc(kueche.replace(/;/g,', '))}</div>` : ''}
                 ${oeffnung ? `<div class="ort-adresse">🕐 ${esc(oeffnung)}</div>` : ''}
                 <div class="ort-dist">📏 ${dist} entfernt</div>
@@ -1165,9 +2925,11 @@ function renderMultiRoute(standort) {
       </a>
     </div>
     <div class="multi-route-actions">
-      <a href="https://www.google.com/maps/dir/?api=1&origin=${startStr}&destination=${m.lat},${m.lng}" target="_blank" class="btn btn-outline btn-sm">📱 Google Maps Navigation</a>
+      <button class="btn btn-primary btn-sm" onclick="naviStarten('${aktiv}')">🧭 Navigation starten</button>
+      <a href="https://www.google.com/maps/dir/?api=1&origin=${startStr}&destination=${m.lat},${m.lng}" target="_blank" class="btn btn-outline btn-sm">📱 Google Maps</a>
       <button class="btn btn-outline btn-sm" onclick="routeZurücksetzen();render()">✕ Route schließen</button>
     </div>
+    <div style="font-size:.72rem;color:var(--g500);margin-top:.4rem;text-align:center">🧭 Navigation mit Sprachansagen — am besten als App auf dem Handy-Bildschirm nutzen</div>
   </div>`;
 }
 
@@ -1262,6 +3024,269 @@ function routeProfilWechseln(profil) {
     state.karte.fitBounds(layer.getBounds(), { padding: [40, 40] });
   }
   render();
+}
+
+// ===== NAVIGATIONSGERÄT (Turn-by-Turn mit Live-GPS und Sprachansagen) =====
+let _naviOverlayEl = null;
+const _NAVI_PROFIL_OSRM = { auto:'driving', fahrrad:'cycling', fuss:'foot' };
+
+// OSRM-Manöver in eine deutsche Anweisung übersetzen
+function naviAnweisung(step) {
+  const t = step?.maneuver?.type || '';
+  const mod = step?.maneuver?.modifier || '';
+  const strasse = step?.name || '';
+  const richtung = {
+    'left':'links','slight left':'leicht links','sharp left':'scharf links',
+    'right':'rechts','slight right':'leicht rechts','sharp right':'scharf rechts',
+    'straight':'geradeaus','uturn':'wenden'
+  }[mod] || '';
+  const aufStr = strasse ? ' auf ' + strasse : '';
+  if (t === 'depart')  return strasse ? 'Losfahren auf ' + strasse : 'Losfahren';
+  if (t === 'arrive')  return 'Sie haben Ihr Ziel erreicht';
+  if (t === 'roundabout' || t === 'rotary')
+    return step.maneuver.exit ? 'Im Kreisverkehr die ' + step.maneuver.exit + '. Ausfahrt nehmen' : 'Dem Kreisverkehr folgen';
+  if (t === 'merge')    return 'Einfädeln' + aufStr;
+  if (t === 'on ramp')  return 'Auffahrt nehmen' + aufStr;
+  if (t === 'off ramp') return 'Abfahrt nehmen' + (richtung && richtung!=='geradeaus' ? ' (' + richtung + ')' : '');
+  if (t === 'fork')     return 'An der Gabelung ' + (richtung || 'geradeaus') + ' halten';
+  if (t === 'end of road') return 'Am Ende der Straße ' + (richtung || 'weiterfahren') + aufStr;
+  if (t === 'continue' || t === 'new name') return strasse ? 'Weiter auf ' + strasse : 'Geradeaus weiter';
+  if (t === 'turn') {
+    if (mod === 'straight') return 'Geradeaus weiter' + aufStr;
+    if (mod === 'uturn')    return 'Bitte wenden';
+    if (richtung)           return richtung.charAt(0).toUpperCase() + richtung.slice(1) + ' abbiegen' + aufStr;
+  }
+  return strasse ? 'Weiter auf ' + strasse : 'Der Route folgen';
+}
+
+function naviIcon(step) {
+  const t = step?.maneuver?.type || '';
+  const mod = step?.maneuver?.modifier || '';
+  if (t === 'arrive') return '🏁';
+  if (t === 'depart') return '🚩';
+  if (t === 'roundabout' || t === 'rotary') return '🔄';
+  if (mod === 'uturn') return '🔃';
+  if (mod.includes('left'))  return '⬅️';
+  if (mod.includes('right')) return '➡️';
+  return '⬆️';
+}
+
+function naviDistText(m) {
+  if (m < 1000) return (Math.round(m/10)*10) + ' Metern';
+  return (m/1000).toFixed(1).replace('.', ',') + ' Kilometern';
+}
+function naviDistKurz(m) {
+  if (m == null) return '';
+  if (m < 1000) return (Math.round(m/10)*10) + ' m';
+  return (m/1000).toFixed(1).replace('.', ',') + ' km';
+}
+
+async function naviRouteHolen(startLat, startLng, zielLat, zielLng, profil) {
+  const osrm = _NAVI_PROFIL_OSRM[profil] || 'driving';
+  try {
+    const url = `https://router.project-osrm.org/route/v1/${osrm}/${startLng},${startLat};${zielLng},${zielLat}?overview=full&geometries=geojson&steps=true`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes?.length) return null;
+    const r = data.routes[0];
+    const steps = (r.legs || []).flatMap(l => l.steps || []);
+    if (steps.length === 0) return null;
+    return { steps, geoJson: r.geometry, distance: r.distance, duration: r.duration };
+  } catch { return null; }
+}
+
+function naviAnsagen(text) {
+  if (!text || state.navi?.stumm || !window.speechSynthesis) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'de-DE'; u.rate = 1.0;
+    speechSynthesis.speak(u);
+  } catch {}
+}
+
+function naviSprecheToggle() {
+  if (!state.navi) return;
+  state.navi.stumm = !state.navi.stumm;
+  if (state.navi.stumm && window.speechSynthesis) speechSynthesis.cancel();
+  naviOverlayAktualisieren();
+}
+
+async function naviStarten(profil) {
+  const m = state.routeMultiModi;
+  if (!m || m.lat == null) { toast('⚠️ Bitte zuerst eine Route berechnen'); return; }
+  if (!navigator.geolocation) { toast('⚠️ GPS auf diesem Gerät nicht verfügbar'); return; }
+  // Sprachausgabe direkt im Tap freischalten (wichtig für iOS)
+  naviAnsagen('Navigation wird gestartet');
+  toast('🧭 Navigation wird gestartet…');
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const sLat = pos.coords.latitude, sLng = pos.coords.longitude;
+    const route = await naviRouteHolen(sLat, sLng, m.lat, m.lng, profil || 'auto');
+    if (!route) { toast('⚠️ Route konnte nicht berechnet werden'); return; }
+    state.navi = {
+      aktiv: true, profil: profil || 'auto',
+      ziel: { lat: m.lat, lng: m.lng, name: m.ziel },
+      steps: route.steps, geoJson: route.geoJson,
+      stepIndex: Math.min(1, route.steps.length - 1),
+      watchId: null, posMarker: null, stumm: false,
+      angesagtVorab: -1, angesagtJetzt: -1,
+      offRouteZaehler: 0, rerouting: false,
+      restDistanz: route.distance, restDauer: route.duration
+    };
+    if (state.routeSchicht) {
+      state.routeSchicht.clearLayers();
+      L.geoJSON(route.geoJson, { style:{ color:'#4F46E5', weight:6, opacity:.85 } }).addTo(state.routeSchicht);
+    }
+    if (state.karte) state.karte.setView([sLat, sLng], 16);
+    naviOverlayZeigen();
+    naviAnsagen(naviAnweisung(state.navi.steps[state.navi.stepIndex]));
+    state.navi.watchId = navigator.geolocation.watchPosition(
+      naviPositionUpdate,
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 12000 }
+    );
+  }, () => {
+    toast('⚠️ Standort nicht verfügbar — bitte GPS-Zugriff erlauben');
+  }, { enableHighAccuracy: true, timeout: 12000 });
+}
+
+function naviAbstandZurRoute(lat, lng) {
+  const coords = state.navi?.geoJson?.coordinates;
+  if (!coords || !coords.length) return 0;
+  let min = Infinity;
+  for (let i = 0; i < coords.length; i++) {
+    const d = haversine(lat, lng, coords[i][1], coords[i][0]);
+    if (d < min) min = d;
+  }
+  return min;
+}
+
+function naviPositionUpdate(pos) {
+  const n = state.navi;
+  if (!n || !n.aktiv) return;
+  const lat = pos.coords.latitude, lng = pos.coords.longitude;
+
+  // Position auf der Karte anzeigen und mitführen
+  if (state.karte) {
+    if (!n.posMarker) {
+      n.posMarker = L.circleMarker([lat, lng], { radius:9, color:'#fff', weight:3, fillColor:'#2563EB', fillOpacity:1 }).addTo(state.karte);
+    } else {
+      n.posMarker.setLatLng([lat, lng]);
+    }
+    state.karte.panTo([lat, lng], { animate: true });
+  }
+
+  // Off-Route erkennen → neu berechnen
+  if (naviAbstandZurRoute(lat, lng) > 65) {
+    n.offRouteZaehler++;
+    if (n.offRouteZaehler >= 3 && !n.rerouting) { naviNeuberechnen(lat, lng); return; }
+  } else {
+    n.offRouteZaehler = 0;
+  }
+
+  const step = n.steps[n.stepIndex];
+  const ml = step?.maneuver?.location;
+  if (!ml) return;
+  const distZ = haversine(lat, lng, ml[1], ml[0]);
+
+  if (distZ < 22) {
+    // Manöver erreicht → nächster Schritt
+    if (n.stepIndex >= n.steps.length - 1) { naviZielErreicht(); return; }
+    n.stepIndex++;
+    n.angesagtVorab = -1; n.angesagtJetzt = -1;
+    naviAnsagen(naviAnweisung(n.steps[n.stepIndex]));
+  } else if (distZ < 45 && n.angesagtJetzt !== n.stepIndex) {
+    n.angesagtJetzt = n.stepIndex;
+    naviAnsagen('Jetzt ' + naviAnweisung(step));
+  } else if (distZ < 230 && n.angesagtVorab !== n.stepIndex) {
+    n.angesagtVorab = n.stepIndex;
+    naviAnsagen('In ' + naviDistText(distZ) + ' ' + naviAnweisung(step));
+  }
+
+  // Restdistanz und -zeit aktualisieren
+  let restD = distZ, restT = 0;
+  for (let i = n.stepIndex + 1; i < n.steps.length; i++) restD += n.steps[i].distance || 0;
+  for (let i = n.stepIndex; i < n.steps.length; i++) restT += n.steps[i].duration || 0;
+  n.restDistanz = restD;
+  n.restDauer = restT;
+
+  naviOverlayAktualisieren(distZ);
+}
+
+async function naviNeuberechnen(lat, lng) {
+  const n = state.navi;
+  if (!n) return;
+  n.rerouting = true;
+  naviAnsagen('Die Route wird neu berechnet');
+  toast('🧭 Route wird neu berechnet…');
+  const route = await naviRouteHolen(lat, lng, n.ziel.lat, n.ziel.lng, n.profil);
+  if (route && state.navi) {
+    n.steps = route.steps;
+    n.geoJson = route.geoJson;
+    n.stepIndex = Math.min(1, route.steps.length - 1);
+    n.angesagtVorab = -1; n.angesagtJetzt = -1;
+    n.offRouteZaehler = 0;
+    if (state.routeSchicht) {
+      state.routeSchicht.clearLayers();
+      L.geoJSON(route.geoJson, { style:{ color:'#4F46E5', weight:6, opacity:.85 } }).addTo(state.routeSchicht);
+    }
+    naviAnsagen(naviAnweisung(route.steps[n.stepIndex]));
+    naviOverlayAktualisieren();
+  }
+  n.rerouting = false;
+}
+
+function naviZielErreicht() {
+  naviAnsagen('Sie haben Ihr Ziel erreicht');
+  toast('🏁 Ziel erreicht!');
+  naviBeenden();
+}
+
+function naviBeenden() {
+  const n = state.navi;
+  if (n) {
+    if (n.watchId != null && navigator.geolocation) { try { navigator.geolocation.clearWatch(n.watchId); } catch {} }
+    if (n.posMarker && state.karte) { try { state.karte.removeLayer(n.posMarker); } catch {} }
+  }
+  if (window.speechSynthesis) { try { speechSynthesis.cancel(); } catch {} }
+  state.navi = null;
+  if (_naviOverlayEl) { _naviOverlayEl.remove(); _naviOverlayEl = null; }
+}
+
+function naviOverlayZeigen() {
+  if (_naviOverlayEl) _naviOverlayEl.remove();
+  _naviOverlayEl = document.createElement('div');
+  _naviOverlayEl.className = 'navi-overlay';
+  document.body.appendChild(_naviOverlayEl);
+  naviOverlayAktualisieren();
+}
+
+function naviOverlayAktualisieren(distZ) {
+  if (!_naviOverlayEl || !state.navi) return;
+  const n = state.navi;
+  const step = n.steps[n.stepIndex] || n.steps[n.steps.length - 1];
+  const naechster = n.steps[n.stepIndex + 1];
+  const distAnzeige = distZ != null ? naviDistKurz(distZ) : '';
+  const restKm = naviDistKurz(n.restDistanz);
+  const restMin = n.restDauer != null ? Math.max(1, Math.round(n.restDauer / 60)) + ' Min.' : '';
+  _naviOverlayEl.innerHTML = `
+    <div class="navi-top">
+      <div class="navi-icon-gross">${naviIcon(step)}</div>
+      <div class="navi-text-wrap">
+        ${distAnzeige ? `<div class="navi-dist">${distAnzeige}</div>` : ''}
+        <div class="navi-text">${esc(naviAnweisung(step))}</div>
+        ${naechster ? `<div class="navi-danach">danach ${naviIcon(naechster)} ${esc(naviAnweisung(naechster))}</div>` : ''}
+      </div>
+    </div>
+    <div class="navi-bottom">
+      <div class="navi-stat"><span>🏁 ${esc(n.ziel.name || 'Ziel')}</span><span>${restKm}${restKm&&restMin?' · ':''}${restMin}</span></div>
+      <div class="navi-bottom-btns">
+        <button class="navi-btn-stumm" onclick="naviSprecheToggle()">${n.stumm ? '🔇 Ton aus' : '🔊 Ton an'}</button>
+        <button class="navi-btn-beenden" onclick="naviBeenden()">✕ Navigation beenden</button>
+      </div>
+    </div>`;
 }
 
 async function routeBerechnen() {
@@ -1428,6 +3453,11 @@ function renderRegSchritt() {
       </select>
     </div>
     <div class="reg-feld">
+      <label class="reg-label">Ihr Alter (optional)</label>
+      <input class="reg-input" id="r-alter" type="number" min="16" max="120" placeholder="z.B. 38" value="${d.alter||''}" />
+      <div style="font-size:.75rem;color:#6B7280;margin-top:.3rem">Ab 65 stellt die App automatisch größere Schrift ein und zeigt den Senioren-Bereich.</div>
+    </div>
+    <div class="reg-feld">
       <label class="reg-label">Anzahl Ihrer Kinder</label>
       <div class="kinder-stepper">
         <button class="stepper-btn" onclick="kinderAnzahlAendern(-1)">−</button>
@@ -1503,6 +3533,8 @@ function regWeiter2() {
   const bl = el('r-bl')?.value;
   if (!bl) { alert('Bitte Bundesland auswählen.'); return; }
   state.regDaten.bundesland = bl;
+  const alterRoh = parseInt(el('r-alter')?.value);
+  state.regDaten.alter = (alterRoh >= 16 && alterRoh <= 120) ? alterRoh : null;
   // Alter validieren
   for (let i=0; i<state.regDaten.kinder.length; i++) {
     if (!state.regDaten.kinder[i].alter && state.regDaten.kinder[i].alter !== 0) {
@@ -1515,8 +3547,19 @@ function regWeiter2() {
 
 function regAbschliessen() {
   const d = state.regDaten;
-  const user = { vorname:d.vorname, plz:d.plz, ort:d.ort, lat:d.lat, lng:d.lng, bundesland:d.bundesland, kinder:d.kinder, registriert:new Date().toISOString() };
+  const user = { vorname:d.vorname, plz:d.plz, ort:d.ort, lat:d.lat, lng:d.lng, bundesland:d.bundesland, kinder:d.kinder, alter:d.alter||null, registriert:new Date().toISOString() };
   saveUser(user);
+
+  // Voreinstellung für Senioren: ab 65 größere Schrift + Senioren-Modus aktivieren
+  if (d.alter && d.alter >= 65) {
+    const einst = einstellungenLaden();
+    einst.seniorModus = true;
+    einst.schriftGross = true;
+    try { localStorage.setItem(EINST_KEY, JSON.stringify(einst)); } catch {}
+    state.einstellungen = einst;
+    document.documentElement.classList.add('schrift-gross');
+    toast('👵 Senioren-Modus aktiviert — größere Schrift eingestellt');
+  }
 
   if (user.bundesland) state.bundesland = BUNDESLAENDER.find(b=>b.id===user.bundesland) || null;
   if (user.lat) state.umgebungStandort = { lat:user.lat, lng:user.lng, name:user.ort };
@@ -1566,6 +3609,8 @@ function profilSchliessen() { el('profil-modal')?.remove(); }
 
 async function profilSpeichern() {
   const user = getUser() || {};
+  const alterOrt = user.ort;
+  const alterPlz = user.plz;
   user.vorname = el('pm-vorname')?.value.trim() || user.vorname;
   const ortNeu = el('pm-ort')?.value.trim();
   const blNeu  = el('pm-bl')?.value;
@@ -1580,6 +3625,19 @@ async function profilSpeichern() {
     if (user.lat) state.umgebungStandort = { lat:user.lat, lng:user.lng, name:user.ort };
   }
   saveUser(user);
+
+  // AUTO-MÜLL: Bei Standort-Änderung Termine neu generieren
+  const standortGeaendert = (user.ort !== alterOrt) || (user.plz !== alterPlz);
+  const einst = einstellungenLaden();
+  const autoMuellAus = einst.muellAutoAus === true;
+  if (standortGeaendert && user.plz && !autoMuellAus) {
+    const ergebnis = muellAutoEintragen(user, { vorabend: true, erinnerung: true });
+    if (ergebnis.generiert > 0) {
+      const stadt = ergebnis.stadt || 'deutsche Standard-Rhythmen';
+      toast(`✓ ${ergebnis.generiert} Müll-Termine für ${stadt} im Kalender (${ergebnis.geloescht} alte entfernt)`);
+    }
+  }
+
   aktualisiereProfilBtn();
   const sel = el('bl-select');
   if (sel && user.bundesland) sel.value = user.bundesland;
@@ -1850,7 +3908,83 @@ function renderWohnung() {
   ${bl?`<div class="block-title">🏛️ Wohnungsbaugesellschaften in ${esc(bl.name)}</div>
   <div class="grid-2">${bl.links.wohnungsbau.map(w=>`<div class="card" style="border-left:4px solid #7C3AED"><div style="font-weight:700;margin-bottom:.5rem">${esc(w.text)}</div><a href="${w.url}" target="_blank" class="btn btn-primary btn-sm">Zur Website →</a></div>`).join('')}</div>`:''}
 
-  <div class="block-title">🌐 Wohnungsportale — Fotos sofort, keine Anmeldung</div>
+  ${ort ? `
+  ${(() => { _wohnungenLiveVersucht = false; setTimeout(() => { if (!_wohnungenLiveVersucht) wohnungenLiveLaden(ort); }, 500); return ''; })()}
+  <!-- LIVE-VERSUCH: aktuelle Wohnungen via RSS-Feeds (klappt oft nicht — Portale blockieren) -->
+  <div class="block-title">🔴 Live-Angebote in ${esc(ort)}</div>
+  <div id="wohnungen-live-container">
+    <div class="info-box blau" style="margin-bottom:.5rem">
+      <span class="ib-icon">🔄</span>
+      <div class="ib-text">Lade Live-Daten…</div>
+    </div>
+  </div>
+
+  <!-- BEISPIEL-WOHNUNGEN MIT BILDERN -->
+  <div class="block-title">🏠 Typische Wohnungen in ${esc(ort)}</div>
+  <div class="info-box orange" style="margin-bottom:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text"><strong>Wichtig zu wissen:</strong> Diese Karten zeigen <strong>typische Wohnungsarten</strong> mit Beispielbildern. Echte Live-Mietangebote gibt es bei deutschen Portalen leider nicht per API für Apps. Aber: Jede Karte öffnet die <strong>vorgefilterte Live-Suche</strong> mit deinen Wunsch-Kriterien (Zimmer, Preis, Größe) direkt im Portal — du sparst dir die ganze Filter-Klickerei.</div></div>
+
+  <div class="wohnung-galerie">
+    ${[
+      { typ:'1-Zi für Studi/Single', groesse:'30 m²', zimmer:'1 Zi', preis:'400–650 €', merkmal:'Kompakt, günstig', bild:'https://images.unsplash.com/photo-1522444195799-478538b28823?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?numberofrooms=1.0-1.5&pricetype=rentpermonth&price=-650.0` },
+      { typ:'2-Zi-Wohnung', groesse:'55 m²', zimmer:'2 Zi', preis:'600–850 €', merkmal:'Hell, Balkon', bild:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?numberofrooms=2.0-2.5&livingspace=50.0-65.0` },
+      { typ:'3-Zi für junge Familie', groesse:'72 m²', zimmer:'3 Zi', preis:'780–1.100 €', merkmal:'Familienfreundlich', bild:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80', portal:'Kleinanzeigen', portalUrl:`https://www.kleinanzeigen.de/s-wohnung-mieten/${slug}/c203` },
+      { typ:'Helle 3-Zi mit Garten', groesse:'80 m²', zimmer:'3 Zi', preis:'900–1.250 €', merkmal:'Garten/Terrasse', bild:'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600&q=80', portal:'Immowelt', portalUrl:`https://www.immowelt.de/suche/${slug}/wohnungen/mieten?d=true&prif=900&pria=1250&rmf=3` },
+      { typ:'4-Zi-Familienwohnung', groesse:'95 m²', zimmer:'4 Zi', preis:'1.100–1.600 €', merkmal:'2 Kinderzimmer', bild:'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?numberofrooms=4.0-` },
+      { typ:'Sozialwohnung mit WBS', groesse:'70 m²', zimmer:'3 Zi', preis:'450–700 €', merkmal:'WBS akzeptiert', bild:'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=80', portal:'Wohnungsbörse', portalUrl:`https://www.wohnungsboerse.net/suche/?city=${encodeURIComponent(ort)}&minPrice=0&maxPrice=700` },
+      { typ:'Möblierte Wohnung', groesse:'45 m²', zimmer:'2 Zi', preis:'700–1.100 €', merkmal:'Sofort einziehen', bild:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80', portal:'WG-Gesucht', portalUrl:`https://www.wg-gesucht.de/wohnungen-in-${slug}.html` },
+      { typ:'Reihenhaus für Familie', groesse:'120 m²', zimmer:'4-5 Zi', preis:'1.400–2.200 €', merkmal:'Eigener Garten', bild:'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/haus-mieten` },
+      { typ:'Dachgeschoss-Wohnung', groesse:'78 m²', zimmer:'3 Zi', preis:'850–1.200 €', merkmal:'Charmant, Aussicht', bild:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80', portal:'Immowelt', portalUrl:`https://www.immowelt.de/suche/${slug}/wohnungen/mieten` },
+      { typ:'Altbau-Charme', groesse:'85 m²', zimmer:'3 Zi', preis:'950–1.400 €', merkmal:'Hohe Decken, Stuck', bild:'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?numberofrooms=3.0-3.5&hasFloors=0&constructionyear=-1949` },
+      { typ:'Neubau-Wohnung', groesse:'90 m²', zimmer:'3 Zi', preis:'1.200–1.800 €', merkmal:'Modern, energieeffizient', bild:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?constructionyear=2015-` },
+      { typ:'Maisonette', groesse:'110 m²', zimmer:'4 Zi', preis:'1.400–2.000 €', merkmal:'2 Ebenen, Charakter', bild:'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=600&q=80', portal:'Immowelt', portalUrl:`https://www.immowelt.de/suche/${slug}/wohnungen/mieten?wf=90` },
+      { typ:'Einfamilienhaus mieten', groesse:'140 m²', zimmer:'5 Zi', preis:'1.800–2.800 €', merkmal:'Garten + Garage', bild:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/haus-mieten?livingspace=120-` },
+      { typ:'Wohnung kaufen — klein', groesse:'60 m²', zimmer:'2 Zi', preis:'180–280 T€', merkmal:'Eigentum statt Miete', bild:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-kaufen?numberofrooms=2.0-3.0` },
+      { typ:'Haus kaufen — Familie', groesse:'160 m²', zimmer:'5 Zi', preis:'400–650 T€', merkmal:'Investition fürs Leben', bild:'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/haus-kaufen?livingspace=120-` },
+      { typ:'Genossenschafts-Wohnung', groesse:'75 m²', zimmer:'3 Zi', preis:'500–800 €', merkmal:'Sicher, langfristig', bild:'https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=600&q=80', portal:'Wohnungsbörse', portalUrl:`https://www.wohnungsboerse.net/suche/?city=${encodeURIComponent(ort)}&suchart=mieten` }
+    ].map(w => `
+    <a href="${w.portalUrl}" target="_blank" class="wohnung-galerie-karte">
+      <div class="wohnung-galerie-bild" style="background-image:url('${w.bild}')">
+        <span class="wohnung-galerie-preis">${esc(w.preis)}</span>
+        <span class="wohnung-galerie-portal">${esc(w.portal)}</span>
+      </div>
+      <div class="wohnung-galerie-body">
+        <div class="wohnung-galerie-titel">${esc(w.typ)}</div>
+        <div class="wohnung-galerie-details">
+          <span class="wg-detail">📐 ${esc(w.groesse)}</span>
+          <span class="wg-detail">🚪 ${esc(w.zimmer)}</span>
+          <span class="wg-detail">✓ ${esc(w.merkmal)}</span>
+        </div>
+        <div class="wohnung-galerie-cta">→ Live-Suche in ${esc(ort)} öffnen</div>
+      </div>
+    </a>`).join('')}
+  </div>
+
+  <!-- Direkte Live-Suchergebnisse: 1-Klick zu Wohnungs-Listen mit Fotos -->
+  <div class="block-title">🔥 Live-Suche bei den großen Portalen</div>
+  <div class="info-box gruen" style="margin-bottom:.75rem"><span class="ib-icon">✓</span><div class="ib-text"><strong>Direkt zu den aktuellen Angeboten</strong> — alle Portale mit Filter auf <strong>${esc(ort)}</strong> bereits vorausgefüllt.</div></div>
+
+  <div class="wohnung-live-grid">
+    ${portale.slice(0,4).map(p => `
+    <a href="${p.url}" target="_blank" class="wohnung-live-karte" style="--lwf:${p.farbe}">
+      <div class="wohnung-live-bild" style="background-image:url('${p.foto}')">
+        <span class="wohnung-live-badge" style="background:${p.farbe}">Live-Suche</span>
+      </div>
+      <div class="wohnung-live-body">
+        <div class="wohnung-live-name">${esc(p.name)}</div>
+        <div class="wohnung-live-meta">${esc(ort)} · Umkreis ${rad} km</div>
+        <span class="wohnung-live-cta" style="background:${p.farbe}">→ Wohnungen ansehen</span>
+      </div>
+    </a>`).join('')}
+  </div>
+
+  <button class="btn btn-primary" style="width:100%;padding:1rem;font-size:1rem;margin-top:.5rem" onclick="alleWohnungsportaleOeffnen('${esc(ort)}', ${rad})">
+    🚀 Alle ${portale.length} Portale gleichzeitig in neuen Tabs öffnen
+  </button>
+  ` : `
+  <div class="info-box orange" style="margin-bottom:1rem"><span class="ib-icon">📍</span><div class="ib-text"><strong>Ort eingeben oben</strong> — sobald du deine Stadt eingegeben hast, siehst du direkt verlinkte Wohnungs-Suchergebnisse aller Portale für deinen Standort.</div></div>
+  `}
+
+  <div class="block-title">🌐 Alle Wohnungsportale im Detail</div>
   <div class="wohnung-portal-grid">
     ${portale.map(p=>`
     <div class="wohnung-portal-karte">
@@ -1867,7 +4001,172 @@ function renderWohnung() {
         </a>
       </div>
     </div>`).join('')}
-  </div>`;
+  </div>
+
+  <div class="info-box blau" style="margin-top:1rem"><span class="ib-icon">ℹ️</span><div class="ib-text"><strong>Warum öffnen sich die Wohnungen in einem neuen Tab?</strong> ImmoScout, Kleinanzeigen und andere Portale erlauben aus Sicherheitsgründen kein direktes Einbetten in andere Apps. Wir verlinken aber direkt zu den Suchergebnissen — du sparst dir die ganze Sucherei.</div></div>`;
+}
+
+// Worker-URL-Verwaltung
+function workerUrlSpeichern() {
+  const url = (state._workerUrlDraft || el('worker-url-input')?.value || '').trim().replace(/\/$/, '');
+  if (url && !/^https?:\/\//.test(url)) { toast('⚠️ URL muss mit https:// beginnen'); return; }
+  const einst = einstellungenLaden();
+  if (url) einst.workerUrl = url; else delete einst.workerUrl;
+  einstellungenSpeichern(einst);
+  toast(url ? '✓ Worker-URL gespeichert' : '✓ Worker-URL entfernt');
+  render();
+}
+function workerUrlLoeschen() {
+  const einst = einstellungenLaden();
+  delete einst.workerUrl;
+  einstellungenSpeichern(einst);
+  toast('✓ Worker entfernt');
+  render();
+}
+async function workerUrlTesten() {
+  const einst = einstellungenLaden();
+  const url = einst.workerUrl;
+  if (!url) { toast('⚠️ Erst Worker-URL speichern'); return; }
+  toast('🔄 Teste Verbindung...');
+  try {
+    const res = await fetch(`${url}/?ort=Berlin`, { signal: AbortSignal.timeout(15000) });
+    const data = await res.json();
+    if (data.ok && data.wohnungen?.length > 0) {
+      toast(`✓ Worker läuft! ${data.anzahl} Test-Wohnungen aus ${data.quelle}`);
+    } else if (data.ok === false) {
+      toast(`⚠️ Worker erreichbar, aber: ${data.fehler}`);
+    } else {
+      toast('⚠️ Antwort unklar — prüfe Code im Worker');
+    }
+  } catch (e) {
+    toast('⚠️ Worker nicht erreichbar — URL prüfen');
+  }
+}
+
+// Auto-Trigger beim Aufruf der Wohnungs-Sektion (1× pro Sektion-View)
+let _wohnungenLiveVersucht = false;
+
+async function wohnungenLiveLaden(ort) {
+  const container = el('wohnungen-live-container');
+  if (!container) return;
+  _wohnungenLiveVersucht = true;
+
+  container.innerHTML = `
+    <div class="info-box blau">
+      <span class="ib-icon">🔄</span>
+      <div class="ib-text"><strong>Lade Live-Angebote für ${esc(ort)}…</strong></div>
+    </div>`;
+
+  const einst = einstellungenLaden();
+  let gefunden = [];
+  let quelleName = '';
+
+  // 1. WORKER versuchen (wenn konfiguriert)
+  if (einst.workerUrl) {
+    try {
+      const res = await fetch(`${einst.workerUrl}/?ort=${encodeURIComponent(ort)}`, { signal: AbortSignal.timeout(20000) });
+      const data = await res.json();
+      if (data.ok && data.wohnungen?.length > 0) {
+        gefunden = data.wohnungen.map(w => ({
+          titel: w.titel || 'Wohnungsangebot',
+          link: w.link || '#',
+          beschr: [w.preis, w.groesse, w.zimmer].filter(Boolean).join(' · '),
+          bild: w.bild,
+          quelle: w.quelle || data.quelle
+        }));
+        quelleName = data.quelle;
+      }
+    } catch(e) { /* fallback unten */ }
+  }
+
+  // 2. Fallback: direkte CORS-Proxy-Versuche
+  if (gefunden.length === 0) {
+    const ortSlug = stadtSlug(ort);
+    const versuche = [
+      { name:'Wohnungsbörse', url:`https://www.wohnungsboerse.net/rss/${ortSlug}` },
+      { name:'WG-Gesucht',   url:`https://www.wg-gesucht.de/wohnungen-in-${ortSlug}.146.0.1.0.rss` }
+    ];
+    const proxies = [
+      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      u => `https://corsproxy.io/?${encodeURIComponent(u)}`
+    ];
+    for (const v of versuche) {
+      for (const p of proxies) {
+        try {
+          const res = await fetch(p(v.url), { signal: AbortSignal.timeout(7000) });
+          if (!res.ok) continue;
+          const xml = await res.text();
+          if (xml.length < 300 || !xml.includes('<item')) continue;
+          const doc = new DOMParser().parseFromString(xml, 'text/xml');
+          Array.from(doc.querySelectorAll('item')).slice(0, 8).forEach(item => {
+            const titel = item.querySelector('title')?.textContent?.trim() || '';
+            const link = item.querySelector('link')?.textContent?.trim() || '';
+            let beschr = item.querySelector('description')?.textContent?.trim() || '';
+            beschr = beschr.replace(/<[^>]*>/g, '').replace(/&nbsp;/g,' ').slice(0, 160);
+            const bildMatch = beschr.match(/https?:\/\/[^\s"']+\.(jpg|jpeg|png|webp)/i);
+            if (titel && link) gefunden.push({ titel, link, beschr, bild: bildMatch?.[0], quelle: v.name });
+          });
+          if (gefunden.length > 0) { quelleName = v.name; break; }
+        } catch {}
+      }
+      if (gefunden.length > 0) break;
+    }
+  }
+
+  if (gefunden.length > 0) {
+    container.innerHTML = `
+      <div class="info-box gruen" style="margin-bottom:.5rem">
+        <span class="ib-icon">✓</span>
+        <div class="ib-text"><strong>${gefunden.length} Live-Angebote</strong> aus ${esc(quelleName)} ${einst.workerUrl ? '(via deinem Worker)' : ''}</div>
+      </div>
+      <div class="wohnung-galerie">
+        ${gefunden.map(w => `
+        <a href="${esc(w.link)}" target="_blank" class="wohnung-galerie-karte">
+          ${w.bild ? `<div class="wohnung-galerie-bild" style="background-image:url('${esc(w.bild)}')">
+            <span class="wohnung-galerie-portal">${esc(w.quelle || '')}</span>
+            <span class="wohnung-galerie-preis">LIVE</span>
+          </div>` : `<div class="wohnung-galerie-bild" style="background:linear-gradient(135deg,#DBEAFE,#BFDBFE);display:flex;align-items:center;justify-content:center;font-size:2.5rem">🏠
+            <span class="wohnung-galerie-portal">${esc(w.quelle || '')}</span>
+            <span class="wohnung-galerie-preis">LIVE</span>
+          </div>`}
+          <div class="wohnung-galerie-body">
+            <div class="wohnung-galerie-titel">${esc(w.titel)}</div>
+            ${w.beschr ? `<div style="font-size:.78rem;color:var(--g700);line-height:1.45;margin-bottom:.4rem">${esc(w.beschr)}</div>` : ''}
+            <div class="wohnung-galerie-cta">→ Angebot ansehen</div>
+          </div>
+        </a>`).join('')}
+      </div>`;
+  } else {
+    const hatWorker = !!einst.workerUrl;
+    container.innerHTML = `
+      <div class="info-box orange">
+        <span class="ib-icon">${hatWorker ? '😔' : '⚠️'}</span>
+        <div class="ib-text">
+          ${hatWorker
+            ? `<strong>Worker hat keine Daten geliefert.</strong> Vielleicht hat ${esc(ort)} gerade wenige Angebote in den Quellen, oder die Portale sind kurz down. Probier es später nochmal.`
+            : `<strong>Noch keinen Worker eingerichtet.</strong> Echte Live-Daten brauchen einen kleinen kostenlosen Server (Cloudflare Workers — 100.000 Anfragen/Tag gratis, keine Kreditkarte).
+               <br><br>
+               <button class="btn btn-primary btn-sm" onclick="zuSektion('einstellungen')">⚙️ Worker einrichten →</button>`
+          }
+          <br><br>
+          <button class="btn btn-sm" onclick="wohnungenLiveLaden('${esc(ort)}')">🔄 Erneut versuchen</button>
+        </div>
+      </div>`;
+  }
+}
+
+function alleWohnungsportaleOeffnen(ort, rad) {
+  if (!ort) { toast('⚠️ Bitte erst einen Ort eingeben'); return; }
+  const slug = stadtSlug(ort);
+  const urls = [
+    `https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten.html`,
+    `https://www.kleinanzeigen.de/s-wohnung-mieten/${slug}/`,
+    `https://www.immowelt.de/suche/${slug}/wohnungen/mieten`,
+    `https://www.wohnungsboerse.net/suche/?city=${encodeURIComponent(ort)}`,
+    `https://www.wg-gesucht.de/wohnungen-in-${slug}.html`
+  ];
+  urls.forEach((u, i) => setTimeout(() => window.open(u, '_blank'), i * 200));
+  toast(`✓ ${urls.length} Portale geöffnet für ${ort}`);
 }
 
 // ===== BERATUNG =====
@@ -1899,25 +4198,30 @@ function sparTabWaehlen(tab) { state.sparTab=tab; render(); }
 
 function renderSparen() {
   const tabs = [
-    {id:'liste',label:'🛍️ Einkaufsliste'},{id:'supermarkt',label:'🛒 Supermarkt'},
+    {id:'tipps',label:'💡 Spar-Tipps'},
+    {id:'geldanlage',label:'🌱 Geldanlagen'},
     {id:'lebensmittel',label:'🥦 Günstig essen'},
-    {id:'strom',label:'⚡ Strom & Handy'},{id:'vertraege',label:'🔄 Verträge'},
-    {id:'kleidung',label:'👕 Kleidung'},{id:'tipps',label:'💡 Tipps'}
+    {id:'supermarkt',label:'🛒 Supermarkt'},
+    {id:'kleidung',label:'👕 Kleidung'},
+    {id:'strom',label:'⚡ Strom & Handy'},
+    {id:'vertraege',label:'🔄 Verträge'}
   ];
+  // Default- und Alt-Stände auf den Tipps-Tab umleiten
+  if (!state.sparTab || state.sparTab === 'liste') state.sparTab = 'tipps';
   let inhalt = '';
   switch(state.sparTab) {
-    case 'liste':       inhalt = renderEinkaufsliste(); break;
-    case 'supermarkt':  inhalt = renderSparSupermarkt(); break;
+    case 'tipps':       inhalt = renderSparTipps(); break;
+    case 'geldanlage':  inhalt = renderSparGeldanlage(); break;
     case 'lebensmittel':inhalt = renderSparLebensmittel(); break;
+    case 'supermarkt':  inhalt = renderSparSupermarkt(); break;
     case 'strom':       inhalt = renderSparStrom(); break;
     case 'vertraege':   inhalt = renderVertraege(); break;
     case 'kleidung':    inhalt = renderSparKleidung(); break;
-    case 'tipps':       inhalt = renderSparTipps(); break;
-    default:            inhalt = renderSparSupermarkt();
+    default:            inhalt = renderSparTipps();
   }
   return `
-  <div class="section-title">💡 Sparen im Alltag</div>
-  <p class="section-sub">Supermarkt-Angebote, Secondhand und 80+ Spar-Tipps</p>
+  <div class="section-title">💰 Sparen & Geld anlegen</div>
+  <p class="section-sub">Über 60 Spar-Tipps, Geldanlagen mit Anleitung und günstig durch den Alltag</p>
   <div class="antrag-tabs" style="margin-bottom:1.25rem">
     ${tabs.map(t=>`<button class="antrag-tab ${state.sparTab===t.id?'aktiv':''}" onclick="sparTabWaehlen('${t.id}')">${t.label}</button>`).join('')}
   </div>${inhalt}`;
@@ -1949,6 +4253,19 @@ function renderListeInhalt() {
     <button class="liste-del" onclick="listeLoeschen(${i.id})">✕</button>
   </div>`;
   container.innerHTML=`${offen.length?`<div class="liste-gruppe-titel">Noch zu kaufen (${offen.length})</div>${offen.map(ri).join('')}`:''}${erledigt.length?`<div class="liste-gruppe-titel" style="margin-top:1rem">Erledigt (${erledigt.length})</div>${erledigt.map(ri).join('')}<button class="btn btn-outline btn-sm" style="margin-top:.75rem;color:#64748B;border-color:#CBD5E1" onclick="listeErledigtLoeschen()">Erledigte löschen</button>`:''}`;
+}
+
+function renderEinkaufslisteSektion() {
+  return `
+  <div class="news-hero">
+    <div class="news-hero-bg" style="background-image:url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=70')"></div>
+    <div class="news-hero-overlay"></div>
+    <div class="news-hero-inhalt">
+      <div style="font-size:1.4rem;font-weight:800;margin-bottom:.3rem">🛒 Einkaufsliste</div>
+      <div style="font-size:.85rem;opacity:.9">Direkt aus Rezepten + manuell ergänzbar</div>
+    </div>
+  </div>
+  ${renderEinkaufsliste()}`;
 }
 
 function renderEinkaufsliste() {
@@ -2402,17 +4719,19 @@ function renderTippsGefiltert(gruppenId, gruppen) {
   </div>`;
 }
 
+function sparTippKatWaehlen(id) { state.sparTippsKat = id; render(); }
+
 function renderSparTipps() {
-  const alle = typeof FAMILIEN_TIPPS_ALLE !== 'undefined' ? FAMILIEN_TIPPS_ALLE : [];
-  const aktiv = state.tippsKat || 'alle';
+  const alle = typeof SPAR_TIPPS !== 'undefined' ? SPAR_TIPPS : [];
+  const aktiv = state.sparTippsKat || 'alle';
   const gefiltert = aktiv === 'alle' ? alle : alle.filter(k => k.id === aktiv);
   const anzahl = alle.reduce((s,k) => s + k.tipps.length, 0);
 
   return `
-  <div class="info-box blau"><span class="ib-icon">💡</span><div class="ib-text"><strong>${anzahl} Tipps für Alleinerziehende</strong> — Kleine Änderungen, großer Effekt. Realistisch 200–400 € / Monat gespart.</div></div>
+  <div class="info-box blau"><span class="ib-icon">💡</span><div class="ib-text"><strong>${anzahl} Spar-Tipps für Familien</strong> — kleine Änderungen, großer Effekt. Realistisch sind 100–300 € im Monat drin.</div></div>
   <div class="tipps-filter">
-    <button class="tipps-filter-btn ${aktiv==='alle'?'aktiv':''}" onclick="tippKatWaehlen('alle')">Alle</button>
-    ${alle.map(k=>`<button class="tipps-filter-btn ${aktiv===k.id?'aktiv':''}" onclick="tippKatWaehlen('${k.id}')">${k.emoji} ${esc(k.kategorie)}</button>`).join('')}
+    <button class="tipps-filter-btn ${aktiv==='alle'?'aktiv':''}" onclick="sparTippKatWaehlen('alle')">Alle</button>
+    ${alle.map(k=>`<button class="tipps-filter-btn ${aktiv===k.id?'aktiv':''}" onclick="sparTippKatWaehlen('${k.id}')">${k.emoji} ${esc(k.kategorie)}</button>`).join('')}
   </div>
   ${gefiltert.map(k=>`
     <div style="margin-bottom:1.5rem">
@@ -2424,6 +4743,60 @@ function renderSparTipps() {
         </div>`).join('')}
       </div>
     </div>`).join('')}`;
+}
+
+function renderSparGeldanlage() {
+  const anlagen = typeof GELDANLAGEN !== 'undefined' ? GELDANLAGEN : [];
+  return `
+  <div class="info-box gruen"><span class="ib-icon">🌱</span><div class="ib-text"><strong>Schritt für Schritt zu mehr Geld.</strong> Erst teure Schulden tilgen, dann den Notgroschen anlegen, dann investieren — in dieser Reihenfolge baust du sicher Vermögen auf.</div></div>
+
+  <div class="block-title">📋 Die goldene Reihenfolge</div>
+  <div class="grid-2" style="margin-bottom:1.25rem">
+    <div class="tipp-karte"><div class="tipp-karte-titel">1. Teure Schulden weg</div><div class="tipp-karte-text">Dispo und Ratenkredite zuerst tilgen — gesparte 10 % Zinsen schlägt fast jede Geldanlage.</div></div>
+    <div class="tipp-karte"><div class="tipp-karte-titel">2. Notgroschen anlegen</div><div class="tipp-karte-text">2–3 Monatsausgaben als Sicherheitspolster aufs Tagesgeldkonto.</div></div>
+    <div class="tipp-karte"><div class="tipp-karte-titel">3. Regelmäßig investieren</div><div class="tipp-karte-text">Erst dann mit kleinen Beträgen langfristig anlegen, zum Beispiel per ETF-Sparplan.</div></div>
+    <div class="tipp-karte"><div class="tipp-karte-titel">Die 50/30/20-Regel</div><div class="tipp-karte-text">50 % fürs Notwendige, 30 % für Wünsche, 20 % fürs Sparen — eine einfache Richtschnur.</div></div>
+  </div>
+
+  ${anlagen.map(a => `
+  <div style="background:white;border:1px solid #E5E7EB;border-left:5px solid ${a.farbe};border-radius:14px;margin-bottom:1rem;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;background:${a.bg}">
+      <span style="font-size:2rem">${a.emoji}</span>
+      <div>
+        <div style="font-weight:900;font-size:1.05rem;color:${a.farbe}">${esc(a.name)}</div>
+        <div style="font-size:.8rem;color:var(--g700)">${esc(a.fuer)}</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem 1rem 0">
+      <div style="flex:1;min-width:95px;background:#F3F4F6;border-radius:9px;padding:.45rem .6rem">
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;color:var(--g500);font-weight:800">Risiko</div>
+        <div style="font-size:.82rem;font-weight:700">${esc(a.risiko)}</div>
+      </div>
+      <div style="flex:1;min-width:95px;background:#F3F4F6;border-radius:9px;padding:.45rem .6rem">
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;color:var(--g500);font-weight:800">Rendite</div>
+        <div style="font-size:.82rem;font-weight:700">${esc(a.rendite)}</div>
+      </div>
+      <div style="flex:1;min-width:95px;background:#F3F4F6;border-radius:9px;padding:.45rem .6rem">
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.04em;color:var(--g500);font-weight:800">Verfügbar</div>
+        <div style="font-size:.82rem;font-weight:700">${esc(a.verfuegbar)}</div>
+      </div>
+    </div>
+    <div style="padding:.75rem 1rem;font-size:.88rem;line-height:1.5;color:var(--g700)">${esc(a.beschreibung)}</div>
+    <div class="block-title" style="margin:0 1rem .25rem">✅ So gehst du vor</div>
+    <div style="padding:0 1rem">
+      ${a.schritte.map(s => `
+      <div class="schritt">
+        <div class="schritt-nr" style="background:${a.farbe}">${s.nr}</div>
+        <div class="schritt-body">
+          <div class="schritt-title">${esc(s.titel)}</div>
+          <div class="schritt-text">${esc(s.text)}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+    <div class="vertrag-spar-tipp" style="border-left-color:${a.farbe};margin:.25rem 1rem 1rem"><strong>💡 Tipp:</strong> ${esc(a.tipp)}</div>
+  </div>`).join('')}
+
+  <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">⚠️</span><div class="ib-text"><strong>Wichtig:</strong> Das sind allgemeine Infos zur Orientierung, keine persönliche Anlageberatung. Erträge der Vergangenheit sind keine Garantie für die Zukunft. Bei konkreten Fragen hilft die <strong>Verbraucherzentrale</strong> mit günstiger, unabhängiger Beratung.</div></div>`;
 }
 
 // ===== SUCHE =====
@@ -2659,7 +5032,13 @@ const TERMIN_TYPEN_ERWEITERT = {
   ehrenamt:  { icon:'🤲', farbe:'#9333EA', label:'Ehrenamt' },
   spielen:   { icon:'🎮', farbe:'#0EA5E9', label:'Spieltreff' },
   jubileum:  { icon:'✨', farbe:'#FBBF24', label:'Jubiläum' },
-  prüfung:   { icon:'📝', farbe:'#DC2626', label:'Prüfung' }
+  prüfung:   { icon:'📝', farbe:'#DC2626', label:'Prüfung' },
+  muell_rest:   { icon:'🗑️', farbe:'#1F2937', label:'Restmüll (schwarz)' },
+  muell_bio:    { icon:'🌱', farbe:'#65A30D', label:'Biomüll (braun)' },
+  muell_papier: { icon:'📄', farbe:'#2563EB', label:'Papier (blau)' },
+  muell_gelb:   { icon:'♻️', farbe:'#FBBF24', label:'Gelber Sack/Tonne' },
+  muell_glas:   { icon:'🍾', farbe:'#10B981', label:'Glas' },
+  muell_sperrm: { icon:'🛋️', farbe:'#A855F7', label:'Sperrmüll' }
 };
 function eigeneKategorienLaden() {
   try { return JSON.parse(localStorage.getItem('eigene_termin_kats') || '[]'); } catch { return []; }
@@ -2701,13 +5080,19 @@ function renderKalender() {
   </div>
 
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;margin-bottom:.5rem">
-    <button class="btn btn-outline btn-sm" onclick="kalenderAlsICSExportieren()">📤 Kalender exportieren (.ics)</button>
+    <button class="btn btn-primary btn-sm" onclick="muellAssistentOeffnen()">🗑️ Müllkalender</button>
+    <button class="btn btn-outline btn-sm" onclick="kalenderAlsICSExportieren()">📤 Exportieren (.ics)</button>
     <label class="btn btn-outline btn-sm" style="cursor:pointer">
-      📥 Kalender importieren
+      📥 Importieren
       <input type="file" accept=".ics,text/calendar" style="display:none" onchange="kalenderAusICSImportieren(this)" />
     </label>
-    <span style="font-size:.75rem;color:var(--g500);align-self:center">→ Termine teilen / mit anderen Geräten synchronisieren</span>
+    <button class="btn btn-outline btn-sm" onclick="kalenderTeilen('whatsapp')">💬 WhatsApp teilen</button>
+    <button class="btn btn-outline btn-sm" onclick="kalenderTeilen('email')">✉️ E-Mail teilen</button>
+    <button class="btn btn-outline btn-sm" onclick="kalenderTeilen('copy')">📋 Termin-Liste kopieren</button>
   </div>
+
+  ${state.muellAssistent ? renderMuellAssistent() : ''}
+  <div style="font-size:.75rem;color:var(--g700);margin-bottom:.5rem">→ Teilen mit Partner, Großeltern oder anderen Geräten. ICS-Datei funktioniert mit Google, Apple, Outlook.</div>
 
   <div class="block-title" style="margin-top:1rem">Familienmitglieder · Filter</div>
   <div class="kal-personen">
@@ -3028,15 +5413,16 @@ function renderRezeptApiInhalt(containerId) {
     <div class="rezept-api-grid">${state.rezeptApiMeals.map(m=>`
       <div class="rezept-api-karte">
         <div class="rezept-api-img-wrap">
-          <img src="${m.strMealThumb}/preview" alt="${esc(m.strMeal)}" loading="lazy"
+          <img src="${m.strMealThumb}/preview" alt="${esc(m._deName||m.strMeal)}" loading="lazy"
             onerror="this.parentElement.innerHTML='<div class=\\'rezept-api-no-img\\'>🍽️</div>'" />
         </div>
         <div class="rezept-api-body">
-          <div class="rezept-api-name">${esc(m.strMeal)}</div>
-          <a href="https://www.themealdb.com/meal/${m.idMeal}" target="_blank" class="btn btn-primary btn-sm" style="margin-top:.5rem;display:block;text-align:center">📖 Rezept ansehen →</a>
+          <div class="rezept-api-name">${esc(m._deName||m.strMeal)}</div>
+          <button class="btn btn-primary btn-sm" style="margin-top:.5rem;display:block;width:100%" onclick="mealApiOeffnen('${m.idMeal}')">📖 Rezept ansehen</button>
         </div>
       </div>`).join('')}
     </div>`;
+  setTimeout(() => mealListeUebersetzen(state.rezeptApiMeals, containerId), 50);
 }
 
 async function ladeRezepteSuche(query) {
@@ -3055,8 +5441,9 @@ async function ladeRezepteSuche(query) {
 function renderRezeptSucheInhalt(meals, query) {
   const c = el('rezept-suche-container');
   if (!c) return;
+  state._sucheMeals = meals; state._sucheQuery = query;
   if (!meals.length) {
-    c.innerHTML = `<div class="info-box orange"><span class="ib-icon">🔍</span><div class="ib-text">${query ? `Kein Rezept gefunden für "<strong>${esc(query)}</strong>". Suchen Sie auf Englisch, z.B. "chicken", "pasta", "soup", "rice".` : 'Suchbegriff eingeben und Enter drücken.'}</div></div>`;
+    c.innerHTML = `<div class="info-box orange"><span class="ib-icon">🔍</span><div class="ib-text">${query ? `Kein Rezept gefunden für "<strong>${esc(query)}</strong>". Bitte auf Englisch suchen, z. B. "chicken", "pasta", "soup", "rice" — die Ergebnisse werden automatisch auf Deutsch angezeigt.` : 'Suchbegriff eingeben und Enter drücken.'}</div></div>`;
     return;
   }
   c.innerHTML = `
@@ -3064,16 +5451,128 @@ function renderRezeptSucheInhalt(meals, query) {
     <div class="rezept-api-grid">${meals.map(m=>`
       <div class="rezept-api-karte">
         <div class="rezept-api-img-wrap">
-          <img src="${m.strMealThumb}/preview" alt="${esc(m.strMeal)}" loading="lazy"
+          <img src="${m.strMealThumb}/preview" alt="${esc(m._deName||m.strMeal)}" loading="lazy"
             onerror="this.parentElement.innerHTML='<div class=\\'rezept-api-no-img\\'>🍽️</div>'" />
         </div>
         <div class="rezept-api-body">
-          <div class="rezept-api-name">${esc(m.strMeal)}</div>
-          ${m.strCategory?`<div style="font-size:.72rem;color:#6B7280;margin:.2rem 0">${esc(m.strCategory)} · ${esc(m.strArea||'')}</div>`:''}
-          <a href="https://www.themealdb.com/meal/${m.idMeal}" target="_blank" class="btn btn-primary btn-sm" style="margin-top:.5rem;display:block;text-align:center">📖 Rezept ansehen →</a>
+          <div class="rezept-api-name">${esc(m._deName||m.strMeal)}</div>
+          ${m.strCategory?`<div style="font-size:.72rem;color:#6B7280;margin:.2rem 0">${esc(mealMetaDe(m))}</div>`:''}
+          <button class="btn btn-primary btn-sm" style="margin-top:.5rem;display:block;width:100%" onclick="mealApiOeffnen('${m.idMeal}')">📖 Rezept ansehen</button>
         </div>
       </div>`).join('')}
     </div>`;
+  setTimeout(() => mealListeUebersetzen(meals, 'rezept-suche-container'), 50);
+}
+
+// ===== Rezept-Übersetzung (englische API-Rezepte ins Deutsche) =====
+const _mealUebersetzungCache = {};
+const LAND_DE = {
+  Italian:'Italienisch', Mexican:'Mexikanisch', Chinese:'Chinesisch', Indian:'Indisch',
+  American:'Amerikanisch', British:'Britisch', French:'Französisch', Thai:'Thailändisch',
+  Japanese:'Japanisch', Spanish:'Spanisch', Greek:'Griechisch', Turkish:'Türkisch',
+  German:'Deutsch', Moroccan:'Marokkanisch', Vietnamese:'Vietnamesisch', Russian:'Russisch',
+  Polish:'Polnisch', Portuguese:'Portugiesisch', Dutch:'Niederländisch', Croatian:'Kroatisch',
+  Egyptian:'Ägyptisch', Irish:'Irisch', Jamaican:'Jamaikanisch', Kenyan:'Kenianisch',
+  Malaysian:'Malaysisch', Tunisian:'Tunesisch', Ukrainian:'Ukrainisch', Canadian:'Kanadisch',
+  Filipino:'Philippinisch', Uruguayan:'Uruguayisch', Unknown:''
+};
+
+function mealMetaDe(m) {
+  const katE = (typeof MEAL_KATEGORIEN !== 'undefined') ? MEAL_KATEGORIEN.find(([v]) => v === m.strCategory) : null;
+  const katDe = katE ? katE[1].replace(/^\S+\s/, '') : (m.strCategory || '');
+  const landDe = LAND_DE[m.strArea] !== undefined ? LAND_DE[m.strArea] : (m.strArea || '');
+  return katDe + (landDe ? ' · ' + landDe : '');
+}
+
+async function mealUebersetzen(text, alsListe) {
+  if (!text || !text.trim()) return text;
+  const key = (alsListe ? 'L:' : 'T:') + text;
+  if (_mealUebersetzungCache[key]) return _mealUebersetzungCache[key];
+  const anweisung = alsListe
+    ? 'Übersetze die folgende Liste ins Deutsche. Gib GENAU eine Zeile pro Eintrag zurück, in gleicher Reihenfolge, ohne Nummerierung und ohne Kommentar. Übersetze Mengen sinnvoll (cup=Tasse, tbsp=EL, tsp=TL):\n\n'
+    : 'Übersetze den folgenden Text natürlich und vollständig ins Deutsche. Gib nur die reine Übersetzung zurück, ohne Kommentar und ohne Anführungszeichen:\n\n';
+  try {
+    const url = 'https://text.pollinations.ai/' + encodeURIComponent(anweisung + text) + '?model=openai&private=true';
+    const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+    if (!res.ok) return null;
+    const t = (await res.text()).trim();
+    if (t) { _mealUebersetzungCache[key] = t; return t; }
+    return null;
+  } catch { return null; }
+}
+
+// Rezeptnamen einer Liste ins Deutsche übersetzen und neu anzeigen
+async function mealListeUebersetzen(meals, containerId) {
+  const offen = (meals || []).filter(m => !m._deName);
+  if (!offen.length) return;
+  const uebersetzt = await mealUebersetzen(offen.map(m => m.strMeal).join('\n'), true);
+  if (!uebersetzt) return;
+  const zeilen = uebersetzt.split(/\r?\n/).map(s => s.replace(/^[-•*\d.]+\s*/, '').trim()).filter(Boolean);
+  if (zeilen.length !== offen.length) return;
+  offen.forEach((m, i) => { m._deName = zeilen[i]; });
+  if (containerId === 'rezept-api-container') renderRezeptApiInhalt(containerId);
+  else if (containerId === 'rezept-suche-container') renderRezeptSucheInhalt(state._sucheMeals || meals, state._sucheQuery || '');
+}
+
+// Geladenes Rezept (TheMealDB) komplett IN der App anzeigen — ins Deutsche übersetzt
+async function mealApiOeffnen(id) {
+  let overlay = document.getElementById('meal-modal');
+  if (overlay) overlay.remove();
+  overlay = document.createElement('div');
+  overlay.id = 'meal-modal';
+  overlay.className = 'meal-modal';
+  overlay.innerHTML = '<div class="meal-modal-box"><div class="rezept-laden" style="padding:3rem;text-align:center">⏳ Rezept wird geladen und ins Deutsche übersetzt…</div></div>';
+  document.body.appendChild(overlay);
+  try {
+    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(12000) });
+    const d = await res.json();
+    const m = d.meals && d.meals[0];
+    if (!m) throw new Error('leer');
+    const zutaten = [];
+    for (let i = 1; i <= 20; i++) {
+      const zut = m['strIngredient' + i], menge = m['strMeasure' + i];
+      if (zut && zut.trim()) zutaten.push(((menge || '').trim() + ' ' + zut.trim()).trim());
+    }
+    const ytId = (m.strYoutube || '').split(/[?&]v=/)[1];
+    // Titel, Zutaten und Anleitung parallel ins Deutsche übersetzen
+    const [titelDe, zutatenDe, anleitungDe] = await Promise.all([
+      mealUebersetzen(m.strMeal, false),
+      mealUebersetzen(zutaten.join('\n'), true),
+      mealUebersetzen(m.strInstructions || '', false)
+    ]);
+    if (!document.getElementById('meal-modal')) return; // vom Nutzer geschlossen
+    const name = titelDe || m.strMeal;
+    let zutatenFinal = zutaten;
+    if (zutatenDe) {
+      const zl = zutatenDe.split(/\r?\n/).map(s => s.replace(/^[-•*\d.]+\s*/, '').trim()).filter(Boolean);
+      if (zl.length) zutatenFinal = zl;
+    }
+    const schritte = (anleitungDe || m.strInstructions || '').split(/\r?\n+/).map(s => s.trim()).filter(s => s.length > 2);
+    const uebersetzt = !!(titelDe || zutatenDe || anleitungDe);
+    overlay.innerHTML = `
+      <div class="meal-modal-box">
+        <button class="meal-modal-close" onclick="mealModalSchliessen()">✕</button>
+        <div class="meal-modal-bild" style="background-image:url('${esc(m.strMealThumb || '')}')"></div>
+        <div class="meal-modal-inhalt">
+          <div class="meal-modal-titel">${esc(name)}</div>
+          <div class="meal-modal-meta">${esc(mealMetaDe(m))}</div>
+          <div class="block-title">🧺 Zutaten</div>
+          <ul class="meal-modal-zutaten">${zutatenFinal.map(z => `<li>${esc(z)}</li>`).join('')}</ul>
+          <div class="block-title">👩‍🍳 Zubereitung</div>
+          <ol class="meal-modal-schritte">${schritte.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+          ${ytId ? `<div class="block-title">🎬 Anleitungsvideo</div><div class="meal-modal-video"><iframe src="https://www.youtube.com/embed/${esc(ytId)}" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe></div>` : ''}
+          <div style="font-size:.72rem;color:var(--g500);margin-top:.85rem">Rezept von TheMealDB${uebersetzt ? ', automatisch ins Deutsche übersetzt' : ' (Übersetzung gerade nicht erreichbar — Originaltext)'}.</div>
+        </div>
+      </div>`;
+    overlay.scrollTop = 0;
+  } catch (e) {
+    const o = document.getElementById('meal-modal');
+    if (o) o.innerHTML = `<div class="meal-modal-box"><button class="meal-modal-close" onclick="mealModalSchliessen()">✕</button><div class="info-box orange" style="margin:2rem 1rem"><span class="ib-icon">⚠️</span><div class="ib-text">Rezept konnte nicht geladen werden. Bitte Internetverbindung prüfen und erneut versuchen.</div></div></div>`;
+  }
+}
+function mealModalSchliessen() {
+  const o = document.getElementById('meal-modal');
+  if (o) o.remove();
 }
 
 function renderRezepte() {
@@ -3083,7 +5582,7 @@ function renderRezepte() {
   if (true) {
     // Detail-Ansicht eines einzelnen Rezepts
     if (state.rezeptDetail) {
-      const r = REZEPTE.find(x => x.id === state.rezeptDetail);
+      const r = rezeptFinden(state.rezeptDetail);
       if (r) return tabNav + renderRezeptDetail(r);
     }
     const filter = state.rezeptFilter;
@@ -3122,7 +5621,7 @@ function renderRezepte() {
   if (state.rezeptTab === 'api') {
     const kat = state.rezeptKatAPI || 'Chicken';
     const html = tabNav + `
-    <div class="info-box blau"><span class="ib-icon">🌍</span><div class="ib-text"><strong>Über 400 internationale Rezepte mit echten Fotos!</strong> Plus 106 deutsche Rezepte im Tab „Deutsche Rezepte" — zusammen über 500. Kategorie auswählen, Rezept anklicken — vollständige Zutaten & Anleitung auf TheMealDB.com (kostenlos, keine Anmeldung).</div></div>
+    <div class="info-box blau"><span class="ib-icon">🌍</span><div class="ib-text"><strong>Hunderte internationale Rezepte mit echten Fotos!</strong> Kategorie auswählen, Rezept anklicken — Zutaten, Anleitung und Video erscheinen <strong>komplett in der App und automatisch auf Deutsch</strong>.</div></div>
     <div class="filter-tabs" style="flex-wrap:wrap;margin-bottom:.75rem">
       ${MEAL_KATEGORIEN.map(([v,l])=>`<button class="filter-tab ${kat===v?'aktiv':''}" onclick="rezeptKatWaehlen('${v}')">${l}</button>`).join('')}
     </div>
@@ -3163,7 +5662,7 @@ function renderRezepte() {
 
 // Rezept-Detail mit Portionsskalierung
 function rezeptOeffnen(id) {
-  const r = REZEPTE.find(x => x.id === id);
+  const r = rezeptFinden(id);
   state.sektion = 'familie';
   state.familieTab = 'rezepte';
   state.rezeptTab = 'lokal';
@@ -3171,6 +5670,18 @@ function rezeptOeffnen(id) {
   state.rezeptDetail = id;
   state.rezeptPortionen = r ? r.portionen : 4;
   render(); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function rezeptFinden(id) {
+  if (typeof REZEPTE !== 'undefined') {
+    const r = REZEPTE.find(x => x.id === id);
+    if (r) return r;
+  }
+  if (typeof FIT_REZEPTE !== 'undefined') {
+    const r = FIT_REZEPTE.find(x => x.id === id);
+    if (r) return r;
+  }
+  return null;
 }
 function rezeptSchliessen() { state.rezeptDetail = null; render(); }
 function rezeptPortionAendern(delta) {
@@ -3256,14 +5767,22 @@ function renderRezeptDetail(r) {
     <!-- Skalierte Zutaten -->
     <div class="rezept-detail-section">
       <div class="rezept-detail-section-titel">🛒 Zutaten für ${port} Portionen</div>
-      <ul class="rezept-zutaten-liste">
-        ${r.zutaten.map(z => `<li>${esc(skaliereZutat(z, faktor))}</li>`).join('')}
+      <div class="info-box blau" style="margin-bottom:.5rem;padding:.5rem .75rem"><span class="ib-icon" style="font-size:1rem">💡</span><div class="ib-text" style="font-size:.78rem">Klick auf <strong>+</strong> bei einer Zutat fügt sie einzeln zur Einkaufsliste hinzu — mit korrekter Menge.</div></div>
+      <ul class="rezept-zutaten-liste-click">
+        ${r.zutaten.map((z, i) => {
+          const skaliert = skaliereZutat(z, faktor);
+          return `
+          <li class="zutat-zeile">
+            <span class="zutat-text">${esc(skaliert)}</span>
+            <button class="zutat-add-btn" onclick="zutatEinzelnHinzu('${r.id}', ${i})" title="Zur Einkaufsliste">＋</button>
+          </li>`;
+        }).join('')}
       </ul>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
-        <button class="btn btn-outline btn-sm" onclick="zutatenZurEinkaufsliste('${r.id}')">
-          + Zur Einkaufsliste
+        <button class="btn btn-primary btn-sm" onclick="zutatenZurEinkaufsliste('${r.id}')">
+          🛒 Alle zur Einkaufsliste
         </button>
-        <button class="btn btn-primary btn-sm" onclick="rezeptZuKochbuch('${r.id}')">
+        <button class="btn btn-outline btn-sm" onclick="rezeptZuKochbuch('${r.id}')">
           ★ In mein Kochbuch
         </button>
       </div>
@@ -3290,7 +5809,7 @@ function renderRezeptDetail(r) {
 }
 
 function zutatenZurEinkaufsliste(id) {
-  const r = REZEPTE.find(x => x.id === id);
+  const r = rezeptFinden ? rezeptFinden(id) : REZEPTE.find(x => x.id === id);
   if (!r) return;
   const port = state.rezeptPortionen || r.portionen;
   const faktor = port / r.portionen;
@@ -3299,7 +5818,19 @@ function zutatenZurEinkaufsliste(id) {
     items.push({id: Date.now()+Math.random(), text: skaliereZutat(z, faktor), menge:'', erledigt:false});
   });
   listeSpeichern(items);
-  alert(`✓ ${r.zutaten.length} Zutaten zur Einkaufsliste hinzugefügt!`);
+  toast(`✓ ${r.zutaten.length} Zutaten zur Einkaufsliste hinzugefügt`);
+}
+
+function zutatEinzelnHinzu(rezeptId, zutatIndex) {
+  const r = rezeptFinden ? rezeptFinden(rezeptId) : REZEPTE.find(x => x.id === rezeptId);
+  if (!r || !r.zutaten[zutatIndex]) return;
+  const port = state.rezeptPortionen || r.portionen;
+  const faktor = port / r.portionen;
+  const skaliert = skaliereZutat(r.zutaten[zutatIndex], faktor);
+  const items = listeleden();
+  items.push({ id: Date.now()+Math.random(), text: skaliert, menge:'', erledigt:false });
+  listeSpeichern(items);
+  toast(`✓ ${skaliert.length > 30 ? skaliert.slice(0,30)+'…' : skaliert}`);
 }
 
 // ===== MENGEN-UMRECHNER =====
@@ -4070,9 +6601,51 @@ const URLAUB_ANGEBOTE = [
   { id:'ferien-mutter', ziel:'Mutter-Kind-Kur', land:'Deutschland', emoji:'🏥', bild:'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&q=75', typ:'guenstig', dauer:'21 Tage', verpflegung:'Vollpension', preis:'10 € / Tag', preisPro:'Eigenanteil — Kur', highlight:'Müttergenesungswerk-Kuren — Erholung mit Kindern, von der Krankenkasse bezahlt!', portal:'Müttergenesungswerk', link:'https://www.muettergenesungswerk.de' }
 ];
 
+function urlaubReiseDatenSetzen() {
+  state.urlaubAnreise   = el('urlaub-anreise')?.value   || state.urlaubAnreise;
+  state.urlaubAbreise   = el('urlaub-abreise')?.value   || state.urlaubAbreise;
+  state.urlaubErwachsene = parseInt(el('urlaub-erwachsene')?.value) || state.urlaubErwachsene || 2;
+  state.urlaubKinder    = parseInt(el('urlaub-kinder')?.value) || state.urlaubKinder || 0;
+  render();
+}
+
+function _urlaubStandardDaten() {
+  // Default: nächster Monat, Aufenthalt 7 Tage
+  const an = new Date(); an.setDate(an.getDate() + 30);
+  const ab = new Date(an); ab.setDate(ab.getDate() + 7);
+  const fmt = d => d.toISOString().split('T')[0];
+  return {
+    anreise: state.urlaubAnreise || fmt(an),
+    abreise: state.urlaubAbreise || fmt(ab),
+    erwachsene: state.urlaubErwachsene || 2,
+    kinder: state.urlaubKinder || 0
+  };
+}
+
+function _urlaubSuchlinks(ziel) {
+  const d = _urlaubStandardDaten();
+  const z = encodeURIComponent(ziel);
+  const an = d.anreise, ab = d.abreise;
+  // Booking.com URL-Format (offizielle Such-Parameter)
+  const booking = `https://www.booking.com/searchresults.de.html?ss=${z}&checkin=${an}&checkout=${ab}&group_adults=${d.erwachsene}&group_children=${d.kinder}&no_rooms=1`;
+  return {
+    booking,
+    bookingFamilie: `${booking}&nflt=family_friendly%3D1`,
+    expedia: `https://www.expedia.de/Hotel-Search?destination=${z}&startDate=${an}&endDate=${ab}&adults=${d.erwachsene}&children=${d.kinder}`,
+    holidaycheck: `https://www.holidaycheck.de/dh/hotels-${z}/`,
+    hrs: `https://www.hrs.de/hotels/?destinationName=${z}&checkInDate=${an}&checkOutDate=${ab}&adults[0]=${d.erwachsene}`,
+    trivago: `https://www.trivago.de/de/srl?aDateRange[arr]=${an}&aDateRange[dep]=${ab}&aRooms[0][adults]=${d.erwachsene}&aRooms[0][children]=${d.kinder}&iPathId=&sHotelName=&fAddress=${z}`,
+    tui: `https://www.tui.com/pauschalreisen/${z}/`,
+    lastminute: `https://www.lastminute.de/reisen/?dest=${z}&from=${an}&to=${ab}&ad=${d.erwachsene}&ch=${d.kinder}`,
+    airbnb: `https://www.airbnb.de/s/${z}/homes?checkin=${an}&checkout=${ab}&adults=${d.erwachsene}&children=${d.kinder}`,
+    fewo: `https://www.fewo-direkt.de/de/Suche/keywords:${z}/arrival:${an}/departure:${ab}`
+  };
+}
+
 function renderUrlaub() {
   const filter = state.urlaubFilter || 'alle';
   const land = state.urlaubLand || 'alle';
+  const dat = _urlaubStandardDaten();
   const filterOptionen = [
     {id:'alle', label:'Alle Typen'},
     {id:'strand', label:'Strand'},
@@ -4122,6 +6695,22 @@ function renderUrlaub() {
     { name:'Brasilien', bild:'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=400&q=70' }
   ];
 
+  // Live-Beispiel-Reiseziele für die Top-Booking.com-Galerie
+  const bookingTopZiele = [
+    { ort:'Mallorca',   land:'Spanien',     emoji:'🏖️', bild:'https://images.unsplash.com/photo-1565009108304-7b9fdfe8c46a?w=600&q=75', preis:'ab 389 €', meta:'7 Nächte · Hotel mit Pool · Familien-Tarif' },
+    { ort:'Antalya',    land:'Türkei',      emoji:'🌅', bild:'https://images.unsplash.com/photo-1581791534056-d36ea0eda1b4?w=600&q=75', preis:'ab 449 €', meta:'7 Nächte · All-Inclusive · 4★ Resort' },
+    { ort:'Hurghada',   land:'Ägypten',     emoji:'🐪', bild:'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=600&q=75', preis:'ab 499 €', meta:'7 Nächte · All-Inclusive · Strandlage' },
+    { ort:'Rhodos',     land:'Griechenland',emoji:'🏛️', bild:'https://images.unsplash.com/photo-1530841344095-502b9b69e7d6?w=600&q=75', preis:'ab 459 €', meta:'7 Nächte · Halbpension · Familienzimmer' },
+    { ort:'Gardasee',   land:'Italien',     emoji:'⛰️', bild:'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600&q=75', preis:'ab 339 €', meta:'7 Nächte · Familienhotel · mit Pool' },
+    { ort:'Algarve',    land:'Portugal',    emoji:'🏖️', bild:'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=600&q=75', preis:'ab 369 €', meta:'7 Nächte · Frühstück · Strandapartment' },
+    { ort:'Kreta',      land:'Griechenland',emoji:'🏝️', bild:'https://images.unsplash.com/photo-1601581875309-fafbf2d3ed3a?w=600&q=75', preis:'ab 479 €', meta:'7 Nächte · All-Inclusive · Familien-Tarif' },
+    { ort:'Side',       land:'Türkei',      emoji:'☀️', bild:'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600&q=75', preis:'ab 429 €', meta:'7 Nächte · All-Inclusive · Wasserrutschen' },
+    { ort:'Berlin',     land:'Deutschland', emoji:'🏛️', bild:'https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600&q=75', preis:'ab 79 €',  meta:'2 Nächte · Familienhotel · Frühstück' },
+    { ort:'München',    land:'Deutschland', emoji:'🥨', bild:'https://images.unsplash.com/photo-1595867818082-083862f3d630?w=600&q=75', preis:'ab 89 €',  meta:'2 Nächte · Zentrum · Familienzimmer' },
+    { ort:'Hamburg',    land:'Deutschland', emoji:'⚓', bild:'https://images.unsplash.com/photo-1518473202055-2eedf26c79df?w=600&q=75', preis:'ab 79 €',  meta:'2 Nächte · Hafenblick · Familienzimmer' },
+    { ort:'Wien',       land:'Österreich',  emoji:'🎻', bild:'https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=600&q=75', preis:'ab 99 €',  meta:'2 Nächte · Altstadt · Familien-Tarif' }
+  ];
+
   return `
   <div class="section-hero" style="background:linear-gradient(135deg,rgba(14,165,233,.9),rgba(79,70,229,.85)),url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=70') center/cover;border-radius:var(--r-lg);padding:2rem 1.5rem;margin-bottom:1.5rem;color:white">
     <div style="font-size:2rem;margin-bottom:.5rem">✈️</div>
@@ -4129,7 +6718,65 @@ function renderUrlaub() {
     <div style="font-size:.88rem;opacity:.9">Echte Reiseangebote — sofort buchbar, kein Login nötig</div>
   </div>
 
+  <div class="card" style="margin-bottom:1.25rem;padding:1rem">
+    <div style="font-weight:800;font-size:.95rem;margin-bottom:.6rem">📅 Reisedaten für alle Suchen</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+      <div>
+        <label style="font-size:.75rem;color:var(--g600);font-weight:600">Anreise</label>
+        <input id="urlaub-anreise" type="date" class="standort-input" value="${dat.anreise}" onchange="urlaubReiseDatenSetzen()">
+      </div>
+      <div>
+        <label style="font-size:.75rem;color:var(--g600);font-weight:600">Abreise</label>
+        <input id="urlaub-abreise" type="date" class="standort-input" value="${dat.abreise}" onchange="urlaubReiseDatenSetzen()">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+      <div>
+        <label style="font-size:.75rem;color:var(--g600);font-weight:600">Erwachsene</label>
+        <select id="urlaub-erwachsene" class="standort-input" onchange="urlaubReiseDatenSetzen()">
+          ${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${dat.erwachsene===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:.75rem;color:var(--g600);font-weight:600">Kinder</label>
+        <select id="urlaub-kinder" class="standort-input" onchange="urlaubReiseDatenSetzen()">
+          ${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${dat.kinder===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="font-size:.72rem;color:var(--g500);margin-top:.5rem">Diese Daten werden in alle Hotel- und Reisesuchen übernommen</div>
+  </div>
+
   <div class="info-box gruen" style="margin-bottom:1.25rem"><span class="ib-icon">💡</span><div class="ib-text"><strong>Tipp:</strong> ALG-II-Empfänger und Geringverdiener haben Anspruch auf <strong>Sozialurlaub</strong> — oft komplett kostenlos über AWO, Caritas oder Diakonie. Unten im Filter "💶 Günstig" anschauen!</div></div>
+
+  <div class="block-title" style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem">
+    <span style="background:#003580;color:white;font-weight:800;padding:.2rem .55rem;border-radius:.3rem;font-size:.75rem">Booking.com</span>
+    Top-Familienangebote
+  </div>
+  <div style="font-size:.78rem;color:var(--g500);margin:-0.35rem 0 .75rem">Klick = Live-Suche bei Booking.com mit deinen Daten</div>
+  <div class="urlaub-grid">
+    ${bookingTopZiele.map(z => {
+      const sl = _urlaubSuchlinks(z.ort);
+      return `
+      <div class="urlaub-karte">
+        <div class="urlaub-bild" style="background-image:url('${z.bild}')">
+          <span class="urlaub-land-badge">${z.land}</span>
+          <span class="urlaub-preis-badge">${z.preis}</span>
+        </div>
+        <div class="urlaub-info">
+          <div class="urlaub-titel">${z.emoji} ${esc(z.ort)}</div>
+          <div class="urlaub-meta">${z.meta}</div>
+          <div class="urlaub-highlight">Familienhotels in ${esc(z.ort)} — vom ${dat.anreise.split('-').reverse().join('.')} bis ${dat.abreise.split('-').reverse().join('.')}</div>
+          <a href="${sl.bookingFamilie}" target="_blank" rel="noopener" class="btn btn-primary urlaub-btn" style="background:#003580">
+            Bei Booking.com ansehen →
+          </a>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="block-title" style="margin-top:1.75rem">Kuratierte Familien-Angebote</div>
+  <div style="font-size:.78rem;color:var(--g500);margin:-0.35rem 0 .75rem">Filter nach Typ und Land — alle Buttons öffnen Booking.com mit deinen Daten</div>
 
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
     ${filterOptionen.map(f=>`<button class="tipps-filter-btn ${filter===f.id?'aktiv':''}" onclick="urlaubFilterSetzen('${f.id}')">${f.label}</button>`).join('')}
@@ -4143,27 +6790,31 @@ function renderUrlaub() {
   </div>
 
   <div class="urlaub-grid">
-    ${gefiltert.map(a=>`
-    <div class="urlaub-karte">
-      <div class="urlaub-bild" style="background-image:url('${a.bild}')">
-        <span class="urlaub-land-badge">${a.land}</span>
-        <span class="urlaub-preis-badge">${a.preis}</span>
-      </div>
-      <div class="urlaub-info">
-        <div class="urlaub-titel">${a.emoji} ${a.ziel}</div>
-        <div class="urlaub-meta">${a.dauer} · ${a.verpflegung} · ${a.preisPro}</div>
-        <div class="urlaub-highlight">${a.highlight}</div>
-        <a href="${a.link}" target="_blank" class="btn btn-primary urlaub-btn">
-          Bei ${a.portal} ansehen →
-        </a>
-      </div>
-    </div>`).join('')}
+    ${gefiltert.map(a=>{
+      const sl = _urlaubSuchlinks(a.ziel.split('/')[0].trim());
+      return `
+      <div class="urlaub-karte">
+        <div class="urlaub-bild" style="background-image:url('${a.bild}')">
+          <span class="urlaub-land-badge">${a.land}</span>
+          <span class="urlaub-preis-badge">${a.preis}</span>
+        </div>
+        <div class="urlaub-info">
+          <div class="urlaub-titel">${a.emoji} ${a.ziel}</div>
+          <div class="urlaub-meta">${a.dauer} · ${a.verpflegung} · ${a.preisPro}</div>
+          <div class="urlaub-highlight">${a.highlight}</div>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem">
+            <a href="${sl.bookingFamilie}" target="_blank" rel="noopener" class="btn btn-primary urlaub-btn" style="background:#003580;flex:1;min-width:140px">Booking.com →</a>
+            <a href="${a.link}" target="_blank" rel="noopener" class="btn urlaub-btn" style="flex:1;min-width:140px;background:#F5F5F5;color:var(--g700)">${a.portal} →</a>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
   </div>
 
-  <div class="block-title" style="margin-top:1.75rem">Alle Länder zur Auswahl (klicken für Reisesuche)</div>
+  <div class="block-title" style="margin-top:1.75rem">Alle Länder zur Auswahl (klicken für Booking.com)</div>
   <div class="urlaub-laender-grid">
     ${weitereLaender.map(l => `
-    <a href="https://www.google.com/search?q=${encodeURIComponent('Familienurlaub '+l.name+' günstig')}" target="_blank" class="urlaub-land-karte">
+    <a href="${_urlaubSuchlinks(l.name.split('/')[0].trim()).bookingFamilie}" target="_blank" rel="noopener" class="urlaub-land-karte">
       <div class="urlaub-land-bild" style="background-image:url('${l.bild}')"></div>
       <div class="urlaub-land-name">${esc(l.name)}</div>
     </a>`).join('')}
@@ -4171,19 +6822,28 @@ function renderUrlaub() {
 
   <div class="block-title" style="margin-top:1.75rem">Weitere Reiseplattformen</div>
   <div class="grid-2">
-    ${[
-      {name:'Lastminute.de', icon:'⚡', txt:'Spontanurlaub bis -70%', link:'https://www.lastminute.de/familienurlaub'},
-      {name:'Expedia', icon:'🌐', txt:'Paket-Deals Flug+Hotel', link:'https://www.expedia.de/Familienurlaub'},
-      {name:'Urlaubsguru', icon:'🧙', txt:'Versteckte Schnäppchen täglich', link:'https://www.urlaubsguru.de/familienurlaub/'},
-      {name:'Holidaycheck', icon:'⭐', txt:'Echte Bewertungen von Familien', link:'https://www.holidaycheck.de/familienhotels'}
-    ].map(p=>`
-    <a href="${p.link}" target="_blank" class="card" style="text-decoration:none;display:flex;align-items:center;gap:.75rem">
-      <span style="font-size:1.75rem">${p.icon}</span>
-      <div>
-        <div style="font-weight:700;font-size:.9rem">${p.name}</div>
-        <div style="font-size:.78rem;color:var(--g500)">${p.txt}</div>
-      </div>
-    </a>`).join('')}
+    ${(() => {
+      const sl = _urlaubSuchlinks('Deutschland');
+      return [
+        {name:'Booking.com',  icon:'🔵', txt:'Hotels & Familienzimmer weltweit',  link:sl.bookingFamilie},
+        {name:'Expedia',      icon:'🌐', txt:'Paket-Deals Flug+Hotel',             link:sl.expedia},
+        {name:'Holidaycheck', icon:'⭐', txt:'Echte Bewertungen von Familien',     link:'https://www.holidaycheck.de/familienhotels'},
+        {name:'HRS',          icon:'🏨', txt:'Hotels mit Familien-Tarif',          link:sl.hrs},
+        {name:'Trivago',      icon:'🔍', txt:'Hotelpreise vergleichen',            link:sl.trivago},
+        {name:'TUI',          icon:'☀️', txt:'Pauschalreisen für Familien',        link:'https://www.tui.com/familienurlaub/'},
+        {name:'Lastminute.de',icon:'⚡', txt:'Spontanurlaub bis -70%',             link:'https://www.lastminute.de/familienurlaub'},
+        {name:'Airbnb',       icon:'🏡', txt:'Ferienwohnungen privat',             link:sl.airbnb},
+        {name:'FeWo-Direkt',  icon:'🏠', txt:'Ferienhäuser direkt vom Eigentümer', link:sl.fewo},
+        {name:'Urlaubsguru',  icon:'🧙', txt:'Versteckte Schnäppchen täglich',     link:'https://www.urlaubsguru.de/familienurlaub/'}
+      ].map(p=>`
+      <a href="${p.link}" target="_blank" rel="noopener" class="card" style="text-decoration:none;display:flex;align-items:center;gap:.75rem">
+        <span style="font-size:1.75rem">${p.icon}</span>
+        <div>
+          <div style="font-weight:700;font-size:.9rem">${p.name}</div>
+          <div style="font-size:.78rem;color:var(--g500)">${p.txt}</div>
+        </div>
+      </a>`).join('');
+    })()}
   </div>`;
 }
 
@@ -4486,6 +7146,31 @@ const EVENTS_AKTUELL = [
   }
 ];
 
+// Echte wiederkehrende Veranstaltungen — nach aktueller Saison
+function renderSaisonEventBlock(stadtName) {
+  if (typeof SAISON_EVENTS === 'undefined') return '';
+  const monat = new Date().getMonth() + 1;
+  const aktuell = SAISON_EVENTS.filter(e => e.monate.includes(monat));
+  const rest = SAISON_EVENTS.filter(e => !e.monate.includes(monat));
+  const suchUrl = e => 'https://www.google.com/search?q=' + encodeURIComponent(e.suche + ' ' + (stadtName || '') + ' Termine');
+  const karte = (e, aktiv) => `
+    <div style="background:white;border:1px solid #E5E7EB;border-left:4px solid ${aktiv ? '#7C3AED' : '#CBD5E1'};border-radius:12px;padding:.8rem .9rem;margin-bottom:.6rem">
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.35rem">
+        <span style="font-size:1.6rem">${e.icon}</span>
+        <span style="font-weight:800;font-size:.98rem">${esc(e.name)}</span>
+        ${aktiv ? '<span style="margin-left:auto;font-size:.66rem;font-weight:800;background:#7C3AED;color:white;padding:.15rem .5rem;border-radius:99px">JETZT</span>' : ''}
+      </div>
+      <div style="font-size:.83rem;color:var(--g700);line-height:1.5;margin-bottom:.55rem">${esc(e.text)}</div>
+      <a href="${suchUrl(e)}" target="_blank" rel="noopener" class="btn btn-sm ${aktiv ? 'btn-primary' : 'btn-outline'}" style="text-decoration:none">🔎 Termine in ${esc(stadtName || 'deiner Nähe')} finden</a>
+    </div>`;
+  return `
+  <div class="block-title" style="margin-top:1.5rem">🗓️ Jetzt Saison${stadtName ? ' rund um ' + esc(stadtName) : ''}</div>
+  <div style="font-size:.78rem;color:var(--g500);margin-bottom:.65rem">Echte, wiederkehrende Veranstaltungen, die in dieser Jahreszeit stattfinden — tippe auf „finden" für die konkreten Termine deiner Stadt.</div>
+  ${aktuell.length ? aktuell.map(e => karte(e, true)).join('') : '<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">Gerade ist Veranstaltungs-Nebensaison — schau in die Jahresübersicht unten.</div>'}
+  <div class="block-title" style="margin-top:1.25rem">📅 Im Jahresverlauf</div>
+  ${rest.map(e => karte(e, false)).join('')}`;
+}
+
 function renderVeranstaltungen() {
   const user = getUser() || {};
   const standort = state.umgebungStandort || (user.lat ? {lat:user.lat, lng:user.lng, name:user.ort} : null);
@@ -4516,6 +7201,8 @@ function renderVeranstaltungen() {
     </div>
   </div>` : `
   <div class="info-box orange"><span class="ib-icon">📍</span><div class="ib-text"><strong>Standort einstellen:</strong> Unter <em>Orte → Umgebung</em> Ihren Wohnort eingeben — nur dann werden echte Veranstaltungsorte angezeigt.</div></div>`}
+
+  ${renderSaisonEventBlock(stadtName)}
 
   ${stadtName ? `
   <!-- Echte Stadt-Veranstaltungs-Webseiten direkt verlinkt -->
@@ -4632,6 +7319,24 @@ async function initVeranstaltungen() {
 
 // ===== GESUNDHEIT & HAUSMITTEL =====
 function gesundheitTabWaehlen(tab) { state.gesundheitTab = tab; render(); }
+function haushaltTabWaehlen(tab) { state.haushaltTab = tab; render(); }
+
+// Aufteilung der GESUNDHEIT_DATEN in zwei Bereiche (echte Keys aus GESUNDHEIT_DATEN)
+const GESUNDHEIT_KATS = ['fieber','bauch','erkaeltung','kopf','schlaf','verbrennung','insekten','haut','zaehne','augen','ersteHilfe','ruecken','ohren','ernaehrung','mental','immunsystem','fitness','kinder','senioren'];
+const HAUSHALT_KATS   = ['kueche_tricks','waesche','garten','haushalt','saisonal','auto','schule','haustiere','geld'];
+
+function getGesundheitKats() {
+  if (typeof GESUNDHEIT_DATEN === 'undefined') return {};
+  const out = {};
+  GESUNDHEIT_KATS.forEach(k => { if (GESUNDHEIT_DATEN[k]) out[k] = GESUNDHEIT_DATEN[k]; });
+  return out;
+}
+function getHaushaltKats() {
+  if (typeof GESUNDHEIT_DATEN === 'undefined') return {};
+  const out = {};
+  HAUSHALT_KATS.forEach(k => { if (GESUNDHEIT_DATEN[k]) out[k] = GESUNDHEIT_DATEN[k]; });
+  return out;
+}
 
 const GESUNDHEIT_DATEN = {
   fieber: {
@@ -4654,7 +7359,22 @@ const GESUNDHEIT_DATEN = {
       { titel: 'Senf-Fußbad', icon: '🌶️', text: '2 EL Senfmehl in 5L 38°C warmes Wasser. 15 Min Füße einweichen. Verschiebt Blut zu den Füßen — entlastet Kopf, hilft bei Fieber.', tipp: 'Bei Diabetikern nicht — Sensibilitätsstörung' },
       { titel: 'Vitamin C hochdosiert', icon: '🍊', text: 'Bei Fieber Tagesbedarf erhöht. 1g Vit C alle 4h für 2 Tage = stärkt Immunsystem. Bei Durchfall Dosis halbieren.', tipp: 'Lipo-Vit-C besser aufgenommen als normales (Acerola, Sanddorn)' },
       { titel: 'Probiotika nach Fieber', icon: '🦠', text: 'Nach Fieber/Antibiotika: 4 Wochen Probiotika (Lactobacillus + Bifidobacterium) zur Darmflora-Wiederaufbau. Sonst chronische Verdauungsstörung.', tipp: 'Symprove flüssig oder Yakult aus Kühlregal — am wirksamsten' },
-      { titel: 'Notruf-Schwellen', icon: '🆘', text: 'Notarzt 112 BEI: >40°C, Steifer Nacken, Atemnot, Krämpfe, Bewusstseinsstörung, Hautausschlag der nicht weicht beim Drücken (Glas-Test).', tipp: 'Bei Säuglingen unter 3 Monaten + Fieber: IMMER Klinik, kein Abwarten' }
+      { titel: 'Notruf-Schwellen', icon: '🆘', text: 'Notarzt 112 BEI: >40°C, Steifer Nacken, Atemnot, Krämpfe, Bewusstseinsstörung, Hautausschlag der nicht weicht beim Drücken (Glas-Test).', tipp: 'Bei Säuglingen unter 3 Monaten + Fieber: IMMER Klinik, kein Abwarten' },
+      { titel:'Fieberthermometer richtig nutzen',icon:'🌡️',text:'Rektal genauester Wert (Säuglinge), im Mund/Achsel +0,5°C dazurechnen. Stirn-Infrarot ungenau. Digitales Stab-Thermometer für 5€ ausreichend.',tipp:'Bei Babys immer rektal — Goldstandard'},
+      { titel:'Fieberkrampf erkennen',icon:'⚡',text:'Bei Kindern: plötzliches Zucken, Bewusstseinsverlust, blau-blass anlaufen. Meist 1-5 Min. Kind auf Seite legen, nichts in Mund, 112 anrufen.',tipp:'In 99% der Fälle harmlos — aber immer Notarzt zur Sicherheit'},
+      { titel:'Heißes Bad bei Fieber-Beginn',icon:'🛁',text:'Bei beginnendem Fieber (37,5-38°C) und Kältegefühl: warmes Bad (37°C) entspannt und unterstützt Immunsystem. NICHT bei Fieber >38,5°C.',tipp:'Mit Eukalyptus-Badeöl noch wirksamer — befreit Atemwege'},
+      { titel:'Echte vs. Stress-Erschöpfung',icon:'😴',text:'Bei Fieber: Schlaf erhöht Immunsystem-Aktivität um 70%. Krank-Schlafen ist Pflicht, nicht Faulheit. 10-12h Schlaf pro Tag bei Krankheit OK.',tipp:'Smartphone weg, Vorhänge zu — wirkt wie Medikament'},
+      { titel:'Knoblauch-Honig-Sirup',icon:'🧄',text:'5 Knoblauchzehen geschnitten + 200g Honig: 2 Wochen im Glas ziehen lassen. 1 EL bei Krankheit. Stärkt Immunsystem, antibakteriell.',tipp:'Im Kühlschrank monatelang haltbar — bei ersten Symptomen sofort verfügbar'},
+      { titel:'Schwitzen kontrolliert',icon:'💦',text:'Wenn Körper schwitzt, fällt Fieber. Lockere Kleidung, leichte Decke (keine Federbett!), Raumtemperatur 18-20°C. So natürliche Regulation.',tipp:'Nasses T-Shirt wechseln — sonst Erkältung der Erkältung'},
+      { titel:'Salzbrühe selbst gemacht',icon:'🍲',text:'1L Wasser + 1 TL Salz + Brühpulver + Gemüse 30 Min köcheln. Elektrolyte für Schwitz-Verlust. Heißer als Tee, sättigt zusätzlich.',tipp:'Mit Ingwer + Zitrone — Immunsystem-Booster'},
+      { titel:'Fieber-Tagebuch führen',icon:'📔',text:'Bei Kindern und chronisch Kranken: Datum, Uhrzeit, Temperatur, Symptome notieren. Hilft Arzt bei Diagnose enorm.',tipp:'App "Fieber-Tracker" automatisiert das — kostenlos im Store'},
+      { titel:'Schüßler-Salz Nr. 3',icon:'💊',text:'Ferrum phosphoricum D6 bei beginnendem Fieber: alle 30 Min 3 Tabletten unter der Zunge. Klassisches Schüßler-Mittel.',tipp:'Auch bei Halsschmerzen und Erkältungs-Beginn wirksam'},
+      { titel:'Kalter Lappen über Pulsstellen',icon:'❄️',text:'Bei hohem Fieber: kühler Lappen über Handgelenke, Hals, Leiste. Da pulst Blut nah unter Haut — kühlt schnell den ganzen Körper.',tipp:'Alle 5 Min Lappen wechseln, nie eiskalt'},
+      { titel:'Granatapfelsaft bei Erschöpfung',icon:'🍷',text:'1 Glas pro Tag: viel Vitamin C, K, B6, Eisen. Bei Schwäche nach Fieber unterstützt schnellere Erholung.',tipp:'100% Direktsaft (Reformhaus), nicht aus Konzentrat'},
+      { titel:'Echinacea-Tropfen',icon:'🌼',text:'Bei ersten Symptomen: 20 Tropfen 5x täglich. Echinacea Purpurea aktiviert Immunsystem nachgewiesenermaßen.',tipp:'Max. 8 Wochen am Stück — sonst Gewöhnungseffekt'},
+      { titel:'Zink bei Erkältung',icon:'⚙️',text:'15-20 mg/Tag verkürzt Erkältungsdauer um 1-2 Tage. Aber: max 6 Wochen, sonst Kupfer-Mangel. Magnesium parallel nehmen.',tipp:'Zink-Lutschtabletten (15 mg) — wirken im Mund-Rachen-Raum direkt'},
+      { titel:'Kein Sport bei Fieber',icon:'🚫',text:'Bei Fieber niemals Sport — Herzmuskel-Entzündung möglich (Myokarditis). 1 Woche nach Fieber-Ende ruhig bleiben.',tipp:'Spaziergang OK ab Fieber-Frei — kein Lauftraining'},
+      { titel:'Schlafzimmer feucht halten',icon:'💧',text:'Heizungsluft trocknet Schleimhäute aus. Wassertopf auf Heizkörper oder feuchtes Handtuch. 50-60% Luftfeuchte ideal.',tipp:'Hygrometer (5€) zeigt — sehr niedrige Werte hauptursache trockener Husten'}
     ]
   },
   bauch: {
@@ -4720,7 +7440,20 @@ const GESUNDHEIT_DATEN = {
       { titel:'Honig-Heißmilch',icon:'🥛',text:'1 Tasse heiße Milch + 2 TL Honig + 1 Prise Kurkuma. Vor Schlaf bei Husten — beruhigt Reizhusten messbar besser als manche Säfte.',tipp:'Goldene Milch nennt sich diese Mischung — auch entzündungshemmend'},
       { titel:'Nasendusche täglich',icon:'🚿',text:'Bei chronischen Schnupfen: täglich Nasendusche. Klassische Neti-Pot oder Sinupret-Spülset. Reduziert Sinusitis-Anfälle um 50%.',tipp:'Selbst gemacht: 9g Salz auf 1L destilliertes Wasser'},
       { titel:'Steinklee-Salbe Bronchien',icon:'🌱',text:'Bei tiefem Husten: Steinklee-Salbe (Apotheke 8€) auf Brust einreiben. Schleimlösend, durchblutungsfördernd.',tipp:'Vor dem Schlafen einreiben — wirkt die ganze Nacht'},
-      { titel:'Kohlwickel bei Bronchitis',icon:'🥬',text:'Wirsing-Blätter mit Nudelholz weich rollen, auf Brust legen, mit warmem Tuch fixieren. 1-2h einwirken — schleimlösend.',tipp:'Klassiker aus Großmutters Zeit — funktioniert bei festsitzendem Husten'}
+      { titel:'Kohlwickel bei Bronchitis',icon:'🥬',text:'Wirsing-Blätter mit Nudelholz weich rollen, auf Brust legen, mit warmem Tuch fixieren. 1-2h einwirken — schleimlösend.',tipp:'Klassiker aus Großmutters Zeit — funktioniert bei festsitzendem Husten'},
+      { titel:'Honig auf Schnitt-Wunde',icon:'🍯',text:'Bei kleinen Schnitten: 1 Tropfen Manuka-Honig drauf, abdecken. Antibakteriell + heilt schneller als trockene Wundheilung.',tipp:'Klassischer Imkerei-Honig auch wirksam — Manuka aber Studien-belegt am besten'},
+      { titel:'Salbei-Gurgeln bei Hals',icon:'🌿',text:'1 EL Salbeiblätter, 200ml heißes Wasser, 10 Min ziehen, mehrmals täglich gurgeln. Wirkt entzündungshemmend.',tipp:'Salbei-Bonbons (Apotheke) für unterwegs — gleich wirksam'},
+      { titel:'Ingwer-Shot morgens',icon:'🥃',text:'30ml Ingwer-Saft + Zitrone + Honig + Kurkuma. Stärkt Abwehr — bei beginnender Erkältung halbiert Krankheitsdauer.',tipp:'Selbst gemacht 50 ct pro Shot, gekauft 2-3€'},
+      { titel:'Schal um Hals nachts',icon:'🧣',text:'Bei Halsschmerzen: warmer Schal/Tuch um Hals beim Schlafen. Wärme entspannt Muskulatur, Heilung im Schlaf.',tipp:'Auch tagsüber: kaltes Wetter besonders gefährlich für gereizten Hals'},
+      { titel:'Brustsalbe selber',icon:'💚',text:'Sheabutter + Eukalyptus-Öl (3 Tropfen) + Pfefferminz-Öl (2 Tropfen) + Thymian-Öl (2 Tropfen) — bei Erwachsenen. Nicht bei Kindern unter 3.',tipp:'Wirkt wie Wick VapoRub, aber natürlich und günstiger'},
+      { titel:'Nasenspülung mit Salz',icon:'👃',text:'9g Salz auf 1L destilliertes Wasser. Mit Nasendusche oder Pumpsprayer. 2x täglich bei Schnupfen.',tipp:'Verkürzt Erkältungsdauer messbar — vor allem bei Sinusitis-Neigung'},
+      { titel:'Zwiebel auf Nachttisch',icon:'🧅',text:'Geschnittene Zwiebel auf Teller neben dem Bett — Dämpfe befreien Atemwege während Schlaf. Klassiker für verstopfte Nase.',tipp:'Geruch gewöhnungsbedürftig — wirkt aber nachweislich'},
+      { titel:'Heiße Zitrone Wahrheit',icon:'🍋',text:'Vitamin C zerfällt bei Hitze! Saft halber Zitrone + Honig in 60°C-warmem (nicht heißem!) Wasser. Sonst keine Wirkung.',tipp:'Wasser nicht kochen lassen — Wirkstoffe bleiben erhalten'},
+      { titel:'Probiotika gegen Erkältung',icon:'🦠',text:'Lactobacillus + Bifidobacterium reduzieren Erkältungs-Häufigkeit um 25%. 3 Monate Kur — gerade Herbst/Winter.',tipp:'Symprove flüssig (50€/Monat) oder Yakult (50 ct/Tag) aus Kühlregal'},
+      { titel:'Hagebutten-Tee Bombe',icon:'🌹',text:'426mg Vit C pro 100g — höher als alles andere. 2-3 Tassen täglich bei Erkältung. Im Bio-Laden Hagebuttenpulver.',tipp:'Auch entzündungshemmend bei Gelenkschmerzen'},
+      { titel:'Schwitzen lassen — bewusst',icon:'🔥',text:'Vor dem Schlaf: heißer Lindenblütentee + warm zudecken + schwitzen. Morgens fühlt man sich oft schon viel besser.',tipp:'Frisches T-Shirt parat — schwitzen nass sofort wechseln'},
+      { titel:'Atemnot ist Notfall',icon:'🆘',text:'Bei Atemnot/Lippen blau/keuchend: SOFORT 112. Kann Asthma, Lungenentzündung sein. Kein Hausmittel mehr.',tipp:'Bei Kindern: Schnelle Atmung (>40/Min) auch Warnsignal'},
+      { titel:'Sauna richtig bei Erkältung',icon:'🧖',text:'Bei beginnender Erkältung (kein Fieber!): Sauna kann Krankheit unterbrechen. Bei vollem Ausbruch oder Fieber: NICHT.',tipp:'Nach Sauna unbedingt ruhen — Immunsystem braucht Energie'}
     ]
   },
   kopf: {
@@ -4745,7 +7478,21 @@ const GESUNDHEIT_DATEN = {
       { titel:'Riboflavin (Vit B2)',icon:'💛',text:'400mg/Tag Vit B2 reduziert Migräne-Anfälle um 50%. 3 Monate ausprobieren. Urin wird gelb — normal!',tipp:'Bei häufiger Migräne lohnt sich definitiv — günstig + nebenwirkungsarm'},
       { titel:'CGRP-Antagonisten',icon:'💉',text:'Neue Migräne-Spritze (Aimovig, Ajovy): 1x monatlich. Reduziert Anfälle bei chronischen Migränikern. Vom Neurologen nach Versagen anderer Therapien.',tipp:'Krankenkasse zahlt — bei richtiger Begründung und Diagnose'},
       { titel:'Triptane richtig einsetzen',icon:'💊',text:'Triptan SOFORT bei Aura/Beginn — nicht warten bis Schmerz stark. Sumatriptan 50mg max 2x/Tag. Bei häufigem Gebrauch: Übergebrauchskopfschmerz!',tipp:'Max 10 Tage/Monat Triptane — sonst Teufelskreis'},
-      { titel:'Stress-Triggerung erkennen',icon:'😰',text:'Migräne kommt oft NACH Stress (Wochenende-Migräne). Stress-Abbau durch progressive Muskelentspannung verhindert das.',tipp:'Wochenende sanft starten — kein Schlaf-Marathon, gleichmäßig leben'}
+      { titel:'Stress-Triggerung erkennen',icon:'😰',text:'Migräne kommt oft NACH Stress (Wochenende-Migräne). Stress-Abbau durch progressive Muskelentspannung verhindert das.',tipp:'Wochenende sanft starten — kein Schlaf-Marathon, gleichmäßig leben'},
+      { titel:'Lavendelöl auf Schläfen',icon:'💜',text:'1 Tropfen ätherisches Lavendelöl auf jede Schläfe (mit Trägeröl verdünnt). Wirkt nachgewiesen bei Spannungskopfschmerz.',tipp:'Klein-Fläschchen 5€ — hält 6 Monate'},
+      { titel:'Wassermangel-Check',icon:'💧',text:'Urin-Farbe-Test: dunkelgelb = Dehydration → häufige Kopfschmerzursache. Bei jedem Kopfschmerz erst 2 Gläser Wasser trinken.',tipp:'Stündlich Glas Wasser zur Routine machen — beste Prävention'},
+      { titel:'Koffein-Entzug erkennen',icon:'☕',text:'Wenn am Wochenende oder im Urlaub Kopfschmerzen: oft Koffein-Entzug. Tasse Kaffee → Symptom weg → bestätigt.',tipp:'Bei Tendenz: gleichmäßig 2 Tassen täglich — keine 5 unter der Woche, 0 am Wochenende'},
+      { titel:'Cluster-Kopfschmerz erkennen',icon:'🎯',text:'Plötzliche, einseitige, stärkste Schmerzen + tränendes Auge: Cluster. Sehr selten, sehr stark. Sofort Neurologe — andere Therapie.',tipp:'Sauerstoff per Maske kann Anfälle stoppen — vom Arzt verschreiben lassen'},
+      { titel:'Spannung im Kiefer lösen',icon:'😬',text:'Bei nächtlichem Zähneknirschen: Aufbissschiene vom Zahnarzt. Reduziert Kopfschmerzen, gerade morgens.',tipp:'Krankenkasse zahlt teilweise — bei chronischer Migräne meist 100%'},
+      { titel:'Schlaf-Apnoe checken',icon:'😴',text:'Schnarchen + morgens Kopfschmerz + tagsüber müde: Schlaf-Apnoe-Verdacht. Schlaf-Labor (Kassenleistung) klärt schnell.',tipp:'CPAP-Maske ist Game-Changer — bessere Schlafqualität sofort'},
+      { titel:'Akupressur LI4',icon:'☝️',text:'Druckpunkt zwischen Daumen und Zeigefinger 1 Min stark drücken. Klassiker bei Kopfschmerzen — wissenschaftlich belegt.',tipp:'NICHT in Schwangerschaft — kann Wehen auslösen'},
+      { titel:'Cluster-Kopfschmerz-Apps',icon:'📱',text:'Migraine-Buddy, Migräne-App: Trigger-Tracking automatisch. Nach 8 Wochen Daten = klare Muster.',tipp:'Kostenlos und sehr nützlich für Arzt-Gespräch'},
+      { titel:'Helmpflicht bei Kindern',icon:'🪖',text:'Auch nach kleinem Kopfanstoß: Bewusstsein, Erbrechen, Sehstörung, schiefes Lächeln? SOFORT 112. Hirnblutung kann verzögert kommen.',tipp:'24h nach Kopfstoß: Beobachten, regelmäßig wecken im Schlaf für Kontrolle'},
+      { titel:'Botox bei chronischer Migräne',icon:'💉',text:'Bei >15 Migränetagen/Monat: Botox-Therapie wirkt bei 60%. Krankenkasse zahlt bei richtigen Voraussetzungen.',tipp:'Neurologe muss überweisen — nicht alle Praxen bieten an'},
+      { titel:'Wetterumschwung-Migräne',icon:'🌦️',text:'Föhn, Gewitter, Druckwechsel: viele Migräniker reagieren. Wettervorhersage-App "Sirius" mit Migräne-Warnung.',tipp:'Vor Wetterwechsel: extra trinken, früh schlafen, Trigger meiden'},
+      { titel:'Vitamin B2 Hochdosis',icon:'💛',text:'400 mg Riboflavin täglich = -50% Migräne-Anfälle. 3 Monate Probe. Nebenwirkungsfrei. Apotheke ohne Rezept.',tipp:'Urin wird gelb-orange — völlig normal, kein Grund zur Sorge'},
+      { titel:'Magnesium Citrat',icon:'⚙️',text:'600 mg täglich Magnesium-Citrat (besser aufgenommen als Oxid). Reduziert Migräne-Häufigkeit nachgewiesen.',tipp:'Bei Durchfall: Dosis halbieren oder auf Bisglycinat wechseln'},
+      { titel:'Q10 100mg täglich',icon:'⚡',text:'300mg Coenzym Q10 reduziert Migräne um 30%. Wirkung baut sich 8-12 Wochen auf. Auch gut für Herz und Energie.',tipp:'Mit Fett-haltiger Mahlzeit nehmen — Aufnahme verdoppelt'}
     ]
   },
   schlaf: {
@@ -5074,7 +7821,21 @@ const GESUNDHEIT_DATEN = {
       { titel: 'Notfall-Vollmacht', icon: '✍️', text: 'Vorsorgevollmacht (jemand vertritt mich), Patientenverfügung (medizinische Wünsche), Generalvollmacht. Wichtig ab 18! Sonst entscheidet Gericht.', tipp: 'Vordrucke kostenlos bei Bundesjustizministerium — selber ausfüllen reicht' },
       { titel: 'Familienpasskasse', icon: '👨‍👩‍👧', text: 'Großeltern-Tipp: 50 € pro Monat in ETF-Sparplan auf Enkel-Namen. 18 Jahre × 50 € = 21.600 € + Zinsen ≈ 30.000 € — Studienfinanzierung gesichert.', tipp: 'Kinderkonto erst ab Mündigkeit — vorher Treuhand-Konto auf eigenen Namen' },
       { titel: 'Coupons + Rabatte', icon: '🎟️', text: 'Apps: Smhaggle, Marktguru, Coupies. Kassenzettel scannen → Cashback. Bei Familien: 100-200 €/Jahr ohne Aufwand zurück.', tipp: 'Payback-Karte überall mitnehmen — Punkte addieren sich extrem' },
-      { titel: 'Rabattaktionen Wochenende', icon: '🛒', text: 'REWE/EDEKA: Donnerstag Prospekte. ALDI/LIDL: Sonntagabend Reduzierung 50%. Vor 18 Uhr Backwaren 30-50% billiger.', tipp: 'Too Good To Go - App: Restaurant-Reste für 3-4 € statt 10-15 €' }
+      { titel: 'Rabattaktionen Wochenende', icon: '🛒', text: 'REWE/EDEKA: Donnerstag Prospekte. ALDI/LIDL: Sonntagabend Reduzierung 50%. Vor 18 Uhr Backwaren 30-50% billiger.', tipp: 'Too Good To Go - App: Restaurant-Reste für 3-4 € statt 10-15 €' },
+      { titel:'ETF-Sparplan ab 25€',icon:'📈',text:'MSCI World ETF: 25€/Monat reichen. 30 Jahre = 50.000€+ bei 7% Rendite. Trade Republic, Scalable, comdirect kostenlos.',tipp:'Konstanz wichtiger als Höhe — Daueraufträge einrichten'},
+      { titel:'Stromkonto wechseln',icon:'⚡',text:'Verivox, Check24: 1 Min Eingabe, 200-400€/Jahr sparen. Boni: Neukunden zahlen ersten Monat nichts.',tipp:'Jährlich wechseln - Bestandskunden zahlen am meisten'},
+      { titel:'Versicherungen Checkliste',icon:'🛡️',text:'Pflicht: Haftpflicht (50€/J), Hausrat (80€/J). Sinnvoll: BU (30-100€/M), Risikolebens (15€/M bei Kindern). Unsinn: Glasversicherung, Sterbegeld.',tipp:'Stiftung Warentest Heft "Versicherungen" - alle 2 Jahre lesen'},
+      { titel:'Auslandsfahrt-Krankenversicherung',icon:'✈️',text:'30€/Jahr (Familie), unbedingt für jede Reise. Krankenhaus ohne kostet 10.000€+. Hanse-Merkur oder ADAC top.',tipp:'Bei Reisen >8 Wochen separat versichern - sonst Lücke'},
+      { titel:'BU schon als Schüler',icon:'🎓',text:'Berufsunfähigkeit ab 15 Jahren: 10-30€/Monat. Spät = teurer + Vorerkrankungen. Wichtigste Versicherung überhaupt.',tipp:'Bei Eltern als Vorsorge - sichert Kind lebenslang ab'},
+      { titel:'Bargeld-Limit täglich',icon:'💵',text:'Familien: max 30€/Tag in Bargeld dabei. Kartenkauf bewusst. Verhindert Spontankauf — Studie: 25% weniger Ausgaben.',tipp:'Bei Kindern: alte Kassenzettel zusammen anschauen - Reflektion'},
+      { titel:'Spar-Challenges machen',icon:'🎯',text:'52-Wochen-Challenge: Woche 1 = 1€, Woche 52 = 52€. Nach Jahr = 1378€. Spielerisch Sparen lernen.',tipp:'Mit Familie - Kinder lernen, Eltern sparen mit'},
+      { titel:'Buchhaltung-App',icon:'📊',text:'YNAB, Outbank, Finanzguru — Konten verknüpft. Sehen wo Geld hingeht. App-Kosten 30-100€/Jahr — sparen 10x mehr.',tipp:'Erste 4 Wochen: Augenöffner. Danach Routine'},
+      { titel:'Internet-Tarif wechseln',icon:'🌐',text:'2 Jahre alter Tarif: meist 10-20€ teurer als Neukunden. Anrufen, kündigen, Bestandskundenrabatt fordern. Klappt in 80%.',tipp:'Bei Streit: 1&1, Telekom, Vodafone direkt vergleichen'},
+      { titel:'Handy-Tarif Optimum',icon:'📱',text:'Familie: einer für alle. Tarif mit unbegrenzten Daten + 4 SIM-Karten. Pro Person 10-15€ statt 30€ separat.',tipp:'Aldi-Talk, Drillisch - günstige Provider mit Telekom-Netz'},
+      { titel:'Wohngeld auch arbeitend',icon:'🏠',text:'Vollzeit-Job + niedriger Lohn = oft Wohngeld-Anspruch. Online-Rechner. Bei 2 Kindern oft 300-500€/Monat möglich.',tipp:'Falsche Auskunft beim Amt - Erst-Antrag selbst stellen'},
+      { titel:'Studenten-Rabatte',icon:'🎓',text:'Spotify 5€ statt 10€, Microsoft Office kostenlos, ÖPNV Semesterticket. Bis 30 Jahre nutzbar. Studierenden-Ausweis nötig.',tipp:'UNiDAYS, StudentBeans Apps - sammeln viele Rabatte'},
+      { titel:'Konto-Wechsel Bonus',icon:'🏦',text:'1822direkt, comdirect, ING: 100-150€ Bonus bei Konto-Wechsel + 2-3 Gehaltseingänge. 30 Min Aufwand.',tipp:'Wechselservice macht alles automatisch'},
+      { titel:'Kinderfreundliche Anlage',icon:'👶',text:'Kinder-Sparkonto + ETF-Sparplan: 50€/Monat * 18 Jahre = 25.000€. Steuerfreibetrag pro Kind 1000€/Jahr.',tipp:'Junior-Depot bei comdirect kostenlos - läuft auf Kindes-Namen'}
     ]
   },
   mental: {
@@ -5129,7 +7890,19 @@ const GESUNDHEIT_DATEN = {
       { titel: 'Mitfahrgelegenheit nutzen', icon: '🚗', text: 'BlaBlaCar 70-80% billiger als Bahn. Mit Familie: kein Reservieren nötig. Auch in der App: nur Frauen-Plätze für Frauen.', tipp: 'Profil mit Foto + Bewertungen → mehr Buchungen, vertrauenswürdiger' },
       { titel: 'E-Auto-Förderung', icon: '⚡', text: 'Umweltbonus 4500 € für reine E-Autos (variabel). KfW-Kredit für Wallbox. Stromtarife für E-Auto: 30% billiger nachts. Auf 10 Jahre Rechnen!', tipp: 'Förderbedingungen prüfen vor Kauf — Anträge oft erst nach Bestellung' },
       { titel: 'Verkehrsregeln 2024', icon: '⚖️', text: 'StVO-Update: Handy am Steuer 100 €, beim Stehen 60 €. Rechts vor links nur ohne Beschilderung. Reißverschluss-Pflicht bei Spurverengung.', tipp: 'Punkte: 8 = Führerschein weg. 1 Punkt verfällt nach 2.5/5/10 Jahren je nach Schwere' },
-      { titel: 'Fahrradmitnahme im Auto', icon: '🚲', text: 'Heckträger oder Dachträger: bei E-Bike (>20kg) Heckträger besser. Bei langer Fahrt: Trägerlast prüfen, Reifen ablassen, Pedale arretieren.', tipp: 'Anhängerkupplung-Träger am stabilsten — auch für E-Bikes geeignet' }
+      { titel: 'Fahrradmitnahme im Auto', icon: '🚲', text: 'Heckträger oder Dachträger: bei E-Bike (>20kg) Heckträger besser. Bei langer Fahrt: Trägerlast prüfen, Reifen ablassen, Pedale arretieren.', tipp: 'Anhängerkupplung-Träger am stabilsten — auch für E-Bikes geeignet' },
+      { titel:'Kindersitz richtig montieren',icon:'👶',text:'I-Size mit ISOFIX am sichersten. Reboarder bis 4 Jahre — Halswirbel schützen. Vor Fahrt: Gurt rüttelfest? Max 2 Finger zwischen Gurt und Kind.',tipp:'ADAC + Stiftung Warentest testen jährlich — Top-Modelle ab 200€'},
+      { titel:'Reifenwechsel-Termine',icon:'🛞',text:'O bis O: Ostern bis Oktober Sommerreifen. Profiltiefe min 4mm Winter, 3mm Sommer (Pflicht 1.6mm — zu wenig).',tipp:'Reifen-Hotel beim Händler: 60€/Jahr aber kein Schlepp'},
+      { titel:'Auto-Wartung selbst',icon:'🔧',text:'Ölwechsel, Luftfilter, Wischer: 100€ Werkstatt vs 25€ selbst. YouTube hat für jedes Modell Anleitung.',tipp:'Werkzeug-Set: 80€ Anfangsinvestition - Jahrzehnte nutzbar'},
+      { titel:'Spritsparend fahren',icon:'⛽',text:'Konstant 90 km/h auf Autobahn statt 130 = -25% Sprit. Frühes Hochschalten (1500-2000 U/min). Bei längerem Halten Motor aus.',tipp:'Eco-Modus aktivieren - automatische Optimierung'},
+      { titel:'TÜV-Vorbereitung',icon:'✅',text:'Vor TÜV: Licht-Check, Bremsen-Test, Reifenprofil, Wischwasser, Auspuff-Halterungen. 80% der Mängel sind Kleinigkeiten.',tipp:'Bei alten Autos: Vor-TÜV (50€) bei Werkstatt - vermeidet Durchfallen'},
+      { titel:'Auto verkaufen privat',icon:'💵',text:'Mobile.de, Autoscout24: bessere Preise als Händler (+10-30%). Inserieren mit guten Fotos. Bei Tausch beim Händler: Wertverlust einrechnen.',tipp:'Wagenpass + Service-Heft sauber → höherer Preis'},
+      { titel:'Park-Apps statt Münzen',icon:'🅿️',text:'EasyPark, ParkNow: Parken ohne Bargeld. Verlängern aus dem Restaurant. Nie wieder Strafzettel wegen abgelaufenem Schein.',tipp:'5% Bonus bei manchen Tarifen mit App'},
+      { titel:'Knöllchen Widerspruch',icon:'📝',text:'Bei unklarer Beschilderung, Foto-Streit: Widerspruch möglich. Foto vom Schild + Datum/Uhrzeit. ca 30% erfolgreich.',tipp:'Bei Strafzetteln im Ausland: oft verfristen lassen (außer EU)'},
+      { titel:'Kfz-Versicherung November',icon:'🔄',text:'Stichtag 30.11.: Kündigung Versicherung zum Jahresende. Vergleich Check24, Verivox. Wechsel-Bonus 50-200€.',tipp:'Telematik-Tarif für vorsichtige Fahrer - bis 30% Rabatt'},
+      { titel:'Fahranfänger SF-Rabatt',icon:'🆕',text:'Bei Eltern als Zweitwagen anmelden: SF-Klasse von Eltern übernommen. Spart Fahranfänger 2.000-4.000€ pro Jahr.',tipp:'Junge Fahrer ohne SF: 200-300% Beitrag - mit SF-Übertragung normal'},
+      { titel:'Werkstatt-Vergleich',icon:'🔧',text:'Werkstatt-Portale (kfzteile24, Autoaid) für Reparatur-Vergleich. Vertragswerkstatt oft 30-50% teurer als freie Werkstatt.',tipp:'Garantie auch bei freier Werkstatt erhalten - HG-Verordnung'},
+      { titel:'Saisonkennzeichen',icon:'📅',text:'Cabrio, Motorrad nur Frühling-Herbst nutzen: Saisonkennzeichen (z.B. 04-10). Spart 40-60% Versicherung + Kfz-Steuer.',tipp:'Mindestlaufzeit 2 Monate, max 11 - perfekt für Wochenend-Autos'}
     ]
   },
   immunsystem: {
@@ -5184,7 +7957,27 @@ const GESUNDHEIT_DATEN = {
       { titel: 'Soße abkürzen', icon: '🥫', text: 'Keine Zeit für 3h Bolognese? Tomatenmark + Rotwein + 1 TL Zucker — 30 Min köcheln = ähnlich tief. Geheimtipp: Senfpulver dazu.', tipp: 'Ein Schuss Soja-Sauce = Umami-Verstärker für jede Soße' },
       { titel: 'Backofen Selbstreinigung', icon: '🔥', text: 'Auflaufform mit Wasser + Spülmittel + Backpulver bei 200°C 30 Min. Dampf löst Verkrustungen — danach abwischen, fertig!', tipp: 'Pyrolyse-Funktion (sofern vorhanden) — perfekt sauber, aber stromintensiv' },
       { titel: 'Frittieröl wiederverwenden', icon: '🍟', text: 'Nach Frittieren: Öl filtern (Kaffeefilter) und in Glas im Kühlschrank — 3-4x wiederverwenden. Mit Zwiebel/Apfel ölen klären.', tipp: 'Fischiger Geruch? Kartoffel mitfrittieren — bindet Geschmack' },
-      { titel: 'Kuchen testen ohne Stäbchen', icon: '🎂', text: 'Kuchen-Mitte mit Finger leicht drücken: federt zurück = fertig. Bleibt eingedrückt = noch nicht. Schneller + sicherer als Holzstäbchen.', tipp: 'Bei Souffle/Käsekuchen: Mitte muss noch leicht wackeln — wird beim Abkühlen fest' }
+      { titel: 'Kuchen testen ohne Stäbchen', icon: '🎂', text: 'Kuchen-Mitte mit Finger leicht drücken: federt zurück = fertig. Bleibt eingedrückt = noch nicht. Schneller + sicherer als Holzstäbchen.', tipp: 'Bei Souffle/Käsekuchen: Mitte muss noch leicht wackeln — wird beim Abkühlen fest' },
+      { titel:'Reis perfekt kochen',icon:'🍚',text:'1 Tasse Reis + 2 Tassen Wasser + Prise Salz. Aufkochen, Deckel zu, 18 Min auf niedrigster Stufe. Nicht öffnen! Dann 10 Min ruhen lassen.',tipp:'Mit Lorbeerblatt oder Kardamomkapsel — aromatisch ohne Mehrarbeit'},
+      { titel:'Eier alt oder frisch',icon:'🥚',text:'Glas Wasser + Ei: sinkt = frisch, stellt sich auf = mittel, schwimmt = alt/schlecht. Sekundentest.',tipp:'Hartgekochte Eier 1 Woche im Kühlschrank haltbar'},
+      { titel:'Zwiebel ohne Tränen',icon:'🧅',text:'Vorher 15 Min in Kühlschrank. Schneiden im Wasserglas in der Nähe (Dämpfe binden). Atmen durch Mund, nicht Nase.',tipp:'Mit feuchtem Tuch über Schneidebrett — Tränen-Gase entweichen weniger'},
+      { titel:'Avocado richtig öffnen',icon:'🥑',text:'Längs schneiden, drehen, mit Löffel Kern rausnehmen. Bei reifer: dunkler Stem ab, leicht zusammendrücken — gibt nach.',tipp:'Nicht-reif: 1 Banane in Tüte 24h = beschleunigt durch Ethylen'},
+      { titel:'Knoblauch schälen-Trick',icon:'🧄',text:'Zehen in geschlossenes Glas, 15 Sek schütteln — Schalen lösen sich. Bei vielen Zehen perfekt.',tipp:'1 Zehe mit Messer plattdrücken — Schale platzt auf'},
+      { titel:'Salat länger frisch',icon:'🥗',text:'Salat waschen, Schleudergang, in Tupper mit Küchenpapier (saugt Feuchtigkeit). 1 Woche statt 3 Tagen frisch.',tipp:'Salatköpfe in feuchtes Tuch wickeln - 2 Wochen frisch'},
+      { titel:'Pfanne perfekt vorheizen',icon:'🍳',text:'Wasser-Tropfen-Test: Wassertropfen tanzt wie Perle = perfekt heiß. Sofort verdampft = zu kalt. Spritzt = zu heiß.',tipp:'Edelstahl-Pfanne: Leidenfrost-Effekt = nichts klebt'},
+      { titel:'Brokkoli-Strunk verwerten',icon:'🥦',text:'Schale abschälen, Strunk in Stifte schneiden — schmeckt wie Spargel. 60% des Brokkoli werden meist weggeworfen.',tipp:'Gerillt, gedämpft 4 Min — zarte Beilage'},
+      { titel:'Speiseöl-Typen kennen',icon:'🫒',text:'Erhitzen: Sonnenblumen-/Raps-Öl. Salat: Olivenöl extra vergine. Asia: Sesamöl + Erdnussöl. Niemals heiß brate kaltgepresstes Olivenöl.',tipp:'Rauchpunkt im Internet checken — verhindert Krebsgefahr durch verbranntes Öl'},
+      { titel:'Mikrowellen-Reinigung',icon:'⚡',text:'Tasse Wasser + Zitronenscheibe 3 Min hochstellen — Dampf löst alles. Danach abwischen, fertig. Kein Schrubben.',tipp:'Wöchentlich kurz vor Hauptreinigung - kein Festkleben'},
+      { titel:'Spülbecken sauber',icon:'🧽',text:'Backpulver + Essig schäumt Verkrustungen weg. Edelstahl: mit Mehl polieren = strahlend.',tipp:'Abfluss verstopft? Backpulver + Essig + heißes Wasser'},
+      { titel:'Bananenflecken vermeiden',icon:'🍌',text:'Stiele mit Frischhaltefolie umwickeln — Ethylen-Gas entweicht weniger. Halten 4-5 Tage länger.',tipp:'Bei braunen: einfrieren für Smoothies oder Bananenbrot'},
+      { titel:'Tomaten-Stengel-Trick',icon:'🍅',text:'Stengel-Stelle mit Finger kurz halten, Spitze des Messers reindrücken, drehen — Stengel kommt raus mit Bissen. Kein Schneiden.',tipp:'Geht auch mit Tomatenschäler (3€) für viele auf einmal'},
+      { titel:'Plastik-Geschmack weg',icon:'🥤',text:'Neue Plastikdose: 1 Nacht mit Essig + Wasser füllen. Geruch weg. Geschirrspülmittel verschlimmert oft.',tipp:'Glasdosen kaufen — kein Plastik-Problem, gesünder'},
+      { titel:'Kaffee-Crema selbst',icon:'☕',text:'Bei Filter-Kaffee: 1 EL Zucker in heißer Tasse cremig rühren (1 Min) — gibt cremige Schicht.',tipp:'Hafer- oder Mandelmilch: vor Aufschäumen kalt halten — bessere Schaumkrone'},
+      { titel:'Schmoren statt Braten',icon:'🍲',text:'Günstige Fleischstücke (Schulter, Wange) bei 80°C 4-8h schmoren — wird butterzart. Spart 50%, schmeckt besser.',tipp:'Im Ofen oder Sous-Vide-Beutel — Niedrigtemperatur-Methode'},
+      { titel:'Suppe nachsalzen',icon:'🧂',text:'Versehentlich zu salzig: Kartoffel roh reinwerfen, 10 Min köcheln, rausfischen — bindet Salz. Funktioniert auch mit Reis.',tipp:'Mehr Wasser + ungesalzene Brühe = letzte Rettung'},
+      { titel:'Honig kristallisiert',icon:'🍯',text:'Glas in warmes Wasser (40°C) stellen, 15 Min — wird wieder flüssig. Niemals in Mikrowelle (zerstört Enzyme).',tipp:'Wasserbad-Methode erhält alle gesunden Inhaltsstoffe'},
+      { titel:'Pasta-Wasser nutzen',icon:'🍝',text:'Stärke-haltiges Nudelwasser zur Sauce dazu (2-3 EL) = bessere Bindung, cremige Konsistenz. Echte Italiener-Geheimnis.',tipp:'Salzig genug für Nudeln und Sauce — niemals süßen'},
+      { titel:'Käse aufbewahren',icon:'🧀',text:'In Backpapier wickeln, dann Tupperdose — atmungsaktiv aber schützt. 3x länger haltbar als Frischhaltefolie.',tipp:'Hartkäse: lockerer eingewickelt — Frischkäse: luftdicht'}
     ]
   },
   schule: {
@@ -5209,7 +8002,21 @@ const GESUNDHEIT_DATEN = {
       { titel: 'Englisch-Praxis Netflix', icon: '🍿', text: 'Lieblings-Serie auf Englisch mit deutschen Untertiteln. Nach 4 Wochen: englische Untertitel. Nach 8 Wochen: ohne Untertitel.', tipp: 'Sprachen-App Mondly oder Duolingo daneben — kostenlose Vokabel-Spiele' },
       { titel: 'Hausaufgaben-Hilfe', icon: '🤝', text: 'Nicht für Kind, nur MIT Kind. Erst selbst probieren lassen. Bei Fehler: Frage stellen, nicht Antwort geben. Selbständiges Lernen entwickelt sich.', tipp: 'Eltern: Sicherheit geben, nicht Antwort. Frage „Wie kommst du darauf?"' },
       { titel: 'Mobbing erkennen', icon: '😢', text: 'Rückzug, Schulangst, Bauchschmerzen vor Schule, schlechtere Noten = Warnsignale. Direkt mit Kind und Lehrern sprechen — frühzeitig handeln!', tipp: 'Hilfe: Nummer gegen Kummer 116111 — kostenlos für Kinder' },
-      { titel: 'Klassenarbeit-Vorbereitung', icon: '📅', text: '7 Tage vorher: Stoff-Übersicht. 5 Tage: Wiederholen. 3 Tage: Üben mit alten Tests. 1 Tag: leicht wiederholen + früh schlafen.', tipp: 'Crammen am Abend ist schlimmster Fehler — Schlaf wichtiger' }
+      { titel: 'Klassenarbeit-Vorbereitung', icon: '📅', text: '7 Tage vorher: Stoff-Übersicht. 5 Tage: Wiederholen. 3 Tage: Üben mit alten Tests. 1 Tag: leicht wiederholen + früh schlafen.', tipp: 'Crammen am Abend ist schlimmster Fehler — Schlaf wichtiger' },
+      { titel:'Prüfungsangst lösen',icon:'😰',text:'Vor Test: 4-7-8 Atmung (4 Sek einatmen, 7 halten, 8 ausatmen). Wiederholt schnelle Beruhigung. „Ich habe gelernt — ich kann das" laut sagen.',tipp:'Test-Simulationen zuhause - reduziert Angst drastisch'},
+      { titel:'Lernziele SMART',icon:'🎯',text:'Spezifisch, Messbar, Attraktiv, Realistisch, Terminiert. Statt "Mathe besser werden": "Bis Freitag 20 Aufgaben zu Brüchen rechnen".',tipp:'Kleine Ziele auf Karteikarte - Erfolg sichtbar'},
+      { titel:'Online-Kurs Anton-App',icon:'📱',text:'Komplett kostenlos, Klasse 1-10, Mathe + Deutsch + Sachunterricht. Spielerisch ohne Werbung. Top-Bewertung.',tipp:'15 Min/Tag = signifikante Verbesserung nach 4 Wochen'},
+      { titel:'Lernen mit YouTube',icon:'▶️',text:'Lehrer Schmidt (Grundschule), Daniel Jung Mathe, MrWissen2go Geschichte — alles kostenlos, gut erklärt.',tipp:'Wiedergabe-Geschwindigkeit 1.5x — schneller lernen ohne Verlust'},
+      { titel:'Hausaufgaben-App Sofatutor',icon:'💻',text:'Sofatutor, Studyflix: bei Schwierigkeiten Erklärvideos zu fast jedem Schulthema. Sofatutor: 20€/Monat, Studyflix kostenlos.',tipp:'Geld lohnt sich bei dauerhafter Nachhilfe vs. Privat-Lehrer 30€/Stunde'},
+      { titel:'Eselsbrücken bauen',icon:'🐴',text:'Geschichts-Daten als Reim, Vokabel als Bild. "1492 - Kolumbus war neu(n) zwei(zwei) da". Funktioniert bis ins Erwachsenenalter.',tipp:'Memo-Techniken-Buch (50€) - Olympiateilnehmer-Methoden'},
+      { titel:'Schul-AGs nutzen',icon:'🎭',text:'Theater, Chor, Sport, Robotik — meist kostenlos. Sozial-Kompetenz + Hobby + Ganztags-Betreuung. Bei BuT auch Materialien kostenlos.',tipp:'Eltern-Vertreter werden - direkt informiert + Gestaltung möglich'},
+      { titel:'Lerntyp-Test online',icon:'🧠',text:'Auditiv (hören), Visuell (sehen), Kinästhetisch (anfassen). Test: lerntipps.lerntipp.com. Methode entscheidet über Erfolg.',tipp:'Multi-Typ: schreiben + laut sprechen + Bild zeichnen = optimal'},
+      { titel:'Mitschriften-Methode',icon:'✏️',text:'Cornell-Methode: Notizfeld + Stichworte links + Zusammenfassung unten. 90% bessere Behaltensquote als bloßes Mitschreiben.',tipp:'YouTube: Cornell-Method-Tutorials - 5 Min lernen, lebenslang anwenden'},
+      { titel:'Test vor Test',icon:'📝',text:'1 Woche vorher selbst Test schreiben mit alten Aufgaben. Was nicht klappt = nochmal lernen. Beste Vorbereitung wissenschaftlich.',tipp:'Eltern als Tester - testen ohne Druck wie echter Test'},
+      { titel:'Lese-Strategie',icon:'📚',text:'SQ3R: Survey (überfliegen), Question (Fragen), Read (lesen), Recite (wiedergeben), Review (wiederholen). Effektiver als gemütlich-lesen.',tipp:'Bei Sachtexten: jeden Absatz in 1 Satz zusammenfassen am Rand'},
+      { titel:'Schulwechsel-Stress',icon:'🏫',text:'Bei neuem Schul-Start: alte Freunde behalten. Erste Wochen ruhig, keine zusätzlichen Aktivitäten. Geduld - 3 Monate normal für Eingewöhnung.',tipp:'Kontakt mit altem Klassenlehrer - Tipps für Übergang'},
+      { titel:'Schulranzen ergonomisch',icon:'🎒',text:'Max 10% Körpergewicht (4kg bei 40kg-Kind). Beide Riemen. Brustgurt. Reflektoren. Wichtiger als teure Marke.',tipp:'Bei Rückenschmerzen: Wegfall der Bücher zuhause lassen, Pendelsystem'},
+      { titel:'Konzentrations-Snacks',icon:'🥜',text:'Nüsse, Beeren, Banane, dunkle Schokolade (>70%): perfekte Hirn-Nahrung. Zucker macht müde nach 1h - bewusst vermeiden vor Test.',tipp:'Sandwich + Apfel beim Test: schnelle + lange Energie kombiniert'}
     ]
   },
   haustiere: {
@@ -5261,7 +8068,22 @@ const GESUNDHEIT_DATEN = {
       { titel:'Schuhpflege',icon:'👞',text:'Lederschuhe wöchentlich pflegen. Schuhcreme + Bürsten. Mit Schuhspanner trocknen.',tipp:'Salz-Ränder im Winter mit Essig + Wasser entfernen'},
       { titel:'Knöpfe annähen',icon:'🪡',text:'Mit Streichholz unter Knopf nähen — gibt etwas Spielraum. Streichholz raus → perfekter Stand.',tipp:'Reservefaden hinten verknoten — hält länger'},
       { titel:'Mottenschutz',icon:'🦋',text:'Lavendelsäckchen, Zedernholz im Kleiderschrank. Naphthalin schädlich. Pelze + Wolle bei 60°C waschen kann Eier abtöten.',tipp:'Befall: alles in 60°C waschen oder gefrieren 1 Woche'},
-      { titel:'BH-Pflege',icon:'👙',text:'Hand-Wäsche bei 30°C. Trocknen flach. Nicht in Trockner — Bügel verbiegen. Leben verlängert sich auf 2-3 Jahre.',tipp:'BH-Tasche aus alter Strumpfhose - sicheres Waschen'}
+      { titel:'BH-Pflege',icon:'👙',text:'Hand-Wäsche bei 30°C. Trocknen flach. Nicht in Trockner — Bügel verbiegen. Leben verlängert sich auf 2-3 Jahre.',tipp:'BH-Tasche aus alter Strumpfhose - sicheres Waschen'},
+      { titel:'Rotweinfleck retten',icon:'🍷',text:'Sofort Salz drauf — saugt Rotwein. Nach 10 Min kaltes Wasser. Niemals heiß waschen — fixiert Fleck.',tipp:'Mit Weißwein hinterher abtupfen - neutralisiert Tannine'},
+      { titel:'Blutflecken kalt waschen',icon:'🩸',text:'Bei frischen Blutflecken: kalte Wasser (NIE heiß!). Hitze koaguliert Eiweiß = Fleck bleibt für immer.',tipp:'Trockenes Salz, dann kalt ausspülen — funktioniert immer'},
+      { titel:'Wäsche-Trockner sparsam',icon:'💨',text:'Schleudergang max → spart 50% Trocknerzeit. Wäsche füllen 2/3 — sonst Kleidung schlecht trocknen.',tipp:'Tennisbälle in Trockner — lockern auf, verkürzen Zeit'},
+      { titel:'Gelbe Stellen Bügeleisen',icon:'🟡',text:'Sohle: Backpulver + Wasser zu Paste, 10 Min einwirken, abwischen. Bei viel Verkrustung: Essig auf Stoffhandtuch über Sohle.',tipp:'Niemals Stahlwolle - zerkratzt'},
+      { titel:'Hemden falten',icon:'👔',text:'Knöpfe schließen, Rücken nach oben, Ärmel nach innen, einmal in der Mitte. Marie-Kondo-Stil: aufrecht stellen statt stapeln.',tipp:'YouTube: 5-Sekunden-Hemd-Falt-Trick'},
+      { titel:'Wäschetrocknen ohne Strom',icon:'🌞',text:'Wäscheständer im Bad mit Lüftungsgerät: 24h trocken. Auf Balkon im Sonne: UV-Licht desinfiziert + bleicht weiß.',tipp:'Sonne tötet Bakterien — günstigste Desinfektion'},
+      { titel:'Socken-System',icon:'🧦',text:'Beim Ausziehen: Paar zusammenrollen — nie wieder einzelne Socken im Schrank. Familien-Trick.',tipp:'Verschiedene Familienmitglieder: Socken vorne markieren (Permanentmarker)'},
+      { titel:'Imprägnieren Outdoor',icon:'🥾',text:'Wachsjacken, Wanderschuhe alle 2-3 Wäschen imprägnieren. Spray oder Einwasch-Imprägnierung (10€). Spart Neukauf.',tipp:'Goretex: spezielle Imprägnierung wie Nikwax — sonst defekt'},
+      { titel:'Filz-Pullover',icon:'🐑',text:'Falsch gewaschene Wolle: gefilzt = klein, hart. Mit Babyshampoo + Conditioner in lauwarmes Wasser, sanft ziehen.',tipp:'Heißklebeprozess teilweise reversibel - oder Spende, schwer reparierbar'},
+      { titel:'Fett-Flecken essen',icon:'🍕',text:'Sofort Mehl/Babypuder drauf — saugt Fett. 10 Min einwirken, abbürsten. Vor Waschen: Spülmittel direkt drauf.',tipp:'Industrie: Brennspiritus löst Fett, niemals waschen ohne Vorbehandlung'},
+      { titel:'Schuhe trocknen Zeitung',icon:'📰',text:'Nasse Schuhe: Zeitung reinstopfen, häufig wechseln. Niemals direkt an Heizung — Leder härtet aus, Klebstellen lösen sich.',tipp:'Schuh-Trockner (elektrisch) für Vielträger - schonend'},
+      { titel:'Jeans seltener waschen',icon:'👖',text:'Jeans 5-10× tragen pro Wäsche — manche Hersteller raten: nie waschen! Spart Wasser, Jeans hält länger Form. Geruch: über Nacht in Gefrierfach.',tipp:'Gefriertruhe-Trick: Bakterien sterben, Jeans frisch'},
+      { titel:'Wäsche zusammenlegen Kids',icon:'👕',text:'Familien-Aufgabe: Kinder ab 4 falten ihre Socken. Spielerisch + lehrreich. Spart Eltern 20 Min pro Wäsche.',tipp:'Belohnungssystem - 5 Cent pro gefaltetes Stück'},
+      { titel:'Make-up-Flecken',icon:'💄',text:'Lippenstift: Rasierschaum direkt drauf, einreiben, auswaschen. Mascara/Augen: Pre-Treatment mit Spülmittel + 30°C.',tipp:'Foundation: Babypulver darauf - saugt Öl raus'},
+      { titel:'Schimmel-Flecken',icon:'🦠',text:'Auf weißer Wäsche: 1 Stunde in Zitronensaft + Salz an der Sonne. Bei dunklem: Backpulver + Essig.',tipp:'Vorbeugen: nasse Wäsche nie zusammengeknubbelt liegenlassen'}
     ]
   },
   garten: {
@@ -5286,7 +8108,18 @@ const GESUNDHEIT_DATEN = {
       { titel:'Regentonne',icon:'💧',text:'250L-Tonne fängt Regenwasser auf. Bessere Wasserqualität für Pflanzen als Leitungswasser (kein Kalk).',tipp:'Mehrere Tonnen verbinden — Übergabesystem für mehr Volumen'},
       { titel:'Wildpflanzen sammeln',icon:'🌿',text:'Brennnessel, Löwenzahn, Bärlauch — kostenlose Vitamine. Gartenführer-App PlantNet bestimmt sicher.',tipp:'Niemals an Straßen — Schwermetall-Belastung'},
       { titel:'Topfgarten Balkon',icon:'🪴',text:'Auch Mini-Balkon: Tomaten, Erdbeeren, Kräuter. Vertikale Pflanzgefäße sparen Platz.',tipp:'Süd-Balkon: Tomaten/Basilikum. Schatten: Salat/Kräuter'},
-      { titel:'Schädlinge biologisch',icon:'🐞',text:'Marienkäfer fressen Blattläuse, Schlupfwespen Mehlraupen, Igel Schnecken. Nützlinge fördern statt Gift.',tipp:'Insektenhotel + Wildwiese — natürliches Schädlings-Management'}
+      { titel:'Schädlinge biologisch',icon:'🐞',text:'Marienkäfer fressen Blattläuse, Schlupfwespen Mehlraupen, Igel Schnecken. Nützlinge fördern statt Gift.',tipp:'Insektenhotel + Wildwiese — natürliches Schädlings-Management'},
+      { titel:'Tomaten ohne Krankheit',icon:'🍅',text:'Tomaten morgens gießen, nur am Boden (nie Blätter!), Mulchen verhindert Spritzwasser. Verhindert Braunfäule.',tipp:'Tomaten-Dach (Folie) bei Regenzeit - Hauptgrund von Krankheit'},
+      { titel:'Pflanzen-Notarzt',icon:'🚑',text:'Welke Pflanze: 1h in lauwarmes Wasser stellen. 80% erholen sich. Vergilbt: zu viel Wasser, brauner Rand: zu wenig.',tipp:'Fingertest: Erde 5cm tief - feucht = ok, trocken = gießen'},
+      { titel:'Indoor-Pflanzen für Anfänger',icon:'🪴',text:'Bogenhanf, Drachenbaum, Pothos, Zamioculcas — sterben nicht so leicht. Wenig Wasser, wenig Licht reicht.',tipp:'Erste Pflanze klein kaufen — wachsen lernen + günstiger'},
+      { titel:'Selbst Saatgut sammeln',icon:'🌻',text:'Tomaten, Sonnenblumen, Bohnen, Erbsen — Samen aus reifen Früchten trocknen, in Papiertüte beschriftet aufbewahren.',tipp:'Hybrid-Samen (F1) wachsen nicht sortenecht — bei Bio-Saatgut Glück'},
+      { titel:'Balkonkasten richtig',icon:'🌷',text:'Drainage-Schicht (Tonscherben) unten, Pflanzenerde mit Ton-Granulat. Tropf-System für Urlaub (PET-Flasche kopfüber).',tipp:'Bewässerungs-Kasten mit Reservoir — 1 Woche ohne Gießen'},
+      { titel:'Frostschutz Pflanzen',icon:'❄️',text:'Vor Frost: Wurzelballen mit Jute oder Vlies einwickeln, mit Tannenzweigen abdecken. Topf vom Boden weg (Holzklotz).',tipp:'Mediterrane Pflanzen (Olive, Zitrone): winterhart bis -5°C wenn richtig geschützt'},
+      { titel:'Kompost in 6 Monaten',icon:'♻️',text:'Schichtung: Grünes (Küchenabfall) + Braunes (Laub, Karton) im 1:2-Verhältnis. Alle 3 Wochen umsetzen. Schwarze Erde nach 6 Monaten.',tipp:'Bokashi (Indoor-Komposter, 60€) — auch in Wohnung möglich'},
+      { titel:'Rasen pflegen',icon:'🌾',text:'Mähen auf 5cm (nicht kürzer!), 1× pro Woche reicht. Wässern: 1× pro Woche tief statt täglich oberflächlich.',tipp:'Im Herbst Vertikutieren + Kalken - Moos hat keine Chance'},
+      { titel:'Salat-Wettlauf',icon:'🥬',text:'Salat wächst in 30 Tagen! 3x pro Sommer aussäen für ständigen Nachschub. Pflücksalat: untere Blätter immer wieder ernten.',tipp:'In Kästen reicht 20cm tief - auch auf Balkon möglich'},
+      { titel:'Pflanz-Sukzession',icon:'📆',text:'Frühling: Spinat, Radieschen. Sommer: Tomaten, Gurken. Herbst: Salat, Lauch. Beet ganzjährig produktiv.',tipp:'Apps wie "GartenJournal" zeigen optimale Pflanzzeiten'},
+      { titel:'Selbst-bewässerung Urlaub',icon:'💦',text:'PET-Flasche mit Loch im Deckel kopfüber in Erde. Tropft langsam. Reicht 1-2 Wochen. Sparmaßnahme statt 50€-Bewässerungssystem.',tipp:'Tongranulat in Erde - speichert Wasser zusätzlich'}
     ]
   },
   kinder: {
@@ -5369,7 +8202,22 @@ const GESUNDHEIT_DATEN = {
       { titel: 'Pollenflug-Kalender', icon: '🌸', text: 'Hasel/Erle Februar, Birke April-Mai, Gräser Mai-Juli, Beifuß Juli-September. Bei Allergie: Urlaub am Meer (wenig Pollen) während Hauptsaison.', tipp: 'Pollen-App: PolleApp oder Pollen-Radar (DWD) — Tagesvorhersage' },
       { titel: 'Sommer-Picknick-Set', icon: '🧺', text: 'Decke aus alter Tagesdecke (Wasserdicht: untere Schicht Plastik). Kühltasche mit Eis-Pads. Insektenschutz. Mehrweggeschirr — umweltfreundlicher.', tipp: 'Schweizer Taschenmesser: für alle Notfälle, Korkenzieher inkl.' },
       { titel: 'Wintervorrat anlegen', icon: '🥫', text: 'Bundesregierung empfiehlt: 10 Tage Wasser (3L/Person/Tag) + Lebensmittel. Konserven, Reis, Nudeln, lange haltbar. Auch Taschenlampe + Batterien.', tipp: 'Notfallliste BBK: bbk.bund.de — Hilfreich für Vorrat-Check' },
-      { titel: 'Saisonale Lebensmittel', icon: '📅', text: 'Saisonkalender: regional + saisonal = günstig + nährstoffreich. Spargel im Mai, Erdbeeren im Juni, Tomaten im August. Frischer = mehr Vitamine.', tipp: 'Verband Ökologische Lebensmittel: kostenloser Saisonkalender als Poster' }
+      { titel: 'Saisonale Lebensmittel', icon: '📅', text: 'Saisonkalender: regional + saisonal = günstig + nährstoffreich. Spargel im Mai, Erdbeeren im Juni, Tomaten im August. Frischer = mehr Vitamine.', tipp: 'Verband Ökologische Lebensmittel: kostenloser Saisonkalender als Poster' },
+      { titel:'Sommerhitze Kinder',icon:'☀️',text:'Bei >30°C: kein Sport zwischen 11-16 Uhr. Sonnencreme LSF 50 alle 2h. Mehrere kleine Trinkpausen. Kühles Tuch im Nacken.',tipp:'Wasser-Spielgerät im Garten — Sprinkler bringt Kinder zum Bewegen UND kühlt'},
+      { titel:'Hagelschäden Auto',icon:'🌨️',text:'Bei Hagel-Vorwarnung: Auto in Garage oder unter Baum. Versicherung: Vollkasko zahlt — Teilkasko nur bei Naturereignis.',tipp:'Schadensmeldung schnell — gerade bei Sturm-Wellen viele Anträge'},
+      { titel:'Heizung Saison-Start',icon:'🔥',text:'Vor erster Heizperiode: Heizkörper entlüften (Klick-Schlüssel 5€), bei Bedarf nachfüllen lassen. Spart 10-15% Heizkosten.',tipp:'Hydraulischer Abgleich vom Heizungsbauer - bis 200€ KfW-Zuschuss'},
+      { titel:'Schul-Vorbereitung August',icon:'🎒',text:'2 Wochen vor Schule: gleichen Schlafrhythmus wie Schulzeit, frühe Bettzeit. Schul-Tasche packen, Hefte beschriften, Stundenplan zusammen anschauen.',tipp:'Schulanfangs-Heft / "Was war heute schön": Übergang erleichtert'},
+      { titel:'Heuschnupfen aushalten',icon:'🤧',text:'Abends Haare waschen (Pollen!), Wäsche nicht draußen trocknen, Fenster zu in Pollen-Hauptzeit (5-10 Uhr Stadt, 18-24 Uhr Land).',tipp:'Hyposensibilisierung (3 Jahre): 80% Heilungsquote — Termin beim Allergologen'},
+      { titel:'Bademantel-Tag Wellness',icon:'🛁',text:'Ein Tag im Monat: alle in Bademantel, lange Bäder, Tee, Bücher, Filme. Kostet 0€ — extrem entspannend, fördert Familien-Bindung.',tipp:'Mit ätherischen Ölen (Lavendel) im Bad - Wellness-Niveau'},
+      { titel:'Sommerferien-Plan',icon:'🏖️',text:'Bei 6 Wochen Ferien: pro Woche ein Highlight. Ist es planlos = teurer + Frust. Mit Plan: 80% Zufriedenheit + günstig.',tipp:'Mix aus Ausflug + zuhause + Besuch — keine Reize-Überflutung'},
+      { titel:'Mücken-Schutz natürlich',icon:'🦟',text:'Lavendel, Citronella, Pfefferminze im Topf an Terrasse. Knoblauch essen (Schweiß-Geruch hält Mücken fern). Ventilator: Mücken können bei Wind nicht fliegen.',tipp:'Bei Stichen: Insektenstich-Stift (5€) mit 50°C Wärme - Eiweiß-Gift zerfällt'},
+      { titel:'Sommer-Vorbereitung Haut',icon:'🌞',text:'2 Wochen vor Urlaub: täglich 10 Min Sonne ohne Creme — bildet Schutzmelanin. Vermeidet Sonnenbrand. Aber niemals direkt mittags!',tipp:'Bei sehr heller Haut bleibt LSF50 Pflicht - kein Vorbräunen möglich'},
+      { titel:'Schnupfen-Tee Frühling',icon:'🌿',text:'Frische Brennnesseln (Frühlingskräuter): 1 EL frisch + 200ml heißes Wasser, 10 Min ziehen. Stärkt Immunsystem nach Winter, viele Vitamine.',tipp:'In Wiese pflücken (Mai-Juni) - kostenlos, mehr Wirkstoff als gekauft'},
+      { titel:'Weihnachts-Budget Plan',icon:'🎁',text:'Ab Januar: 50€ pro Monat sparen — 600€ Budget Dezember. Verhindert Verschuldung. Kindergeschenke 50€ pro Kind, Erwachsene Wichteln.',tipp:'Konto "Weihnachten" extra einrichten - psychologisch klare Trennung'},
+      { titel:'Übergangsjacke Frühling',icon:'🧥',text:'Mai/September: Zwiebelprinzip aus T-Shirt + Hemd + Jacke. Wechselhaftes Wetter. Frühling: Allergiker Brille (Pollen).',tipp:'Schal als Schmuck UND Wärme - vielseitiges Accessoire'},
+      { titel:'Silvester sicher',icon:'🎆',text:'Mit Kindern: Kinder-Feuerwerk (Schweizer Kracher, Wunderkerzen) — keine Raketen. Haustiere: in ruhigem Zimmer mit Musik. Klingel still.',tipp:'Bezirksamt fragen wo Feuerwerk erlaubt - in Innenstädten oft verboten'},
+      { titel:'Schulranzen August prüfen',icon:'🎒',text:'Riemen stabil? Reflektoren da? Geh-Stütze nicht durchgescheuert? Reparieren günstiger als kaufen (Schuster: Ranzen-Reparatur 10-20€).',tipp:'1 Klasse weiter = oft noch passend, größere Kinder oft Tasche statt Ranzen'},
+      { titel:'Garten winterfest',icon:'🍂',text:'Oktober/November: Laub bedeckt Beete = natürlicher Schutz. Stauden zurückschneiden, Wasserhähne im Keller absperren, Gartenmöbel abdecken.',tipp:'Igel-Versteck: Laubhaufen in ruhiger Ecke stehen lassen - hilft Tieren'}
     ]
   },
   fitness: {
@@ -5470,64 +8318,102 @@ function gesundheitTippzahl() {
 }
 
 function renderGesundheit() {
-  const tabs = Object.entries(GESUNDHEIT_DATEN).map(([k, v]) => ({id:k, ...v}));
-  const tippsTotal = gesundheitTippzahl();
-  const aktiv = GESUNDHEIT_DATEN[state.gesundheitTab] || GESUNDHEIT_DATEN.fieber;
-  const sucheTerm = (state.gesundheitSuche || '').toLowerCase().trim();
+  return renderTippsBereich({
+    daten: getGesundheitKats(),
+    titel: '🌿 Gesundheit & Hausmittel',
+    sub: 'Natürliche Tipps ohne Medikamente — bewährt & wissenschaftlich erklärt',
+    sucheState: 'gesundheitSuche',
+    tabState: 'gesundheitTab',
+    fallbackTab: 'fieber',
+    hinweisBox: { farbe:'gruen', icon:'🌿', html:'<strong>Heilpraktische Tipps:</strong> Bewährte Alternativen — bei ernsthaften Symptomen ersetzen sie keinen Arztbesuch.' },
+    inputId: 'gesundheit-such-input',
+    sucheAendern: 'gesundheitSucheAendern',
+    tabWaehlen: 'gesundheitTabWaehlen'
+  });
+}
 
-  // Wenn Suche aktiv: alle Kategorien durchsuchen, sonst nur aktive Kategorie
+function renderHaushalt() {
+  return renderTippsBereich({
+    daten: getHaushaltKats(),
+    titel: '🏡 Haushalt & Alltag',
+    sub: 'Praktische Tipps für Haushalt, Küche, Wäsche, Garten und mehr',
+    sucheState: 'haushaltSuche',
+    tabState: 'haushaltTab',
+    fallbackTab: 'haushalt',
+    hinweisBox: { farbe:'blau', icon:'🏡', html:'<strong>Haushalts-Tipps:</strong> Putzen, Sparen, Organisation — Lifehacks für den Alltag.' },
+    inputId: 'haushalt-such-input',
+    sucheAendern: 'haushaltSucheAendern',
+    tabWaehlen: 'haushaltTabWaehlen'
+  });
+}
+
+function haushaltSucheAendern(v) {
+  state.haushaltSuche = v;
+  render();
+  setTimeout(() => { const i = el('haushalt-such-input'); if (i) { i.focus(); i.setSelectionRange(v.length,v.length); } }, 50);
+}
+
+function renderTippsBereich(cfg) {
+  const daten = cfg.daten;
+  const tabs = Object.entries(daten).map(([k, v]) => ({id:k, ...v}));
+  const total = tabs.reduce((s,t) => s + (t.tipps?.length || 0), 0);
+  const aktivId = state[cfg.tabState] && daten[state[cfg.tabState]] ? state[cfg.tabState] : (cfg.fallbackTab in daten ? cfg.fallbackTab : Object.keys(daten)[0]);
+  const aktiv = daten[aktivId] || tabs[0];
+  const sucheTerm = (state[cfg.sucheState] || '').toLowerCase().trim();
+
   let tippsZuZeigen, alleErgebnisse = [];
   if (sucheTerm) {
-    Object.entries(GESUNDHEIT_DATEN).forEach(([katId, kat]) => {
-      kat.tipps.forEach(t => {
-        if (t.titel.toLowerCase().includes(sucheTerm) || t.text.toLowerCase().includes(sucheTerm) || t.tipp.toLowerCase().includes(sucheTerm)) {
+    Object.entries(daten).forEach(([katId, kat]) => {
+      (kat.tipps || []).forEach(t => {
+        if (t.titel.toLowerCase().includes(sucheTerm) || t.text.toLowerCase().includes(sucheTerm) || (t.tipp||'').toLowerCase().includes(sucheTerm)) {
           alleErgebnisse.push({ ...t, kat: katId, katFarbe: kat.farbe, katBg: kat.bg, katLabel: kat.label });
         }
       });
     });
     tippsZuZeigen = alleErgebnisse;
   } else {
-    tippsZuZeigen = aktiv.tipps.map((t,i)=>({ ...t, _idx:i, katFarbe:aktiv.farbe, katBg:aktiv.bg }));
+    tippsZuZeigen = (aktiv?.tipps || []).map((t,i)=>({ ...t, _idx:i, katFarbe:aktiv.farbe, katBg:aktiv.bg }));
   }
 
   return `
-  <div class="section-title">🌿 Gesundheit & Hausmittel</div>
-  <p class="section-sub">${tippsTotal} natürliche Tipps ohne Medikamente — alle Kategorien · bewährt & wissenschaftlich erklärt</p>
+  <div class="bereich-hero">
+    <div class="bereich-hero-titel">${cfg.titel}</div>
+    <div class="bereich-hero-sub">${total} Tipps · ${tabs.length} Kategorien</div>
+    <div class="bereich-hero-sub-2">${cfg.sub}</div>
+  </div>
 
-  <!-- Suche -->
   <div class="ges-suche-box">
     <div class="dash-suche-icon">🔍</div>
-    <input id="gesundheit-such-input" type="search" class="dash-suche-input"
-      placeholder="Tipp suchen, z.B. Husten, Fleck, Mücke..."
-      value="${esc(state.gesundheitSuche || '')}"
-      oninput="gesundheitSucheAendern(this.value)" autocomplete="off" />
-    ${state.gesundheitSuche ? `<button class="dash-suche-clear" onclick="gesundheitSucheAendern('')">✕</button>` : ''}
+    <input id="${cfg.inputId}" type="search" class="dash-suche-input"
+      placeholder="Tipp suchen..."
+      value="${esc(state[cfg.sucheState] || '')}"
+      oninput="${cfg.sucheAendern}(this.value)" autocomplete="off" />
+    ${state[cfg.sucheState] ? `<button class="dash-suche-clear" onclick="${cfg.sucheAendern}('')">✕</button>` : ''}
   </div>
 
   ${!sucheTerm ? `
-  <div class="info-box gruen"><span class="ib-icon">🌿</span><div class="ib-text"><strong>Heilpraktische Tipps:</strong>
-  Diese Hausmittel sind bewährte Alternativen, ersetzen aber bei ernsthaften Symptomen keinen Arztbesuch.</div></div>
+  <div class="info-box ${cfg.hinweisBox.farbe}"><span class="ib-icon">${cfg.hinweisBox.icon}</span><div class="ib-text">${cfg.hinweisBox.html}</div></div>
 
   <div class="ges-tabs">
     ${tabs.map(t=>`
-    <button class="ges-tab ${state.gesundheitTab===t.id?'aktiv':''}"
-      onclick="gesundheitTabWaehlen('${t.id}')"
-      style="${state.gesundheitTab===t.id?`background:${t.farbe};border-color:${t.farbe};color:white;`:''}">
+    <button class="ges-tab ${aktivId===t.id?'aktiv':''}"
+      onclick="${cfg.tabWaehlen}('${t.id}')"
+      style="${aktivId===t.id?`background:${t.farbe};border-color:${t.farbe};color:white;`:''}">
       ${t.icon} ${t.label}
     </button>`).join('')}
   </div>
 
-  ${aktiv.warnung ? `
+  ${aktiv?.warnung ? `
   <div class="ges-warnung">
     <span style="font-size:1.1rem">${aktiv.warnung.startsWith('⚠️')?'⚠️':'💡'}</span>
     <span style="font-size:.82rem;line-height:1.4">${aktiv.warnung.replace(/^[⚠️💡]\s*/,'')}</span>
   </div>` : ''}` : `
   <div class="suche-banner">
-    <strong>${tippsZuZeigen.length} Treffer</strong> für „${esc(state.gesundheitSuche)}" in allen Gesundheits-Kategorien
+    <strong>${tippsZuZeigen.length} Treffer</strong> für „${esc(state[cfg.sucheState])}"
   </div>`}
 
   ${tippsZuZeigen.length === 0 ? `
-  <div class="such-leer">Keine Tipps zu „${esc(state.gesundheitSuche)}" gefunden. Versuchen Sie z.B. „Honig", „Tee", „Wärme".</div>` : `
+  <div class="such-leer">Keine Tipps zu „${esc(state[cfg.sucheState])}" gefunden.</div>` : `
   <div class="ges-tipp-grid">
     ${tippsZuZeigen.map((t,i) => `
     <div class="ges-tipp-karte" style="--ges-farbe:${t.katFarbe};--ges-bg:${t.katBg}">
@@ -5540,7 +8426,7 @@ function renderGesundheit() {
       <div class="ges-tipp-text">${t.text}</div>
       <div class="ges-tipp-bottom">
         <span class="ges-tipp-icon-klein">💡</span>
-        <span class="ges-tipp-hinweis">${t.tipp}</span>
+        <span class="ges-tipp-hinweis">${t.tipp || ''}</span>
       </div>
     </div>`).join('')}
   </div>`}`;
@@ -5579,18 +8465,46 @@ function toast(text) {
   setTimeout(() => { t.classList.remove('toast-zeige'); setTimeout(() => t.remove(), 300); }, 2200);
 }
 
+const THEMES = {
+  lila:      { p1:'#4F46E5', p2:'#7C3AED', p3:'#EC4899', bg:'#EDE9FE', label:'Lila' },
+  blau:      { p1:'#2563EB', p2:'#1D4ED8', p3:'#0EA5E9', bg:'#DBEAFE', label:'Blau' },
+  tuerkis:   { p1:'#0891B2', p2:'#0E7490', p3:'#06B6D4', bg:'#CFFAFE', label:'Türkis' },
+  gruen:     { p1:'#059669', p2:'#047857', p3:'#10B981', bg:'#D1FAE5', label:'Grün' },
+  mintgruen: { p1:'#10B981', p2:'#059669', p3:'#34D399', bg:'#D1FAE5', label:'Minze' },
+  oliv:      { p1:'#65A30D', p2:'#4D7C0F', p3:'#84CC16', bg:'#ECFCCB', label:'Oliv' },
+  gelb:      { p1:'#CA8A04', p2:'#A16207', p3:'#EAB308', bg:'#FEF9C3', label:'Gelb' },
+  orange:    { p1:'#D97706', p2:'#B45309', p3:'#F59E0B', bg:'#FEF3C7', label:'Orange' },
+  korall:    { p1:'#EA580C', p2:'#C2410C', p3:'#FB923C', bg:'#FFEDD5', label:'Koralle' },
+  rot:       { p1:'#DC2626', p2:'#B91C1C', p3:'#EF4444', bg:'#FEE2E2', label:'Rot' },
+  pink:      { p1:'#DB2777', p2:'#BE185D', p3:'#EC4899', bg:'#FCE7F3', label:'Pink' },
+  magenta:   { p1:'#C026D3', p2:'#A21CAF', p3:'#E879F9', bg:'#FAE8FF', label:'Magenta' },
+  violett:   { p1:'#7C3AED', p2:'#6D28D9', p3:'#A855F7', bg:'#EDE9FE', label:'Violett' },
+  indigo:    { p1:'#4338CA', p2:'#3730A3', p3:'#6366F1', bg:'#E0E7FF', label:'Indigo' },
+  nachtblau: { p1:'#1E3A8A', p2:'#1E40AF', p3:'#3B82F6', bg:'#DBEAFE', label:'Nachtblau' },
+  ozean:     { p1:'#0369A1', p2:'#075985', p3:'#0EA5E9', bg:'#E0F2FE', label:'Ozean' },
+  petrol:    { p1:'#0F766E', p2:'#115E59', p3:'#14B8A6', bg:'#CCFBF1', label:'Petrol' },
+  waldgruen: { p1:'#15803D', p2:'#166534', p3:'#22C55E', bg:'#DCFCE7', label:'Waldgrün' },
+  bernstein: { p1:'#B45309', p2:'#92400E', p3:'#FBBF24', bg:'#FEF3C7', label:'Bernstein' },
+  bordeaux:  { p1:'#9F1239', p2:'#881337', p3:'#BE123C', bg:'#FFE4E6', label:'Bordeaux' },
+  beere:     { p1:'#9D174D', p2:'#831843', p3:'#DB2777', bg:'#FCE7F3', label:'Beere' },
+  aubergine: { p1:'#6B21A8', p2:'#581C87', p3:'#9333EA', bg:'#F3E8FF', label:'Aubergine' },
+  mokka:     { p1:'#6F4E37', p2:'#4E3524', p3:'#A47551', bg:'#EFE6DD', label:'Mokka' },
+  stein:     { p1:'#57534E', p2:'#44403C', p3:'#78716C', bg:'#F5F5F4', label:'Stein' },
+  schiefer:  { p1:'#475569', p2:'#334155', p3:'#64748B', bg:'#F1F5F9', label:'Schiefer' },
+  mitternacht:{ p1:'#0F172A', p2:'#020617', p3:'#334155', bg:'#E2E8F0', label:'Mitternacht' },
+  schwarz:   { p1:'#1F2937', p2:'#111827', p3:'#4B5563', bg:'#F3F4F6', label:'Anthrazit' }
+};
+
 function themeAnwenden(theme) {
-  const themes = {
-    lila:   { p1:'#4F46E5', p2:'#7C3AED', p3:'#EC4899' },
-    gruen:  { p1:'#059669', p2:'#047857', p3:'#10B981' },
-    blau:   { p1:'#2563EB', p2:'#1D4ED8', p3:'#0EA5E9' },
-    orange: { p1:'#D97706', p2:'#B45309', p3:'#F59E0B' },
-    pink:   { p1:'#DB2777', p2:'#BE185D', p3:'#EC4899'  }
-  };
-  const t = themes[theme] || themes.lila;
+  const t = THEMES[theme] || THEMES.lila;
   document.documentElement.style.setProperty('--p1', t.p1);
   document.documentElement.style.setProperty('--p2', t.p2);
   document.documentElement.style.setProperty('--p3', t.p3);
+  // Akzent-Gradient ebenfalls aktualisieren
+  document.documentElement.style.setProperty('--akzent-1', t.p1);
+  document.documentElement.style.setProperty('--akzent-2', t.p2);
+  document.documentElement.style.setProperty('--akzent-3', t.p3);
+  document.documentElement.style.setProperty('--akzent-grad', `linear-gradient(135deg, ${t.p1} 0%, ${t.p2} 50%, ${t.p3} 100%)`);
 }
 
 function initEinstellungen() {
@@ -5639,6 +8553,16 @@ function familienfotoUpload(input) {
   reader.readAsDataURL(file);
 }
 
+function schriftSetzen(groesse) {
+  const einst = einstellungenLaden();
+  einst.schriftGross = (groesse === 'gross');
+  einst.schriftXl    = (groesse === 'xl');
+  einstellungenSpeichern(einst);
+  document.documentElement.classList.toggle('schrift-gross', groesse === 'gross');
+  document.documentElement.classList.toggle('schrift-xl',    groesse === 'xl');
+  render();
+}
+
 function einstellungToggle(key) {
   const einst = einstellungenLaden();
   einst[key] = !einst[key];
@@ -5651,17 +8575,24 @@ function renderEinstellungen() {
   const user = getUser() || {};
   const theme = einst.theme || 'lila';
 
-  const themes = [
-    { id:'lila',   label:'Lila',   farbe:'#4F46E5', bg:'#EDE9FE' },
-    { id:'gruen',  label:'Grün',   farbe:'#059669', bg:'#D1FAE5' },
-    { id:'blau',   label:'Blau',   farbe:'#2563EB', bg:'#DBEAFE' },
-    { id:'orange', label:'Orange', farbe:'#D97706', bg:'#FEF3C7' },
-    { id:'pink',   label:'Pink',   farbe:'#DB2777', bg:'#FCE7F3' }
-  ];
+  const themes = Object.entries(THEMES).map(([id, t]) => ({
+    id, label: t.label, farbe: t.p1, bg: t.bg
+  }));
 
   return `
   <div class="section-title">⚙️ Einstellungen</div>
   <p class="section-sub">App nach Ihren Wünschen anpassen</p>
+
+  <!-- App teilen & installieren -->
+  <div class="einst-gruppe">
+    <div class="einst-gruppe-titel">📤 App teilen & installieren</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Schick die App an Familie und Freunde — sie können sie ganz ohne App-Store direkt aufs Handy legen.</div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:.5rem" onclick="appTeilen()">📤 App-Link teilen</button>
+    <button class="btn btn-outline" style="width:100%;margin-bottom:.85rem" onclick="dashboardInstallStarten()">📲 Diese App installieren</button>
+    <div class="info-box blau" style="font-size:.8rem"><span class="ib-icon">📱</span><div class="ib-text"><strong>Ohne App-Store installieren:</strong><br>
+    <strong>iPhone:</strong> Link in Safari öffnen → Teilen-Symbol ⬆ → „Zum Home-Bildschirm".<br>
+    <strong>Android:</strong> Link in Chrome öffnen → Menü ⋮ → „App installieren".</div></div>
+  </div>
 
   <!-- Lieblings-Bereiche -->
   <div class="einst-gruppe">
@@ -5712,7 +8643,33 @@ function renderEinstellungen() {
         'https://images.pexels.com/photos/1620655/pexels-photo-1620655.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/3661266/pexels-photo-3661266.jpeg?auto=compress&cs=tinysrgb&w=800',
         'https://images.pexels.com/photos/5638742/pexels-photo-5638742.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/8941658/pexels-photo-8941658.jpeg?auto=compress&cs=tinysrgb&w=800'
+        'https://images.pexels.com/photos/8941658/pexels-photo-8941658.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1648387/pexels-photo-1648387.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1684149/pexels-photo-1684149.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/3933025/pexels-photo-3933025.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4473864/pexels-photo-4473864.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4474035/pexels-photo-4474035.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4259140/pexels-photo-4259140.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/7282809/pexels-photo-7282809.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/3661266/pexels-photo-3661266.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/3661356/pexels-photo-3661356.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/1648376/pexels-photo-1648376.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/8554544/pexels-photo-8554544.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/8554569/pexels-photo-8554569.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/5638706/pexels-photo-5638706.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4715098/pexels-photo-4715098.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4587965/pexels-photo-4587965.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4473409/pexels-photo-4473409.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4473775/pexels-photo-4473775.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4473863/pexels-photo-4473863.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/5063577/pexels-photo-5063577.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/3771071/pexels-photo-3771071.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/3771518/pexels-photo-3771518.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/5497919/pexels-photo-5497919.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/4473608/pexels-photo-4473608.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/3812743/pexels-photo-3812743.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/3933025/pexels-photo-3933025.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'https://images.pexels.com/photos/6849469/pexels-photo-6849469.jpeg?auto=compress&cs=tinysrgb&w=800'
       ].map(url => `
         <button class="foto-option ${einst.familienfoto===url?'aktiv':''}"
           style="background-image:url('${url}')"
@@ -5752,7 +8709,17 @@ function renderEinstellungen() {
         {key:'zeigLeistungen',   label:'⭐ Top-Leistungen-Cards',         def:true},
         {key:'zeigInstallCard',  label:'📱 App installieren',             def:true},
         {key:'zeigNotfall',      label:'📞 Notfall-Nummern',              def:true},
-        {key:'zitateAus',        label:'💬 Motivationssprüche AUSblenden', def:false, invertieren:true}
+        {key:'zitateAus',        label:'💬 Motivationssprüche AUSblenden', def:false, invertieren:true},
+        {key:'zeigWetter',       label:'🌤️ Wetter heute',                  def:true},
+        {key:'zeigHeuteBox',     label:'⏰ Heute zu tun (Termine, Müll, To-dos)', def:true},
+        {key:'zeigFreizeit',     label:'🎠 Freizeit in der Nähe',         def:true},
+        {key:'zeigTagesRezept',  label:'🍽️ Tages-Rezept-Vorschlag',       def:true},
+        {key:'zeigNewsHeadlines',label:'📰 News-Schlagzeilen',             def:true},
+        {key:'zeigTagesTipp',    label:'💡 Tipp des Tages',                def:true},
+        {key:'zeigHeuteTermine', label:'📅 Heutige & nächste Termine',     def:true},
+        {key:'zeigAusflugTipp',  label:'🎠 Ausflugs-Vorschlag für heute',  def:true},
+        {key:'zeigPinnwand',     label:'📌 Letzte Pinnwand-Notizen',       def:true},
+        {key:'zeigSocialMedia',  label:'📱 Social Media & App teilen',     def:true}
       ].map(item => {
         const an = einst[item.key] !== undefined ? einst[item.key] : item.def;
         return `
@@ -5769,13 +8736,26 @@ function renderEinstellungen() {
   <!-- Notifications -->
   <div class="einst-gruppe">
     <div class="einst-gruppe-titel">🔔 Benachrichtigungen</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Erinnerungen für heutige Termine, Müll-Abholung morgen und wichtige To-dos.</div>
+
+    ${typeof Notification !== 'undefined' ? (() => {
+      const perm = Notification.permission;
+      if (perm === 'granted') return '<div class="info-box gruen" style="margin-bottom:.75rem"><span class="ib-icon">✓</span><div class="ib-text"><strong>Aktiviert</strong> — Benachrichtigungen werden gezeigt</div></div>';
+      if (perm === 'denied') return '<div class="info-box orange" style="margin-bottom:.75rem"><span class="ib-icon">⚠️</span><div class="ib-text"><strong>Blockiert</strong> — bitte in den Browser-Einstellungen erlauben (Schloss-Symbol neben URL)</div></div>';
+      return '<button class="btn btn-primary" style="width:100%;margin-bottom:.75rem" onclick="notificationsBerechtigung().then(()=>render())">🔔 Benachrichtigungen aktivieren</button>';
+    })() : ''}
+
     <div class="einst-toggle-liste">
       ${[
-        {key:'notifAngebote', label:'🏷️ Neue Supermarkt-Angebote'},
-        {key:'notifJobs',     label:'💼 Neue Jobs in der Nähe'},
-        {key:'notifKalender', label:'📅 Kalender-Erinnerungen'}
+        {key:'notifTermine',  label:'📅 Heutige Kalender-Termine', def:true},
+        {key:'notifMuell',    label:'🗑️ Müllabfuhr morgen (Vorabend)', def:true},
+        {key:'notifTodo',     label:'✅ To-do-Erinnerungen (mit Uhrzeit)', def:true},
+        {key:'notifAngebote', label:'🏷️ Neue Supermarkt-Angebote', def:false},
+        {key:'notifJobs',     label:'💼 Neue Jobs in der Nähe', def:false},
+        {key:'notifAus',      label:'🔕 Alle Benachrichtigungen aus', def:false},
+        {key:'muellAutoAus',  label:'🗑️ Müll-Auto-Eintragung bei Standort-Update AUS', def:false}
       ].map(item => {
-        const an = !!einst[item.key];
+        const an = einst[item.key] !== undefined ? !!einst[item.key] : !!item.def;
         return `
         <div class="einst-toggle-row">
           <span class="einst-toggle-label">${item.label}</span>
@@ -5785,7 +8765,56 @@ function renderEinstellungen() {
         </div>`;
       }).join('')}
     </div>
-    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Benachrichtigungen funktionieren nur wenn die App installiert ist (PWA).</div></div>
+    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text"><strong>So funktionieren Erinnerungen:</strong> Bei To-dos kannst du eine Uhrzeit setzen. Die Erinnerung erscheint sofort, wenn sie fällig ist und die App geöffnet (auch im Hintergrund) ist — sonst wird sie beim nächsten Öffnen der App nachgeholt. Tipp: App auf den Home-Bildschirm legen (PWA), dann bleiben Erinnerungen am zuverlässigsten.</div></div>
+  </div>
+
+  <!-- Live-Wohnungs-API (Cloudflare Worker) -->
+  <div class="einst-gruppe">
+    <div class="einst-gruppe-titel">🔌 Live-Wohnungs-API (optional)</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">
+      Für <strong>echte Live-Mietangebote</strong> in der Wohnungssuche brauchst du einen kostenlosen Cloudflare-Worker (100.000 Anfragen/Tag gratis, keine Kreditkarte). Einmal-Setup in 5 Minuten. Ohne Worker zeigt die App Beispiel-Karten + Live-Such-Links.
+    </div>
+    <input type="text" class="reg-input" id="worker-url-input"
+      placeholder="https://wohnungen.dein-name.workers.dev"
+      value="${esc(einst.workerUrl || '')}"
+      oninput="state._workerUrlDraft=this.value" />
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+      <button class="btn btn-primary btn-sm" onclick="workerUrlSpeichern()">💾 Speichern</button>
+      ${einst.workerUrl ? `<button class="btn btn-outline btn-sm" onclick="workerUrlTesten()">🧪 Verbindung testen</button>` : ''}
+      ${einst.workerUrl ? `<button class="btn btn-outline btn-sm" onclick="workerUrlLoeschen()">🗑️ Entfernen</button>` : ''}
+    </div>
+    <div class="info-box gruen" style="margin-top:.75rem">
+      <span class="ib-icon">📘</span>
+      <div class="ib-text">
+        <strong>Setup-Anleitung:</strong> Die komplette Schritt-für-Schritt-Anleitung liegt im Projekt-Ordner als <code>WOHNUNGEN-WORKER-SETUP.md</code>. Worker-Code liegt als <code>wohnungen-worker.js</code> bereit zum Kopieren.
+      </div>
+    </div>
+    <div class="info-box orange" style="margin-top:.5rem">
+      <span class="ib-icon">⚠️</span>
+      <div class="ib-text" style="font-size:.78rem">
+        ImmoScout & Kleinanzeigen blockieren auch Server-Anfragen — der Worker holt Daten von <strong>Wohnungsbörse, WG-Gesucht und Immobilo</strong>. In großen Städten findet man meistens was, in Dörfern selten.
+      </div>
+    </div>
+  </div>
+
+  <!-- Schriftgröße / Senior-Modus -->
+  <div class="einst-gruppe">
+    <div class="einst-gruppe-titel">🔤 Schriftgröße &amp; Barrierefreiheit</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Größere Schrift macht die App leichter lesbar — besonders für Senioren oder bei Sehschwäche.</div>
+    <div class="schrift-auswahl">
+      ${[
+        { id:'normal', label:'Normal',  beispiel:'Aa', size:'1rem'    },
+        { id:'gross',  label:'Größer',  beispiel:'Aa', size:'1.15rem' },
+        { id:'xl',     label:'Sehr groß', beispiel:'Aa', size:'1.3rem'  }
+      ].map(opt => {
+        const aktuell = einst.schriftXl ? 'xl' : (einst.schriftGross ? 'gross' : 'normal');
+        return `
+        <button class="schrift-btn ${aktuell===opt.id?'aktiv':''}" onclick="schriftSetzen('${opt.id}')">
+          <span class="schrift-btn-beispiel" style="font-size:${opt.size}">${opt.beispiel}</span>
+          <span class="schrift-btn-label">${opt.label}</span>
+        </button>`;
+      }).join('')}
+    </div>
   </div>
 
   <!-- Profil -->
@@ -6431,6 +9460,7 @@ const ALLE_BEREICHE = [
   { id:'kalender',        icon:'📅', titel:'Kalender',   sub:'Termine', sektion:'kalender' },
   { id:'familie',         icon:'👪', titel:'Familie',    sub:'Rezepte & Ausflüge', sektion:'familie' },
   { id:'gesundheit',      icon:'🌿', titel:'Gesundheit', sub:'Hausmittel & Tipps', sektion:'gesundheit' },
+  { id:'haushalt',        icon:'🏡', titel:'Haushalt',   sub:'Küche, Wäsche, Garten', sektion:'haushalt' },
   { id:'extras',          icon:'💶', titel:'Budget',     sub:'Haushaltsrechner', sektion:'extras' },
   { id:'urlaub',          icon:'✈️', titel:'Urlaub',     sub:'Familienreisen', sektion:'urlaub' },
   { id:'jobs',            icon:'💼', titel:'Jobs',       sub:'Live-Jobsuche', sektion:'jobs' },
@@ -6484,10 +9514,17 @@ function todoHinzu() {
   const text = inp?.value.trim();
   if (!text) return;
   const prio = el('todo-prio')?.value || 'normal';
+  const erinnerungVal = el('todo-erinnerung')?.value || '';
+  const erinnerung = erinnerungVal ? new Date(erinnerungVal).toISOString() : null;
   const items = todoLaden();
-  items.push({ id: Date.now(), text, prio, erledigt: false, datum: new Date().toISOString() });
+  items.push({ id: Date.now(), text, prio, erledigt: false, datum: new Date().toISOString(), erinnerung });
   todoSpeichern(items);
   inp.value = '';
+  const eInp = el('todo-erinnerung'); if (eInp) eInp.value = '';
+  // Bei gesetzter Erinnerung ggf. um Benachrichtigungs-Erlaubnis bitten
+  if (erinnerung && 'Notification' in window && Notification.permission === 'default') {
+    notificationsBerechtigung();
+  }
   render();
 }
 function todoToggle(id) {
@@ -6533,6 +9570,10 @@ function renderTodo() {
     </select>
     <button class="btn btn-primary" onclick="todoHinzu()">+ Hinzufügen</button>
   </div>
+  <label style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.82rem;color:var(--g700);margin:-.35rem 0 .75rem">
+    <span>⏰ Erinnerung (optional):</span>
+    <input type="datetime-local" id="todo-erinnerung" class="reg-input" style="flex:1;min-width:170px" />
+  </label>
 
   <div class="filter-tabs">
     ${[['alle','Alle'],['offen','Offen'],['wichtig','Wichtig'],['erledigt','Erledigt']].map(([v,l])=>
@@ -6545,10 +9586,18 @@ function renderTodo() {
     ${items.map(i => {
       const prioFarbe = { hoch:'#DC2626', normal:'#4F46E5', niedrig:'#94A3B8' }[i.prio] || '#4F46E5';
       const datum = new Date(i.datum).toLocaleDateString('de-DE',{day:'2-digit',month:'short'});
+      let erinnerungStr = '';
+      if (i.erinnerung) {
+        const ed = new Date(i.erinnerung);
+        if (!isNaN(ed.getTime())) {
+          const faellig = ed.getTime() <= Date.now();
+          erinnerungStr = ` · <span style="color:${faellig&&!i.erledigt?'#DC2626':'#4F46E5'};font-weight:700">⏰ ${ed.toLocaleString('de-DE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>`;
+        }
+      }
       return `
       <div class="todo-item ${i.erledigt?'erledigt':''}" style="border-left-color:${prioFarbe}">
         <button class="todo-check" onclick="todoToggle(${i.id})">${i.erledigt?'✓':''}</button>
-        <div class="todo-text">${esc(i.text)}<div class="todo-datum">erstellt am ${datum}${i.prio==='hoch'?' · Wichtig':''}</div></div>
+        <div class="todo-text">${esc(i.text)}<div class="todo-datum">erstellt am ${datum}${i.prio==='hoch'?' · Wichtig':''}${erinnerungStr}</div></div>
         <button class="todo-del" onclick="todoLoeschen(${i.id})">✕</button>
       </div>`;
     }).join('')}
@@ -6610,71 +9659,94 @@ function eigenesRezeptHinzu() {
 
 function renderKochbuch() {
   const buch = kochbuchLaden();
+  const alleRezepte = (typeof REZEPTE !== 'undefined' ? REZEPTE : []);
+  const aktiverTab = state.kochbuchTab || 'alle';
+
+  // Tabs werden weiter unten dynamisch aus den vorhandenen Themen-Kategorien gebildet
+
+  // Fit-/Gesund-Rezepte aus dem alten kuratierten Block
+  const fitRezepte = [
+    { id:'fit-bowl', name:'Power-Bowl mit Quinoa', bild:'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=75', kategorie:'fit', dauer:'20 Min.', kosten:'≈ 2,50 €', portionen:2, zutaten:['100g Quinoa','1 Süßkartoffel','100g Spinat','1 Hähnchenbrust','1/2 Avocado','30g Granatapfel','2 EL Tahin','1 EL Zitronensaft','Salz, Pfeffer'], zubereitung:'Quinoa nach Packung kochen. Süßkartoffel würfeln, in Olivenöl 20 Min braten. Hähnchen in Streifen, ebenfalls braten. Spinat in Schüssel, alles drauf, mit Tahin-Zitrone übergießen.', tipp:'Anschluss-Tipp: am Wochenende vorbereiten, 3 Tage im Kühlschrank haltbar' },
+    { id:'fit-haehnchen', name:'Mageres Hähnchen mit Brokkoli', bild:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=75', kategorie:'fit', dauer:'25 Min.', kosten:'≈ 2,80 €', portionen:2, zutaten:['2 Hähnchenbrüste','1 Brokkoli','100g brauner Reis','2 EL Olivenöl','1 Zitrone','2 Knoblauchzehen','Salz, Pfeffer'], zubereitung:'Reis nach Packung kochen. Hähnchen mit Knoblauch in Pfanne braten. Brokkoli 5 Min dämpfen. Alles anrichten, mit Zitrone beträufeln.', tipp:'Wenig Fett, viel Protein — perfekt nach Training' },
+    { id:'fit-overnight', name:'Overnight Oats mit Beeren', bild:'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=600&q=75', kategorie:'fit', dauer:'5 Min. + Nacht', kosten:'≈ 1,20 €', portionen:1, zutaten:['50g Haferflocken','200ml Magermilch oder Mandelmilch','1 EL Chiasamen','100g Beeren','1 EL Honig','10g Nüsse'], zubereitung:'Hafer, Milch, Chia in Glas mischen. Über Nacht in Kühlschrank. Morgens Beeren, Honig und Nüsse oben drauf.', tipp:'Perfekt zum Abnehmen — sättigt lange, wenige Kalorien' },
+    { id:'fit-lachs', name:'Lachs mit Spargel', bild:'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=75', kategorie:'fit', dauer:'25 Min.', kosten:'≈ 4,50 €', portionen:2, zutaten:['2 Lachsfilets','500g grüner Spargel','2 EL Olivenöl','1 Zitrone','Salz, Pfeffer','frischer Dill'], zubereitung:'Spargel waschen, Holzige Enden ab. In Pfanne 8 Min. braten. Lachs mit Salz, Pfeffer würzen, in zweiter Pfanne 4 Min pro Seite. Mit Zitrone und Dill servieren.', tipp:'Omega-3, Low-Carb, sättigend' },
+    { id:'fit-suppe', name:'Detox-Gemüsesuppe', bild:'https://images.unsplash.com/photo-1547308283-b941de5747bf?w=600&q=75', kategorie:'gesund', dauer:'30 Min.', kosten:'≈ 1,50 €', portionen:6, zutaten:['4 Karotten','3 Selleriestangen','2 Lauchstangen','1 Bund Petersilie','30g Ingwer','1 TL Kurkuma','1,5 L Gemüsebrühe','Salz, Pfeffer'], zubereitung:'Gemüse waschen, klein schneiden. In Topf mit Brühe + Ingwer + Kurkuma 25 Min köcheln. Mit Petersilie bestreuen.', tipp:'Entgiftend, kalorienarm — 6 Portionen für die Woche' },
+    { id:'fit-salat', name:'Eiweiß-Salat mit Ei und Avocado', bild:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=75', kategorie:'fit', dauer:'15 Min.', kosten:'≈ 2,80 €', portionen:2, zutaten:['200g Spinat','4 Eier','1 Avocado','200g Cherry-Tomaten','1 Hähnchenbrust','30g Walnüsse','3 EL Olivenöl','1 EL Balsamico'], zubereitung:'Eier 8 Min kochen. Hähnchen in Streifen braten. Spinat in Schüssel, alles drauf, mit Öl + Essig anmachen.', tipp:'Low Carb, High Protein — sättigt bis abends' },
+    { id:'fit-zoodles', name:'Zoodles mit Garnelen', bild:'https://images.unsplash.com/photo-1611270629569-8b357cb88da9?w=600&q=75', kategorie:'fit', dauer:'15 Min.', kosten:'≈ 4,00 €', portionen:2, zutaten:['3 Zucchini','200g Garnelen','3 Knoblauchzehen','200g Cherry-Tomaten','2 EL Olivenöl','Petersilie','Salz, Pfeffer'], zubereitung:'Zucchini mit Spiralschneider zu Spaghetti machen. Garnelen mit Knoblauch in Öl 4 Min braten. Tomaten dazu, kurz mitbraten. Zoodles 2 Min unterheben.', tipp:'Kohlenhydratarm, schmeckt wie Pasta' },
+    { id:'fit-smoothie', name:'Grüner Power-Smoothie', bild:'https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=600&q=75', kategorie:'gesund', dauer:'5 Min.', kosten:'≈ 1,80 €', portionen:1, zutaten:['100g Spinat','1 Banane','1 Apfel','1 Selleriestange','20g Ingwer','1 Zitrone','1 EL Chiasamen','200ml Wasser'], zubereitung:'Alles in den Mixer geben, 1 Min mixen. Direkt trinken.', tipp:'Vitamin-Bombe — perfekt am Morgen' },
+    { id:'fit-buddha', name:'Buddha-Bowl Vegan', bild:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=75', kategorie:'gesund', dauer:'30 Min.', kosten:'≈ 2,20 €', portionen:2, zutaten:['100g Hirse','200g Kichererbsen','1 Karotte','1 Avocado','100g Rotkohl','1 Süßkartoffel','Hummus','Tahin-Sauce'], zubereitung:'Hirse kochen. Süßkartoffel würfeln, im Ofen 20 Min bei 200°C. Kichererbsen kurz braten. Alles in Schüssel anrichten, mit Hummus und Sauce.', tipp:'Vegan, glutenfrei, gut für die Darmflora' },
+    { id:'fit-omelett', name:'Spinat-Feta-Omelett', bild:'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=75', kategorie:'fit', dauer:'10 Min.', kosten:'≈ 1,80 €', portionen:1, zutaten:['3 Eier','50g Spinat','30g Feta','1 EL Olivenöl','Salz, Pfeffer'], zubereitung:'Eier verquirlen, Spinat unterheben. In Pfanne mit Öl gießen, Feta drüber. 5 Min auf mittlerer Stufe braten.', tipp:'Perfektes Eiweiß-Frühstück, sehr sättigend' },
+    { id:'fit-linsen', name:'Rote-Linsen-Curry', bild:'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=75', kategorie:'gesund', dauer:'25 Min.', kosten:'≈ 1,80 €', portionen:4, zutaten:['250g rote Linsen','1 Dose Kokosmilch','1 Zwiebel','2 Knoblauchzehen','1 EL Currypaste','1 Dose gehackte Tomaten','Salz, Reis als Beilage'], zubereitung:'Zwiebel und Knoblauch dünsten. Currypaste anrösten. Linsen, Tomaten, Kokosmilch dazu. 20 Min köcheln. Mit Reis servieren.', tipp:'Vegan, gut für die Familie, sehr günstig' },
+    { id:'fit-quark', name:'Quark mit Beeren und Nüssen', bild:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=75', kategorie:'fit', dauer:'5 Min.', kosten:'≈ 1,50 €', portionen:1, zutaten:['250g Magerquark','100g Beeren','20g Nüsse','1 EL Honig','1 TL Chia'], zubereitung:'Quark in Schüssel. Beeren, Nüsse, Honig und Chia oben drauf. Fertig.', tipp:'25g Protein, perfekt nach Sport' }
+  ];
+
+  // Tabs dynamisch aus allen vorhandenen Themen-Kategorien bilden — alles auffindbar
+  const alleQuellen = [...alleRezepte, ...fitRezepte];
+  const vorhandeneKats = [...new Set(alleQuellen.map(r => r.kategorie))];
+  const katMeta = {
+    schnell:'⚡ Schnell', guenstig:'💶 Günstig', klassiker:'🇩🇪 Deutsche Küche',
+    kinder:'🧒 Für Kinder', resteessen:'♻️ Resteküche', gesund:'🥦 Gesund & Leicht', fit:'💪 Fitness'
+  };
+  const tabs = [{ id:'alle', label:'📚 Alle' }];
+  Object.keys(katMeta).forEach(k => { if (vorhandeneKats.includes(k)) tabs.push({ id:k, label:katMeta[k] }); });
+  tabs.push({ id:'eigen', label:'✏️ Eigene' });
+
+  let zuZeigen = [];
+  if (aktiverTab === 'eigen') zuZeigen = buch;
+  else if (aktiverTab === 'alle') zuZeigen = [...alleRezepte, ...fitRezepte, ...buch];
+  else zuZeigen = alleQuellen.filter(r => r.kategorie === aktiverTab);
+
   return `
   <div class="news-hero">
     <div class="news-hero-bg" style="background-image:url('https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=70')"></div>
     <div class="news-hero-overlay"></div>
     <div class="news-hero-inhalt">
-      <div style="font-size:1.4rem;font-weight:800;margin-bottom:.3rem">Mein Kochbuch</div>
-      <div style="font-size:.85rem;opacity:.9">${buch.length} gespeicherte Rezepte</div>
+      <div style="font-size:1.4rem;font-weight:800;margin-bottom:.3rem">📔 Mein Kochbuch</div>
+      <div style="font-size:.85rem;opacity:.9">${alleRezepte.length + fitRezepte.length + buch.length} Rezepte · alle mit Portions-Umrechner</div>
     </div>
   </div>
 
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
     <button class="btn btn-primary" onclick="eigenesRezeptHinzu()">+ Eigenes Rezept anlegen</button>
-    <button class="btn btn-outline" onclick="zuSektion('familie');state.familieTab='rezepte';render()">Alle Rezepte durchsuchen</button>
+    <button class="btn btn-outline" onclick="state.familieTab='rezeptApi';zuSektion('familie')">🌍 Internationale Rezepte (TheMealDB 300+)</button>
   </div>
 
-  ${buch.length === 0 ? `
+  <div class="filter-tabs" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem">
+    ${tabs.map(t => `<button class="filter-tab ${aktiverTab===t.id?'aktiv':''}" onclick="kochbuchTabWaehlen('${t.id}')">${t.label}</button>`).join('')}
+  </div>
+
+  <div class="info-box gruen" style="margin-bottom:1rem"><span class="ib-icon">👥</span><div class="ib-text"><strong>Portions-Umrechner</strong>: Klick auf ein Rezept öffnet die Detail-Ansicht — dort kannst du die Anzahl der Portionen einstellen und alle Mengen werden automatisch berechnet.</div></div>
+
+  ${zuZeigen.length === 0 ? `
   <div class="info-box lila">
     <span class="ib-icon">📔</span>
-    <div class="ib-text"><strong>Ihr Kochbuch ist noch leer.</strong> Speichern Sie Rezepte aus der Übersicht (Familie → Rezepte) per "Zu Kochbuch hinzufügen", oder legen Sie eigene Rezepte an.</div>
+    <div class="ib-text">${aktiverTab === 'eigen' ? '<strong>Noch keine eigenen Rezepte.</strong> Lege jetzt dein erstes an!' : '<strong>Keine Rezepte in dieser Kategorie.</strong> Wähle einen anderen Tab.'}</div>
   </div>` :
   `<div class="rezept-grid">
-    ${buch.map(r => `
-    <button class="rezept-foto-karte" onclick="${r.eigen?'kochbuchEigenesAnzeigen':'rezeptOeffnen'}('${r.id}')">
-      <div class="rezept-foto-bild" style="background-image:url('${r.bild}')">
+    ${zuZeigen.map(r => `
+    <button class="rezept-foto-karte" onclick="${r.eigen?`kochbuchEigenesAnzeigen('${r.id}')`:`rezeptOeffnen('${r.id}')`}">
+      <div class="rezept-foto-bild" style="background-image:url('${r.bild || ''}');background-color:#FCE7F3">
         ${r.eigen ? '<span class="rezept-foto-eigen">EIGEN</span>' : ''}
-        <span class="rezept-foto-kosten">${r.kosten}</span>
+        ${r.kosten ? `<span class="rezept-foto-kosten">${r.kosten}</span>` : ''}
       </div>
       <div class="rezept-foto-body">
         <div class="rezept-foto-name">${esc(r.name)}</div>
         <div class="rezept-foto-meta">
-          <span>⏱️ ${r.dauer}</span>
-          <span>🍽️ ${r.portionen} P.</span>
+          <span>⏱️ ${r.dauer || '—'}</span>
+          <span>🍽️ ${r.portionen || 4} P.</span>
         </div>
       </div>
     </button>`).join('')}
-  </div>`}
-
-  <div class="block-title" style="margin-top:1.5rem">Gesunde & Fitness-Rezepte (kuratiert)</div>
-  <div class="rezept-grid">
-    ${[
-      { id:'fit-bowl', name:'Power-Bowl mit Quinoa', bild:'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=75', kosten:'≈ 2,50 €', dauer:'20 Min.', portionen:2, beschreibung:'Quinoa, Avocado, Süßkartoffel, Spinat, Hähnchenbrust, Granatapfel, Tahin-Dressing' },
-      { id:'fit-haehnchen', name:'Mageres Hähnchen mit Brokkoli', bild:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=75', kosten:'≈ 2,80 €', dauer:'25 Min.', portionen:2, beschreibung:'Hähnchenbrust, Brokkoli, brauner Reis, Olivenöl, Zitrone, Knoblauch — wenig Fett, viel Protein' },
-      { id:'fit-overnight', name:'Overnight Oats mit Beeren', bild:'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400&q=75', kosten:'≈ 1,20 €', dauer:'5 Min. + Nacht', portionen:1, beschreibung:'Haferflocken, Magermilch/Mandelmilch, Chia, Beeren, Honig, Nüsse — perfekt zum Abnehmen' },
-      { id:'fit-lachs', name:'Lachs mit Spargel', bild:'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=75', kosten:'≈ 4,50 €', dauer:'25 Min.', portionen:2, beschreibung:'Lachsfilet, grüner Spargel, Zitrone, Olivenöl — Omega-3, Low-Carb, sättigend' },
-      { id:'fit-suppe', name:'Detox-Gemüsesuppe', bild:'https://images.unsplash.com/photo-1547308283-b941de5747bf?w=400&q=75', kosten:'≈ 1,50 €', dauer:'30 Min.', portionen:6, beschreibung:'Karotten, Sellerie, Lauch, Petersilie, Ingwer, Kurkuma — entgiftend, kalorienarm' },
-      { id:'fit-salat', name:'Eiweiß-Salat mit Ei und Avocado', bild:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&q=75', kosten:'≈ 2,80 €', dauer:'15 Min.', portionen:2, beschreibung:'Spinat, hartgekochte Eier, Avocado, Tomaten, Hähnchenbrust, Walnüsse — Low Carb, High Protein' },
-      { id:'fit-zoodles', name:'Zoodles mit Garnelen', bild:'https://images.unsplash.com/photo-1611270629569-8b357cb88da9?w=400&q=75', kosten:'≈ 4,00 €', dauer:'15 Min.', portionen:2, beschreibung:'Zucchini-Spaghetti statt Pasta, Garnelen, Knoblauch, Cherry-Tomaten — kohlenhydratarm' },
-      { id:'fit-smoothie', name:'Grüner Power-Smoothie', bild:'https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=400&q=75', kosten:'≈ 1,80 €', dauer:'5 Min.', portionen:1, beschreibung:'Spinat, Banane, Apfel, Sellerie, Ingwer, Zitrone, Chia — Vitamin-Bombe' }
-    ].map(r => `
-    <a href="https://www.google.com/search?q=${encodeURIComponent(r.name+' Rezept')}" target="_blank" class="rezept-foto-karte" style="text-decoration:none">
-      <div class="rezept-foto-bild" style="background-image:url('${r.bild}')">
-        <span class="rezept-foto-fit">FIT</span>
-        <span class="rezept-foto-kosten">${r.kosten}</span>
-      </div>
-      <div class="rezept-foto-body">
-        <div class="rezept-foto-name">${esc(r.name)}</div>
-        <div class="rezept-foto-meta">
-          <span>⏱️ ${r.dauer}</span>
-          <span>🍽️ ${r.portionen} P.</span>
-        </div>
-        <div style="font-size:.72rem;color:var(--g500);margin-top:.35rem;line-height:1.3">${esc(r.beschreibung)}</div>
-      </div>
-    </a>`).join('')}
-  </div>`;
+  </div>`}`;
 }
+
+function kochbuchTabWaehlen(tab) {
+  state.kochbuchTab = tab;
+  render();
+}
+
+// rezeptOeffnen muss kuratierte Fit-Rezepte auch finden — wir merken sie temporär in state
+const _FIT_REZEPTE_CACHE_IDS = ['fit-bowl','fit-haehnchen','fit-overnight','fit-lachs','fit-suppe','fit-salat','fit-zoodles','fit-smoothie','fit-buddha','fit-omelett','fit-linsen','fit-quark'];
 
 function kochbuchEigenesAnzeigen(id) {
   const r = kochbuchLaden().find(x => x.id === id);
@@ -6686,16 +9758,96 @@ function kochbuchEigenesAnzeigen(id) {
 
 // ===== SCHWANGERSCHAFT =====
 const SCHWANGERSCHAFT_WOCHEN = [
-  { woche:1, name:'1.-4. Woche', titel:'Befruchtung & Einnistung', baby:'Befruchtete Eizelle nistet sich ein. Größe: weniger als 1 mm.', mama:'Sie merken meist noch nichts. Eventuell leichte Einnistungsblutung.', tun:'Mit Folsäure beginnen (400 µg/Tag) — schützt vor Neuralrohrdefekten!' },
-  { woche:5, name:'5.-8. Woche', titel:'Embryo entsteht', baby:'Herz beginnt zu schlagen. Arme und Beine bilden sich. Größe: 1-2 cm.', mama:'Übelkeit, Müdigkeit, empfindliche Brüste, häufiges Wasserlassen.', tun:'Erste Vorsorgeuntersuchung beim Frauenarzt. Mutterpass anlegen lassen.' },
-  { woche:9, name:'9.-12. Woche', titel:'Aus Embryo wird Fetus', baby:'Alle Organe vorhanden. Finger und Zehen erkennbar. Größe: 5-8 cm.', mama:'Übelkeit lässt oft nach. Bauch wächst leicht. Stimmungsschwankungen.', tun:'Erstes Trimester-Screening (Ersttrimesterscreening) - optional.' },
-  { woche:13, name:'13.-16. Woche', titel:'2. Trimester beginnt', baby:'Geschlechtsorgane entwickelt. Baby beginnt zu schlucken. Größe: 12-16 cm.', mama:'Energie kehrt zurück. Bauch deutlich sichtbar. Gewichtszunahme.', tun:'Schwangerschaft Arbeitgeber melden. Mutterschutz (6 Wochen vor + 8 Wochen nach Geburt) klären.' },
-  { woche:17, name:'17.-20. Woche', titel:'Erste Bewegungen', baby:'Erste Tritte spürbar. Geschlecht im Ultraschall erkennbar. Größe: 20-25 cm.', mama:'Babybauch deutlich. Erste Kindsbewegungen spürbar (ab 18.-20. Woche).', tun:'Großer Ultraschall (2. Vorsorge). Hebamme suchen — frühzeitig!' },
-  { woche:21, name:'21.-24. Woche', titel:'Sinne entwickeln sich', baby:'Hört Geräusche. Reagiert auf Licht. Größe: 27-30 cm, Gewicht: 500-700 g.', mama:'Bauch deutlich gewachsen. Eventuell Rückenschmerzen, Wassereinlagerungen.', tun:'Geburtsvorbereitungskurs buchen. Geburtsklinik anmelden.' },
-  { woche:25, name:'25.-28. Woche', titel:'3. Trimester beginnt', baby:'Augen öffnen sich. Schluckauf möglich. Größe: 35-38 cm, Gewicht: 1 kg.', mama:'Sodbrennen, Atemnot, Schlafprobleme häufig. Wassereinlagerungen.', tun:'Glukosetoleranztest (auf Schwangerschaftsdiabetes). Kliniktasche packen!' },
-  { woche:29, name:'29.-32. Woche', titel:'Baby wird größer', baby:'Trainiert Atmen. Lagert Fett ein. Größe: 40-42 cm, Gewicht: 1,5-2 kg.', mama:'Müdigkeit, Übungswehen möglich. Beckenbodentraining wichtig.', tun:'Mutterschaftsgeld bei Krankenkasse beantragen. Stillkurs anmelden.' },
-  { woche:33, name:'33.-36. Woche', titel:'Endspurt', baby:'Dreht sich in Geburtsposition (Kopf nach unten). Größe: 45-47 cm, 2,5-3 kg.', mama:'Bauch zieht sich. Unwohlsein. Vorbereitung auf Geburt.', tun:'Elterngeld-Antrag vorbereiten. Vaterschaftsanerkennung (wenn unverheiratet).' },
-  { woche:37, name:'37.-40. Woche', titel:'Geburtsbereit', baby:'Vollständig entwickelt. Wartet auf Geburt. Größe: 50-52 cm, 3-3,5 kg.', mama:'Kann jeden Moment losgehen! Senkwehen, eventuell Schleimpfropf-Abgang.', tun:'Tasche bereit, Kontakte griffbereit. Bei Wehen oder Blasensprung in die Klinik!' }
+  {
+    woche:1, name:'1.-4. Woche', titel:'Befruchtung & Einnistung',
+    groesse:'< 1 mm',
+    gewicht:'< 1 g',
+    vergleich:'🌱 Wie ein Mohnkorn',
+    baby:'In dieser Zeit entsteht aus der befruchteten Eizelle eine winzige Zellkugel (Blastozyste), die sich in die Gebärmutter-Schleimhaut einnistet. Aus dieser Zellgruppe wird in den nächsten Wochen Ihr Baby entstehen. Erste Zellen für Gehirn, Wirbelsäule und Herz beginnen sich zu spezialisieren.',
+    mama:'Sie merken meist noch nichts. Eventuell eine leichte Einnistungsblutung (rosa Schmierblutung) um Tag 7-10 nach der Befruchtung. Ein Test schlägt erst ab der ausbleibenden Regelblutung an. Erste Anzeichen: empfindliche Brüste, leichte Übelkeit, Geruchsempfindlichkeit, Müdigkeit.',
+    tun:'Folsäure 400-800 µg/Tag — schützt vor Neuralrohrdefekten beim Baby. Alkohol komplett weglassen, Rauchen stoppen. Kein Sushi, kein rohes Fleisch, kein Rohmilchkäse. Frauenarzt-Termin vereinbaren.'
+  },
+  {
+    woche:5, name:'5.-8. Woche', titel:'Embryo entsteht',
+    groesse:'5-15 mm',
+    gewicht:'1-3 g',
+    vergleich:'🫐 Wie eine Heidelbeere',
+    baby:'Das winzige Herz beginnt in der 5. Woche zu schlagen — bei einer Vorsorge oft schon mit Doppler hörbar. Arme und Beine entwickeln sich aus winzigen "Knospen". Nervensystem, Augen, Ohren beginnen Form anzunehmen. Bis Woche 8 sind alle wichtigen Organe in Grundform angelegt.',
+    mama:'Übelkeit (vor allem morgens), starke Müdigkeit, empfindliche Brüste, häufiges Wasserlassen, Geruchs- und Geschmacksveränderungen. Stimmungsschwankungen durch Hormone. Manchmal Heißhunger oder Abneigungen gegen Lebensmittel. Erstes Trimester ist oft das anstrengendste.',
+    tun:'Erste Vorsorgeuntersuchung beim Frauenarzt. Mutterpass anlegen lassen — er begleitet Sie die ganze Schwangerschaft. Folsäure weiter nehmen. Hebamme suchen (oft Wartelisten — frühzeitig!). Bei starker Übelkeit: Ingwer-Tee, kleine Mahlzeiten, Zwieback morgens vor dem Aufstehen.'
+  },
+  {
+    woche:9, name:'9.-12. Woche', titel:'Aus Embryo wird Fetus',
+    groesse:'2-6 cm',
+    gewicht:'2-14 g',
+    vergleich:'🍓 Wie eine Erdbeere bis Pflaume',
+    baby:'Alle Organe sind angelegt — ab jetzt heißt es Fetus statt Embryo. Finger und Zehen sind erkennbar, Fingernägel beginnen zu wachsen. Das Geschlecht ist genetisch festgelegt, aber im Ultraschall noch nicht sicher erkennbar. Das Baby bewegt sich bereits — Sie spüren es noch nicht.',
+    mama:'Übelkeit lässt oft am Ende des ersten Trimesters nach. Bauch wächst leicht — erste Schwangerschaftshosen können bequem sein. Hormonbedingt: Stimmungsschwankungen, vergrößerte Brüste, ggf. dunklere Haut an Brustwarzen. Risiko einer Fehlgeburt sinkt nach Woche 12 deutlich.',
+    tun:'Optional: Ersttrimester-Screening (Nackenfaltenmessung + Blutwerte) zur Risiko-Einschätzung Chromosomenstörungen. Falls bei der Arbeit Risikofaktoren (Chemie, Heben, Strahlung): Arbeitgeber informieren. Schwangerschafts-Gymnastik buchen — Krankenkassen zahlen oft.'
+  },
+  {
+    woche:13, name:'13.-16. Woche', titel:'2. Trimester beginnt',
+    groesse:'7-12 cm',
+    gewicht:'25-100 g',
+    vergleich:'🍋 Wie eine Zitrone',
+    baby:'Geschlechtsorgane sind soweit entwickelt, dass das Geschlecht im Ultraschall erkennbar wird. Das Baby kann schlucken und Daumen lutschen. Lanugo-Haare (feiner Flaum) bedecken den Körper. Es kann hören — Eltern können beruhigend mit dem Bauch reden.',
+    mama:'Energie kehrt zurück — das "goldene Trimester" beginnt. Bauch deutlich sichtbar. Gewichtszunahme: insgesamt 1-3 kg bisher. Haut, Haare und Nägel oft besonders schön ("Schwangerschafts-Glow"). Manche merken Sodbrennen oder Verstopfung.',
+    tun:'Schwangerschaft Arbeitgeber schriftlich melden mit Geburtstermin. Mutterschutzfristen klären (6 Wochen vor + 8 Wochen nach Geburt, 12 Wochen nach Mehrlingen/Frühgeburten). Reise-Planung: bis Woche 32 in der Regel unproblematisch. Mama-Yoga oder Aquafit beginnen.'
+  },
+  {
+    woche:17, name:'17.-20. Woche', titel:'Erste Bewegungen spüren',
+    groesse:'13-25 cm',
+    gewicht:'150-350 g',
+    vergleich:'🍑 Wie eine Mango',
+    baby:'Sie spüren die ersten Tritte und Stupser — anfangs wie Blubbern im Bauch, später deutlicher. Beim Zweitkind oft schon ab Woche 16. Geschlecht ist sicher erkennbar. Baby trainiert Schlucken, Greifen, Bewegung. Es schläft 12-14 Stunden pro Tag, oft im Zyklus mit der Mama.',
+    mama:'Babybauch ist deutlich sichtbar. Erste Schwangerschafts-Kleidung wird nötig. Manche spüren Schmerzen im Becken oder Rücken durch wachsenden Bauch und Hormone. Wassereinlagerungen in den Beinen können beginnen. Gewichtszunahme ca. 4-6 kg insgesamt.',
+    tun:'Großer Ultraschall (2. Vorsorge, Feindiagnostik): kompletter Organ-Check. Hebamme für Nachsorge buchen (10 Hausbesuche nach Geburt kostenlos!). Geburtsklinik besichtigen — Termine 1-3 Monate Vorlauf. Kindergeld-Antrag schon ausfüllen (kann nach Geburt sofort eingereicht werden).'
+  },
+  {
+    woche:21, name:'21.-24. Woche', titel:'Sinne entwickeln sich',
+    groesse:'26-32 cm',
+    gewicht:'400-700 g',
+    vergleich:'🥭 Wie eine Papaya',
+    baby:'Augenlider trennen sich — Baby kann blinzeln. Es hört Geräusche von außen deutlich: Stimmen, Musik, Geräusche. Reagiert auf Licht durch Bewegungen. Fingerabdrücke entwickeln sich. Erste Lungenbläschen entstehen (aber Lunge noch nicht funktionsfähig).',
+    mama:'Bauch deutlich gewachsen. Rückenschmerzen häufig — Bauchgurt hilft. Stimmungs-Hochs und Tiefs durch Hormone normal. Wassereinlagerungen, vor allem in Knöcheln + Händen. Schlaf wird schwieriger — Seitenschläferkissen ist die beste Investition.',
+    tun:'Geburtsvorbereitungskurs buchen (Termine 5-7. Monat). Geburtsklinik anmelden. Stillkurs einplanen — Krankenkassen zahlen. Beckenbodentraining starten — verhindert Probleme nach Geburt. Reisepläne ggf. anpassen (Flug nach Woche 28 oft nur mit Attest).'
+  },
+  {
+    woche:25, name:'25.-28. Woche', titel:'3. Trimester beginnt',
+    groesse:'34-38 cm',
+    gewicht:'800-1100 g',
+    vergleich:'🥦 Wie ein Blumenkohl',
+    baby:'Augen öffnen sich — Baby kann hell und dunkel unterscheiden. Schluckauf ist häufig spürbar (kleine rhythmische Stöße). Schreckreflex entwickelt. Schmeckt Fruchtwasser — Geschmacksvorlieben prägen sich. Bei Frühgeburt jetzt überlebensfähig mit intensiver Klinikbetreuung.',
+    mama:'Sodbrennen häufig durch verdrängten Magen. Atemnot bei Anstrengung. Schlafprobleme, häufiges Aufstehen nachts. Übungswehen (Braxton-Hicks) — unregelmäßig, schmerzlos, normal. Beine schwerer, Wassereinlagerungen mehr. Insgesamt schon 7-10 kg zugenommen.',
+    tun:'Glukosetoleranz-Test (Schwangerschaftsdiabetes) — zwischen 24-28 Woche. Kliniktasche packen (siehe Checkliste in der App!). Vorname-Auswahl, Erstausstattung kaufen (Kinderwagen, Babybett, Tragetuch). Antrag auf Mutterschaftsgeld bei Krankenkasse vorbereiten.'
+  },
+  {
+    woche:29, name:'29.-32. Woche', titel:'Baby wird größer',
+    groesse:'39-43 cm',
+    gewicht:'1300-1800 g',
+    vergleich:'🍍 Wie eine Ananas',
+    baby:'Baby trainiert das Atmen — bewegt Brustkorb rhythmisch. Lagert Fett ein für die Wärme nach der Geburt. Knochen härten aus. Tritte werden kraftvoller, können Mama nachts wecken. Baby unterscheidet jetzt Mamas Stimme von anderen — beruhigt sich beim Hören.',
+    mama:'Müdigkeit kehrt zurück. Übungswehen häufiger. Beckenbodenmuskulatur trainieren — beugt Inkontinenz vor. Kurzatmigkeit, weil Baby die Lunge nach oben drückt. Hämorrhoiden + Krampfadern möglich (Stützstrümpfe helfen). Hebamme bietet jetzt Wehen-Vorbereitung an.',
+    tun:'Mutterschaftsgeld bei Krankenkasse beantragen (bis 13€/Tag zusätzlich zum Lohn). Stillkurs besuchen. Pucken üben (Schlaftrick für Babys). Familienbett-Konzept überlegen. Bei Beruf: Mutterschutz beginnt 6 Wochen vor Geburt automatisch.'
+  },
+  {
+    woche:33, name:'33.-36. Woche', titel:'Endspurt — Baby bezieht Stellung',
+    groesse:'44-48 cm',
+    gewicht:'2000-2800 g',
+    vergleich:'🍈 Wie eine Honigmelone',
+    baby:'Baby dreht sich in die Geburtsposition — Kopf nach unten. Bei Steißlage manchmal noch in Woche 36 Wendung möglich. Lunge entwickelt sich final. Bewegungen weniger, da kein Platz mehr. Schläft mehr. Fast geburtsreif — könnte schon zur Welt kommen.',
+    mama:'Bauch fühlt sich groß und schwer an. Bewegung wird mühsam. Übungswehen werden stärker. Senkwehen können beginnen — Baby rutscht ins Becken. Schlaf nur noch auf Seite gut möglich. Wassereinlagerungen. Ungeduldigkeit normal — Endspurt-Stimmung.',
+    tun:'Elterngeld-Antrag fertigstellen — Frist: innerhalb 3 Monate nach Geburt. Vaterschafts-Anerkennung beim Standesamt (wenn unverheiratet). Vorname festlegen + bei Geburt mitteilen. Kontakte für Notfall griffbereit (Klinik, Hebamme, Notruf 112).'
+  },
+  {
+    woche:37, name:'37.-40. Woche', titel:'Geburtsbereit',
+    groesse:'48-52 cm',
+    gewicht:'2900-3500 g',
+    vergleich:'🎃 Wie ein kleiner Kürbis',
+    baby:'Vollständig entwickelt. Ab Woche 37 nicht mehr Frühgeburt. Lungen fertig. Verdauungssystem bereit. Fingernägel reichen über die Fingerspitzen. Lanugo (Flaum) verschwindet. Käseschmiere (Schutzschicht) löst sich. Wartet auf den Startschuss.',
+    mama:'Kann jeden Moment losgehen! Senkwehen werden regelmäßiger. Schleimpfropf-Abgang möglich (klare oder bräunliche Schleimablösung, "Zeichnen"). Blasensprung kann passieren (Fruchtwasser-Abgang). Spürbare Wehen kommen in regelmäßigen Abständen — alle 5-10 Min = Klinik!',
+    tun:'Tasche bereit, Kontakte am Handy gespeichert. Bei regelmäßigen Wehen (alle 5-10 Min, mind. 30 Sek dauernd) oder Blasensprung in die Klinik! Bei starkem Bluten oder fehlenden Babybewegungen >2 h: Sofort Klinik! Geburts-Termine verschieben sich oft um ±2 Wochen — Gelassenheit.'
+  }
 ];
 
 const SCHWANGERSCHAFT_BEHOERDEN = [
@@ -6714,10 +9866,329 @@ const SCHWANGERSCHAFT_BEHOERDEN = [
 function schwangerschaftWocheWaehlen(w) { state.schwangerschaftWoche = w; render(); }
 function schwangerschaftTabWaehlen(t) { state.schwangerschaftTab = t; render(); }
 
+// ===== FOTO-ALBUM (Fotos auf dem Gerät, gespeichert in IndexedDB) =====
+let _albumDB = null;
+function albumDBOeffnen() {
+  return new Promise((resolve, reject) => {
+    if (_albumDB) return resolve(_albumDB);
+    const req = indexedDB.open('familienapp-album', 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('fotos')) db.createObjectStore('fotos', { keyPath: 'id' });
+    };
+    req.onsuccess = e => { _albumDB = e.target.result; resolve(_albumDB); };
+    req.onerror = () => reject(req.error);
+  });
+}
+async function albumFotosLaden() {
+  const db = await albumDBOeffnen();
+  return new Promise(resolve => {
+    const req = db.transaction('fotos', 'readonly').objectStore('fotos').getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => resolve([]);
+  });
+}
+async function albumFotoSpeichern(foto) {
+  const db = await albumDBOeffnen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('fotos', 'readwrite');
+    tx.objectStore('fotos').put(foto);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function albumFotoLoeschen(id) {
+  const db = await albumDBOeffnen();
+  return new Promise(resolve => {
+    const tx = db.transaction('fotos', 'readwrite');
+    tx.objectStore('fotos').delete(id);
+    tx.oncomplete = resolve;
+    tx.onerror = resolve;
+  });
+}
+
+// Foto vor dem Speichern verkleinern — spart Speicherplatz
+function albumBildKomprimieren(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 1280;
+        let w = img.width, h = img.height;
+        if (w > max || h > max) {
+          if (w > h) { h = Math.round(h * max / w); w = max; }
+          else { w = Math.round(w * max / h); h = max; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function albumUpload(input) {
+  const dateien = Array.from(input.files || []);
+  if (!dateien.length) return;
+  let ok = 0;
+  for (const file of dateien) {
+    if (!file.type.startsWith('image/')) continue;
+    try {
+      const bild = await albumBildKomprimieren(file);
+      await albumFotoSpeichern({
+        id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+        bild, titel: file.name.replace(/\.[^.]+$/, ''), datum: new Date().toISOString()
+      });
+      ok++;
+    } catch (e) { /* einzelnes Foto übersprungen */ }
+  }
+  input.value = '';
+  toast(ok > 0 ? `✓ ${ok} Foto${ok > 1 ? 's' : ''} gespeichert` : '⚠️ Kein Foto gespeichert');
+  albumGridAktualisieren();
+}
+
+function renderAlbum() {
+  setTimeout(() => albumGridAktualisieren(), 50);
+  return `
+  <div class="section-title">📷 Familien-Album</div>
+  <p class="section-sub">Eure schönsten Momente — sicher auf diesem Gerät gespeichert</p>
+  <label class="btn btn-primary" style="display:block;text-align:center;cursor:pointer;margin-bottom:.6rem">
+    📷 Fotos hinzufügen
+    <input type="file" accept="image/*" multiple onchange="albumUpload(this)" style="display:none" />
+  </label>
+  <div class="info-box blau" style="font-size:.8rem"><span class="ib-icon">🔒</span><div class="ib-text">Deine Fotos bleiben nur auf diesem Gerät und werden nirgends hochgeladen. Beim Wechsel des Handys werden sie nicht mit übertragen.</div></div>
+  <div id="album-grid" style="margin-top:1rem"><div class="loading-spinner"><div class="spinner"></div><span>Album wird geladen…</span></div></div>`;
+}
+
+async function albumGridAktualisieren() {
+  const c = el('album-grid');
+  if (!c) return;
+  const fotos = (await albumFotosLaden()).sort((a, b) => (b.datum || '').localeCompare(a.datum || ''));
+  if (!fotos.length) {
+    c.innerHTML = '<div class="info-box lila"><span class="ib-icon">📷</span><div class="ib-text"><strong>Noch keine Fotos.</strong> Tippe oben auf „Fotos hinzufügen", um euer Album zu starten.</div></div>';
+    return;
+  }
+  c.innerHTML = '<div style="font-size:.78rem;color:var(--g500);margin-bottom:.5rem">' + fotos.length + ' Foto' + (fotos.length > 1 ? 's' : '') + ' im Album</div>'
+    + '<div class="album-grid">' + fotos.map(f => `
+    <div class="album-foto">
+      <img src="${f.bild}" alt="${esc(f.titel || 'Foto')}" loading="lazy" onclick="albumVollbild('${f.id}')" />
+      <button class="album-foto-del" onclick="albumLoeschenBestaetigen('${f.id}')">✕</button>
+    </div>`).join('') + '</div>';
+}
+
+async function albumVollbild(id) {
+  const f = (await albumFotosLaden()).find(x => x.id === id);
+  if (!f) return;
+  let o = document.getElementById('album-modal');
+  if (o) o.remove();
+  o = document.createElement('div');
+  o.id = 'album-modal';
+  o.className = 'album-modal';
+  o.onclick = () => o.remove();
+  o.innerHTML = `<button class="album-modal-close">✕</button><img src="${f.bild}" alt="${esc(f.titel || '')}" />`;
+  document.body.appendChild(o);
+}
+
+async function albumLoeschenBestaetigen(id) {
+  if (!confirm('Dieses Foto wirklich löschen?')) return;
+  await albumFotoLoeschen(id);
+  toast('✓ Foto gelöscht');
+  albumGridAktualisieren();
+}
+
+// ===== KONTAKTE =====
+const KONTAKT_KATS = [
+  { id:'familie',  label:'Familie & Freunde',   icon:'👨‍👩‍👧', farbe:'#EC4899' },
+  { id:'arzt',     label:'Ärzte & Gesundheit',  icon:'🩺',      farbe:'#DC2626' },
+  { id:'schule',   label:'Schule & Kita',       icon:'🎒',      farbe:'#2563EB' },
+  { id:'notfall',  label:'Notfall & Wichtiges', icon:'🆘',      farbe:'#B91C1C' },
+  { id:'sonstige', label:'Sonstige',            icon:'📇',      farbe:'#7C3AED' }
+];
+function kontakteLaden() { try { return JSON.parse(localStorage.getItem('familienapp_kontakte') || '[]'); } catch { return []; } }
+function kontakteSpeichern(l) { try { localStorage.setItem('familienapp_kontakte', JSON.stringify(l)); } catch { toast('⚠️ Speicherfehler'); } }
+
+function kontaktHinzu() {
+  const name = el('kontakt-name')?.value.trim();
+  if (!name) { toast('⚠️ Bitte einen Namen eingeben'); el('kontakt-name')?.focus(); return; }
+  const k = {
+    id: Date.now(),
+    name,
+    kategorie: el('kontakt-kat')?.value || 'sonstige',
+    telefon: el('kontakt-tel')?.value.trim() || '',
+    email: el('kontakt-email')?.value.trim() || '',
+    notiz: el('kontakt-notiz')?.value.trim() || ''
+  };
+  const l = kontakteLaden();
+  l.push(k);
+  kontakteSpeichern(l);
+  toast('✓ Kontakt gespeichert');
+  render();
+}
+function kontaktLoeschen(id) {
+  if (!confirm('Diesen Kontakt wirklich löschen?')) return;
+  kontakteSpeichern(kontakteLaden().filter(k => k.id !== id));
+  toast('✓ Kontakt gelöscht');
+  render();
+}
+
+function renderKontakte() {
+  const kontakte = kontakteLaden();
+  return `
+  <div class="section-title">📇 Kontakte</div>
+  <p class="section-sub">Alle wichtigen Nummern der Familie an einem Ort</p>
+
+  <div class="info-box" style="background:#FEE2E2;border:1px solid #FCA5A5">
+    <span class="ib-icon">🆘</span>
+    <div class="ib-text"><strong>Notruf 112</strong> (Feuerwehr & Rettung) · <strong>110</strong> (Polizei) · <strong>116117</strong> (ärztlicher Bereitschaftsdienst) · <strong>116111</strong> (Kinder-Sorgentelefon)</div>
+  </div>
+
+  <div class="card" style="margin:1rem 0">
+    <div style="font-weight:800;margin-bottom:.65rem">➕ Neuen Kontakt anlegen</div>
+    <div class="reg-feld"><label class="reg-label">Name</label><input id="kontakt-name" class="reg-input" type="text" placeholder="z. B. Kinderärztin Dr. Müller" autocomplete="off" /></div>
+    <div class="grid-2">
+      <div class="reg-feld"><label class="reg-label">Kategorie</label>
+        <select id="kontakt-kat" class="reg-select">${KONTAKT_KATS.map(k => `<option value="${k.id}">${k.icon} ${k.label}</option>`).join('')}</select>
+      </div>
+      <div class="reg-feld"><label class="reg-label">Telefon</label><input id="kontakt-tel" class="reg-input" type="tel" placeholder="z. B. 030 1234567" autocomplete="off" /></div>
+    </div>
+    <div class="reg-feld"><label class="reg-label">E-Mail (optional)</label><input id="kontakt-email" class="reg-input" type="email" placeholder="name@beispiel.de" autocomplete="off" /></div>
+    <div class="reg-feld"><label class="reg-label">Notiz (optional)</label><input id="kontakt-notiz" class="reg-input" type="text" placeholder="z. B. Sprechzeiten, Adresse" autocomplete="off" /></div>
+    <button class="btn btn-primary" style="width:100%" onclick="kontaktHinzu()">+ Kontakt speichern</button>
+  </div>
+
+  ${kontakte.length === 0 ? `
+  <div class="info-box lila"><span class="ib-icon">📇</span><div class="ib-text"><strong>Noch keine Kontakte.</strong> Lege oben Arzt, Schule, Familie oder wichtige Notfall-Kontakte an — dann sind sie immer griffbereit.</div></div>`
+  : KONTAKT_KATS.map(kat => {
+      const inKat = kontakte.filter(k => k.kategorie === kat.id);
+      if (!inKat.length) return '';
+      return `
+      <div class="block-title" style="margin-top:1.25rem">${kat.icon} ${kat.label}</div>
+      ${inKat.map(k => `
+        <div class="kontakt-karte" style="border-left:4px solid ${kat.farbe}">
+          <div class="kontakt-karte-info">
+            <div class="kontakt-karte-name">${esc(k.name)}</div>
+            ${k.telefon ? `<div class="kontakt-karte-zeile">📞 ${esc(k.telefon)}</div>` : ''}
+            ${k.email ? `<div class="kontakt-karte-zeile">✉️ ${esc(k.email)}</div>` : ''}
+            ${k.notiz ? `<div class="kontakt-karte-zeile" style="color:var(--g500)">📝 ${esc(k.notiz)}</div>` : ''}
+          </div>
+          <div class="kontakt-karte-aktionen">
+            ${k.telefon ? `<a href="tel:${esc(k.telefon.replace(/\s/g, ''))}" class="kontakt-btn" style="background:${kat.farbe}" title="Anrufen">📞</a>` : ''}
+            ${k.email ? `<a href="mailto:${esc(k.email)}" class="kontakt-btn" style="background:#64748B" title="E-Mail">✉️</a>` : ''}
+            <button class="kontakt-btn kontakt-btn-del" onclick="kontaktLoeschen(${k.id})" title="Löschen">✕</button>
+          </div>
+        </div>`).join('')}`;
+    }).join('')}`;
+}
+
+// ===== ZYKLUSKALENDER =====
+function zyklusLaden() { try { return JSON.parse(localStorage.getItem('familienapp_zyklus')) || null; } catch { return null; } }
+function zyklusSpeichern(d) { try { localStorage.setItem('familienapp_zyklus', JSON.stringify(d)); } catch {} }
+
+function zyklusBerechnen() {
+  const datum = el('zyklus-datum')?.value;
+  const laenge = parseInt(el('zyklus-laenge')?.value) || 28;
+  const dauer = parseInt(el('zyklus-dauer')?.value) || 5;
+  if (!datum) { toast('⚠️ Bitte den ersten Tag der letzten Periode eingeben'); return; }
+  zyklusSpeichern({
+    letztePeriode: datum,
+    zyklusLaenge: Math.max(20, Math.min(45, laenge)),
+    periodenDauer: Math.max(2, Math.min(10, dauer))
+  });
+  toast('✓ Zyklus gespeichert');
+  render();
+}
+function zyklusZuruecksetzen() {
+  if (!confirm('Zyklus-Daten wirklich löschen?')) return;
+  localStorage.removeItem('familienapp_zyklus');
+  render();
+}
+
+function zyklusFormular(d) {
+  return `
+  <div class="card" style="margin-top:1rem">
+    <div style="font-weight:800;margin-bottom:.65rem">🌸 ${d ? 'Zyklus-Daten aktualisieren' : 'Zyklus eintragen'}</div>
+    <div class="reg-feld">
+      <label class="reg-label">Erster Tag der letzten Periode</label>
+      <input type="date" id="zyklus-datum" class="reg-input" value="${d ? d.letztePeriode : ''}" />
+    </div>
+    <div class="grid-2">
+      <div class="reg-feld">
+        <label class="reg-label">Zykluslänge (Tage)</label>
+        <input type="number" id="zyklus-laenge" class="reg-input" min="20" max="45" value="${d ? d.zyklusLaenge : 28}" />
+      </div>
+      <div class="reg-feld">
+        <label class="reg-label">Dauer der Periode (Tage)</label>
+        <input type="number" id="zyklus-dauer" class="reg-input" min="2" max="10" value="${d ? d.periodenDauer : 5}" />
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:.4rem" onclick="zyklusBerechnen()">${d ? '✓ Aktualisieren' : '✓ Zyklus berechnen'}</button>
+    ${d ? '<button class="btn btn-outline btn-sm" style="width:100%;margin-top:.5rem" onclick="zyklusZuruecksetzen()">Daten löschen</button>' : ''}
+  </div>`;
+}
+
+function renderZykluskalender() {
+  const d = zyklusLaden();
+  if (!d) {
+    return `
+    <div class="info-box lila"><span class="ib-icon">🌸</span><div class="ib-text"><strong>Zykluskalender:</strong> Behalte deinen Zyklus im Blick — hilfreich bei Kinderwunsch und um deinen Körper besser zu verstehen. Deine Daten bleiben nur auf diesem Gerät.</div></div>
+    ${zyklusFormular(null)}
+    <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Der Zykluskalender dient der <strong>Orientierung</strong> und ist <strong>keine Verhütungsmethode</strong>. Jeder Zyklus ist unterschiedlich.</div></div>`;
+  }
+  const tag = 86400000;
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  const lp = new Date(d.letztePeriode + 'T00:00:00');
+  const tageSeit = Math.floor((heute - lp) / tag);
+  const zyklen = tageSeit >= 0 ? Math.floor(tageSeit / d.zyklusLaenge) : 0;
+  const zyklusStart = new Date(lp.getTime() + zyklen * d.zyklusLaenge * tag);
+  const zyklustag = Math.floor((heute - zyklusStart) / tag) + 1;
+  const naechstePeriode = new Date(zyklusStart.getTime() + d.zyklusLaenge * tag);
+  const eisprungDatum = new Date(zyklusStart.getTime() + (d.zyklusLaenge - 14 - 1) * tag);
+  const fruchtbarVon = new Date(eisprungDatum.getTime() - 5 * tag);
+  const fruchtbarBis = new Date(eisprungDatum.getTime() + 1 * tag);
+  const fmt = dt => dt.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'short' });
+  const tageBisPeriode = Math.round((naechstePeriode - heute) / tag);
+  const istFruchtbar = heute >= fruchtbarVon && heute <= fruchtbarBis;
+  const istPeriode = zyklustag >= 1 && zyklustag <= d.periodenDauer;
+
+  let statusBox;
+  if (istPeriode) {
+    statusBox = '<div class="info-box" style="background:#FEE2E2;border:1px solid #FCA5A5"><span class="ib-icon">🩸</span><div class="ib-text"><strong>Periode:</strong> Du bist vermutlich gerade in den ersten Zyklustagen (Tag ' + zyklustag + ').</div></div>';
+  } else if (istFruchtbar) {
+    statusBox = '<div class="info-box" style="background:#DCFCE7;border:1px solid #86EFAC"><span class="ib-icon">🌱</span><div class="ib-text"><strong>Fruchtbare Tage:</strong> Heute ist die Wahrscheinlichkeit, schwanger zu werden, erhöht.</div></div>';
+  } else {
+    statusBox = '<div class="info-box lila"><span class="ib-icon">📅</span><div class="ib-text">Heute ist <strong>Zyklustag ' + zyklustag + '</strong> von ' + d.zyklusLaenge + '.</div></div>';
+  }
+
+  const statKarte = (icon, titel, wert) => `
+    <div style="flex:1;min-width:140px;background:white;border:1px solid #E5E7EB;border-radius:12px;padding:.75rem .85rem">
+      <div style="font-size:1.4rem">${icon}</div>
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--g500);font-weight:800;margin-top:.2rem">${titel}</div>
+      <div style="font-size:.92rem;font-weight:800;margin-top:.1rem">${wert}</div>
+    </div>`;
+
+  return `
+  ${statusBox}
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0">
+    ${statKarte('🔵', 'Zyklustag', zyklustag + ' / ' + d.zyklusLaenge)}
+    ${statKarte('🩸', 'Nächste Periode', fmt(naechstePeriode) + ' (in ' + tageBisPeriode + ' T.)')}
+    ${statKarte('🌱', 'Fruchtbare Tage', fmt(fruchtbarVon) + ' – ' + fmt(fruchtbarBis))}
+    ${statKarte('⭐', 'Eisprung (ca.)', fmt(eisprungDatum))}
+  </div>
+  ${zyklusFormular(d)}
+  <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Alle Angaben sind <strong>Schätzungen zur Orientierung</strong> und keine Verhütungsmethode. Bei unregelmäßigem Zyklus, Kinderwunsch über längere Zeit oder Beschwerden hilft die Frauenärztin weiter.</div></div>`;
+}
+
 function renderSchwangerschaft() {
   const tab = state.schwangerschaftTab || 'wochen';
   const tabs = [
     {id:'wochen', label:'Wochenüberblick'},
+    {id:'zyklus', label:'Zykluskalender'},
     {id:'untersuchungen', label:'Untersuchungen'},
     {id:'ernaehrung', label:'Ernährung'},
     {id:'stillen', label:'Stillen'},
@@ -6728,6 +10199,7 @@ function renderSchwangerschaft() {
 
   let inhalt = '';
   if (tab === 'wochen') inhalt = renderSchwangerschaftWochen();
+  else if (tab === 'zyklus') inhalt = renderZykluskalender();
   else if (tab === 'untersuchungen') inhalt = renderSchwangerschaftUntersuchungen();
   else if (tab === 'ernaehrung') inhalt = renderSchwangerschaftErnaehrung();
   else if (tab === 'stillen') inhalt = renderSchwangerschaftStillen();
@@ -6775,20 +10247,36 @@ function renderSchwangerschaftWochen() {
     </button>`).join('')}
   </div>
   <div class="ssw-detail">
-    <div style="height:200px;background-image:url('${wochenBilder[aktuelleWoche.woche]||wochenBilder[1]}');background-size:cover;background-position:center;border-radius:var(--r);margin-bottom:1rem"></div>
-    <h3 style="font-size:1.2rem;margin-bottom:.75rem">${esc(aktuelleWoche.name)}: ${esc(aktuelleWoche.titel)}</h3>
+    <div style="height:220px;background-image:url('${wochenBilder[aktuelleWoche.woche]||wochenBilder[1]}');background-size:cover;background-position:center;border-radius:var(--r-lg);margin-bottom:1rem;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background:linear-gradient(0deg, rgba(0,0,0,.45), transparent 60%)"></div>
+      <div style="position:absolute;bottom:.85rem;left:1rem;right:1rem;color:white">
+        <div style="font-size:1.3rem;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,.5)">${esc(aktuelleWoche.name)}</div>
+        <div style="font-size:.95rem;font-weight:600;opacity:.95;text-shadow:0 2px 4px rgba(0,0,0,.5)">${esc(aktuelleWoche.titel)}</div>
+      </div>
+    </div>
+
+    ${aktuelleWoche.vergleich ? `
+    <div class="ssw-groessen-karte">
+      <div class="ssw-groessen-emoji">${aktuelleWoche.vergleich.split(' ')[0]}</div>
+      <div class="ssw-groessen-text">
+        <div class="ssw-groessen-titel">So groß ist dein Baby:</div>
+        <div class="ssw-groessen-vergleich">${esc(aktuelleWoche.vergleich.replace(/^[^\s]+\s/, ''))}</div>
+        <div class="ssw-groessen-masse">📏 ${esc(aktuelleWoche.groesse || '–')} &nbsp;·&nbsp; ⚖️ ${esc(aktuelleWoche.gewicht || '–')}</div>
+      </div>
+    </div>` : ''}
+
     <div class="grid-2">
       <div class="card" style="border-left:4px solid #EC4899">
-        <div style="font-weight:800;margin-bottom:.4rem">Baby entwickelt sich</div>
-        <p style="font-size:.85rem;line-height:1.55">${esc(aktuelleWoche.baby)}</p>
+        <div style="font-weight:800;margin-bottom:.4rem;color:#BE185D">👶 Baby entwickelt sich</div>
+        <p style="font-size:.88rem;line-height:1.6;color:#334155">${esc(aktuelleWoche.baby)}</p>
       </div>
       <div class="card" style="border-left:4px solid #4F46E5">
-        <div style="font-weight:800;margin-bottom:.4rem">Mama spürt</div>
-        <p style="font-size:.85rem;line-height:1.55">${esc(aktuelleWoche.mama)}</p>
+        <div style="font-weight:800;margin-bottom:.4rem;color:#4F46E5">🤰 Mama spürt</div>
+        <p style="font-size:.88rem;line-height:1.6;color:#334155">${esc(aktuelleWoche.mama)}</p>
       </div>
     </div>
     <div class="info-box gruen" style="margin-top:1rem">
-      <span class="ib-icon">!</span>
+      <span class="ib-icon">✓</span>
       <div class="ib-text"><strong>Jetzt erledigen:</strong> ${esc(aktuelleWoche.tun)}</div>
     </div>
     <div class="card" style="margin-top:1rem;background:#FEF3C7">
@@ -7043,21 +10531,48 @@ function renderSchwangerschaftVorbereitung() {
 
 // ===== BASTELIDEEN =====
 const BASTELIDEEN = [
-  { titel:'Salzteig herstellen', alter:'ab 3 J.', kat:'klassiker', dauer:'30 Min.', material:'2 Tassen Mehl, 1 Tasse Salz, 1 Tasse Wasser', anleitung:'Mehl + Salz mischen, Wasser dazu, kneten bis Teig glatt ist. Formen, bei 100°C 1-2h trocknen, dann anmalen.', bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
-  { titel:'Papierflieger falten', alter:'ab 5 J.', kat:'papier', dauer:'10 Min.', material:'DIN A4 Blatt', anleitung:'Längs falten, oben Ecken zur Mitte, nochmal Spitze, Flügel falten. Kinder lieben Wettrennen!', bild:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70' },
-  { titel:'Pappmaché-Maske', alter:'ab 5 J.', kat:'klassiker', dauer:'2 Tage', material:'Zeitungspapier, Kleister, Luftballon, Farbe', anleitung:'Ballon mit Pappmaché umkleiden, trocknen, halbieren, anmalen, Augenlöcher schneiden.', bild:'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&q=70' },
-  { titel:'Naturmandala legen', alter:'ab 4 J.', kat:'natur', dauer:'30 Min.', material:'Blätter, Steine, Blüten, Tannenzapfen', anleitung:'Im Wald oder Garten Naturmaterial sammeln. Mandalas legen — kreisförmig, symmetrisch.', bild:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=70' },
-  { titel:'Knete selber machen', alter:'ab 2 J.', kat:'klassiker', dauer:'15 Min.', material:'2 Tassen Mehl, 1 Tasse Salz, 2 EL Öl, 2 Tassen Wasser, Lebensmittelfarbe', anleitung:'Alles in Topf, bei mittlerer Hitze rühren bis Teig fest wird. Abkühlen, kneten, formen.', bild:'https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=400&q=70' },
-  { titel:'Fingerabdruck-Tiere', alter:'ab 3 J.', kat:'malen', dauer:'20 Min.', material:'Fingerfarbe, Papier, schwarzer Stift', anleitung:'Fingerabdruck als Körper, mit Stift Beine, Augen, Ohren ergänzen. Maus, Schmetterling, Marienkäfer.', bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
-  { titel:'Klorollen-Tiere', alter:'ab 4 J.', kat:'recycling', dauer:'30 Min.', material:'leere Klorollen, Buntpapier, Klebstoff, Stifte', anleitung:'Klorolle bemalen oder bekleben. Augen, Ohren, Beine basteln und ankleben. Hase, Eule, Tiger.', bild:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70' },
-  { titel:'Eierkarton-Raupe', alter:'ab 4 J.', kat:'recycling', dauer:'20 Min.', material:'Eierkarton, Pfeifenputzer, Augen, Farbe', anleitung:'Eierkarton-Reihe ausschneiden, anmalen, Pfeifenputzer als Fühler reinstecken, Wackelaugen kleben.', bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
-  { titel:'Schneekugel basteln', alter:'ab 5 J.', kat:'jahreszeit', dauer:'30 Min.', material:'Glas mit Deckel, kleine Figuren, Glitzer, Glycerin, Wasser', anleitung:'Figur am Deckel mit Heißkleber befestigen. Glas mit Wasser+Glitzer+Tropfen Glycerin füllen. Deckel zudrehen, schütteln.', bild:'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=400&q=70' },
-  { titel:'Kastanien-Männchen', alter:'ab 3 J.', kat:'natur', dauer:'30 Min.', material:'Kastanien, Streichhölzer/Zahnstocher, Knete', anleitung:'Kastanien als Kopf+Körper, mit Streichholz verbinden. Kleine Knete-Augen aufkleben.', bild:'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=70' },
-  { titel:'Sandbild', alter:'ab 5 J.', kat:'malen', dauer:'45 Min.', material:'Spezial-Sand bunt, Klebstoff, Pappe', anleitung:'Motiv auf Pappe malen. Erst eine Farbe mit Klebstoff streichen, Sand drüber. Trocknen, nächste Farbe.', bild:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70' },
-  { titel:'Origami-Kranich', alter:'ab 8 J.', kat:'papier', dauer:'20 Min.', material:'Quadratisches Origami-Papier (15x15cm)', anleitung:'Klassische Faltanleitung — siehe YouTube. Kraniche bringen Glück (japanische Tradition).', bild:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70' },
-  { titel:'Filz-Anhänger', alter:'ab 6 J.', kat:'klassiker', dauer:'30 Min.', material:'Filz-Stoff, Schere, Nadel + Faden, Füllung', anleitung:'Form zweimal ausschneiden, mit Knopflochstich nähen, Füllung rein, schließen.', bild:'https://images.unsplash.com/photo-1555212697-194d092e3b8f?w=400&q=70' },
-  { titel:'Murmel-Bahn aus Pappe', alter:'ab 5 J.', kat:'recycling', dauer:'1h', material:'Pappkarton, Klorollen, Klebeband, Murmeln', anleitung:'Klorollen längs halbieren = Rinne. Auf Karton kleben in Schräglage. Verbindungen, Kurven, Looping bauen.', bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
-  { titel:'Pustebild', alter:'ab 4 J.', kat:'malen', dauer:'15 Min.', material:'Tinte, Strohhalm, Papier', anleitung:'Tropfen Tinte aufs Papier. Mit Strohhalm pusten — wachsende Bäume, Spinnenbeine entstehen.', bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' }
+  { titel:'Salzteig herstellen', alter:'ab 3 J.', kat:'klassiker', dauer:'30 Min.', material:'2 Tassen Mehl, 1 Tasse Salz, 1 Tasse Wasser, Backblech, Pinsel + Farben', schritte:['2 Tassen Mehl und 1 Tasse Salz in eine Schüssel geben','1 Tasse warmes Wasser langsam dazugeben','5 Minuten kneten bis der Teig glatt und elastisch ist','Formen ausstechen, mit Strohhalm Loch reinmachen (zum Aufhängen)','Bei 100 °C im Ofen 1–2 Stunden trocknen','Nach Abkühlen mit Wasserfarben anmalen','Mit Klarlack besprühen — hält Jahre'], bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
+  { titel:'Papierflieger falten', alter:'ab 5 J.', kat:'papier', dauer:'10 Min.', material:'DIN A4 Blatt', schritte:['Blatt längs in der Mitte falten, dann wieder öffnen','Beide oberen Ecken zur Mittellinie falten','Die entstandene Spitze nochmal nach unten falten','Erneut zur Mitte falten — schmales Dreieck','Beide Seiten als Flügel nach außen falten','Flügel-Spitzen leicht nach oben biegen — fliegt weiter!','Wettrennen veranstalten — wer fliegt am weitesten?'], bild:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70' },
+  { titel:'Pappmaché-Maske', alter:'ab 5 J.', kat:'klassiker', dauer:'2 Tage', material:'Luftballon, Zeitungspapier, Tapetenkleister, Schere, Pinsel, Farben', schritte:['Luftballon aufblasen, mit Klebeband auf Schüssel stellen','Zeitungspapier in 3 cm breite Streifen reißen','Streifen in Kleister tunken und auf Ballon kleben','Mindestens 4 Schichten überlappend auflegen','24 Stunden trocknen lassen','Ballon zerstechen, Maske halbieren','Augenlöcher und Mund ausschneiden','Mit Acrylfarben anmalen und verzieren'], bild:'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&q=70' },
+  { titel:'Naturmandala legen', alter:'ab 4 J.', kat:'natur', dauer:'30 Min.', material:'Im Wald sammeln: Blätter, Steine, Blüten, Tannenzapfen, Eicheln', schritte:['Mit den Kindern in den Wald oder Park gehen','Verschiedene Naturmaterialien sammeln (in Beutel)','Auf glattem Boden einen Kreis als Mitte legen','Symmetrisch nach außen weitere Ringe legen','Mit Farben und Formen arbeiten — Wechsel im Muster','Foto machen — Mandala bleibt für die Natur','Tipp: jede Jahreszeit andere Materialien'], bild:'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=70' },
+  { titel:'Knete selber machen', alter:'ab 2 J.', kat:'klassiker', dauer:'15 Min.', material:'2 T. Mehl, 1 T. Salz, 2 EL Öl, 2 T. Wasser, 1 EL Zitronensäure, Lebensmittelfarben', schritte:['Alle Zutaten in einen Topf geben','Bei mittlerer Hitze rühren bis ein klumpiger Teig entsteht','Wenn sich der Teig vom Boden löst — fertig','Auf bemehlte Fläche stürzen, abkühlen lassen','In Portionen teilen, Lebensmittelfarbe einkneten','In luftdichten Dosen aufbewahren','Hält 3-4 Monate im Kühlschrank — ungiftig!'], bild:'https://images.unsplash.com/photo-1497440001374-f26997328c1b?w=400&q=70' },
+  { titel:'Fingerabdruck-Tiere', alter:'ab 3 J.', kat:'malen', dauer:'20 Min.', material:'Fingerfarbe, Papier, schwarzer Filzstift, Wasser zum Reinigen', schritte:['Papier vorbereiten, alte Kleidung anziehen','Finger in Fingerfarbe tunken','Auf Papier drücken — wird Tierkörper','Trocknen lassen (5 Min)','Mit Stift Beine, Augen, Schwanz ergänzen','Maus = grauer Daumen + Schwanz','Schmetterling = 2 Daumenabdrücke + Antennen','Marienkäfer = roter Abdruck + schwarze Punkte'], bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
+  { titel:'Klorollen-Tiere', alter:'ab 4 J.', kat:'recycling', dauer:'30 Min.', material:'Leere Klorollen, Buntpapier, Klebstoff, Filzstifte, Wackelaugen', schritte:['Leere Klorollen sammeln','Mit Buntpapier oder Acrylfarbe bemalen','Trocknen lassen','Aus Buntpapier Ohren, Schwanz, Flügel ausschneiden','Mit Klebestift auf Rolle befestigen','Wackelaugen aufkleben (oder mit Stift malen)','Mit Stift Nase, Mund ergänzen — fertig Hase/Eule/Tiger'], bild:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70' },
+  { titel:'Eierkarton-Raupe', alter:'ab 4 J.', kat:'recycling', dauer:'20 Min.', material:'Eierkarton, Pfeifenputzer, Wackelaugen, grüne/bunte Farbe', schritte:['Eierkarton längs in eine Reihe schneiden (5-6 Becher)','Mit grüner Farbe bemalen, trocknen lassen','Pfeifenputzer als Fühler in vorderste Spitze stecken','Wackelaugen vorne aufkleben','Mit schwarzem Stift Punkte für Augen und Mund','Optional: bunte Tupfen auf den Rücken malen'], bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
+  { titel:'Schneekugel basteln', alter:'ab 5 J.', kat:'jahreszeit', dauer:'30 Min.', material:'Einmachglas mit Deckel, kleine Figur, Glitzer, Glycerin (Apotheke), destilliertes Wasser, Heißkleber', schritte:['Figur (Tier, Tanne, Haus) auswählen — wasserfest','Figur mit Heißkleber innen am Deckel befestigen','Glas mit destilliertem Wasser füllen (bis kurz unter Rand)','1 TL Glycerin dazugeben — Glitzer fällt langsamer','1-2 EL Glitzer ins Wasser geben','Deckel fest zudrehen, mit Klebstoff abdichten','Schütteln und genießen'], bild:'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=400&q=70' },
+  { titel:'Kastanien-Männchen', alter:'ab 3 J.', kat:'natur', dauer:'30 Min.', material:'Kastanien (Herbst), Streichhölzer/Zahnstocher, kleine Knete-Stücke, kleiner Bohrer (Erwachsener!)', schritte:['Kastanien im Park/Wald sammeln','Erwachsener bohrt mit kleinem Bohrer Löcher','Kinder stecken Streichhölzer als Beine/Arme rein','2 Kastanien (Kopf + Körper) mit Streichholz verbinden','Aus Knete kleine Augen, Nase, Mund formen','An Kopf-Kastanie befestigen','Variante: Kastanien-Tiere mit mehreren Beinen'], bild:'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=70' },
+  { titel:'Sandbild', alter:'ab 5 J.', kat:'malen', dauer:'45 Min.', material:'Bunter Bastel-Sand (Bastelladen), Klebstoff, Pappe, Pinsel', schritte:['Motiv leicht mit Bleistift auf Pappe vorzeichnen','Bereich der ersten Farbe mit Klebstoff bestreichen','Sand der gewünschten Farbe darüber streuen','Überschuss abklopfen — bleibt am Klebstoff haften','Trocknen lassen (15 Min)','Nächsten Bereich mit Klebstoff bestreichen, anderen Sand','Bis alle Bereiche fertig sind'], bild:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70' },
+  { titel:'Origami-Kranich', alter:'ab 8 J.', kat:'papier', dauer:'20 Min.', material:'Quadratisches Origami-Papier (15x15 cm)', schritte:['Papier diagonal in der Mitte falten — Dreieck','Wieder öffnen, andere Diagonale falten — wieder öffnen','Auch horizontal und vertikal falten','Mit den 4 Falten ein "Kreuz" mit X erzeugen','Zu einem kleinen Quadrat zusammenführen','Spitzen zur Mitte falten, umdrehen, wiederholen','Beine + Hals einklappen, Flügel nach unten','YouTube: "Origami Kranich Anleitung" für Bildschritte'], bild:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70' },
+  { titel:'Filz-Anhänger', alter:'ab 6 J.', kat:'klassiker', dauer:'30 Min.', material:'Bastel-Filz in Farben, Schere, Nadel + Faden, Füllwatte, Schlüsselring', schritte:['Form zeichnen (Herz, Stern, Tier) auf Filz','Form 2× ausschneiden — Vorder- und Rückseite','Mit Knopflochstich oder Heftstich am Rand zusammen nähen','3/4 nähen, Füllwatte hineindrücken','Vollständig zunähen','Schleife oder Schlüsselring oben annähen','Tipp: Knöpfe, Perlen als Verzierung'], bild:'https://images.unsplash.com/photo-1555212697-194d092e3b8f?w=400&q=70' },
+  { titel:'Murmel-Bahn aus Pappe', alter:'ab 5 J.', kat:'recycling', dauer:'1h', material:'Großer Pappkarton, viele Klorollen, Klebeband, Schere, Murmeln', schritte:['Klorollen längs halbieren = U-förmige Rinnen','Karton aufrecht aufstellen oder an Wand lehnen','Klorollen mit leichter Schräglage aufkleben','Verbindungen so legen, dass Murmel weiterrollt','Kurven, Trichter, Looping aus Pappe basteln','Mit Murmel testen, ggf. korrigieren','Tipp: bunt anmalen für tollen Look'], bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
+  { titel:'Pustebild', alter:'ab 4 J.', kat:'malen', dauer:'15 Min.', material:'Flüssige Tinte oder Wasserfarbe, Strohhalm, Aquarellpapier', schritte:['Papier auf Tisch legen, alte Kleidung anziehen','Tropfen Tinte mit Pipette aufs Papier setzen','Mit Strohhalm seitlich pusten','Tinte läuft in alle Richtungen — wird zu Baum/Spinne','Mehrere Farben kombinieren','Mit Filzstift Details hinzufügen (Vögel, Blätter)','Trocknen lassen, Bild eintrahmen'], bild:'https://images.unsplash.com/photo-1607734834519-d8576ae60ea4?w=400&q=70' },
+  // ====== Neue Bastelideen mit Schritten ======
+  { titel:'Steine bemalen', alter:'ab 3 J.', kat:'natur', dauer:'25 Min.', material:'Flache Steine, Acrylfarben, dünne Pinsel, Klarlack', schritte:['Glatte, flache Steine sammeln (am See/Strand am besten)','Mit Wasser sauber waschen, trocknen','Mit Bleistift Motiv vorzeichnen (Marienkäfer, Eule)','Mit Acrylfarbe in Schichten anmalen','Zwischen Schichten 10 Min trocknen lassen','Details mit dünnem Pinsel ergänzen','Klarlack drüber — bleibt jahrelang schön','Tipp: als Garten-Deko oder Briefbeschwerer'] },
+  { titel:'Lesezeichen weben', alter:'ab 6 J.', kat:'klassiker', dauer:'30 Min.', material:'Festeres Tonpapier, Schere, bunte Papierstreifen, Klebstoff', schritte:['Tonpapier 5 × 20 cm ausschneiden','Längs 6 parallele Schlitze schneiden (nicht ganz durch)','Papierstreifen 1 × 15 cm in 2-3 Farben vorbereiten','Erste Reihe abwechselnd durch Schlitze ziehen','Zweite Reihe entgegengesetzt einweben','Enden mit Klebstoff fixieren','Oben mit Locher Loch + Schleife','Variante: mit Faden Quaste daran knüpfen'] },
+  { titel:'Marmorpapier (Rasierschaum)', alter:'ab 4 J.', kat:'malen', dauer:'20 Min.', material:'Rasierschaum, flache Schale, Lebensmittelfarbe, Papier, Spachtel', schritte:['Rasierschaum 2 cm dick in Schale verteilen','Tropfen Lebensmittelfarbe darauf setzen','Mit Stäbchen leicht durchziehen — Marmor-Muster','Papier vorsichtig auf Schaum drücken','Vorsichtig abnehmen — Muster ist auf Papier','Mit Spachtel/Karte überschüssigen Schaum abschaben','Trocknen lassen, 10 Min','Wunderschönes Muster bleibt zurück!'] },
+  { titel:'Traumfänger', alter:'ab 7 J.', kat:'klassiker', dauer:'45 Min.', material:'Holzring (15 cm), Garn, Federn, Perlen, Schere', schritte:['Garn um Holzring wickeln — komplette Bedeckung','Knoten am Anfang und Ende fixieren','Inneres Netz: Faden zickzack durch Ring spannen','Bei jedem Knoten Perlen einfädeln','Unten 5 lange Fäden befestigen','Federn und Perlen an Fäden befestigen','Oben Schlaufe zum Aufhängen','Über dem Bett aufhängen — fängt schlechte Träume'] },
+  { titel:'Eis-Schmuck Sommer', alter:'ab 4 J.', kat:'jahreszeit', dauer:'2h (mit Gefrieren)', material:'Schale, Wasser, Blumen/Blätter, Faden, Gefrierfach', schritte:['Flache Schale mit Wasser füllen (2 cm hoch)','Bunte Blumen, Blätter ins Wasser geben','Faden so legen, dass beide Enden außen sind','3-4 Stunden im Gefrierfach','Schale ins warme Wasser tunken — löst sich','Eis vorsichtig herausnehmen','Mit Faden draußen an Baum aufhängen','Schmilzt langsam — wunderschöner Anblick'] },
+  { titel:'Geheimtinte mit Zitrone', alter:'ab 6 J.', kat:'klassiker', dauer:'15 Min.', material:'Zitronensaft, Wattestäbchen, weißes Papier, Bügeleisen (Erwachsener)', schritte:['Zitrone halbieren und auspressen','Wattestäbchen in Saft tunken','Damit Botschaft auf Papier schreiben','Trocknen lassen — wird unsichtbar','Erwachsener bügelt mit warmem Eisen drüber','Hitze macht Botschaft sichtbar (bräunlich)','Auch mit Apfelsaft oder Milch möglich','Detektiv-Spiel: Geheimnachrichten austauschen'] },
+  { titel:'Tannenzapfen-Tiere', alter:'ab 4 J.', kat:'natur', dauer:'30 Min.', material:'Tannenzapfen, Filz-Reste, Bastelkleber, Wackelaugen, Pfeifenputzer', schritte:['Tannenzapfen im Wald sammeln','Wackelaugen an Spitze kleben — Tier-Gesicht','Aus Filz Ohren, Schwanz, Pfoten ausschneiden','Mit Klebestift am Zapfen befestigen','Mit Pfeifenputzer als Beine umwickeln','Igel = Zapfen + Stift-Gesicht','Eule = Zapfen + große Filzaugen + Schnabel'] },
+  { titel:'Windrad selbst basteln', alter:'ab 6 J.', kat:'papier', dauer:'25 Min.', material:'Buntpapier 15x15 cm, Holzstab/Stift, Reißzwecke, Perle', schritte:['Papier diagonal beide Wege falten — Kreuz in Mitte','Von jeder Ecke bis zur Hälfte der Diagonale einschneiden','Jede zweite Ecke zur Mitte falten','Mit Klebepunkt in Mitte fixieren','Loch in Mitte stechen','Stab durchstecken, mit Perle als Abstandhalter','Mit Reißzwecke am Stab befestigen','Im Garten oder am Balkon — dreht sich im Wind!'] },
+  { titel:'Schaukel-Karte', alter:'ab 6 J.', kat:'papier', dauer:'30 Min.', material:'Tonkarton 2 Farben, Schere, Buntstifte, Schleifenband, Klebstoff', schritte:['Karton längs auf halbe Größe falten — Karte','Aus 2. Karton schmalen Streifen schneiden (1 × 8 cm)','Streifen mehrfach falten — Ziehharmonika','Eine Seite an Karte innen kleben','Andere Seite: kleine Figur (Person, Tier) ankleben','Zusätzlich: Schleife in Geschenkfarbe','Beim Öffnen schwingt die Figur','Niemand kann widerstehen!'] },
+  { titel:'Kresse-Köpfe', alter:'ab 4 J.', kat:'natur', dauer:'15 Min. (+1 Woche Wachsen)', material:'Leere Eierschalen, Watte, Kressesamen, Filzstift, Eierkarton', schritte:['Eierschalen halb leer essen — Hälfte aufheben','Gesichter auf Schalen malen — fröhliche/böse','In Eierkarton stellen','Watte feucht machen, in Schale legen','Kressesamen darüber streuen','Auf sonnige Fensterbank stellen','Täglich Watte feucht halten','Nach 5-7 Tagen wachsen "Haare" — essbare Ernte!'] },
+  { titel:'Korkenbastel-Stempel', alter:'ab 5 J.', kat:'recycling', dauer:'20 Min.', material:'Weinflaschen-Korken, Cutter (Erwachsener), Stempelkissen, Papier', schritte:['Korken sammeln (Restaurants, Eltern)','Erwachsener schneidet Motiv in flache Seite (Stern, Herz)','Korken auf Stempelkissen drücken','Auf Papier abdrucken','Mehrere Motive kombinieren','Geburtstagskarten, Geschenkpapier selbst machen','Tipp: Eltern hilft beim Schneiden zwingend!'] },
+  { titel:'Pop-up-Karten', alter:'ab 7 J.', kat:'papier', dauer:'30 Min.', material:'Tonkarton 2 Farben, Schere, Klebstoff, Buntstifte', schritte:['Karton längs falten — Karte','In der Falt-Mitte 2 parallele Schnitte 2 cm tief','Den entstehenden Streifen nach innen klappen','Karte öffnen — Pop-up-Teil steht jetzt nach vorne','Auf das stehende Stück Bild kleben (Herz, Geburtstagstorte)','Karte schließen — drinnen Botschaft schreiben','Beim Öffnen springt Motiv heraus!','Variante: mehrere Pop-up-Teile auf einer Karte'] },
+  { titel:'Webrahmen Geschenkverpackung', alter:'ab 8 J.', kat:'papier', dauer:'40 Min.', material:'Buntpapier-Reste, Schere, Lineal, Klebstoff', schritte:['Papier in 1,5 cm breite Streifen schneiden — Querstreifen','In anderer Farbe genauso lange Längsstreifen','Querstreifen parallel auf Tisch — gleichmäßiger Abstand','Längs einen Längsstreifen über/unter den Querstreifen flechten','Zweiten Längsstreifen entgegengesetzt','Fortsetzen bis fertig — verflochtenes Muster','Ränder mit Klebstoff fixieren','Wunderschönes Geschenkpapier — selbst gemacht'] },
+  { titel:'Tonpapier-Schmetterling', alter:'ab 5 J.', kat:'papier', dauer:'20 Min.', material:'Bunter Tonpapier, Schere, Pfeifenputzer, Wackelaugen, Glitzerkleber', schritte:['Quadrat Tonpapier diagonal halbieren — Dreieck','Aus Dreieck Schmetterlingsform schneiden (zusammen — symmetrisch)','Aufklappen — Schmetterling mit symmetrischen Flügeln','Pfeifenputzer in der Mitte falten — Körper + Fühler','Mit Klebstoff Pfeifenputzer auf Schmetterling','Wackelaugen aufkleben','Mit Glitzerkleber Punkte und Linien malen','An Fenster oder Schnur befestigen'] },
+  { titel:'Geo-Schatzkarte', alter:'ab 6 J.', kat:'klassiker', dauer:'30 Min. + Schatzsuche', material:'Pergament-/Backpapier, Tee, Streichholz (Erwachsener), Stift', schritte:['Backpapier in Größe schneiden','Mit feuchtem Tee-Beutel das Papier "altern" lassen','5 Min trocknen lassen — sieht alt aus','Erwachsener verbrennt vorsichtig die Ränder','Schatzkarte zeichnen — Häuser, Bäume, X','Beschriften, knicken, einrollen','Schatz im Haus oder Garten verstecken','Mit Geschwistern oder Freunden Schatzsuche!'] },
+  { titel:'Vogel-Futterring', alter:'ab 5 J.', kat:'natur', dauer:'20 Min.', material:'Kokosfett (300g), Vogelfutter (Sonnenblumenkerne), Schnur, Eierkarton', schritte:['Kokosfett in einem Topf vorsichtig schmelzen','Vom Herd nehmen, 1-2 Min abkühlen','Vogelfutter dazugeben (ca. 200g)','In Eierkarton-Mulden füllen','Schnur als Schlaufe in Fett tunken','Schnur in jeder Mulde positionieren','Kalt werden lassen (im Kühlschrank 1h)','Kart aus Karton lösen, im Winter draußen aufhängen'] },
+  { titel:'Bügelperlen-Untersetzer', alter:'ab 6 J.', kat:'klassiker', dauer:'30 Min.', material:'Bügelperlen, Steckplatte (Quadrat), Bügelpapier, Bügeleisen (Erwachsener!)', schritte:['Quadrat-Steckplatte vor Kind legen','Muster überlegen — Pixel-Art, Herz, Tier','Perlen nach Muster auf Stifte stecken','Mit Bügelpapier abdecken','Erwachsener bügelt mit mittlerer Stufe drüber (30 Sek)','Vorsichtig abkühlen lassen','Vorsichtig Steckplatte abziehen','Untersetzer für Tassen — fertig'] },
+  { titel:'Filz-Blumen-Haargummi', alter:'ab 8 J.', kat:'klassiker', dauer:'25 Min.', material:'Filz in 2 Farben, Schere, Nadel + Faden, Knopf, Haargummi', schritte:['Aus Filz 5 Blütenblätter in Tropfen-Form schneiden','Mit Faden in der Mitte zusammenfassen','Aus anderem Filz Mitte (Kreis) schneiden','Knopf in Mitte annähen','Auf Haargummi aufnähen','Knoten fest setzen, Faden vernähen','Variante: mit kleinen Perlen verzieren'] },
+  { titel:'Pet-Flaschen-Vogel', alter:'ab 5 J.', kat:'recycling', dauer:'40 Min.', material:'Leere 1,5L PET-Flasche, Acrylfarbe, Tonpapier, Wackelaugen, Klebstoff', schritte:['PET-Flasche gut spülen, Etikett abziehen','Komplett mit Acrylfarbe (gelb/grau) anmalen','Trocknen lassen, evtl. zweite Schicht','Aus Tonpapier Flügel ausschneiden — 2 Stück','Mit Klebstoff seitlich befestigen','Aus Tonpapier Schwanz-Federn schneiden, hinten befestigen','Schnabel aus Pappe basteln, vorne aufkleben','Wackelaugen aufkleben — fertig Eule/Pinguin!'] },
+  { titel:'Knöpfe-Bild', alter:'ab 4 J.', kat:'klassiker', dauer:'30 Min.', material:'Alte Knöpfe sammeln, Karton, Klebstoff (Heißkleber Erwachsener)', schritte:['Karton 20 × 20 cm vorbereiten','Motiv leicht mit Bleistift skizzieren (Baum, Sonne, Herz)','Knöpfe nach Farben sortieren','Erwachsener: Knöpfe mit Heißkleber befestigen','Oder: Bastelkleber für Kinder ab 6','In Schichten von außen nach innen','Tipp: Knöpfe von alten Hemden sammeln, Großmutter fragen'] },
+  { titel:'Pet-Flaschen-Bowling', alter:'ab 3 J.', kat:'recycling', dauer:'30 Min. + spielen', material:'6 leere 0,5L Flaschen, Acrylfarbe, Sand zum Beschweren, Tennisball', schritte:['6 Flaschen sammeln, Etikett ab','Pro Flasche 2 EL Sand reinfüllen — beschwert','Verschluss draufschrauben (sonst läuft Sand)','Flaschen bunt anmalen oder bekleben','Trocknen lassen','Im Garten aufstellen — Dreiecksform','Tennisball als Bowlingkugel — wer trifft alle?','Beim Aufräumen auch mal mit Kreidemarker beschriften'] },
+  { titel:'Strohhalm-Flöte', alter:'ab 6 J.', kat:'klassiker', dauer:'15 Min.', material:'5 Plastik- oder Papier-Strohhalme, Klebeband, Schere', schritte:['Strohhalme nebeneinander legen','Auf gestaffelte Längen schneiden (10, 9, 8, 7, 6 cm)','Mit Klebeband seitlich zusammenkleben','Oben gerade Kanten, unten Treppe','Längsenden mit Klebeband zukleben','Über die offenen Enden blasen','Verschiedene Töne entstehen','Kindern Notation erklären: vom langen zum kurzen Strohhalm = höhere Töne'] },
+  { titel:'Webrahmen Untersetzer', alter:'ab 7 J.', kat:'klassiker', dauer:'45 Min.', material:'Webrahmen 10 × 10 cm (oder Karton mit Einschnitten), Garnreste, Webnadel', schritte:['Garnreste sortieren — bunte Mischung','Längsfäden auf Webrahmen spannen','Mit Webnadel querfaden einweben','Abwechselnd oben/unten — Webmuster','Bei Farbwechsel: alten Faden verknoten, neuen anknüpfen','Bis Webrahmen voll ist','Aus Rahmen lösen — Untersetzer fertig'] },
+  { titel:'Bunte Glasflaschen', alter:'ab 6 J.', kat:'recycling', dauer:'30 Min.', material:'Leere Glasflaschen (Wein, Öl), Acrylfarben, Pinsel', schritte:['Glasflaschen mit Wasser + Spüli reinigen','Etiketten abziehen, trocknen','Mit Acrylfarbe schichtweise anmalen','Auch Innenseite möglich: Farbe rein, drehen','Trocknen lassen','Variante: mit Schnur oder Bast umwickeln','Als Vase, Dekoration oder Kerzenhalter','Mit Eltern: Tonflasche → Lampenfuß'] },
+  { titel:'Pferderennen-Würfelspiel', alter:'ab 5 J.', kat:'klassiker', dauer:'30 Min. + spielen', material:'Großes Karton, Würfel, kleine Pferdchen (Lego/Spielzeug)', schritte:['Karton flach hinlegen','Mit Lineal 6 Bahnen quer einzeichnen','Pro Bahn 12 Felder (Quadrate) malen','Bahnen mit Zahlen 2-12 beschriften (Würfel-Summen)','Startfeld und Ziel definieren','Pferdchen auf Startfelder stellen','Würfeln: Summe = Bahn-Nr bewegt sich 1 Feld','Welches Pferd kommt zuerst ins Ziel?'] },
+  { titel:'Lavalampe selbst', alter:'ab 5 J.', kat:'klassiker', dauer:'10 Min.', material:'Klare Plastikflasche, Pflanzenöl, Wasser, Brause-Tablette, Lebensmittelfarbe', schritte:['Plastikflasche zu 2/3 mit Pflanzenöl füllen','Restliche 1/3 mit Wasser auffüllen','5-10 Tropfen Lebensmittelfarbe rein','Brause-Tablette in 2-3 Stücke teilen','Stücke nach und nach reinwerfen','Blubber-Effekt entsteht — wie Lavalampe','Mit Taschenlampe von unten = noch toller','Wissenschafts-Hintergrund: Öl + Wasser mischen nicht'] }
 ];
 
 const BASTELN_KATS = [
@@ -7088,9 +10603,15 @@ function renderBasteln() {
     ${BASTELN_KATS.map(k=>`<button class="news-kat-btn ${kat===k.id?'aktiv':''}" onclick="bastelnKatWaehlen('${k.id}')">${k.label}</button>`).join('')}
   </div>
   <div class="rezept-grid">
-    ${ideen.map(b => `
+    ${ideen.map(b => {
+      const schritteHtml = Array.isArray(b.schritte) && b.schritte.length
+        ? `<ol class="basteln-schritte">${b.schritte.map(s => `<li>${esc(s)}</li>`).join('')}</ol>`
+        : `<div style="font-size:.78rem;color:#334155;margin-top:.35rem;line-height:1.5">${esc(b.anleitung || '')}</div>`;
+      const bildStyle = b.bild ? `background-image:url('${b.bild}')` : 'background:linear-gradient(135deg,#EDE9FE 0%,#FCE7F3 100%);display:flex;align-items:center;justify-content:center;font-size:3rem';
+      const bildInhalt = b.bild ? '' : '🎨';
+      return `
     <div class="rezept-foto-karte" style="cursor:default">
-      <div class="rezept-foto-bild" style="background-image:url('${b.bild}')">
+      <div class="rezept-foto-bild" style="${bildStyle}">${bildInhalt}
         <span class="rezept-foto-kosten">${b.alter}</span>
       </div>
       <div class="rezept-foto-body">
@@ -7098,11 +10619,13 @@ function renderBasteln() {
         <div class="rezept-foto-meta">
           <span>⏱️ ${b.dauer}</span>
         </div>
-        <div style="font-size:.75rem;color:var(--g700);margin-top:.45rem;line-height:1.4"><strong>Material:</strong> ${esc(b.material)}</div>
-        <div style="font-size:.78rem;color:var(--g500);margin-top:.35rem;line-height:1.45">${esc(b.anleitung)}</div>
+        <div style="font-size:.78rem;color:#0F172A;margin-top:.5rem;line-height:1.5"><strong>Material:</strong> ${esc(b.material)}</div>
+        ${Array.isArray(b.schritte) && b.schritte.length ? '<div style="font-size:.78rem;font-weight:700;margin-top:.55rem;color:#0F172A">📋 Anleitung Schritt für Schritt:</div>' : ''}
+        ${schritteHtml}
         <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(b.titel + ' Kinder basteln Anleitung')}" target="_blank" rel="noopener" class="basteln-video-btn">▶ Video-Anleitung auf YouTube</a>
       </div>
-    </div>`).join('')}
+    </div>`;
+    }).join('')}
   </div>`;
 }
 
@@ -8710,6 +12233,56 @@ function getFamilienMitgliederNamen() {
   return namen;
 }
 
+// ===== KALENDER TEILEN (WhatsApp, E-Mail, Kopieren) =====
+function kalenderTermineFormatiert(maxTage = 30) {
+  const termine = (typeof getTermine === 'function') ? getTermine() : [];
+  if (!termine.length) return null;
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  const limit = new Date(heute); limit.setDate(limit.getDate() + maxTage);
+  const TYPEN = (typeof getAlleTerminTypen === 'function') ? getAlleTerminTypen() : (typeof TERMIN_TYPEN !== 'undefined' ? TERMIN_TYPEN : {});
+
+  const naechste = termine
+    .filter(t => { const d = new Date(t.datum + 'T00:00:00'); return d >= heute && d <= limit; })
+    .sort((a,b) => a.datum.localeCompare(b.datum));
+  if (!naechste.length) return null;
+
+  const zeilen = naechste.map(t => {
+    const d = new Date(t.datum + 'T00:00:00');
+    const datStr = d.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+    const zeit = t.uhrzeit ? ` ${t.uhrzeit}` : '';
+    const typ = TYPEN[t.typ] || {};
+    const icon = typ.icon || '📅';
+    const person = t.person ? ` (${t.person})` : '';
+    const ort = t.ort ? ` · ${t.ort}` : '';
+    return `${icon} ${datStr}${zeit} — ${t.titel}${person}${ort}`;
+  });
+  return zeilen.join('\n');
+}
+
+function kalenderTeilen(modus) {
+  const text = kalenderTermineFormatiert(30);
+  if (!text) { toast('⚠️ Keine Termine in den nächsten 30 Tagen'); return; }
+  const header = '📅 Familien-Kalender — Termine der nächsten 30 Tage:\n\n';
+  const ganz = header + text + '\n\n— gesendet via FamilienApp';
+
+  if (modus === 'whatsapp') {
+    window.open('https://wa.me/?text=' + encodeURIComponent(ganz), '_blank');
+  } else if (modus === 'email') {
+    window.open('mailto:?subject=' + encodeURIComponent('Familien-Kalender — nächste Termine') + '&body=' + encodeURIComponent(ganz), '_blank');
+  } else if (modus === 'copy') {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(ganz).then(
+        () => toast('✓ Termin-Liste in Zwischenablage kopiert'),
+        () => toast('⚠️ Kopieren nicht möglich')
+      );
+    } else {
+      toast('⚠️ Zwischenablage nicht unterstützt');
+    }
+  } else if (modus === 'native' && navigator.share) {
+    navigator.share({ title: 'Familien-Kalender', text: ganz }).catch(() => {});
+  }
+}
+
 // ===== KALENDER ICS-EXPORT / -IMPORT (Teilen) =====
 function kalenderAlsICSExportieren() {
   const termine = (typeof getTermine === 'function') ? getTermine() : [];
@@ -8832,8 +12405,8 @@ function parseICS(text) {
 function kiSuchBox(id) {
   return `
   <div class="ki-such-box" id="ki-box-${id}">
-    <div class="ki-such-titel">🤖 Familien-Assistent</div>
-    <div class="ki-such-sub">Stell deine Frage — die App findet die passende Antwort und liest sie vor.</div>
+    <div class="ki-such-titel">🤖 Familien-Assistent <span style="font-size:.65rem;font-weight:800;background:var(--akzent-grad);color:white;padding:.15rem .5rem;border-radius:99px;vertical-align:middle;margin-left:.35rem">KI</span></div>
+    <div class="ki-such-sub">Stell jede Frage — echte KI-Antwort + passende Bereiche aus der App. Auch per Sprache.</div>
     <div class="ki-such-eingabe">
       <input type="text" id="ki-input-${id}" class="ki-such-input"
         placeholder="z.B. Was ist Wohngeld? Was hilft bei Fieber? Wo finde ich Spielplätze?"
@@ -8865,46 +12438,273 @@ function kiSuchSprechen(id) {
 }
 
 let _kiVorleseText = '';
+let _kiAbbruchController = null;
 
-function kiSuchStarten(id) {
+const KI_SYSTEM_PROMPT = `Du bist der Familien-Assistent einer App für Familien in Deutschland — warmherzig, kompetent und immer hilfreich.
+
+GRUNDREGEL: Du gibst auf JEDE Frage eine konkrete, hilfreiche Antwort oder Empfehlung. Du sagst NIEMALS nur „das weiß ich nicht" und hörst dann auf. Wenn du etwas nicht sicher weißt, gib trotzdem deine beste fundierte Einschätzung UND nenne die richtige Anlaufstelle (Arzt, Amt, Beratungsstelle). Niemand soll dich ohne brauchbare Antwort verlassen.
+
+DEINE EXPERTISE — du beantwortest ALLE Fragen aus diesen Bereichen ausführlich:
+• Familienleistungen DE: Kindergeld (255€/Kind/Monat), Wohngeld (Ø 370€), Elterngeld (300–1800€), Bürgergeld (563€ Regelsatz + 36% Mehrbedarf alleinerziehend), Unterhaltsvorschuss (230/301/395€ nach Alter), Kinderzuschlag (bis 297€), BAföG, Bildungspaket
+• Schwangerschaft, Geburt, Stillen, U-Untersuchungen, Mutterpass, Mutterschutz, Zyklus & Kinderwunsch
+• Erziehung & Methoden: Trotzanfälle, Schlaf, Geschwisterstreit, Pubertät, Bildschirmzeit, Grenzen, Bindung. Erziehungsstile (autoritativ = empfohlen) und Methoden (Montessori, Pikler, Positive Discipline, bindungsorientiert). Alters-angepasste Tipps
+• Gesundheit von Kindern und Erwachsenen, Hausmittel, Krankheiten, Erste Hilfe
+• Recht: Sorgerecht, Umgangsrecht, Unterhalt (Düsseldorfer Tabelle), Scheidung, Vaterschaft, Patientenverfügung
+• Schule, Haushalt, Sparen, Rezepte, Urlaub, Veranstaltungen, Alltag, Senioren & Pflege
+
+GESUNDHEITSFRAGEN — besonders wenn es um ein KRANKES KIND geht:
+Antworte wie eine erfahrene Kinderkrankenschwester — ausführlich, ernst und konkret. Gliedere die Antwort klar:
+1. **Was es sein kann** — die häufigsten, wahrscheinlichen Ursachen für die geschilderten Symptome.
+2. **Was du jetzt tun kannst** — konkrete Maßnahmen und Hausmittel mit Mengen, Dauer und Anwendung.
+3. **Beobachten** — was normal ist und in welchem Zeitraum Besserung zu erwarten ist.
+4. **⚠️ Sofort zum Arzt / Notruf** — klare Warnzeichen, bei denen man nicht abwarten darf: Atemnot, steifer Nacken mit Fieber, Apathie/Teilnahmslosigkeit, Hautausschlag der auf Druck nicht verblasst, Krampfanfall, Fieber bei Säuglingen unter 3 Monaten. Notruf 112, ärztlicher Bereitschaftsdienst 116117, Giftnotruf 030 19240.
+Du ersetzt keinen Arzt — aber du lässt niemanden ratlos zurück. Gib immer eine echte, gehaltvolle Einschätzung statt nur „geh zum Arzt".
+
+NOTFALL-NUMMERN: 112 (Lebensgefahr), 116117 (ärztl. Bereitschaftsdienst), 110 (Polizei), 116016 (Hilfetelefon Gewalt gegen Frauen), 116111 (Kinder-Sorgentelefon), 0800 111 0 550 (Elterntelefon).
+
+Wenn ECHTE Daten in eckigen Klammern [...] am Anfang stehen: NUTZE sie — empfehle konkrete Namen, Entfernungen, Preise daraus.
+
+ANTWORT-STIL:
+• Auf Deutsch, warm und persönlich, gut verständlich — kein Fachjargon ohne Erklärung
+• Normale Fragen: 4–7 Sätze. Gesundheits- und ernste Fragen: ausführlich, so lang wie nötig (gern 10–15 Sätze, mit Gliederung)
+• **fett** für Zahlen, Beträge, Warnzeichen und wichtige Begriffe
+• Konkrete Schritte statt vager Tipps
+• Niemals belehrend, niemals oberflächlich, niemals ausweichend
+
+ANTWORTE JETZT DIREKT auf die Frage des Nutzers — ohne Begrüßung, ohne Floskeln.`;
+
+// Erkennt verschiedene Fragearten für Tool-Use
+function _istWetterFrage(q) {
+  const ql = q.toLowerCase();
+  return /\b(wetter|regen|schnee|sonne|temperatur|grad|warm|kalt|heute draußen|raus gehen|jacke|regenschirm|gewitter|sturm|wolken|sonnig|bewölkt|frost|hitze)\b/.test(ql);
+}
+function _istRestaurantFrage(q) {
+  const ql = q.toLowerCase();
+  return /\b(restaurant|essen gehen|in der nähe essen|gastro|imbiss|pizzeria|café|caf[eé]|bistro|kneipe|bar|brauerei|sushi|burger|chinese|italiener)\b/.test(ql);
+}
+function _istFreizeitFrage(q) {
+  const ql = q.toLowerCase();
+  return /\b(freizeit|aktivit[äa]t|unternehmen|ausflug|ausflüge|spielplatz|park|museum|zoo|schwimmbad|freibad|kino|bowling|minigolf|veranstaltung|event)\b/.test(ql);
+}
+function _istErsteHilfeFrage(q) {
+  const ql = q.toLowerCase();
+  return /\b(erste hilfe|notfall|112|notruf|herzdruck|reanimation|blutung|verbrennung|vergiftung|sturz|bewusstlos|atemstillstand|krampfanfall|schock|wunde versorgen)\b/.test(ql);
+}
+
+async function _wetterFuerKI() {
+  try {
+    const u = getUser() || {};
+    const lat = state.umgebungStandort?.lat || u.lat;
+    const lng = state.umgebungStandort?.lng || u.lng;
+    if (!lat || !lng) return null;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FBerlin&forecast_days=3`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const c = d.current || {}, dly = d.daily || {};
+    const info = wetterInfo(c.weather_code);
+    const ort = state.umgebungStandort?.name || u.ort || 'deinem Standort';
+    const morgen = dly.weather_code?.[1] ? wetterInfo(dly.weather_code[1]).label + ' ' + Math.round(dly.temperature_2m_max[1]) + '°/' + Math.round(dly.temperature_2m_min[1]) + '°' : '';
+    return `[WETTER-DATEN in ${ort}: JETZT ${info.label}, ${Math.round(c.temperature_2m)}°C (gefühlt ${Math.round(c.apparent_temperature)}°C). HEUTE Max ${Math.round(dly.temperature_2m_max?.[0])}°C/Min ${Math.round(dly.temperature_2m_min?.[0])}°C, Regen ${(dly.precipitation_sum?.[0]||0).toFixed(1)} mm. MORGEN ${morgen}. Wind ${Math.round(c.wind_speed_10m)} km/h, Luftfeuchte ${Math.round(c.relative_humidity_2m)}%]`;
+  } catch { return null; }
+}
+
+// Restaurants/Freizeit in der Nähe via Overpass — gibt der KI echte Orte
+async function _orteInDerNaeheFuerKI(typ) {
+  try {
+    const u = getUser() || {};
+    const lat = state.umgebungStandort?.lat || u.lat;
+    const lng = state.umgebungStandort?.lng || u.lng;
+    if (!lat || !lng) return null;
+    const queries = {
+      restaurant: `node["amenity"~"restaurant|cafe|bar"](around:2000,${lat},${lng});`,
+      freizeit:   `node["leisure"~"playground|park|sports_centre|swimming_pool|bowling_alley"](around:5000,${lat},${lng});node["tourism"~"museum|zoo|attraction"](around:5000,${lat},${lng});`,
+      events:     `node["amenity"~"theatre|cinema|community_centre|arts_centre"](around:5000,${lat},${lng});`
+    };
+    const q = queries[typ] || queries.freizeit;
+    const overpassQ = `[out:json][timeout:8];(${q});out body 10;`;
+    const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQ)}`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const orte = (data.elements || []).filter(o => o.tags?.name).slice(0, 8).map(o => {
+      const dist = Math.round(_haversineMeter(lat, lng, o.lat, o.lon));
+      const distStr = dist < 1000 ? dist + 'm' : (dist/1000).toFixed(1) + ' km';
+      const kueche = o.tags.cuisine ? ' (' + o.tags.cuisine + ')' : '';
+      const adresse = o.tags['addr:street'] ? ', ' + o.tags['addr:street'] : '';
+      const preis = o.tags.charge ? ' [Preis: ' + o.tags.charge + ']'
+                  : o.tags.fee === 'no' ? ' [kostenlos]'
+                  : o.tags.fee === 'yes' ? ' [kostenpflichtig]' : '';
+      const zeiten = o.tags.opening_hours ? ' [offen: ' + o.tags.opening_hours + ']' : '';
+      return `${o.tags.name}${kueche}${adresse}${preis}${zeiten} — ${distStr}`;
+    });
+    if (orte.length === 0) return null;
+    const ort = state.umgebungStandort?.name || u.ort || 'der Nähe';
+    return `[ECHTE ORTE in ${ort} aus OpenStreetMap, nach Entfernung sortiert:\n${orte.join('\n')}]`;
+  } catch { return null; }
+}
+
+function _haversineMeter(lat1, lng1, lat2, lng2) {
+  const R = 6371000, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2-lat1), dLng = toRad(lng2-lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Treffer-Liste (passende App-Bereiche) rendern — von Erfolgs- und Fehlerpfad genutzt
+function renderKiTreffer(trefferEl, treffer) {
+  if (!trefferEl || !treffer || treffer.length === 0) return;
+  trefferEl.innerHTML = '<div style="font-size:.8rem;font-weight:700;color:var(--g700);margin:.85rem 0 .3rem">📌 Passende Bereiche in der App:</div>'
+    + '<div class="ki-treffer-liste">'
+    + treffer.map(t =>
+        '<div class="ki-treffer"' + (t.action ? ' onclick="' + t.action.replace(/"/g,'&quot;') + '" style="cursor:pointer"' : '') + '>'
+        + '<div class="ki-treffer-icon">' + (t.icon || '💡') + '</div>'
+        + '<div class="ki-treffer-text">'
+        + '<div class="ki-treffer-titel">' + esc(t.titel) + '</div>'
+        + '<div class="ki-treffer-sub">' + esc(t.sub || '') + '</div>'
+        + '</div>'
+        + (t.action ? '<span class="ki-treffer-pfeil">→</span>' : '')
+        + '</div>'
+      ).join('')
+    + '</div>';
+}
+
+async function kiSuchStarten(id) {
   const frage = (el('ki-input-' + id)?.value || '').trim();
   if (!frage) return;
-  const antwort = kiAntwortFinden(frage);
   const box = el('ki-antwort-' + id);
   if (!box) return;
 
-  _kiVorleseText = antwort.vorlese || '';
+  // Lokale Antwort SOFORT berechnen — damit es IMMER ein Ergebnis gibt
+  const lokal = kiAntwortFinden(frage);
+  const lokaleTreffer = lokal.treffer.slice(0, 4);
+  const lokalFormatiert = esc(lokal.text).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  _kiVorleseText = lokal.vorlese || '';
 
-  const trefferHtml = antwort.treffer.length === 0
-    ? '<div class="ki-antwort-text"><strong>Keine direkte Antwort in der App gefunden.</strong><br>Du kannst deine Frage an ChatGPT senden — dort gibt es eine echte KI-Antwort.</div>'
-    : '<div class="ki-antwort-text"><strong>' + esc(antwort.einleitung) + '</strong></div>'
-      + '<div class="ki-treffer-liste">'
-      + antwort.treffer.slice(0, 5).map(t =>
-          '<div class="ki-treffer"' + (t.action ? ' onclick="' + t.action.replace(/"/g,'&quot;') + '" style="cursor:pointer"' : '') + '>'
-          + '<div class="ki-treffer-icon">' + (t.icon || '💡') + '</div>'
-          + '<div class="ki-treffer-text">'
-          + '<div class="ki-treffer-titel">' + esc(t.titel) + '</div>'
-          + '<div class="ki-treffer-sub">' + esc(t.sub || '') + '</div>'
-          + '</div>'
-          + (t.action ? '<span class="ki-treffer-pfeil">→</span>' : '')
-          + '</div>'
-        ).join('')
-      + '</div>';
+  // Sofort anzeigen: lokale Schnellantwort, KI verfeinert im Hintergrund
+  box.innerHTML = `
+    <div class="ki-antwort-block">
+      <div class="ki-antwort-frage">❓ ${esc(frage)}</div>
+      <div class="ki-antwort-text" id="ki-stream-${id}">
+        <div class="ki-fallback-hinweis"><span class="ki-typing"><span></span><span></span><span></span></span> Familien-Assistent verfeinert die Antwort…</div>
+        <div>${lokalFormatiert}</div>
+      </div>
+      <div id="ki-treffer-${id}"></div>
+      <div class="ki-antwort-aktionen">
+        <button class="btn btn-sm" id="ki-stop-${id}" onclick="kiAbbrechen()">⏹ Stop</button>
+        <button class="btn btn-sm" onclick="kiAntwortSchliessen('${id}')">✕ Schließen</button>
+      </div>
+    </div>`;
 
-  const vorleseBtn = antwort.treffer.length > 0
-    ? '<button class="btn btn-outline btn-sm" onclick="kiVorlesen()">🔊 Antwort vorlesen</button>'
-    : '';
+  const streamEl = el('ki-stream-' + id);
+  const trefferEl = el('ki-treffer-' + id);
+  renderKiTreffer(trefferEl, lokaleTreffer);
 
-  box.innerHTML =
-    '<div class="ki-antwort-block">'
-    + '<div class="ki-antwort-frage">❓ ' + esc(frage) + '</div>'
-    + trefferHtml
-    + '<div class="ki-antwort-aktionen">'
-    + vorleseBtn
-    + '<a href="https://chat.openai.com/?q=' + encodeURIComponent(frage) + '" target="_blank" class="btn btn-primary btn-sm">💬 An ChatGPT senden</a>'
-    + '<button class="btn btn-sm" onclick="kiAntwortSchliessen(\'' + id + '\')">✕ Schließen</button>'
-    + '</div>'
-    + '</div>';
+  // Vorherige Anfrage abbrechen
+  if (_kiAbbruchController) try { _kiAbbruchController.abort(); } catch {}
+  _kiAbbruchController = new AbortController();
+
+  const stopMitVorlesenErsetzen = () => {
+    const stopBtn = el('ki-stop-' + id);
+    if (stopBtn) stopBtn.outerHTML = '<button class="btn btn-primary btn-sm" onclick="kiVorlesen()">🔊 Vorlesen</button>';
+  };
+
+  try {
+    // Tool-Daten PARALLEL abrufen — vorher liefen sie nacheinander (größter Tempo-Killer)
+    const toolJobs = [];
+    if (_istWetterFrage(frage))     toolJobs.push(_wetterFuerKI());
+    if (_istRestaurantFrage(frage)) toolJobs.push(_orteInDerNaeheFuerKI('restaurant'));
+    const istFreizeit = _istFreizeitFrage(frage);
+    if (istFreizeit)                toolJobs.push(_orteInDerNaeheFuerKI('freizeit'));
+
+    let toolDaten = '';
+    if (toolJobs.length) {
+      const ergebnisse = await Promise.all(toolJobs);
+      const valide = ergebnisse.filter(Boolean);
+      if (valide.length) toolDaten += valide.join('\n') + '\n';
+    }
+    if (istFreizeit) {
+      toolDaten += '[TYPISCHE PREISE Freizeit in Deutschland — nenne diese wenn keine echten Preise vorliegen: Freibad 3–6 € Erwachsene / 2–4 € Kind, Hallenbad 4–8 €, Museum 5–12 € (Kinder oft frei), Zoo/Tierpark 10–25 € Erw. / 5–15 € Kind, Kino 8–14 €, Bowling 3–6 € pro Spiel, Minigolf 4–7 €, Kletterhalle 12–18 €, Indoor-Spielplatz 6–12 € pro Kind. Spielplatz, Park, Wald und Stadtbücherei sind kostenlos. Familienkarten und der Familienpass der Stadt sparen oft 30–50 %. Nenne bei Freizeit-Tipps IMMER ungefähre Preise pro Person.]\n';
+    }
+    if (_istErsteHilfeFrage(frage)) {
+      toolDaten += '[ACHTUNG: Bei Notfall-Fragen IMMER zuerst 112 anrufen empfehlen. Erste-Hilfe-Schritte erklären, aber Arzt-Hilfe priorisieren.]\n';
+    }
+
+    let promptFrage = frage;
+    if (toolDaten) promptFrage = toolDaten + 'Frage des Nutzers: ' + frage + '\n\nAntworte auf die Frage und nutze die obigen ECHTEN Daten wo passend. Empfehle konkrete Orte mit Namen + Entfernung + Preis wenn welche vorhanden sind.';
+
+    const text = await kiAPIAnfrage(promptFrage, _kiAbbruchController.signal, streamEl);
+    _kiVorleseText = text.replace(/\*\*/g,'').replace(/\n+/g,' ').replace(/\s+/g,' ').trim();
+    const formatiert = esc(text).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    if (streamEl) streamEl.innerHTML = formatiert;
+    renderKiTreffer(trefferEl, lokaleTreffer);
+    stopMitVorlesenErsetzen();
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      // Abgebrochen: lokale Schnellantwort bleibt als gültiges Ergebnis stehen
+      if (streamEl) streamEl.innerHTML = '<div class="ki-fallback-hinweis">⚡ Schnell-Antwort aus der App</div><div>' + lokalFormatiert + '</div>';
+      _kiVorleseText = lokal.vorlese || '';
+      stopMitVorlesenErsetzen();
+      return;
+    }
+    // KI-Server nicht erreichbar: lokale Antwort als vollwertige Offline-Antwort zeigen
+    if (streamEl) {
+      streamEl.innerHTML = '<div class="ki-fallback-hinweis">⚡ Offline-Antwort aus der App-Datenbank (KI-Server nicht erreichbar)</div>'
+        + (lokal.einleitung ? '<strong>' + esc(lokal.einleitung) + '</strong><br><br>' : '')
+        + lokalFormatiert;
+    }
+    _kiVorleseText = lokal.vorlese || '';
+    renderKiTreffer(trefferEl, lokaleTreffer);
+    stopMitVorlesenErsetzen();
+  }
+}
+
+function kiAbbrechen() {
+  if (_kiAbbruchController) try { _kiAbbruchController.abort(); } catch {}
+}
+
+// Pollinations.ai — kostenlose KI ohne API-Key, mit Streaming
+async function kiAPIAnfrage(frage, signal, streamEl) {
+  const url = 'https://text.pollinations.ai/' + encodeURIComponent(frage) +
+    '?model=openai' +
+    '&system=' + encodeURIComponent(KI_SYSTEM_PROMPT) +
+    '&private=true';
+
+  // Timeout: 30s gesamt
+  const timeout = setTimeout(() => { if (signal && !signal.aborted) try { _kiAbbruchController?.abort(); } catch {} }, 30000);
+
+  try {
+    const res = await fetch(url, { signal });
+    if (!res.ok) throw new Error('API-Fehler ' + res.status);
+
+    // Streaming-Anzeige: Body in Chunks lesen und Text live anzeigen
+    if (res.body && streamEl) {
+      streamEl.innerHTML = '<span id="ki-stream-text"></span><span class="ki-cursor">▋</span>';
+      const textEl = streamEl.querySelector('#ki-stream-text');
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let total = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        total += chunk;
+        if (textEl) {
+          const formatiert = esc(total).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+          textEl.innerHTML = formatiert;
+          // Auto-Scroll zum Ende des Texts
+          streamEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+      return total.trim();
+    }
+
+    // Fallback ohne Streaming
+    const text = await res.text();
+    return text.trim();
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function kiAntwortSchliessen(id) {
@@ -8924,114 +12724,177 @@ function kiVorlesen() {
   speechSynthesis.speak(u);
 }
 
+// ===== KI-WISSENS-DATENBANK =====
+// Pseudo-AI: Schlüsselwort-basiertes Matching mit menschlich klingenden Antworten.
+// Keine externe API — alles lokal in der App.
+const KI_WISSEN = [
+  // FINANZEN & ANTRÄGE
+  { keys:['kindergeld','kindergeldhöhe','wie viel kindergeld'], antwort:'Das Kindergeld beträgt aktuell **255 € pro Kind und Monat** (Stand 2025). Es wird automatisch bis zum 18. Geburtstag gezahlt, bei Ausbildung oder Studium bis maximal 25 Jahre. Antrag stellst du online auf arbeitsagentur.de unter "Kindergeld beantragen". Du brauchst die Steuer-Identifikationsnummer von dir und deinem Kind — das ist die wichtigste Voraussetzung.\n\nSofort nach der Geburt beantragen, denn rückwirkend wird nur 6 Monate ausgezahlt.', icon:'👶' },
+  { keys:['wohngeld','miete zuschuss','wohngeldrechner'], antwort:'Wohngeld ist ein Zuschuss zur Miete, wenn dein Einkommen unter den Einkommensgrenzen liegt. Im Schnitt zahlt der Staat **etwa 370 € im Monat**. Antrag beim Wohngeldamt deiner Stadt — Vordruck heißt "WoGG".\n\nDu brauchst: Mietvertrag, Einkommensnachweise der letzten 3 Monate, Kontoauszüge, Personalausweise aller Haushaltsmitglieder. Wohngeld wird ab dem Monat der Antragstellung gezahlt — also nicht zögern! Die Bearbeitung dauert 4–8 Wochen.', icon:'🏠' },
+  { keys:['unterhalt','unterhaltsvorschuss','vater zahlt nicht','mutter zahlt nicht'], antwort:'Wenn der andere Elternteil keinen oder zu wenig Unterhalt zahlt, springt der Staat ein. Das nennt sich **Unterhaltsvorschuss** — Antrag beim Jugendamt deiner Stadt.\n\nBeträge: 230 € (0–5 Jahre), 301 € (6–11 Jahre), 395 € (12–17 Jahre). Es gibt seit 2017 kein Zeitlimit mehr — wird gezahlt bis zum 18. Geburtstag.\n\nVoraussetzungen: Kind lebt bei dir, ist unter 18, du bist nicht verheiratet mit dem anderen Elternteil, und der andere zahlt nicht.', icon:'🤝' },
+  { keys:['elterngeld','elternzeit','nach geburt geld'], antwort:'Elterngeld ist ein Einkommensersatz nach der Geburt: **65–67 % vom Nettoeinkommen**, mindestens 300 €, maximal 1.800 € pro Monat.\n\nBasis-Elterngeld: 12 Monate (alleinerziehend bis 14 Monate). ElterngeldPlus: halber Betrag, doppelt so lang (bis 28 Monate).\n\n**Wichtig**: Innerhalb von 3 Monaten nach Geburt beantragen — sonst gehen Monate verloren! Antrag bei der Elterngeldstelle deines Bundeslands, oft online über elterngeld-digital.de.', icon:'🍼' },
+  { keys:['bürgergeld','hartz','arbeitslos','jobcenter','sgb'], antwort:'Bürgergeld (früher Hartz IV) bekommst du, wenn dein Einkommen nicht zum Leben reicht. Als alleinerziehend gibt es einen **Mehrbedarfszuschlag von 36 %** auf den Regelsatz!\n\nRegelsatz Erwachsene: 563 €/Monat. Plus Miete + Heizung übernimmt das Jobcenter. Kinder bekommen je nach Alter 357–471 €.\n\nAntrag direkt beim Jobcenter. Wichtig: Sage explizit dass du alleinerziehend bist — der Mehrbedarf wird oft vergessen. Bei Ablehnung immer Widerspruch (1 Monat Frist).', icon:'🏛️' },
+
+  // GESUNDHEIT
+  { keys:['fieber baby','fieber kind','was tun bei fieber'], antwort:'Bei Fieber zuerst die Temperatur richtig messen — bei Babys rektal (genau). Ab 38,5 °C nennt man es richtig Fieber.\n\n**Hausmittel die helfen**:\n• Wadenwickel (nur bei warmen Füßen!) — Tücher in handwarmem Wasser, 15 Min anlegen\n• Viel trinken: Wasser, dünner Kräutertee, Hühnerbrühe\n• Ruhe und Schlaf — das Immunsystem braucht Energie\n• Lindenblütentee fördert das Schwitzen\n\n**Sofort zum Arzt/112 bei**:\n• Säuglingen unter 3 Monaten mit Fieber\n• Steifem Nacken + Fieber\n• Bewusstseinsstörungen, Krämpfen\n• Hautausschlag der bei Druck nicht weicht\n• Über 40 °C bei Erwachsenen, über 39 °C bei Kindern', icon:'🌡️' },
+  { keys:['husten','erkältung','schnupfen'], antwort:'Bei Erkältung helfen oft natürliche Mittel:\n\n**Sofort-Maßnahmen**:\n• Honig-Ingwer-Zitronen-Tee (Honig erst bei <40 °C dazu)\n• Nasenspülung mit Salzwasser — befreit verstopfte Nase\n• Inhalieren mit Kamille (10–15 Min)\n• Zwiebel-Honig-Sirup gegen Husten (1 TL bis 5x täglich)\n• Hühnerbrühe ist wissenschaftlich belegt entzündungshemmend\n\n**Schnell zum Arzt** bei: Blut beim Husten, anhaltend hohem Fieber, Atemnot oder Brustschmerzen.', icon:'🤧' },
+  { keys:['bauchschmerzen','übelkeit','durchfall','magen'], antwort:'Bei Magen-Darm-Problemen:\n\n**Hausmittel**:\n• Wärmflasche auf den Bauch — entspannt Krämpfe\n• FAK-Tee (Fenchel-Anis-Kümmel) — Klassiker, hilft Babys + Erwachsenen\n• Ingwertee gegen Übelkeit\n• BRAT-Diät bei Durchfall: Banane, Reis, Apfelmus, Toast (Zwieback)\n• Bei Erbrechen: Cola + Salzstangen oder besser Elektrolytlösung aus der Apotheke\n\n**Zum Arzt** bei: Blut im Stuhl, Erbrechen >24h, starken Schmerzen, hohem Fieber, Bauchschmerzen die plötzlich kommen und stark sind (Blinddarm-Verdacht!).', icon:'🤢' },
+  { keys:['kopfschmerzen','migräne','kopf'], antwort:'Häufigste Ursachen für Kopfschmerzen sind **Dehydration** und **Verspannungen**. Erste Schritte:\n\n1. 2 große Gläser Wasser trinken, 20 Min warten\n2. Pfefferminzöl verdünnt auf Schläfen und Nacken\n3. Schulter/Nacken-Massage\n4. Bei Migräne: dunkler Raum, Stille, Augen zu\n\n**Vorbeugend**: 300 mg Magnesium täglich reduziert Migräne-Anfälle um 41 % (Studie). Auch B2 (Riboflavin 400 mg) und Q10 wirken.\n\n**Sofort 112** bei plötzlich stärkstem "Donnerschlag"-Kopfschmerz, Nackensteife mit Fieber, Lähmungen oder nach Kopf-Sturz.', icon:'🤕' },
+  { keys:['schlafen','einschlafen','schlafstörung','schlafprobleme'], antwort:'Schlafprobleme sind in Familien sehr häufig — gerade bei alleinerziehenden Eltern. Bewährte Tricks:\n\n**4-7-8-Atmung**: 4 Sek einatmen, 7 Sek halten, 8 Sek ausatmen. Senkt Puls in 2 Minuten.\n\n**Schlafhygiene**:\n• Feste Schlafenszeiten, auch Wochenende\n• 1 Stunde vor Bett kein Bildschirm\n• Schlafzimmer kühl (16–18 °C), dunkel, ruhig\n• Bett nur für Schlaf — nicht für Handy/Fernsehen\n• Lavendel-Duft im Kissen\n\n**Bei chronischer Insomnie** (länger 4 Wochen): zum Arzt. KVT-I (Verhaltenstherapie für Insomnie) wirkt nachhaltig — Krankenkassen zahlen oft die Online-Variante "Somnio".', icon:'😴' },
+
+  // FAMILIE
+  { keys:['kita','kindergarten','betreuung'], antwort:'Kita-Platz suchen läuft so:\n\n1. Beim Jugendamt anmelden — am besten **direkt nach der Geburt** (Wartelisten!)\n2. Mehrere Kitas direkt kontaktieren (Stadt, Träger wie AWO/Caritas/Diakonie, freie Kitas)\n3. Rechtsanspruch: ab 1. Geburtstag hast du Anspruch auf einen Betreuungsplatz!\n4. Bei Ablehnung: Klage einreichen — viele Eltern bekommen so kurzfristig Platz\n\n**Kita-Beiträge**: einkommensabhängig. Bei Bürgergeld kostenlos. Bei niedrigem Einkommen Ermäßigung über das Jugendamt. Tagespflege/Tagesmütter sind oft günstiger und flexibler als Kitas.', icon:'🎒' },
+  { keys:['kind wütend','trotzphase','wutanfall'], antwort:'Wutanfälle sind in der Entwicklung **völlig normal** (1–4 Jahre) — Kinder lernen gerade ihre Gefühle zu regulieren. Das Wichtigste:\n\n1. **Selbst ruhig bleiben** — 3 tiefe Atemzüge bevor du reagierst\n2. **Auf Augenhöhe gehen** (knien!) und Gefühl benennen: "Du bist gerade richtig wütend — das verstehe ich."\n3. **Nicht diskutieren** während des Anfalls — das verschlimmert es\n4. **Sicherheit geben**, körperliche Nähe wenn das Kind das zulässt\n5. **Nach dem Sturm**: gemeinsam reflektieren, Lösung suchen\n\nWas hilft langfristig: feste Tagesabläufe, klare einfache Regeln, ausreichend Schlaf. Wutanfälle nach dem 5. Geburtstag häufig = unter Umständen Anzeichen für Überforderung — Kinderarzt fragen.', icon:'😤' },
+  { keys:['schreien baby','baby weint','baby beruhigen'], antwort:'Babys schreien um zu kommunizieren — Bedürfnisse-Check:\n\n1. **Hunger** — letzte Mahlzeit > 2-3 h her?\n2. **Windel** voll oder wund?\n3. **Müde** — überdreht statt einfach schlafen\n4. **Zu warm/kalt** — Nacken im Genick fühlen\n5. **Nähe** — auf den Arm nehmen, schaukeln\n6. **Bauchweh** — Beine zum Bauch heranziehen, FAK-Tee (Babytee)\n\n**5-S-Methode** beruhigt 90% der Babys: Swaddling (pucken), Side (seitlich halten), Shushing (Pssst-Geräusche), Swinging (sanft schaukeln), Sucking (Schnuller/Nuckeln).\n\n**Zum Arzt** bei: schrillem Schreien, schlaffem Verhalten, weniger als 6 nasse Windeln/Tag, Fieber.', icon:'👶' },
+
+  // BERATUNG / NOTFALL
+  { keys:['hilfe','beratung','wo bekomme ich hilfe'], antwort:'Es gibt viele kostenlose Anlaufstellen:\n\n**Bei Krisen / Notlagen**:\n• Telefonseelsorge: **0800 111 0 111** (24/7, anonym)\n• Hilfetelefon Gewalt gegen Frauen: **116 016**\n• Elterntelefon: **0800 111 0 550** (Mo–Fr 9–17)\n• Nummer gegen Kummer (Kinder): **116 111**\n\n**Bei Familienfragen**:\n• Jugendamt deiner Stadt — kostenlose Beratung\n• Caritas, AWO, Diakonie — bundesweite Beratungsstellen\n• pro familia — Familienplanung, Schwangerschaft\n• VAMV — Verband alleinerziehender Mütter und Väter\n\nUnter dem Reiter "Familie → Beratung" findest du über 50 Anlaufstellen.', icon:'📞' },
+  { keys:['notfall','112','rettung','schlaganfall','herzinfarkt'], antwort:'**112 sofort wählen** bei:\n• Atemnot, blau anlaufende Lippen\n• Brustschmerzen, Herzrasen mit Schwindel\n• Plötzlicher Lähmung, schiefem Lächeln, Sprachstörung (Schlaganfall!)\n• Bewusstlosigkeit oder Krampfanfall\n• Starken Blutungen die nicht stoppen\n• Verdacht auf Vergiftung\n• Säuglingen mit Fieber > 38.5 °C\n\n**Während du wartest**:\n• Stabile Seitenlage bei Bewusstlosigkeit mit Atmung\n• Bei Atemstillstand: Herzdruckmassage (100/Min, 5 cm tief)\n• Person nicht allein lassen, beruhigen\n• Bei Herzinfarkt: Aspirin kauen wenn vorhanden\n\nWeniger akut aber Hilfe nötig: **116 117** (ärztlicher Bereitschaftsdienst, 24/7).', icon:'🆘' },
+  { keys:['gewalt','schläge','häusliche gewalt','partner schlägt'], antwort:'Du bist nicht allein — und es ist nicht deine Schuld.\n\n**Sofort-Hilfe (24/7, anonym, kostenlos)**:\n• **Hilfetelefon Gewalt gegen Frauen: 116 016** — 18 Sprachen\n• **Männer-Hilfetelefon: 0800 123 99 00**\n• **Polizei: 110** bei akuter Gefahr\n\n**Was du tun kannst**:\n1. Sicherheit zuerst — bei Bedarf das Haus mit Kindern verlassen\n2. Frauenhaus suchen: frauenhauskoordinierung.de — anonyme Unterkunft\n3. Verletzungen ärztlich dokumentieren lassen (auch ohne Anzeige)\n4. Wichtige Dokumente (Ausweise, Geburtsurkunden, EC-Karte) griffbereit halten\n\nWeißer Ring bei Opferhilfe: **116 006** (Mo–So 7–22 Uhr, kostenlos).', icon:'⚠️' },
+
+  // SONSTIGES
+  { keys:['einkaufen sparen','geld sparen','spartipps'], antwort:'Top-Sparmaßnahmen im Familienalltag:\n\n**Wöchentlich planen + einkaufen**: spart 30–50 € im Monat\n**Eigenmarken statt Markenprodukte**: Aldi/Lidl-Eigenmarken oft aus denselben Fabriken, 50% günstiger\n**Saisonal + regional kaufen**: Wochenmarkt vor Ladenschluss = Schnäppchen\n**Too Good To Go App**: Bäcker/Restaurant-Reste für 2–5 €\n**Tafel nutzen** (bei geringem Einkommen): tafel.de\n**Wasser statt Saft/Limo**: spart 50 €+ im Monat\n**Strom-Anbieter wechseln**: Verivox/Check24 vergleichen → 200–400 €/Jahr sparen\n**Versicherungen jährlich vergleichen**: Kfz, Haftpflicht, Hausrat\n\nUnter Reiter "Geld → Sparen" findest du über 80 weitere Spar-Tipps.', icon:'💰' },
+  { keys:['ausflug','was unternehmen','wochenende','spielplatz'], antwort:'Kostenlose oder günstige Aktivitäten:\n\n• **Spielplatz-Rallye**: alle Spielplätze der Stadt nach und nach erkunden\n• **Bibliothek**: Bücher, DVDs, Kinderprogramme — alles kostenlos\n• **Stadtpark/Wald**: Picknick, Naturmandala, Stöcke sammeln\n• **Museum am freien Tag**: viele am 1. Sonntag im Monat gratis\n• **Geocaching**: digitale Schatzsuche, kostenlose App\n• **Freibad**: 2–4 €/Kind, Saisonkarte oft ab 5 Besuchen günstiger\n• **Family-Pass der Stadt**: 50 % Rabatt in Bädern, Museen, Zoo\n• **Stadtfeste und Open-Air-Konzerte**: meist gratis\n\nUnter "Orte → Umgebung" siehst du auf einer Live-Karte alle Spielplätze, Parks, Museen, Schwimmbäder rund um deinen Standort.', icon:'🎠' },
+  { keys:['rezept','kochen','was kochen','essen'], antwort:'In der App findest du über **400 Rezepte** — deutsche Klassiker plus internationale über TheMealDB. Alle mit Bildern und Schritt-für-Schritt-Anleitung.\n\n**Schnell und günstig** (< 30 Min, < 3 €/Portion):\n• Nudeln mit Tomaten-Sauce\n• Pfannkuchen (süß oder herzhaft)\n• Linsensuppe\n• Gemüse-Curry mit Reis\n• Kartoffelsuppe\n• Omelett\n\n**Tipps**:\n• Wochenplan = weniger Verschwendung\n• Doppelt kochen, einfrieren — spart Zeit\n• Mit Kindern zusammen kochen — sie essen, was sie selbst zubereitet haben\n\nÖffne "Familie → Rezepte" für die volle Auswahl mit Portionsumrechner.', icon:'🍽️' },
+  { keys:['schwanger','schwangerschaft','baby kommt'], antwort:'Glückwunsch! Wichtigste erste Schritte:\n\n1. **Frauenarzt-Termin** für Mutterpass + erste Vorsorge\n2. **Hebamme suchen** ab 8. Woche (hebammenverband.de) — Krankenkasse zahlt komplett\n3. **Mutterschutz**: 6 Wochen vor + 8 Wochen nach Geburt (12 Wochen bei Frühgeburt)\n4. **Elterngeld** vorbereiten — Antrag innerhalb 3 Monate nach Geburt\n5. **Schwangerschaftsberatung**: pro familia, Caritas, Donum Vitae (kostenlos)\n\n**Finanzielle Hilfen**:\n• Bundesstiftung Mutter und Kind — Erstausstattung\n• Familienkasse: Kindergeld sofort nach Geburt beantragen\n• Bei Bedarf: Wohngeld + Bürgergeld\n\nIn der App-Sektion "Schwangerschaft" findest du Wochen-für-Wochen-Infos.', icon:'🤰' },
+
+  // RECHT
+  { keys:['sorgerecht','umgangsrecht','trennung','scheidung'], antwort:'Bei Trennung/Sorgerecht gilt:\n\n**Gemeinsames Sorgerecht** ist Standard — auch nach Trennung. Beide Eltern entscheiden bei wichtigen Fragen (Schule, Operation, Wohnort) gemeinsam.\n\n**Umgangsrecht**: Beide Eltern haben Recht auf Umgang, das Kind hat Recht auf beide Eltern. Wenn verweigert: erst Jugendamt (kostenlose Mediation), dann Familiengericht.\n\n**Beratungshilfeschein**: Bei geringem Einkommen kostenlose Anwaltsberatung über das Amtsgericht.\n\n**Prozesskostenhilfe**: Bei Gerichtsverfahren übernimmt der Staat die Kosten — Antrag beim Gericht.\n\n**Wichtige Anlaufstellen**: VAMV, ISUV, Caritas Familienberatung, Jugendamt-Beistandschaft.', icon:'⚖️' },
+  { keys:['steuer','steuerklasse','steuererklärung'], antwort:'Als alleinerziehend hast du Anspruch auf **Steuerklasse 2** — spart bis zu 350 €/Jahr.\n\n**Beantragung**: über ELSTER (elster.de) oder direkt beim Finanzamt. Formular "Antrag auf Lohnsteuerermäßigung".\n\n**Voraussetzungen für Klasse 2**:\n• Mindestens ein Kind im Haushalt (mit Kindergeld-Anspruch)\n• Keine andere erwachsene Person im Haushalt\n• Unbeschränkt steuerpflichtig in Deutschland\n\n**Steuererklärung lohnt fast immer** — auch bei Bürgergeld:\n• Kinderbetreuungskosten zu 2/3 absetzbar (bis 4.000 €/Kind)\n• Werbungskosten (Pauschale 1.230 €)\n• Außergewöhnliche Belastungen (Krankheit, Beerdigung)\n• Haushaltsnahe Dienstleistungen 20 % absetzbar\n\nKostenlos: ELSTER. Bei Komplexität: Lohnsteuerhilfeverein (100–300 €/Jahr, spart oft mehr).', icon:'💶' },
+  { keys:['schulden','schuldenberatung','pfändung','insolvenz'], antwort:'Schulden sind kein Grund zur Scham — es gibt Auswege:\n\n**Erste Schritte**:\n1. **P-Konto einrichten** (kostenfrei bei deiner Bank) — schützt 1.410 € im Monat vor Pfändung, +475 € pro Kind\n2. **Schuldnerberatung kostenlos**: Caritas, AWO, Diakonie\n3. **Übersicht erstellen**: Alle Gläubiger + offene Beträge auflisten\n4. **Mit Gläubigern reden**: Ratenzahlung oder Vergleich oft möglich\n\n**Privatinsolvenz** (Restschuldbefreiung in 3 Jahren möglich seit 2020):\n• Antrag beim Amtsgericht\n• Vorher Schuldnerberatung Pflicht\n• Nach 3 Jahren komplett schuldenfrei\n\n**Wichtig**: Mahnbescheide niemals ignorieren — 2 Wochen Widerspruchsfrist! Bürgschaften niemals leichtfertig unterschreiben.', icon:'💸' },
+
+  // KIDS
+  { keys:['hausaufgaben','lernen','schule helfen'], antwort:'Hausaufgaben-Hilfe ohne Stress:\n\n**Goldene Regel**: Nicht FÜR das Kind, sondern MIT dem Kind. Fragen stellen statt Antworten geben.\n\n**Lern-Techniken**:\n• **Pomodoro**: 25 Min lernen, 5 Min Pause (bei Kindern 20+5)\n• **Fester Lernplatz**: gut beleuchtet, ohne Handy\n• **Frühstück**: Vollkornbrot + Eiweiß = stabile Konzentration\n• **Bewegung in Pausen**: Treppe rauf-runter aktiviert Gehirn\n• **Vor dem Schlaf wiederholen**: festigt Erinnerung\n\n**Kostenlose Lernportale**:\n• Anton-App (Klasse 1–10, alle Fächer)\n• Lehrer Schmidt (YouTube, Grundschule + weiterführend)\n• Daniel Jung (40.000+ Mathe-Videos)\n• MrWissen2go (Geschichte, Politik)\n\nUnter "Kinder → Hausaufgaben" findest du Klassen 1–12 mit YouTube-Empfehlungen.', icon:'📚' }
+];
+
 function kiAntwortFinden(frage) {
-  const q = frage.toLowerCase();
+  const q = frage.toLowerCase().trim();
   const treffer = [];
+  let beste = null;
+  let besteScore = 0;
 
-  // 1. Leistungen (Wohngeld, Kindergeld, Elterngeld etc.)
-  if (typeof BUNDESWEITE_LEISTUNGEN !== 'undefined') {
-    BUNDESWEITE_LEISTUNGEN.forEach(l => {
-      if ((l.name + ' ' + l.beschreibung).toLowerCase().includes(q.split(' ')[0]) ||
-          q.includes(l.name.toLowerCase())) {
-        treffer.push({
-          icon: l.emoji || '💰',
-          titel: l.name + ' (' + l.betrag + ')',
-          sub: l.beschreibung.slice(0, 120),
-          action: `zuSektion('leistungen')`
-        });
+  // 1. KI-Wissen durchsuchen mit Score-System
+  KI_WISSEN.forEach(eintrag => {
+    eintrag.keys.forEach(k => {
+      const kw = k.toLowerCase();
+      // Volltreffer
+      if (q.includes(kw)) {
+        const score = kw.length / (1 + Math.abs(q.length - kw.length) * 0.01);
+        if (score > besteScore) { besteScore = score; beste = eintrag; }
       }
-    });
-  }
-
-  // 2. Anträge mit Schritt-Anleitung
-  if (typeof ANTRAEGE !== 'undefined') {
-    ANTRAEGE.forEach(a => {
-      if ((a.name + ' ' + a.beschreibung).toLowerCase().includes(q.split(' ')[0]) ||
-          q.includes(a.name.toLowerCase())) {
-        const exists = treffer.find(t => t.titel.startsWith(a.name));
-        if (!exists) {
-          treffer.push({
-            icon: a.emoji || '📋',
-            titel: 'Formular: ' + a.name,
-            sub: 'Schritt-für-Schritt-Anleitung · ' + a.dauer,
-            action: `state.antragId='${a.id}';zuSektion('formular')`
-          });
+      // Wortweise
+      else {
+        const qWoerter = q.split(/[\s,.!?]+/).filter(w => w.length > 2);
+        const kwWoerter = kw.split(/\s+/);
+        const matches = qWoerter.filter(qw => kwWoerter.some(kww => kww.includes(qw) || qw.includes(kww))).length;
+        if (matches > 0) {
+          const score = matches * 0.5;
+          if (score > besteScore) { besteScore = score; beste = eintrag; }
         }
       }
     });
-  }
+  });
 
-  // 3. Gesundheits-Tipps
+  // 1b. Gesundheits-Datenbank durchsuchen (659 Heilmittel) für ausführliche Gesundheits-Antworten
+  let gesundheitTreffer = null;
   if (typeof GESUNDHEIT_DATEN !== 'undefined') {
-    for (const [katId, kat] of Object.entries(GESUNDHEIT_DATEN)) {
-      const matches = (kat.tipps || []).filter(t =>
-        (t.titel + ' ' + t.text).toLowerCase().includes(q.split(' ')[0]) ||
-        q.includes(kat.label.toLowerCase())
-      );
-      matches.slice(0, 2).forEach(t => {
-        treffer.push({
-          icon: kat.icon || '🌿',
-          titel: t.titel,
-          sub: t.text.slice(0, 140),
-          action: `state.gesundheitTab='${katId}';zuSektion('gesundheit')`
-        });
-      });
-      if (matches.length > 0 && !treffer.find(x => x.titel === kat.label)) break;
+    const gesundheitSynonyme = {
+      fieber:['fieber','temperatur','glüht','heiße stirn'],
+      bauch:['bauch','bauchweh','bauchschmerz','magen','übelkeit','durchfall','erbrechen','erbricht','brechen','blähung','verstopfung'],
+      erkaeltung:['erkältung','erkältet','husten','schnupfen','halsweh','halsschmerz','grippe','niesen','heiser'],
+      kopf:['kopfschmerz','kopfweh','migräne'],
+      schlaf:['schlafen','einschlafen','durchschlafen','schlafproblem','schläft schlecht','schläft nicht'],
+      verbrennung:['verbrennung','verbrannt','verbrüh'],
+      insekten:['insekt','mücke','wespe','biene','zecke','stich','gestochen'],
+      haut:['hautausschlag','ausschlag','ekzem','juckt','jucken','pickel','neurodermitis','windpocken','rote flecken'],
+      zaehne:['zahn','zähne','zahnen','zahnschmerz','zahnungsschmerz'],
+      augen:['auge','augen','bindehaut','gerstenkorn'],
+      ohren:['ohr','ohren','ohrenschmerz','ohrenweh'],
+      ruecken:['rücken','rückenschmerz','verspannung','nacken'],
+      ernaehrung:['ernährung','vitamin','gesund essen','appetit'],
+      mental:['stress','angst','traurig','überfordert','psyche','panik','sorgen'],
+      immunsystem:['immunsystem','abwehr','immun','oft krank','ständig krank'],
+      ersteHilfe:['erste hilfe','schnittwunde','wunde','nasenbluten','sturz','prellung','platzwunde']
+    };
+    for (const [katId, woerter] of Object.entries(gesundheitSynonyme)) {
+      const kat = GESUNDHEIT_DATEN[katId];
+      if (!kat) continue;
+      if (woerter.some(w => q.includes(w)) || (kat.label && q.includes(kat.label.toLowerCase()))) {
+        gesundheitTreffer = kat;
+        break;
+      }
     }
   }
 
-  // 4. Beratungsstellen
-  if (typeof BERATUNGSSTELLEN !== 'undefined') {
-    BERATUNGSSTELLEN.forEach(g => {
-      (g.stellen || []).forEach(s => {
-        if ((s.name + ' ' + s.beschreibung).toLowerCase().includes(q.split(' ')[0])) {
-          treffer.push({
-            icon: g.emoji || '📞',
-            titel: s.name + (s.tel ? ' · ' + s.tel : ''),
-            sub: s.beschreibung.slice(0, 120),
-            action: s.url ? `window.open('${s.url}','_blank')` : null
-          });
+  // 2. Treffer aus App-Inhalten sammeln
+  if (typeof BUNDESWEITE_LEISTUNGEN !== 'undefined') {
+    BUNDESWEITE_LEISTUNGEN.forEach(l => {
+      if ((l.name + ' ' + l.beschreibung).toLowerCase().split(/\s+/).some(w => w.length > 3 && q.includes(w.toLowerCase()))) {
+        treffer.push({ icon:l.emoji||'💰', titel:l.name+' ('+l.betrag+')', sub:l.beschreibung.slice(0,100), action:`zuSektion('leistungen')` });
+      }
+    });
+  }
+  if (typeof ANTRAEGE !== 'undefined') {
+    ANTRAEGE.forEach(a => {
+      if (q.includes(a.name.toLowerCase())) {
+        if (!treffer.find(t => t.titel.includes(a.name))) {
+          treffer.push({ icon:a.emoji||'📋', titel:'Formular: '+a.name, sub:'Schritt-für-Schritt-Anleitung', action:`state.antragId='${a.id}';zuSektion('formular')` });
         }
-      });
+      }
     });
   }
 
-  // 5. Sektionen direkt
   const sektionen = [
-    { schluessel:'wohnung mieten immobilien', titel:'Wohnung finden', icon:'🏘️', action:`zuSektion('wohnung')` },
-    { schluessel:'spielplatz park restaurant umgebung läden', titel:'Umgebung', icon:'📍', action:`zuSektion('umgebung')` },
-    { schluessel:'kalender termin', titel:'Kalender', icon:'📅', action:`zuSektion('kalender')` },
-    { schluessel:'jobs arbeit', titel:'Jobs in der Nähe', icon:'💼', action:`zuSektion('jobs')` },
-    { schluessel:'urlaub reise ferien', titel:'Urlaubsangebote', icon:'✈️', action:`zuSektion('urlaub')` },
-    { schluessel:'rezept kochen essen', titel:'Rezepte & Kochbuch', icon:'🍽️', action:`zuSektion('familie')` },
-    { schluessel:'einkauf liste einkaufsliste', titel:'Einkaufsliste', icon:'🛍️', action:`state.sparTab='liste';zuSektion('sparen')` },
-    { schluessel:'todo aufgabe', titel:'To-Do Liste', icon:'✅', action:`zuSektion('todo')` },
-    { schluessel:'notiz nachricht pinnwand', titel:'Familien-Pinnwand', icon:'📌', action:`zuSektion('notizen')` },
-    { schluessel:'schwanger schwangerschaft', titel:'Schwangerschaft', icon:'🤰', action:`zuSektion('schwangerschaft')` },
-    { schluessel:'hausaufgaben lernen schule', titel:'Hausaufgaben-Hilfe', icon:'📚', action:`zuSektion('hausaufgaben')` },
-    { schluessel:'symptom krank arzt', titel:'Symptom-Check', icon:'🩺', action:`zuSektion('symptome')` },
-    { schluessel:'sparen tipp tipps', titel:'Spar-Tipps', icon:'💡', action:`zuSektion('tipps')` }
+    { schluessel:['wohnung','mieten','immobilien'], titel:'Wohnung finden', icon:'🏘️', action:`zuSektion('wohnung')` },
+    { schluessel:['spielplatz','park','restaurant','umgebung','läden'], titel:'Umgebung', icon:'📍', action:`zuSektion('umgebung')` },
+    { schluessel:['kalender','termin'], titel:'Kalender', icon:'📅', action:`zuSektion('kalender')` },
+    { schluessel:['jobs','arbeit','arbeitsstelle'], titel:'Jobs in der Nähe', icon:'💼', action:`zuSektion('jobs')` },
+    { schluessel:['urlaub','reise','ferien'], titel:'Urlaubsangebote', icon:'✈️', action:`zuSektion('urlaub')` },
+    { schluessel:['rezept','kochen','essen'], titel:'Rezepte & Kochbuch', icon:'🍽️', action:`zuSektion('familie')` },
+    { schluessel:['einkauf','liste','einkaufsliste'], titel:'Einkaufsliste', icon:'🛒', action:`zuSektion('einkaufsliste')` },
+    { schluessel:['todo','aufgabe'], titel:'To-Do Liste', icon:'✅', action:`zuSektion('todo')` },
+    { schluessel:['notiz','nachricht','pinnwand'], titel:'Familien-Pinnwand', icon:'📌', action:`zuSektion('notizen')` },
+    { schluessel:['schwanger','schwangerschaft'], titel:'Schwangerschaft', icon:'🤰', action:`zuSektion('schwangerschaft')` },
+    { schluessel:['hausaufgaben','lernen'], titel:'Hausaufgaben-Hilfe', icon:'📚', action:`zuSektion('hausaufgaben')` },
+    { schluessel:['symptom','krank','arzt'], titel:'Symptom-Check', icon:'🩺', action:`zuSektion('symptome')` },
+    { schluessel:['sparen','tipp','tipps'], titel:'Spar-Tipps', icon:'💡', action:`zuSektion('tipps')` },
+    { schluessel:['gesundheit','hausmittel'], titel:'Gesundheit & Hausmittel', icon:'🌿', action:`zuSektion('gesundheit')` },
+    { schluessel:['basteln','bastelidee'], titel:'Bastelideen', icon:'🎨', action:`zuSektion('basteln')` },
+    { schluessel:['beratung','beratungsstelle','hilfe'], titel:'Beratungsstellen', icon:'📞', action:`zuSektion('beratung')` }
   ];
   sektionen.forEach(s => {
-    const woerter = s.schluessel.split(' ');
-    if (woerter.some(w => q.includes(w))) {
+    if (s.schluessel.some(w => q.includes(w))) {
       if (!treffer.find(t => t.titel === s.titel)) {
-        treffer.push({ icon: s.icon, titel: s.titel, sub: 'In der App öffnen', action: s.action });
+        treffer.push({ icon:s.icon, titel:s.titel, sub:'In der App öffnen', action:s.action });
       }
     }
   });
 
-  // Antwort-Text für Vorlesen zusammenbauen
-  let einleitung = '';
-  let vorlese = '';
-  if (treffer.length === 0) {
-    einleitung = 'Ich habe keine direkte Antwort in der App gefunden.';
-    vorlese = 'Ich habe leider keine direkte Antwort zu deiner Frage gefunden. Du kannst die Frage über den Button auch an ChatGPT senden.';
+  // Antwort zusammenbauen — es gibt IMMER eine Antwort oder Empfehlung
+  let einleitung, text;
+  if (gesundheitTreffer) {
+    einleitung = (gesundheitTreffer.icon || '🌿') + ' ' + gesundheitTreffer.label + ' — das kannst du tun:';
+    text = gesundheitTreffer.tipps.slice(0, 6).map(t => '**' + t.titel + ':** ' + t.text).join('\n\n');
+    if (gesundheitTreffer.warnung) text += '\n\n' + gesundheitTreffer.warnung;
+    text += '\n\nWeitere Hausmittel findest du in der App unter „Gesundheit". Bei starken, anhaltenden oder ungewöhnlichen Beschwerden bitte einen Arzt fragen — bei Kindern im Zweifel lieber einmal zu früh.';
+    if (!treffer.find(t => t.titel && t.titel.includes('Gesundheit'))) {
+      treffer.unshift({ icon:'🌿', titel:'Gesundheit & Hausmittel', sub:gesundheitTreffer.label + ' und viele weitere Themen', action:`zuSektion('gesundheit')` });
+    }
+  } else if (beste) {
+    einleitung = 'Hier ist meine Antwort:';
+    text = beste.antwort;
+  } else if (treffer.length > 0) {
+    einleitung = 'Zu deiner Frage habe ich folgende Bereiche in der App gefunden:';
+    text = 'Schau dir am besten direkt die passenden Sektionen unten an — dort findest du detaillierte Infos, Beispiele und Anleitungen.';
   } else {
-    einleitung = `Ich habe ${treffer.length} Treffer in der App gefunden:`;
-    vorlese = einleitung + ' ' + treffer.slice(0, 3).map(t => t.titel + '. ' + (t.sub || '')).join(' ');
+    einleitung = 'Hier ist meine Empfehlung:';
+    text = 'Stell mir deine Frage gern noch einmal etwas genauer — ich helfe bei allen **Familien-Themen**: Zuschüsse & Anträge, Gesundheit & Hausmittel für Kinder, Erziehung, Schwangerschaft, Schule, Sparen, Recht und mehr.\n\n**Beispiele:**\n• „Mein Kind hat Fieber — was tun?"\n• „Wie viel Kindergeld steht mir zu?"\n• „Wie beantrage ich Wohngeld?"\n• „Mein Kind schläft schlecht"\n\nFür persönliche Beratung: bei Gesundheit hilft der Arzt oder der Bereitschaftsdienst **116117**, bei Geld & Anträgen das zuständige Amt, bei schwierigen Lagen findest du unter Familie → Beratung über 50 kostenlose Anlaufstellen.';
   }
-  return { einleitung, treffer, vorlese };
+
+  // Für Vorlesen aufbereiten (Markdown raus)
+  const vorlese = (einleitung + ' ' + text).replace(/\*\*/g, '').replace(/\n+/g, '. ').replace(/\s+/g, ' ');
+
+  return { einleitung, text, treffer: treffer.slice(0, 5), vorlese };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9039,6 +12902,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Gespeichertes Theme direkt beim Start anwenden
   const einst = einstellungenLaden();
   if (einst.theme) themeAnwenden(einst.theme);
+  // Schriftgröße (Senior-Modus)
+  if (einst.schriftGross) document.documentElement.classList.add('schrift-gross');
+  if (einst.schriftXl)    document.documentElement.classList.add('schrift-xl');
   // Datenschutz-Banner zeigen wenn noch nicht akzeptiert
   setTimeout(() => datenschutzBannerPruefen(), 1500);
+  // Benachrichtigungen prüfen (heutige Termine, Müll morgen, To-dos)
+  setTimeout(() => erinnerungenPruefen(), 3000);
+  setTimeout(() => erinnerungenTick(), 3500);
+  // Zeitbasierte To-Do-Erinnerungen regelmäßig prüfen, solange die App offen ist
+  setInterval(() => erinnerungenTick(), 60000);
+  // Beim Zurückkehren zur App: verpasste Erinnerungen sofort nachholen
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { erinnerungenTick(); erinnerungenPruefen(); }
+  });
+  // Klick auf eine Benachrichtigung (vom Service Worker): zur passenden Sektion springen
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data && e.data.type === 'NAVIGATE' && e.data.sektion && typeof zuSektion === 'function') {
+        zuSektion(e.data.sektion);
+      }
+    });
+  }
+
+  // Hinweis: Das automatische Eintragen geschätzter Müll-Termine wurde entfernt.
+  // Die Schätzung anhand der Postleitzahl war oft falsch. Stattdessen öffnen Nutzer
+  // im Müllkalender-Assistenten den offiziellen Kalender ihrer Stadt.
 });

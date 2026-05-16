@@ -23,8 +23,10 @@
   <!-- Splash Screens iOS -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="css/styles.css?v=11" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="css/styles.css?v=37" />
 </head>
 <body>
 
@@ -72,6 +74,12 @@
     <!-- Header -->
     <header class="header" id="header">
       <div class="header-top">
+        <button class="menu-btn" id="menu-btn" onclick="menuOeffnen()" title="Menü öffnen" aria-label="Menü öffnen">
+          <span class="menu-icon">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="menu-btn-label">Menü</span>
+        </button>
         <div class="logo" onclick="zuSektion('dashboard')" style="cursor:pointer">
           <svg class="logo-icon" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <defs>
@@ -99,20 +107,41 @@
           </button>
         </div>
       </div>
-      <!-- Haupt-Gruppen -->
-      <nav class="nav-gruppen" id="nav-gruppen" role="navigation" aria-label="Hauptkategorien">
-        <button class="nav-g-btn" data-gruppe="start"     onclick="navGruppeWaehlen('start')">Start</button>
-        <button class="nav-g-btn" data-gruppe="geld"      onclick="navGruppeWaehlen('geld')">Geld</button>
-        <button class="nav-g-btn" data-gruppe="formulare" onclick="navGruppeWaehlen('formulare')">Formulare</button>
-        <button class="nav-g-btn" data-gruppe="ort"       onclick="navGruppeWaehlen('ort')">Orte</button>
-        <button class="nav-g-btn" data-gruppe="familie"   onclick="navGruppeWaehlen('familie')">Familie</button>
-        <button class="nav-g-btn" data-gruppe="kinder"    onclick="navGruppeWaehlen('kinder')">Kinder</button>
-        <button class="nav-g-btn" data-gruppe="gesund"    onclick="navGruppeWaehlen('gesund')">Gesund</button>
-        <button class="nav-g-btn" data-gruppe="mehr"      onclick="navGruppeWaehlen('mehr')">Mehr</button>
-      </nav>
-      <!-- Unter-Tabs (erscheinen nach Klick auf Gruppe) -->
+      <!-- Unter-Tabs der gerade gewählten Gruppe -->
       <nav class="nav-sub" id="nav-sub" role="navigation" aria-label="Unternavigation"></nav>
     </header>
+
+    <!-- Slide-out Menü-Drawer (alle Hauptkategorien) -->
+    <div id="menu-backdrop" class="menu-backdrop" onclick="menuSchliessen()"></div>
+    <aside id="menu-drawer" class="menu-drawer" role="dialog" aria-label="Hauptmenü" aria-modal="true">
+      <div class="menu-drawer-kopf">
+        <div class="menu-drawer-titel">🏠 Menü</div>
+        <button class="menu-drawer-close" onclick="menuSchliessen()" aria-label="Menü schließen">✕</button>
+      </div>
+      <nav class="menu-drawer-liste" id="menu-drawer-liste" role="navigation" aria-label="Hauptkategorien">
+        <button class="menu-eintrag" data-gruppe="start"         onclick="menuKlick('start')">         <span class="menu-icon-emoji">🏠</span> <span class="menu-eintrag-label">Start</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="geld"          onclick="menuKlick('geld')">          <span class="menu-icon-emoji">💶</span> <span class="menu-eintrag-label">Geld</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="formulare"     onclick="menuKlick('formulare')">     <span class="menu-icon-emoji">📋</span> <span class="menu-eintrag-label">Formulare</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="ort"           onclick="menuKlick('ort')">           <span class="menu-icon-emoji">📍</span> <span class="menu-eintrag-label">Orte</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="familie"       onclick="menuKlick('familie')">       <span class="menu-icon-emoji">👨‍👩‍👧</span> <span class="menu-eintrag-label">Familie</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="kinder"        onclick="menuKlick('kinder')">        <span class="menu-icon-emoji">🎨</span> <span class="menu-eintrag-label">Kinder</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="gesund"        onclick="menuKlick('gesund')">        <span class="menu-icon-emoji">🌿</span> <span class="menu-eintrag-label">Gesundheit</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="schwangerschaft" onclick="menuKlick('schwangerschaft')"><span class="menu-icon-emoji">🤰</span> <span class="menu-eintrag-label">Schwangerschaft</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="erziehung"     onclick="menuKlick('erziehung')">     <span class="menu-icon-emoji">🧸</span> <span class="menu-eintrag-label">Erziehungshilfe</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="senioren"      onclick="menuKlick('senioren')">      <span class="menu-icon-emoji">👵</span> <span class="menu-eintrag-label">Senioren</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="album"         onclick="menuKlick('album')">         <span class="menu-icon-emoji">📷</span> <span class="menu-eintrag-label">Familien-Album</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="kontakte"      onclick="menuKlick('kontakte')">      <span class="menu-icon-emoji">📇</span> <span class="menu-eintrag-label">Kontakte</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="haushalt"      onclick="menuKlick('haushalt')">      <span class="menu-icon-emoji">🏡</span> <span class="menu-eintrag-label">Haushalt</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="kochbuch"      onclick="menuKlick('kochbuch')">      <span class="menu-icon-emoji">📔</span> <span class="menu-eintrag-label">Mein Kochbuch</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="einkaufsliste" onclick="menuKlick('einkaufsliste')"><span class="menu-icon-emoji">🛒</span> <span class="menu-eintrag-label">Einkaufsliste</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="tipps"         onclick="menuKlick('tipps')">         <span class="menu-icon-emoji">💡</span> <span class="menu-eintrag-label">Tipps</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="einstellungen" onclick="menuKlick('einstellungen')"><span class="menu-icon-emoji">⚙️</span> <span class="menu-eintrag-label">Einstellungen</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="mehr"          onclick="menuKlick('mehr')">          <span class="menu-icon-emoji">✨</span> <span class="menu-eintrag-label">Mehr</span> <span class="menu-pfeil">›</span></button>
+      </nav>
+      <div class="menu-drawer-fuss">
+        <p>🏠 FamilienApp · Für die ganze Familie</p>
+      </div>
+    </aside>
 
     <!-- Hauptinhalt -->
     <main class="main" id="content" role="main" aria-live="polite"></main>
@@ -123,6 +152,30 @@
     </footer>
 
   </div><!-- /#app -->
+
+  <!-- Scroll-to-Top Button -->
+  <button id="scroll-top-btn" class="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Nach oben scrollen">↑</button>
+
+  <!-- In-App-Browser-Modal (Iframe-Viewer) -->
+  <div id="iframe-modal" class="iframe-modal versteckt" role="dialog" aria-modal="true" aria-label="Eingebettete Seite">
+    <div class="iframe-modal-kopf">
+      <div class="iframe-modal-titel" id="iframe-modal-titel">Seite wird geladen…</div>
+      <div class="iframe-modal-aktionen">
+        <button class="iframe-modal-btn" onclick="iframeNeuLaden()" title="Neu laden">🔄</button>
+        <button class="iframe-modal-btn" onclick="iframeExternOeffnen()" title="In neuem Tab öffnen">↗</button>
+        <button class="iframe-modal-btn iframe-modal-close" onclick="iframeSchliessen()" aria-label="Schließen">✕</button>
+      </div>
+    </div>
+    <div class="iframe-modal-body">
+      <iframe id="iframe-modal-frame" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" loading="lazy" title="Eingebettete Seite"></iframe>
+      <div id="iframe-modal-fehler" class="iframe-modal-fehler versteckt">
+        <div class="iframe-fehler-icon">🔒</div>
+        <div class="iframe-fehler-titel">Diese Seite lässt sich nicht einbetten</div>
+        <div class="iframe-fehler-text">Aus Sicherheitsgründen blockiert <strong id="iframe-fehler-host"></strong> das Anzeigen in anderen Apps. Das ist normal — wir können die Seite trotzdem im Browser-Tab öffnen.</div>
+        <button class="btn btn-primary" onclick="iframeExternOeffnen()">🌐 Im Browser öffnen</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Bottom Navigation für moderne Mobile-UX -->
   <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Hauptnavigation Mobile">
@@ -143,9 +196,26 @@
     </button>
   </nav>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/data.js?v=10"></script>
-  <script src="js/app.js?v=10"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="js/data.js?v=37"></script>
+  <script src="js/app.js?v=37"></script>
+  <script>
+    // Scroll-to-Top Button-Sichtbarkeit
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('scroll-top-btn');
+      if (!btn) return;
+      if (window.scrollY > 400) btn.classList.add('sichtbar');
+      else btn.classList.remove('sichtbar');
+    }, { passive: true });
+    // ESC schließt Menü
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('menu-drawer')?.classList.contains('offen')) {
+        if (typeof menuSchliessen === 'function') menuSchliessen();
+      }
+    });
+  </script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -158,7 +228,7 @@
             nw.addEventListener('statechange', () => {
               if (nw.state === 'activated') {
                 caches.keys().then(keys => Promise.all(
-                  keys.filter(k => !k.includes('familienapp-v10')).map(k => caches.delete(k))
+                  keys.filter(k => !k.includes('familienapp-v35')).map(k => caches.delete(k))
                 )).then(() => location.reload());
               }
             });

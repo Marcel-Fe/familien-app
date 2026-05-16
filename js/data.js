@@ -1474,37 +1474,317 @@ const SECONDHAND_PORTALE = [
 // Spar-Tipps nach Kategorien
 const SPAR_TIPPS = [
   {
-    kategorie: 'Einkaufen',
-    emoji: '🛒',
+    id: 'einkaufen', kategorie: 'Einkaufen & Lebensmittel', emoji: '🛒',
     tipps: [
-      { titel: 'Einkaufsliste schreiben', text: 'Immer mit Liste einkaufen — spart im Schnitt 20–30 % weil keine Impulskäufe passieren.' },
-      { titel: 'Eigenmarken wählen', text: 'Aldi/Lidl-Eigenmarken sind bis zu 50 % günstiger als Marken — oft aus denselben Fabriken.' },
-      { titel: 'Wochenplan machen', text: 'Mahlzeiten für die Woche planen, dann gezielt einkaufen — kein Wegwerfen, spart bis zu 40 € im Monat.' },
-      { titel: 'Prospekte vor dem Einkauf', text: 'Kaufda oder Marktguru öffnen, günstigste Angebote notieren und danach gezielt einkaufen.' },
-      { titel: 'Abends einkaufen', text: '30–60 Min. vor Ladenschluss: Frischprodukte mit gelbem Aufkleber — bis 70 % reduziert.' }
+      { titel: 'Immer mit Einkaufsliste', text: 'Mit Liste einkaufen spart 20–30 % — keine Impulskäufe. Vorher kurz in Kühlschrank und Vorrat schauen.' },
+      { titel: 'Eigenmarken statt Marken', text: 'Eigenmarken von Aldi, Lidl und Rewe sind bis zu 50 % günstiger — oft aus denselben Fabriken wie die Markenware.' },
+      { titel: 'Wochenplan fürs Essen', text: 'Mahlzeiten für die Woche planen und gezielt einkaufen. Weniger wegwerfen spart bis zu 40 € im Monat.' },
+      { titel: 'Nicht hungrig einkaufen', text: 'Wer hungrig in den Laden geht, kauft deutlich mehr. Lieber nach dem Essen losgehen.' },
+      { titel: 'Reduziertes am Abend', text: '30–60 Minuten vor Ladenschluss: Frischware mit rotem oder gelbem Aufkleber — oft bis 70 % günstiger.' },
+      { titel: 'Grundpreis vergleichen', text: 'Nicht den Packungspreis, sondern den Preis pro Kilo oder Liter auf dem Regaletikett vergleichen.' },
+      { titel: 'Augenhöhe ist teuer', text: 'Teure Marken stehen auf Augenhöhe, günstige oben oder unten im Regal. Bewusst auch dorthin schauen.' },
+      { titel: 'Reste-Apps nutzen', text: 'Apps wie Too Good To Go verkaufen Reste-Tüten von Bäckern und Supermärkten für 2–5 € statt Wegwerfen.' },
+      { titel: 'Saisonal und regional', text: 'Obst und Gemüse der Saison ist günstiger und besser. Wochenmarkt kurz vor Schluss bringt Schnäppchen.' },
+      { titel: 'Tafel nutzen', text: 'Bei kleinem Einkommen gibt die Tafel Lebensmittel für einen symbolischen Betrag. Standorte auf tafel.de.' }
     ]
   },
   {
-    kategorie: 'Energie & Kosten',
-    emoji: '⚡',
+    id: 'energie', kategorie: 'Strom, Wasser & Heizen', emoji: '⚡',
     tipps: [
-      { titel: 'Strom-Anbieter wechseln', text: 'Verivox oder Check24 nutzen — einmal im Jahr wechseln spart oft 200–400 € pro Jahr.' },
-      { titel: 'Standby abschalten', text: 'Geräte im Standby kosten bis zu 100 € im Jahr extra. Steckerleiste mit Schalter nutzen.' },
-      { titel: 'Waschmaschine voll beladen', text: 'Nie halbvolle Waschmaschine starten — spart Wasser, Strom und Waschmittel.' },
-      { titel: 'Kalt oder 30°C waschen', text: 'Kalt oder 30°C statt 60°C waschen spart bis zu 60 % Energie pro Waschgang.' }
+      { titel: 'Stromanbieter jährlich wechseln', text: 'Mit Verivox oder Check24 vergleichen — der Wechsel spart oft 200–400 € im Jahr und dauert 10 Minuten.' },
+      { titel: 'Standby abschalten', text: 'Geräte im Standby kosten bis zu 100 € im Jahr. Steckerleiste mit Schalter abends einfach ausknipsen.' },
+      { titel: 'Bei 30 Grad waschen', text: 'Kalt oder 30 Grad statt 60 Grad spart bis zu 60 % Strom pro Waschgang — sauber wird die Wäsche trotzdem.' },
+      { titel: 'Waschmaschine voll beladen', text: 'Nie halbvoll waschen. Eine volle Trommel spart Strom, Wasser und Waschmittel.' },
+      { titel: 'Lufttrocknen statt Trockner', text: 'Der Wäschetrockner ist ein echter Stromfresser. Der Wäscheständer spart rund 100 € im Jahr.' },
+      { titel: 'LED statt alte Lampen', text: 'LED-Lampen brauchen 80 % weniger Strom und halten viel länger. Nach und nach austauschen.' },
+      { titel: 'Heizung runter, Pulli an', text: 'Jedes Grad weniger spart rund 6 % Heizkosten. 20 Grad im Wohnraum und 17 im Schlafzimmer reichen.' },
+      { titel: 'Stoßlüften statt Kippfenster', text: 'Fenster 5 Minuten ganz öffnen statt stundenlang kippen — spart Heizenergie und schützt vor Schimmel.' },
+      { titel: 'Duschen statt baden', text: 'Ein Vollbad braucht dreimal so viel Warmwasser wie eine Dusche. Ein Sparduschkopf hilft zusätzlich.' },
+      { titel: 'Kühlschrank richtig einstellen', text: 'Kühlschrank auf 7 Grad, Gefrierfach auf -18 Grad reicht. Regelmäßiges Abtauen spart zusätzlich Strom.' }
     ]
   },
   {
-    kategorie: 'Freizeit mit Kindern',
-    emoji: '🎠',
+    id: 'haushalt', kategorie: 'Haushalt & Wohnen', emoji: '🏠',
     tipps: [
-      { titel: 'Bibliothek nutzen', text: 'Kostenlos Bücher, DVDs, Hörspiele leihen. Viele Bibliotheken bieten auch kostenlose Veranstaltungen für Kinder an.' },
-      { titel: 'Museen am freien Tag', text: 'Viele Museen haben einen kostenlosen Tag pro Woche — Website des Museums prüfen.' },
-      { titel: 'Stadtpark & Spielplätze', text: 'Kostenlose Freizeitgestaltung — viele Parks haben auch Grillplätze die man kostenlos nutzen kann.' },
-      { titel: 'BuT: Sport & Verein', text: 'Bildung & Teilhabe übernimmt Sport- und Vereinsbeiträge bis 15 €/Monat bei Bürgergeld-Bezug.' },
-      { titel: 'BundesKulturPass', text: 'Jugendliche ab 18 Jahren bekommen 200 € Kulturbudget vom Staat für Konzerte, Kino, Bücher.' }
+      { titel: 'Reiniger selbst machen', text: 'Essig, Natron und Zitronensäure ersetzen die meisten Spezialreiniger — für wenige Cent statt mehrere Euro.' },
+      { titel: 'Reparieren statt wegwerfen', text: 'Repair-Cafés reparieren kostenlos Elektrogeräte, Kleidung und Fahrräder. Standorte über reparatur-initiativen.de.' },
+      { titel: 'Nebenkostenabrechnung prüfen', text: 'Jede zweite Abrechnung ist fehlerhaft. Im Zweifel prüft der Mieterverein sie für einen kleinen Beitrag.' },
+      { titel: 'Gebraucht kaufen', text: 'Möbel, Geräte und Werkzeug gibt es auf Kleinanzeigen oder im Sozialkaufhaus oft fast neu zum halben Preis.' },
+      { titel: 'Leitungswasser trinken', text: 'Leitungswasser ist streng kontrolliert und kostet fast nichts — spart gegenüber Flaschenwasser über 200 € im Jahr.' },
+      { titel: 'Verleihen statt kaufen', text: 'Bohrmaschine, Tapeziertisch oder Raclette: selten Gebrauchtes bei Nachbarn leihen oder im Leihladen ausleihen.' },
+      { titel: 'Wohngeld prüfen', text: 'Auch mit Job kann Wohngeld zustehen — viele Familien verschenken hier Geld. Im Bereich Zuschüsse durchrechnen.' }
     ]
   },
+  {
+    id: 'mobilitaet', kategorie: 'Auto & Unterwegs', emoji: '🚗',
+    tipps: [
+      { titel: 'Spritpreise vergleichen', text: 'Tanken ist abends meist günstiger als morgens. Tank-Apps zeigen die billigste Station in der Nähe.' },
+      { titel: 'Deutschlandticket prüfen', text: 'Für 58 € im Monat bundesweit Bus und Bahn. Wer öfter pendelt, spart damit oft viel gegenüber dem Auto.' },
+      { titel: 'Reifendruck und Fahrweise', text: 'Richtiger Reifendruck und vorausschauendes Fahren senken den Spritverbrauch um bis zu 15 %.' },
+      { titel: 'Fahrgemeinschaften bilden', text: 'Mit Nachbarn oder Kollegen Fahrten teilen — Sprit- und Parkkosten halbieren sich dabei.' },
+      { titel: 'Kfz-Versicherung wechseln', text: 'Bis 30. November kündigen und neu vergleichen — oft 200–400 € Unterschied bei gleichem Schutz.' },
+      { titel: 'Kurze Wege mit dem Rad', text: 'Strecken unter 5 km mit dem Fahrrad fahren — spart Sprit und Parkgebühren und ist gesünder.' },
+      { titel: 'Werkstattpreise vergleichen', text: 'Freie Werkstätten sind oft 30–50 % günstiger als Vertragswerkstätten. Vergleichsportale holen Angebote ein.' }
+    ]
+  },
+  {
+    id: 'vertraege', kategorie: 'Verträge & Versicherungen', emoji: '📑',
+    tipps: [
+      { titel: 'Abos jährlich durchgehen', text: 'Kontoauszüge der letzten 3 Monate prüfen. Jedes Abo, das du kaum nutzt, sofort kündigen.' },
+      { titel: 'Handytarif beim Discounter', text: 'Aldi Talk, Lidl Connect und Co. nutzen dieselben Netze und kosten 5–12 € statt 30–50 € im Monat.' },
+      { titel: 'Nur nötige Versicherungen', text: 'Wirklich wichtig sind Privathaftpflicht, Berufsunfähigkeit und Krankenversicherung. Vieles andere ist verzichtbar.' },
+      { titel: 'Versicherungen bündeln', text: 'Haftpflicht und Hausrat beim selben Anbieter geben oft 15–20 % Rabatt. Kinder sind meist gratis mitversichert.' },
+      { titel: 'Rundfunkbeitrag-Befreiung', text: 'Bei Bürgergeld, BAföG oder bestimmten Leistungen entfällt der Beitrag — Antrag auf rundfunkbeitrag.de stellen.' },
+      { titel: 'Streaming im Wechsel', text: 'Nicht alle Dienste gleichzeitig: einen Monat Netflix, dann kündigen, dann Disney+ — das spart die Hälfte.' },
+      { titel: 'Sozialtarife erfragen', text: 'Manche Internet- und Stromanbieter geben mit Bürgergeld-Bescheid Rabatt. Einfach direkt nachfragen.' }
+    ]
+  },
+  {
+    id: 'kinder', kategorie: 'Kinder & Schule', emoji: '👶',
+    tipps: [
+      { titel: 'Secondhand für Kinderkleidung', text: 'Kinder wachsen schnell. Flohmärkte, Kleiderbasare und Kleinanzeigen sparen 50–80 % der Kosten.' },
+      { titel: 'Bildung und Teilhabe nutzen', text: 'Das BuT-Paket zahlt Schulausflüge, 15 €/Monat für Vereine und Schulbedarf — bei Bürgergeld, Wohngeld oder Kinderzuschlag.' },
+      { titel: 'Kinderzuschlag beantragen', text: 'Bis zu 297 € pro Kind im Monat für Familien mit kleinem Einkommen. Antrag bei der Familienkasse stellen.' },
+      { titel: 'Schulbücher gebraucht kaufen', text: 'Gebrauchte Schulbücher gibt es bei booklooker oder auf dem Schul-Basar oft für ein Drittel des Preises.' },
+      { titel: 'Spielzeug tauschen', text: 'Spielzeugbörsen und Tausch mit anderen Familien — Kinder lieben Abwechslung, der Geldbeutel freut sich.' },
+      { titel: 'Bibliothek statt kaufen', text: 'Büchereien haben Bücher, Hörspiele und Spiele, oft mit kostenlosem Kinderprogramm. Ausweis für Kinder meist gratis.' },
+      { titel: 'Förderverein fragen', text: 'Bei knappem Geld: Schulen und Fördervereine haben oft stille Töpfe für Ausflüge oder Material.' }
+    ]
+  },
+  {
+    id: 'freizeit', kategorie: 'Freizeit & Urlaub', emoji: '🎠',
+    tipps: [
+      { titel: 'Bibliothek als Freizeitort', text: 'Kostenlos Bücher, Spiele und Filme leihen — viele Büchereien bieten gratis Veranstaltungen für Kinder.' },
+      { titel: 'Museen am freien Tag', text: 'Viele Museen haben einen kostenlosen Tag im Monat. Häufig ist es der erste Sonntag.' },
+      { titel: 'Familienpass der Stadt', text: 'Viele Städte geben einen Familienpass mit Rabatt für Bäder, Zoo und Museen — beim Bürgeramt nachfragen.' },
+      { titel: 'Natur kostet nichts', text: 'Wald, Parks, Spielplätze und Seen: Picknick, Schatzsuche und Geocaching machen Familienzeit ganz ohne Eintritt.' },
+      { titel: 'Ferien zu Hause planen', text: 'Tagesausflüge in der Region statt teurer Reise — Schwimmbad, Wandern, Zoo. Günstig und ohne Reisestress.' },
+      { titel: 'Nebensaison buchen', text: 'Urlaub direkt vor oder nach den Schulferien ist oft deutlich billiger. Auch Camping spart viel Geld.' },
+      { titel: 'BuT für Vereinsbeitrag', text: 'Sportverein oder Musikschule: 15 € im Monat übernimmt das Bildungspaket bei Leistungsbezug.' },
+      { titel: 'Stadtfeste besuchen', text: 'Stadtfeste, Open-Air-Konzerte und Bibliotheks-Aktionen sind meist kostenlos — die Stadt-Website verrät die Termine.' }
+    ]
+  },
+  {
+    id: 'geld', kategorie: 'Konto & Geld im Griff', emoji: '💳',
+    tipps: [
+      { titel: 'Haushaltsbuch führen', text: 'Einen Monat lang alle Ausgaben aufschreiben — per App oder Heft. So siehst du sofort, wo das Geld verschwindet.' },
+      { titel: 'Umschlag-Methode', text: 'Bargeld für Lebensmittel, Freizeit und Kleidung in getrennte Umschläge. Ist der Umschlag leer, ist Schluss.' },
+      { titel: 'Kostenloses Girokonto', text: 'Viele Banken verlangen Kontoführungsgebühren. Ein kostenloses Konto spart 60–120 € im Jahr.' },
+      { titel: 'Dauerauftrag aufs Sparkonto', text: 'Direkt nach dem Geldeingang einen festen Betrag sparen — sich selbst zuerst bezahlen.' },
+      { titel: 'Dispo vermeiden', text: 'Der Dispokredit kostet oft 10–14 % Zinsen. Bei dauerhaftem Minus ist ein Ratenkredit viel günstiger.' },
+      { titel: 'Die 24-Stunden-Regel', text: 'Vor größeren Anschaffungen einen Tag warten. Die Hälfte der spontanen Wünsche verschwindet von allein.' },
+      { titel: 'Alle Zuschüsse prüfen', text: 'Wohngeld, Kinderzuschlag, Bildungspaket — viele Familien lassen Hunderte Euro liegen. Im Bereich Zuschüsse prüfen.' }
+    ]
+  },
+  {
+    id: 'gesundheit', kategorie: 'Gesundheit & Apotheke', emoji: '💊',
+    tipps: [
+      { titel: 'Generika statt Markenmedikament', text: 'Wirkstoffgleiche Generika sind deutlich günstiger. In der Apotheke gezielt danach fragen.' },
+      { titel: 'Apothekenpreise vergleichen', text: 'Bei rezeptfreien Mitteln lohnt der Preisvergleich mit Versandapotheken — die Preise schwanken stark.' },
+      { titel: 'Zuzahlungsbefreiung', text: 'Wer die Belastungsgrenze erreicht, zahlt den Rest des Jahres nichts mehr dazu — bei der Krankenkasse beantragen.' },
+      { titel: 'Bonusprogramm der Kasse', text: 'Viele Krankenkassen zahlen Boni für Vorsorge und Sport — so sind 50–150 € im Jahr drin.' },
+      { titel: 'Hausmittel kennen', text: 'Bei leichten Beschwerden helfen oft einfache Hausmittel. Im Bereich Gesundheit gibt es Hunderte erprobte Tipps.' }
+    ]
+  }
+];
+
+// ===== GELDANLAGEN — anfängerfreundliche Anlageformen mit Schritt-für-Schritt-Anleitung =====
+const GELDANLAGEN = [
+  {
+    id: 'notgroschen', emoji: '🛟', name: 'Notgroschen aufbauen', farbe: '#0EA5E9', bg: '#E0F2FE',
+    risiko: 'Kein Risiko', rendite: 'Sicherheit', verfuegbar: 'Jederzeit',
+    fuer: 'Der allererste Schritt — vor jeder anderen Geldanlage.',
+    beschreibung: 'Der Notgroschen ist ein Sicherheitspolster für kaputte Waschmaschine, Autoreparatur oder eine Nachzahlung. Ziel sind 2–3 Monatsausgaben. So musst du bei Überraschungen keinen teuren Kredit aufnehmen.',
+    schritte: [
+      { nr:1, titel:'Zielbetrag ausrechnen', text:'Monatliche Ausgaben mal 3. Beispiel: 2.000 € Ausgaben ergeben 6.000 € als Ziel. Auch 1.000 € sind ein guter Anfang.' },
+      { nr:2, titel:'Eigenes Tagesgeldkonto nutzen', text:'Den Notgroschen getrennt vom Girokonto auf einem Tagesgeldkonto parken — verfügbar, aber nicht in Griffweite für Spontankäufe.' },
+      { nr:3, titel:'Kleinen Dauerauftrag einrichten', text:'Nach jedem Geldeingang automatisch 25–100 € auf das Notgroschen-Konto. Lieber klein und regelmäßig als gar nicht.' },
+      { nr:4, titel:'Nach Nutzung wieder auffüllen', text:'Wenn du den Notgroschen brauchst, ist das genau richtig so. Danach Schritt für Schritt wieder aufstocken.' }
+    ],
+    tipp: 'Den Notgroschen niemals in Aktien oder ETF anlegen — er muss sicher und sofort verfügbar bleiben.'
+  },
+  {
+    id: 'tagesgeld', emoji: '💶', name: 'Tagesgeldkonto', farbe: '#059669', bg: '#D1FAE5',
+    risiko: 'Sehr sicher', rendite: 'rund 2–3 % pro Jahr', verfuegbar: 'Täglich',
+    fuer: 'Geld, das sicher liegen und trotzdem Zinsen bringen soll.',
+    beschreibung: 'Ein Tagesgeldkonto ist wie ein Sparkonto: Du kommst jederzeit ans Geld und bekommst Zinsen. Bis 100.000 € pro Bank ist dein Geld durch die gesetzliche Einlagensicherung geschützt.',
+    schritte: [
+      { nr:1, titel:'Zinsen vergleichen', text:'Auf einem unabhängigen Portal wie Finanztip oder Verivox die aktuellen Zinsen vergleichen. Hausbank-Angebote sind oft die schlechtesten.' },
+      { nr:2, titel:'Auf Einlagensicherung achten', text:'Eine Bank mit Sitz in der EU wählen — dann sind bis 100.000 € gesetzlich abgesichert.' },
+      { nr:3, titel:'Konto online eröffnen', text:'Die Eröffnung dauert 10–15 Minuten. Den Ausweis per Video oder in der Postfiliale bestätigen.' },
+      { nr:4, titel:'Geld überweisen', text:'Vom Girokonto auf das Tagesgeldkonto überweisen. Die Zinsen werden meist monatlich oder jährlich gutgeschrieben.' }
+    ],
+    tipp: 'Lockzinsen gelten oft nur ein paar Monate. Danach ruhig wieder vergleichen und notfalls wechseln.'
+  },
+  {
+    id: 'festgeld', emoji: '🔒', name: 'Festgeld', farbe: '#7C3AED', bg: '#EDE9FE',
+    risiko: 'Sehr sicher', rendite: 'meist etwas höher als Tagesgeld', verfuegbar: 'Erst nach der Laufzeit',
+    fuer: 'Geld, das du sicher 1–3 Jahre nicht brauchst.',
+    beschreibung: 'Beim Festgeld legst du einen Betrag für eine feste Laufzeit an, zum Beispiel 1, 2 oder 3 Jahre, und bekommst dafür einen garantierten Zins. Vorher kommst du normalerweise nicht ans Geld.',
+    schritte: [
+      { nr:1, titel:'Nur planbares Geld anlegen', text:'Festgeld eignet sich für Geld, das du sicher eine Weile nicht brauchst — nicht für den Notgroschen.' },
+      { nr:2, titel:'Laufzeit und Zins vergleichen', text:'Auf Vergleichsportalen die Laufzeiten gegenüberstellen. Eine längere Laufzeit bringt meist mehr Zins, bindet das Geld aber länger.' },
+      { nr:3, titel:'Konto eröffnen und einzahlen', text:'Ähnlich wie beim Tagesgeld online eröffnen. Der Betrag wird dann für die ganze Laufzeit fest angelegt.' },
+      { nr:4, titel:'An das Laufzeitende denken', text:'Am Ende wird das Geld oft automatisch neu angelegt, wenn du nicht widersprichst. Den Termin notieren und neu entscheiden.' }
+    ],
+    tipp: 'Treppen-Strategie: das Geld auf mehrere Laufzeiten verteilen — so wird regelmäßig ein Teil wieder frei.'
+  },
+  {
+    id: 'etf', emoji: '📈', name: 'ETF-Sparplan', farbe: '#D97706', bg: '#FEF3C7',
+    risiko: 'Schwankungen, langfristig bewährt', rendite: 'langfristig rund 6–7 % pro Jahr im Durchschnitt (nicht garantiert)', verfuegbar: 'Verkauf jederzeit möglich',
+    fuer: 'Vermögensaufbau über viele Jahre — mindestens 10 bis 15.',
+    beschreibung: 'Ein ETF ist ein Korb aus vielen hundert Aktien weltweit — du investierst breit gestreut in einem Schritt. Mit einem Sparplan legst du automatisch jeden Monat einen kleinen Betrag an, schon ab 25 €. Der Wert schwankt, über lange Zeit ist die Anlage aber bewährt.',
+    schritte: [
+      { nr:1, titel:'Erst Notgroschen, dann ETF', text:'Investiere nur Geld, das du viele Jahre nicht brauchst. Schulden tilgen und Notgroschen anlegen kommen zuerst.' },
+      { nr:2, titel:'Depot bei einem günstigen Anbieter', text:'Ein Wertpapierdepot bei einem Neobroker oder einer Direktbank eröffnen. Auf niedrige oder keine Depotgebühren achten.' },
+      { nr:3, titel:'Breit gestreuten ETF wählen', text:'Ein weltweiter ETF, etwa auf den Index MSCI World oder FTSE All-World, streut über viele Länder und Branchen.' },
+      { nr:4, titel:'Sparplan einrichten', text:'Einen festen monatlichen Betrag einstellen, zum Beispiel 25–100 €. Der Kauf läuft dann automatisch — du musst nichts weiter tun.' },
+      { nr:5, titel:'Ruhe bewahren und dranbleiben', text:'Kurse fallen auch mal. Genau dann nicht verkaufen — wer den Sparplan einfach weiterlaufen lässt, kauft günstig nach.' }
+    ],
+    tipp: 'Einen Freistellungsauftrag bei der Bank stellen: Gewinne bleiben bis 1.000 € pro Jahr steuerfrei.'
+  },
+  {
+    id: 'kinder', emoji: '🧸', name: 'Für die Kinder sparen', farbe: '#EC4899', bg: '#FCE7F3',
+    risiko: 'je nach gewählter Anlageform', rendite: 'je nach gewählter Anlageform', verfuegbar: 'je nach gewählter Anlageform',
+    fuer: 'Ein Startkapital für Führerschein, Ausbildung oder die erste eigene Wohnung.',
+    beschreibung: 'Schon kleine Beträge wachsen über 18 Jahre kräftig. Geld, das erst in vielen Jahren gebraucht wird, darf ruhig in einen ETF-Sparplan. Was bald gebraucht wird, gehört aufs Tagesgeld.',
+    schritte: [
+      { nr:1, titel:'Sparziel und Zeitraum klären', text:'Wie viele Jahre bleiben bis zum 18. Geburtstag? Je länger der Zeitraum, desto eher passt ein ETF-Sparplan.' },
+      { nr:2, titel:'Kleinen Betrag festlegen', text:'Schon 25 € im Monat ergeben über 18 Jahre eine spürbare Summe. Einen Teil des Kindergeldes zu sparen ist ein guter Trick.' },
+      { nr:3, titel:'Konto oder Depot auf das Kind', text:'Ein Sparplan kann auf den Namen des Kindes laufen. Das hat Steuervorteile, das Geld gehört dann aber rechtlich dem Kind.' },
+      { nr:4, titel:'Verwandte einbinden', text:'Großeltern schenken zu Geburtstagen oft Geld — ein Hinweis auf den Sparplan lenkt es in sinnvolle Bahnen.' }
+    ],
+    tipp: 'Wird das Geld zu einem festen Zeitpunkt gebraucht, ein paar Jahre vorher schrittweise vom ETF aufs Tagesgeld umschichten.'
+  },
+  {
+    id: 'altersvorsorge', emoji: '🏦', name: 'Fürs Alter vorsorgen', farbe: '#0891B2', bg: '#CFFAFE',
+    risiko: 'je nach Form', rendite: 'je nach Form, oft mit staatlicher Förderung', verfuegbar: 'meist erst ab dem Rentenalter',
+    fuer: 'Zusätzliche Sicherheit, weil die gesetzliche Rente oft nicht reicht.',
+    beschreibung: 'Neben der gesetzlichen Rente gibt es geförderte Wege: die betriebliche Altersvorsorge über den Arbeitgeber und private Vorsorge. Gerade für Familien lohnt sich ein früher, kleiner Start.',
+    schritte: [
+      { nr:1, titel:'Renteninformation anschauen', text:'Einmal im Jahr kommt die Renteninformation per Post. Sie zeigt die voraussichtliche Rente — meist deutlich weniger als das heutige Einkommen.' },
+      { nr:2, titel:'Betriebsrente erfragen', text:'Viele Arbeitgeber zahlen zur betrieblichen Altersvorsorge dazu. Nach dem Angebot fragen — geschenktes Geld nicht liegen lassen.' },
+      { nr:3, titel:'Förderungen prüfen', text:'Je nach Lebenssituation gibt es Zulagen, etwa für Kinder. Welche Form am besten passt, ist sehr individuell.' },
+      { nr:4, titel:'Unabhängig beraten lassen', text:'Die Verbraucherzentrale bietet günstige, unabhängige Beratung zur Altersvorsorge — ganz ohne Verkaufsinteresse.' }
+    ],
+    tipp: 'Finger weg von teuren Verträgen mit hohen Abschlusskosten. Im Zweifel zuerst zur Verbraucherzentrale.'
+  }
+];
+
+// ===== SENIOREN — alles für ein gutes Leben im Alter =====
+const SENIOREN_DATEN = {
+  rente: {
+    icon:'💶', label:'Rente & Geld', farbe:'#059669', bg:'#D1FAE5',
+    intro:'Im Alter steht oft mehr Geld zu, als viele denken. Diese Hilfen lohnen sich zu prüfen.',
+    tipps:[
+      { titel:'Grundsicherung im Alter', text:'Wenn die Rente nicht zum Leben reicht, gibt es Grundsicherung beim Sozialamt — sie deckt Lebensunterhalt, Miete und Heizung.', tipp:'Anders als beim Bürgergeld wird das Vermögen der Kinder nicht herangezogen.' },
+      { titel:'Wohngeld auch für Rentner', text:'Viele Rentner haben Anspruch auf Wohngeld als Mietzuschuss und wissen es nicht. Antrag beim Wohngeldamt der Stadt.', tipp:'Im Bereich Zuschüsse kannst du den Anspruch grob durchrechnen.' },
+      { titel:'Rundfunkbeitrag-Befreiung', text:'Bei Grundsicherung oder dem Merkzeichen RF im Schwerbehindertenausweis entfällt der Rundfunkbeitrag.', tipp:'Antrag online auf rundfunkbeitrag.de.' },
+      { titel:'Kostenlose Renten-Beratung', text:'Die Deutsche Rentenversicherung berät kostenlos zu Rentenhöhe, Anträgen und Zuschlägen — Termin vereinbaren.', tipp:'Auch ungenutzte Kindererziehungszeiten lassen sich hier noch klären.' },
+      { titel:'Steuererklärung lohnt oft', text:'Auch Rentner bekommen häufig Geld zurück. Ein Lohnsteuerhilfeverein hilft günstig beim Ausfüllen.', tipp:'Krankheitskosten und Handwerkerleistungen lassen sich absetzen.' },
+      { titel:'Hilfe bei Energiekosten', text:'Der Stromspar-Check unterstützt Haushalte mit kleinem Einkommen kostenlos beim Energiesparen — mit kostenlosen Soforthilfen.', tipp:'Anmeldung über die Caritas oder den lokalen Anbieter.' },
+      { titel:'Vergünstigter Nahverkehr', text:'Viele Städte bieten Senioren ein vergünstigtes Ticket für Bus und Bahn. Beim Verkehrsverbund nachfragen.', tipp:'Mit dem Deutschlandticket gilt 58 € im Monat bundesweit.' }
+    ]
+  },
+  pflege: {
+    icon:'🤝', label:'Pflege & Hilfe', farbe:'#0891B2', bg:'#CFFAFE',
+    intro:'Pflege beginnt nicht erst im Pflegeheim. Schon bei kleinem Hilfebedarf gibt es Unterstützung.',
+    tipps:[
+      { titel:'Pflegegrad beantragen', text:'Schon bei leichtem Hilfebedarf lohnt der Antrag bei der Pflegekasse. Der Gutachter kommt nach Hause und schätzt den Bedarf ein.', tipp:'Vorher eine Woche ein Pflege-Tagebuch führen — das hilft im Gutachten.' },
+      { titel:'Entlastungsbetrag nutzen', text:'Jeder mit Pflegegrad bekommt rund 130 € im Monat für Alltagshilfen wie Putzen oder Begleitung — er verfällt sonst.', tipp:'Nicht genutzte Beträge lassen sich noch ein halbes Jahr nachholen.' },
+      { titel:'Pflegehilfsmittel gratis', text:'Zum Verbrauch bestimmte Hilfsmittel wie Handschuhe oder Betteinlagen zahlt die Pflegekasse mit rund 40 € im Monat.', tipp:'Einfach eine Box bei einem Anbieter bestellen — die rechnen direkt mit der Kasse ab.' },
+      { titel:'Verhinderungspflege', text:'Wenn pflegende Angehörige Urlaub oder eine Pause brauchen, zahlt die Kasse eine Ersatzpflege.', tipp:'Pflegestützpunkt fragen, wie sich das mit Kurzzeitpflege kombinieren lässt.' },
+      { titel:'Kostenlose Pflegeberatung', text:'Pflegestützpunkte beraten kostenlos und neutral — sie helfen durch den Antrags-Dschungel und kennen alle Angebote vor Ort.', tipp:'Die Beratung steht jedem zu, auch ohne Pflegegrad.' },
+      { titel:'Hausnotruf einrichten', text:'Ein Knopfdruck holt im Notfall Hilfe. Ab Pflegegrad 1 zahlt die Pflegekasse einen Zuschuss zum Hausnotruf.', tipp:'Sinnvoll besonders für Alleinlebende.' },
+      { titel:'Wohnung anpassen', text:'Für barrierefreie Umbauten — etwa bodengleiche Dusche oder Treppenlift — gibt es bis 4.000 € Zuschuss je Maßnahme.', tipp:'Antrag bei der Pflegekasse stellen, bevor der Umbau beginnt.' }
+    ]
+  },
+  gesundheit: {
+    icon:'🩺', label:'Gesund & sicher', farbe:'#DC2626', bg:'#FEE2E2',
+    intro:'Mit ein paar einfachen Gewohnheiten bleibt man länger fit und sicher zu Hause.',
+    tipps:[
+      { titel:'Vorsorge wahrnehmen', text:'Gesundheits-Check, Krebsfrüherkennung und Impfungen gegen Grippe, Gürtelrose und Pneumokokken schützen gezielt im Alter.', tipp:'Die Krankenkasse erinnert auf Wunsch an Vorsorgetermine.' },
+      { titel:'Stürze vermeiden', text:'Lose Teppiche entfernen, Haltegriffe im Bad anbringen, für gute Beleuchtung sorgen und festes Schuhwerk tragen.', tipp:'Ein Sturz ist im Alter ein häufiger Grund für Pflegebedürftigkeit — Vorbeugen lohnt sich.' },
+      { titel:'Medikamentenplan führen', text:'Alle Medikamente auf einer Liste sammeln. Arzt und Apotheke prüfen sie auf Wechselwirkungen.', tipp:'Ab drei Dauer-Medikamenten gibt es Anspruch auf einen amtlichen Medikationsplan.' },
+      { titel:'Genug trinken', text:'Im Alter lässt das Durstgefühl nach. Rund 1,5 Liter am Tag sind wichtig für Kreislauf und Konzentration.', tipp:'Eine Trink-Erinnerung oder eine sichtbare Wasserflasche helfen.' },
+      { titel:'In Bewegung bleiben', text:'Tägliche Spaziergänge, leichte Gymnastik und Gleichgewichtsübungen halten Muskeln und Kreislauf fit.', tipp:'Schon 30 Minuten gehen am Tag macht einen großen Unterschied.' },
+      { titel:'Augen und Ohren prüfen', text:'Gutes Sehen und Hören beugt Stürzen und Vereinsamung vor. Regelmäßig kontrollieren lassen.', tipp:'Ein Hörgerät früh zu nutzen fällt leichter als spät.' },
+      { titel:'Auf den Notfall vorbereitet', text:'Notfallnummern gut sichtbar notieren und eine Notfalldose im Kühlschrank mit den wichtigsten Gesundheitsdaten bereithalten.', tipp:'Rettungsdienste suchen gezielt im Kühlschrank nach der Notfalldose.' }
+    ]
+  },
+  aktiv: {
+    icon:'🚶', label:'Aktiv & unterwegs', farbe:'#16A34A', bg:'#DCFCE7',
+    intro:'Das Alter ist eine aktive Zeit. Unternehmungen und Kontakte halten Körper und Geist jung.',
+    tipps:[
+      { titel:'Umgebung entdecken', text:'Unter Umgebung zeigt die App Parks, Cafés, Museen und Spazierwege in deiner Nähe auf einer Karte.', tipp:'Mit dem Routenplaner siehst du gleich den Weg zu Fuß.' },
+      { titel:'Günstig Bahn fahren', text:'Mit der BahnCard 65 fahren Senioren günstiger. Dazu kommen Sparpreise und das bundesweite Deutschlandticket.', tipp:'Viele Ausflugsziele sind ohne Auto gut erreichbar.' },
+      { titel:'Seniorentreff besuchen', text:'Mehrgenerationenhäuser und Seniorentreffs bieten Kaffeenachmittage, Spielegruppen und Ausflüge — meist kostenlos.', tipp:'Das Seniorenbüro der Stadt kennt die Angebote in der Nähe.' },
+      { titel:'Sport für Senioren', text:'Vereine bieten Senioren-Gymnastik, Wassergymnastik, Wandergruppen und Tanzkreise — gut für Körper und Kontakte.', tipp:'Die Krankenkasse bezuschusst oft Gesundheitskurse.' },
+      { titel:'Neues lernen', text:'Die Volkshochschule hat Kurse von Sprachen bis Computer, oft mit Rabatt für Rentner.', tipp:'Lernen hält das Gehirn nachweislich fit.' },
+      { titel:'Ehrenamt und Engagement', text:'Erfahrung weitergeben als Lesepate, bei der Tafel oder im Besuchsdienst — das hält aktiv und verbindet mit anderen.', tipp:'Freiwilligenagenturen vermitteln passende Aufgaben.' },
+      { titel:'Reisen in der Gruppe', text:'Seniorenreisen und begleitete Busreisen sind stressfrei organisiert — über Wohlfahrtsverbände, Kirchen und Vereine.', tipp:'In der Gruppe reist es sich auch allein nicht einsam.' },
+      { titel:'Ausflüge festhalten', text:'Der Kalender der App hilft, Termine und Ausflüge mit Familie und Freunden zu planen und nichts zu vergessen.', tipp:'Erinnerungen lassen sich pro Termin einstellen.' }
+    ]
+  },
+  alltag: {
+    icon:'🏠', label:'Hilfe im Alltag', farbe:'#D97706', bg:'#FEF3C7',
+    intro:'Niemand muss alles allein schaffen. Für fast jede Alltagsaufgabe gibt es Unterstützung.',
+    tipps:[
+      { titel:'Essen auf Rädern', text:'Warme Mahlzeiten werden nach Hause geliefert. Wohlfahrtsverbände und private Dienste bieten das an.', tipp:'Oft gibt es Probeessen, um den Geschmack zu testen.' },
+      { titel:'Haushaltshilfe', text:'Caritas, AWO und Diakonie vermitteln Hilfe beim Putzen, Wäsche und Einkaufen.', tipp:'Mit Pflegegrad lässt sich das über den Entlastungsbetrag bezahlen.' },
+      { titel:'Einkaufshilfe und Lieferung', text:'Viele Supermärkte liefern nach Hause. Auch die Nachbarschaftshilfe organisiert Einkäufe.', tipp:'Ein fester Liefertag pro Woche bringt Routine.' },
+      { titel:'Fahrdienste nutzen', text:'Behindertenfahrdienste und ehrenamtliche Fahrdienste bringen zum Arzt, zum Einkauf oder zu Terminen.', tipp:'Beim Seniorenbüro oder der Gemeinde nach Angeboten fragen.' },
+      { titel:'Nachbarschaftshilfe', text:'Nicht zögern zu fragen — viele Nachbarn helfen gern, man muss es nur ansprechen.', tipp:'Auch kleine Gegenleistungen wie Kuchen halten die Hilfe lebendig.' },
+      { titel:'Begleitdienste', text:'Ehrenamtliche begleiten zu Behörden, zum Arzt oder einfach zum Spaziergang.', tipp:'Gerade für Wege, die allein unsicher wären, eine große Hilfe.' },
+      { titel:'Seniorenbüro der Stadt', text:'Das Seniorenbüro ist die zentrale Anlaufstelle — es kennt alle Hilfen vor Ort und vermittelt weiter.', tipp:'Ein Anruf dort spart viel eigenes Suchen.' }
+    ]
+  },
+  digital: {
+    icon:'📱', label:'Handy & Betrugsschutz', farbe:'#4F46E5', bg:'#E0E7FF',
+    intro:'Das Smartphone hilft im Alltag — und mit Wissen schützt man sich gut vor Betrügern.',
+    tipps:[
+      { titel:'Smartphone in Ruhe lernen', text:'Volkshochschulen und Vereine bieten Handy-Kurse speziell für Senioren — in kleinem Tempo und mit Geduld.', tipp:'Auch Enkelkinder zeigen gern, wie es geht.' },
+      { titel:'Enkeltrick erkennen', text:'Wenn am Telefon angeblich ein Verwandter dringend Geld braucht: auflegen und die echte, bekannte Nummer selbst anrufen.', tipp:'Echte Verwandte verstehen diese Vorsicht.' },
+      { titel:'Falsche Polizei am Telefon', text:'Die echte Polizei fragt niemals nach Geld oder Wertsachen am Telefon. Im Zweifel auflegen und selbst 110 wählen.', tipp:'Die 110 nie zurückrufen lassen — immer selbst neu wählen.' },
+      { titel:'Keine Daten herausgeben', text:'Bankdaten, PIN und Passwörter niemals am Telefon, per SMS oder E-Mail nennen — egal wie echt es wirkt.', tipp:'Banken fragen so etwas grundsätzlich nicht ab.' },
+      { titel:'Vorsicht an der Haustür', text:'Keine fremden Handwerker oder Verkäufer hereinlassen. Die Türkette nutzen und im Zweifel die Tür geschlossen halten.', tipp:'Echte Stadtwerke kündigen Besuche vorher schriftlich an.' },
+      { titel:'Sichere Passwörter', text:'Für jedes wichtige Konto ein eigenes Passwort. Eine Vertrauensperson kann beim Einrichten helfen.', tipp:'Passwörter an einem sicheren Ort notieren, nicht am Bildschirm.' },
+      { titel:'Im Zweifel nachfragen', text:'Lieber einmal zu viel bei Familie oder der Verbraucherzentrale nachfragen als auf einen Betrug hereinzufallen.', tipp:'Sich Zeit nehmen — Betrüger setzen immer unter Druck.' }
+    ]
+  },
+  recht: {
+    icon:'📜', label:'Vorsorge & Recht', farbe:'#7C3AED', bg:'#EDE9FE',
+    intro:'Wer rechtzeitig vorsorgt, behält die Entscheidung in der eigenen Hand und entlastet die Familie.',
+    tipps:[
+      { titel:'Vorsorgevollmacht', text:'Sie legt fest, wer entscheiden darf, wenn man es selbst nicht mehr kann. Ohne sie bestimmt ein Gericht einen Betreuer.', tipp:'Am besten gemeinsam mit einer Vertrauensperson aufsetzen.' },
+      { titel:'Patientenverfügung', text:'Sie hält fest, welche medizinische Behandlung man im Ernstfall möchte und welche nicht. Vordrucke gibt es kostenlos.', tipp:'Mit dem Hausarzt besprechen, damit alles eindeutig formuliert ist.' },
+      { titel:'Betreuungsverfügung', text:'Falls doch eine gesetzliche Betreuung nötig wird, bestimmt sie, welche Person das Gericht einsetzen soll.', tipp:'Sinnvoll als Ergänzung zur Vorsorgevollmacht.' },
+      { titel:'Testament', text:'Ein handschriftlich verfasstes und unterschriebenes Testament ist gültig. Beim Notar wird es sicher verwahrt.', tipp:'Ohne Testament gilt die gesetzliche Erbfolge — die passt nicht für jeden.' },
+      { titel:'Beratung nutzen', text:'Betreuungsvereine und die Verbraucherzentrale beraten kostenlos oder günstig zu allen Vorsorge-Dokumenten.', tipp:'Fertige, geprüfte Formulare ersparen teure Fehler.' },
+      { titel:'Dokumente griffbereit', text:'Wichtige Unterlagen an einem festen Ort sammeln und einer Vertrauensperson sagen, wo sie liegen.', tipp:'Eine einfache Übersichtsliste hilft den Angehörigen sehr.' },
+      { titel:'Bestattungsvorsorge', text:'Wer möchte, kann eigene Wünsche und Kosten für die Bestattung vorab regeln — das entlastet die Angehörigen.', tipp:'Es besteht kein Zwang dazu — nur ein Angebot für mehr Ruhe.' }
+    ]
+  }
+};
+
+// ===== SAISON-VERANSTALTUNGEN — echte wiederkehrende Feste, Märkte & Programme =====
+const SAISON_EVENTS = [
+  { icon:'🎄', name:'Weihnachtsmärkte', monate:[11,12], text:'Glühwein, Buden, Karussell und Lichter — in fast jeder Stadt und vielen Dörfern von Ende November bis Weihnachten.', suche:'Weihnachtsmarkt' },
+  { icon:'🕯️', name:'Adventssingen & Lichterfeste', monate:[11,12], text:'Konzerte, Krippenspiele und Lichterfeste in Kirchen und Gemeinden während der Adventszeit.', suche:'Adventssingen Lichterfest' },
+  { icon:'🏮', name:'Martinsumzüge', monate:[11], text:'Laternenumzüge zum Sankt-Martins-Tag am 11. November — ein Höhepunkt für Kita- und Grundschulkinder.', suche:'Martinsumzug Laternenumzug' },
+  { icon:'🎆', name:'Silvester & Neujahr', monate:[12,1], text:'Öffentliche Silvesterfeiern, Feuerwerke und Neujahrsempfänge der Städte.', suche:'Silvester Veranstaltung' },
+  { icon:'🤡', name:'Fasching & Karneval', monate:[1,2], text:'Faschingsumzüge, Kinderfasching und Karnevalspartys — vor allem im Februar rund um Rosenmontag.', suche:'Faschingsumzug Kinderfasching' },
+  { icon:'🐣', name:'Ostermärkte & Osterfeuer', monate:[3,4], text:'Ostermärkte, Osterfeuer und Eiersuchen für Familien rund um die Osterfeiertage.', suche:'Ostermarkt Osterfeuer' },
+  { icon:'🌷', name:'Frühlings- & Maifeste', monate:[4,5], text:'Maibaumfeste, Frühlingsfeste und Tag-der-offenen-Tür-Aktionen, sobald es wärmer wird.', suche:'Frühlingsfest Maifest' },
+  { icon:'🎡', name:'Volksfeste & Kirmes', monate:[4,5,6,7,8,9], text:'Rummel mit Fahrgeschäften, Buden und Festzelt — von der kleinen Kirmes bis zum großen Volksfest.', suche:'Volksfest Kirmes' },
+  { icon:'🛍️', name:'Flohmärkte & Trödelmärkte', monate:[3,4,5,6,7,8,9,10], text:'Floh- und Trödelmärkte am Wochenende — günstig stöbern und selbst verkaufen. Oft auch reine Kinder-Flohmärkte.', suche:'Flohmarkt' },
+  { icon:'🏙️', name:'Stadtfeste', monate:[5,6,7,8,9], text:'Großes Stadtfest mit Bühnen, Musik, Essen und Kinderprogramm — meist an einem Wochenende im Sommer.', suche:'Stadtfest' },
+  { icon:'🎬', name:'Open-Air-Kino', monate:[6,7,8], text:'Filme unter freiem Himmel in lauen Sommernächten — viele Städte zeigen auch Familienfilme.', suche:'Open-Air-Kino Freiluftkino' },
+  { icon:'🧒', name:'Ferienprogramm der Stadt', monate:[7,8], text:'In den Sommerferien bieten Städte und Vereine ein buntes Ferienprogramm — Ausflüge, Workshops und Sport, oft günstig oder kostenlos.', suche:'Ferienprogramm Sommerferien Kinder' },
+  { icon:'🍂', name:'Erntedank- & Herbstfeste', monate:[9,10], text:'Erntedankfeste, Herbstmärkte und Kürbisfeste mit Bauernmarkt und Mitmachaktionen für Kinder.', suche:'Herbstfest Erntedankfest' },
+  { icon:'🎃', name:'Halloween-Aktionen', monate:[10], text:'Kürbisschnitzen, Gruselführungen und Halloween-Partys für Kinder Ende Oktober.', suche:'Halloween Kinder Aktion' },
+  { icon:'🛒', name:'Verkaufsoffene Sonntage', monate:[1,2,3,4,5,6,7,8,9,10,11,12], text:'An verkaufsoffenen Sonntagen ist die Innenstadt geöffnet — oft mit Musik, Aktionen und Programm für die ganze Familie.', suche:'verkaufsoffener Sonntag' },
+  { icon:'📚', name:'Bibliotheks- & Vorleseprogramme', monate:[1,2,3,4,5,6,7,8,9,10,11,12], text:'Stadtbüchereien bieten das ganze Jahr Vorlesestunden, Bastelnachmittage und Kinderprogramme — meist kostenlos.', suche:'Stadtbibliothek Kinderprogramm' }
 ];
 
 // ===== ALLE FAMILIEN-TIPPS (80+) =====
@@ -1523,7 +1803,25 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'Eigene Zeit schützen', text: 'Mindestens 1 Stunde pro Woche nur für sich selbst einplanen und als unverrückbar behandeln.' },
       { titel: 'Lob konkret machen', text: 'Nicht "Du bist toll" sondern "Du hast heute so geduldig gewartet — das war toll!" — konkretes Lob wirkt stärker.' },
       { titel: 'Kinderbetreuung clever nutzen', text: 'Tagespflegepersonen (Tagesmütter) sind oft günstiger als Kitas und flexibler. Jugendamt fragt ansprechen.' },
-      { titel: 'Familienrat einführen', text: 'Wöchentlich 10 Min. gemeinsam reden: Was war schön? Was war schwierig? Was wollen wir nächste Woche machen?' }
+      { titel: 'Familienrat einführen', text: 'Wöchentlich 10 Min. gemeinsam reden: Was war schön? Was war schwierig? Was wollen wir nächste Woche machen?' },
+      { titel: 'Bildschirmzeit klar regeln', text: 'WHO-Empfehlung: U2 kein TV, 2-5 J max. 1h, 6-12 J max. 2h pro Tag. Kein Bildschirm 1h vor Schlaf. Klare Regel statt täglich Diskussion.' },
+      { titel: 'Geschwisterstreit moderieren', text: 'Nicht Schiedsrichter spielen — Kinder beide Seiten erzählen lassen, dann gemeinsam Lösung finden. Trainiert Empathie und Konfliktlösung.' },
+      { titel: 'Vorbild sein bei Emotionen', text: 'Kinder kopieren Reaktionen. Wer selbst tief atmet bei Stress, lernt Kindern die wertvollste Lebenskompetenz.' },
+      { titel: 'Tagesabschluss-Ritual', text: 'Jeden Abend 5 Min: "Was war heute schön? Worauf bin ich stolz?" Stärkt Selbstwert und positives Denken bei Kindern.' },
+      { titel: 'Wutanfälle akzeptieren', text: 'Bei kleinen Kindern: Wut ist normal, kein Trotz. Nicht bekämpfen, sondern begleiten. Wenn ruhig: gemeinsam reden.' },
+      { titel: 'Kein TV beim Essen', text: 'Mahlzeiten ohne Bildschirm fördern Gespräche, langsamere Esstempo und stärken Familienbindung — schon kleine Kinder profitieren.' },
+      { titel: 'Hausaufgaben-Zeit fix', text: 'Immer zur gleichen Zeit (z.B. 15-16 Uhr) Hausaufgaben — wird zur Routine, keine Diskussion mehr. Vorher kurze Bewegungspause.' },
+      { titel: 'Bilderbuch statt Handy', text: 'Bei Wartezeiten (Arzt, ÖPNV): kleines Buch in der Tasche statt Handy. Kinder lernen Konzentration und Geduld.' },
+      { titel: 'Kuschelzeit täglich', text: 'Körperkontakt schüttet Oxytocin aus — bei Babys und großen Kindern gleich wichtig. 10 Min am Tag bewusst kuscheln stärkt Bindung.' },
+      { titel: 'Eigene Geheimsprache', text: 'Eigene Wörter oder Geste-Code für die Familie (z.B. drei Hand-Drücke für "Ich hab dich lieb") — schafft Verbundenheit.' },
+      { titel: 'Foto-Album mit Kindern', text: 'Gemeinsam ein Erinnerungsbuch machen: Fotos einkleben, Sätze daneben. Stärkt Identität und Familiengeschichte.' },
+      { titel: 'Kind-mit-Eltern-Date', text: 'Bei mehreren Kindern: jedem einzelnen 1× im Monat 1h exklusive Zeit nur mit dir. Stärkt Bindung enorm.' },
+      { titel: 'Mediennutzung gemeinsam', text: 'Wenn TV/Tablet: zusammen schauen und nachher drüber reden. Macht den Konsum sozial statt isolierend.' },
+      { titel: 'Großeltern-Kontakt pflegen', text: 'Bei räumlicher Entfernung: wöchentliches Video-Telefonat fest einplanen. Verbindung zu Generation hilft Kindern.' },
+      { titel: 'Patenkind-Konzept', text: 'Vertraute Bezugsperson außerhalb der Familie (Pate, Tante, Freund) — Kinder profitieren von zusätzlicher Bezugsperson, gerade bei Single-Eltern.' },
+      { titel: 'Eigenes Zimmer respektieren', text: 'Ab 8 Jahren: Anklopfen vor dem Eintreten. Lehrt Privatsphäre und gegenseitigen Respekt.' },
+      { titel: 'Geschenke selbst basteln', text: 'Für Großeltern/Verwandte: Selbstgemachtes ist wertvoller und kostet nichts. Kinder lernen: Schenken ≠ Geld.' },
+      { titel: 'Familien-Hobby pflegen', text: 'Ein gemeinsames Hobby (Wandern, Brettspiele, Backen) prägt Kindheit nachhaltig — wichtiger als teure Aktivitäten.' }
     ]
   },
   {
@@ -1540,7 +1838,26 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'Kostenlose Angebote nutzen', text: 'Bibliothek, Spielplatz, Stadtpark, Familien-Events, Museen am freien Tag — Freizeit muss nichts kosten.' },
       { titel: 'Kreditkarte vermeiden', text: 'Revolving-Credit (Ratenzahlung der Kreditkarte) kostet oft 15–20 % Zinsen — immer sofort ausgleichen oder Debitkarte nutzen.' },
       { titel: 'Sozialtarife anfragen', text: 'Internet, Strom, ÖPNV — viele Anbieter haben Sozialtarife für Bürgergeld-Bezieher. Direkt beim Anbieter nachfragen!' },
-      { titel: 'Elterngeld rechtzeitig beantragen', text: 'Elterngeld muss innerhalb von 3 Monaten nach Geburt beantragt werden — max. 14 Monate, auch für Alleinerziehende möglich.' }
+      { titel: 'Elterngeld rechtzeitig beantragen', text: 'Elterngeld muss innerhalb von 3 Monaten nach Geburt beantragt werden — max. 14 Monate, auch für Alleinerziehende möglich.' },
+      { titel: '50-30-20-Regel anwenden', text: '50% Fixkosten (Miete, Strom), 30% variable Ausgaben (Essen, Freizeit), 20% Sparen/Schulden. Einfache Faustregel für Haushalt.' },
+      { titel: 'Bargeld-Umschlag-System', text: 'Für variable Ausgaben (Lebensmittel, Freizeit): am Monatsanfang Bargeld in Umschläge — wenn leer, ist leer. Verhindert Überziehung.' },
+      { titel: 'Steuererklärung lohnt sich', text: 'Auch bei Bürgergeld/wenig Einkommen: Steuererklärung kann 200-1000€ zurückbringen (Werbungskosten, Kinderbetreuung). ELSTER ist kostenlos.' },
+      { titel: 'Riester-Rente Familienbonus', text: 'Pro Kind 300€/Jahr Zulage vom Staat — auch bei niedrigem Einkommen. Mindesteinzahlung: 60€/Jahr (5€/Monat).' },
+      { titel: 'Kontowechsel für Bonus', text: 'Viele Banken zahlen 50-150€ Bonus für Kontowechsel. Service: financefly.de, finanzfluss.de — Vergleichsportale.' },
+      { titel: 'Cashback-Apps nutzen', text: 'PAYBACK, DeutschlandCard, Marktguru: bei jedem Einkauf 1-3% zurück. Klingt wenig, summiert sich auf 100-300€ im Jahr.' },
+      { titel: 'Vergleichsportal vor jedem Kauf', text: 'Idealo, Geizhals: vor jedem größeren Kauf (>50€) 2 Min vergleichen. Spart oft 10-30% am gleichen Produkt.' },
+      { titel: 'Schul-/Vereinsausstattung gebraucht', text: 'Schulranzen, Sportbekleidung, Musikinstrumente: Kleinanzeigen, Mamikreisel, Vinted. 50-80% günstiger, Kinder wachsen eh raus.' },
+      { titel: 'Birthday-Boxen vermeiden', text: 'Kinder-Geburtstag muss nicht teuer sein: Schatzsuche im Park, selbstgemachte Snacks, ein Spiel. Klassiker > teure Locations.' },
+      { titel: 'Schufa-Auskunft kostenlos', text: '1× pro Jahr kostenlose Schufa-Selbstauskunft anfordern (meineschufa.de) — Fehler korrigieren spart bei Mietverträgen/Krediten.' },
+      { titel: 'Pflegekind-Vergütung prüfen', text: 'Wer ein Kind aufnimmt: Pflegegeld bis 1.200€/Monat möglich. Auch bei Verwandten-Pflege (Großeltern, Onkel) möglich.' },
+      { titel: 'Krankenkassen-Boni nutzen', text: 'TK, AOK, Barmer: Bonusprogramme bringen 100-500€/Jahr. Sport, Vorsorge, Bewegungs-App. Anrufen und nachfragen.' },
+      { titel: 'GEZ befreien lassen', text: 'Bei Bürgergeld, BAföG, Wohngeld: Rundfunkbeitrag wegfallen (220€/Jahr). Antrag online auf rundfunkbeitrag.de.' },
+      { titel: 'Klassische Sparbücher meiden', text: 'Sparbuch zahlt 0,01% — Geldmarktkonto (Trade Republic) 3-4%. Bei 5.000€ Notgroschen: 150€/Jahr mehr.' },
+      { titel: 'Abos im Halbjahres-Check', text: 'Alle Abos (Streaming, Apps, Fitness) alle 6 Monate prüfen. Was nicht genutzt → sofort kündigen. Schnitt: 30-80€/Monat Einsparung.' },
+      { titel: 'Stromkosten halbieren', text: 'LED-Lampen, Standby aus, Wäsche bei 30°C, Kühlschrank auf 7°C, Türen kurz öffnen. -30% sind realistisch ohne Komfortverlust.' },
+      { titel: 'Selbst-Reparatur lernen', text: 'YouTube hat Anleitung für fast alles (Waschmaschine, Fahrrad, Möbel). Selbst-Reparatur spart 100-500€ pro Reparatur.' },
+      { titel: 'Geld für Kinder lernen', text: 'Ab 6 Jahren Taschengeld einführen: alters * 0,50€/Woche. Kinder lernen Wert kennen — die wichtigste Geld-Lektion.' },
+      { titel: 'Bedingungsloses Sparen', text: 'Sparen muss VOR den Ausgaben passieren — Dauerauftrag am 1. des Monats. "Was übrig bleibt sparen" funktioniert nie.' }
     ]
   },
   {
@@ -1555,7 +1872,26 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'Soziale Träger anfragen', text: 'AWO, Caritas, Diakonie haben oft eigene günstige Wohnprojekte speziell für Alleinerziehende — direkt vor Ort anfragen.' },
       { titel: 'Umzugskosten als Hilfe beantragen', text: 'Beim Jobcenter / Sozialamt können Umzugskosten übernommen werden — vorher unbedingt genehmigen lassen!' },
       { titel: 'Nebenkostenabrechnung prüfen', text: 'Jährlich die Nebenkostenabrechnung kontrollieren — Fehler sind häufig. Mieterverein bietet günstige Prüfung an (ca. 10 €).' },
-      { titel: 'Kleine Wohnung clever einrichten', text: 'Hochbetten, Multifunktionsmöbel und helle Farben lassen kleine Wohnungen größer wirken und sparen Platz für Kinder.' }
+      { titel: 'Kleine Wohnung clever einrichten', text: 'Hochbetten, Multifunktionsmöbel und helle Farben lassen kleine Wohnungen größer wirken und sparen Platz für Kinder.' },
+      { titel: 'Mietkaution-Versicherung statt Bar', text: 'Statt 3 Monatsmieten Kaution: Kautionsversicherung (1-5% jährlich). Kostet ein bisschen, schont Liquidität.' },
+      { titel: 'Energieausweis prüfen', text: 'Bei neuer Wohnung Energieausweis prüfen — schlechte Werte = hohe Heizkosten. C oder besser ideal.' },
+      { titel: 'Erstausstattung bei Bürgergeld', text: 'Jobcenter zahlt bei Wohnungserstausstattung Möbel/Haushaltsgeräte. Beim Einzug + bei Geburt eines Kindes beantragen.' },
+      { titel: 'Zwei-Zimmer-Trick', text: 'Wohnzimmer als zweites Schlafzimmer für Kind nutzen: Schlafsofa + Vorhang/Raumteiler. Spart 200-400€ Miete.' },
+      { titel: 'Heizen unter 20°C kostet 6%', text: 'Pro Grad weniger Raumtemperatur: 6% Heizkosten gespart. 19°C Wohnzimmer, 17°C Schlafzimmer = optimal + gesund.' },
+      { titel: 'Stoßlüften statt Kipp', text: 'Fenster gekippt = Wärme weg, Schimmel rein. 3× täglich 5 Min Stoßlüften = optimal. Spart 200€/Jahr Heizkosten.' },
+      { titel: 'Schimmel früh erkennen', text: 'Kleine schwarze Punkte hinter Möbeln, an Außenwänden. Sofort handeln: Möbel 10 cm Abstand zur Wand, mehr lüften, Hygrometer (5€).' },
+      { titel: 'Mietminderung bei Mängeln', text: 'Heizung defekt, Schimmel, Lärm: Mietminderung möglich (1-50%). Schriftlich melden, Beweise sichern. Mieterverein hilft.' },
+      { titel: 'IKEA-Hacks für günstige Möbel', text: 'IKEA-Kallax-Regal, Lack-Tisch, Malm-Kommode — Klassiker zu kleinem Preis. Kombinieren mit gebrauchten Stücken = persönlich.' },
+      { titel: 'Wohnberechtigungsschein zeitig', text: 'WBS 3-6 Monate vor geplanter Wohnungssuche beantragen — Vorlaufzeit für Bearbeitung. Beim Wohnungsamt.' },
+      { titel: 'Wohnbau-Genossenschaften', text: 'Genossenschaftswohnungen sind sicherer und oft günstiger. Anteil ab 500-3.000€. Recherche: wohnungsboerse.de oder lokale Genossenschaften.' },
+      { titel: 'Pflanzen für Raumklima', text: 'Birkenfeige, Bogenhanf, Efeu: filtern Schadstoffe, befeuchten Luft. 3-5 Pflanzen reichen für 20 m² Zimmer.' },
+      { titel: 'Smart-Meter-Anfrage', text: 'Bei Neueinzug Smart-Meter beantragen — zeigt Stromverbrauch live. Bewusster Konsum = -10-20% Stromrechnung.' },
+      { titel: 'Wohnungsbörsen Geheimtipps', text: 'wg-gesucht.de, friendsmove.de, eBay-Kleinanzeigen — neben Hauptportalen oft günstigere Angebote für Familien.' },
+      { titel: 'Schlüssel-Service vermeiden', text: 'Notdienst-Schlüssel-Service kostet 100-300€. Zweitschlüssel bei Nachbar/Familie lassen = 0€ und sicherer.' },
+      { titel: 'Hausrat-Inventarliste', text: 'Liste aller Wertsachen mit Fotos auf Cloud speichern. Bei Schaden/Diebstahl: lückenlose Versicherungsabwicklung.' },
+      { titel: 'Wäsche-Trockner ohne Strom', text: 'Statt Tumbler: Wäscheständer im Bad mit Lüftungsventilator. Spart 200-400€/Jahr Strom.' },
+      { titel: 'Türrahmen-Klettergerüst', text: 'Kletterstange im Türrahmen für Kinder (10-20€). Bewegung in der Wohnung, gerade bei Regenwetter Gold wert.' },
+      { titel: 'Räume zonen statt trennen', text: 'In kleiner Wohnung: Bereiche durch Teppich/Licht/Vorhang abgrenzen statt durch Wände. Schafft Privatsphäre bei Platzmangel.' }
     ]
   },
   {
@@ -1570,7 +1906,27 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'Zahnprophylaxe nutzen', text: 'Zweimal jährlich kostenlose professionelle Zahnreinigung bei vielen Krankenkassen inklusive — Termin rechtzeitig vereinbaren.' },
       { titel: 'Bewegung in den Alltag integrieren', text: 'Mit Kindern zu Fuß oder Fahrrad fahren statt Auto — spart Sprit und hält fit. Spielplatz statt Sofa ist die beste Prävention.' },
       { titel: 'Schlaf schützen', text: 'Ausreichend Schlaf ist die wichtigste Gesundheitsressource. Kinder-Schlafrhythmus früh einführen damit auch Eltern ausreichend schlafen.' },
-      { titel: 'Ernährungsberatung kostenlos', text: 'Viele Krankenkassen übernehmen Kosten für Ernährungsberatung (bis 200 €). Bei Kasse nachfragen — lohnt sich für die ganze Familie.' }
+      { titel: 'Ernährungsberatung kostenlos', text: 'Viele Krankenkassen übernehmen Kosten für Ernährungsberatung (bis 200 €). Bei Kasse nachfragen — lohnt sich für die ganze Familie.' },
+      { titel: 'Impfungen aktuell halten', text: 'Impfpass jährlich prüfen. Tetanus alle 10 Jahre, Grippe ab 60 oder bei Risikogruppen. Bei Kindern STIKO-Plan beim Kinderarzt prüfen.' },
+      { titel: 'Vitamin-D im Winter', text: 'Oktober-April: 80% der Deutschen haben Mangel. 1.000-2.000 IE täglich für Erwachsene. Bei Kindern Arzt fragen.' },
+      { titel: 'Augenuntersuchung Kinder', text: 'U7a und U9: Kostenlose Sehtests. Bei Schielen, Augenreiben, Stolpern: zum Augenarzt — frühe Behandlung verhindert lebenslange Sehprobleme.' },
+      { titel: '116117 statt 112', text: 'Nicht-akut, aber außerhalb Sprechzeit: 116117 anrufen — kostenfrei, Wegweiser zur richtigen Hilfe. Entlastet Notaufnahme.' },
+      { titel: 'Erste-Hilfe-Kurs auffrischen', text: 'Alle 3-5 Jahre Auffrischung — vor allem Kinder-Erste-Hilfe. DRK, Maltester, ASB: 30-50€ und ein Tag.' },
+      { titel: 'Hörscreening Säuglinge', text: 'Direkt nach Geburt + bei U3 (4-5 Wochen). Hörverlust früh erkannt = optimale Sprachentwicklung.' },
+      { titel: 'Telefon-Sprechstunde nutzen', text: 'Viele Hausärzte und Kinderärzte bieten Tel-Sprechstunde an — schnelle Klärung ohne Wartezimmer-Zeit.' },
+      { titel: 'Online-Termine buchen', text: 'doctolib.de, jameda.de: viele Ärzte verfügbar. Spart Telefon-Wartezeiten und zeigt freie Termine.' },
+      { titel: 'eRezept aktivieren', text: 'Über Krankenkassen-App eRezept aktivieren — Apotheke direkt mit Code beliefern, ohne Wartezeit beim Arzt.' },
+      { titel: 'Sport-Verein günstig', text: 'Vereinsbeiträge 5-15€/Monat — Krankenkassen-Bonus 50-150€/Jahr für Aktivität. Netto kostet es quasi nichts.' },
+      { titel: 'Schwitzen bei Babys vermeiden', text: 'Faustregel: gleiche Kleidung wie Eltern, 1 Schicht mehr in Schlafzimmer. Überhitzung erhöht SIDS-Risiko.' },
+      { titel: 'Sonnenschutz LSF 50+', text: 'Kinderhaut 30-mal empfindlicher. LSF 50, alle 2h erneuern, 11-15 Uhr Schatten. Mehr UV-Schäden in Kindheit → Hautkrebs später.' },
+      { titel: 'Zähne ab 1. Zahn putzen', text: 'Ab erstem Zahn: 2× täglich mit fluoridhaltiger Kinderzahnpasta. Eltern bis 8 Jahre nachputzen. Beugt Karies effektiv vor.' },
+      { titel: 'Mund-Nasen-Schutz Reisen', text: 'In Flugzeugen, Bahnen mit Kindern: leichte FFP2-Maske für Eltern reduziert Krankheitsmitnahme von Reisen.' },
+      { titel: 'Medikamenten-Box sortieren', text: 'Tagesbox (7-Tage-Pillenbox 5€): verhindert Doppelte oder vergessene Einnahmen — wichtig bei chronischen Krankheiten.' },
+      { titel: 'Medizin-Hotline App', text: 'Apps wie ADA, Babylon: Symptome eingeben → strukturierte Hinweise. Kostenlos und 24/7 — Wegweiser, kein Ersatz für Arzt.' },
+      { titel: 'Wadenschmerzen ernst nehmen', text: 'Plötzliche, einseitige Wadenschmerzen + Schwellung: Thrombose-Verdacht! Sofort zum Arzt — gefährlich aber gut behandelbar.' },
+      { titel: 'Frauenarzt jährlich', text: 'PAP-Test alle 1-3 Jahre, ab 35 zusätzlich HPV-Test. Krebsfrüherkennung 100% Kassenleistung — wichtige 15 Minuten pro Jahr.' },
+      { titel: 'Männer-Check ab 45', text: 'Männer ab 45: jährlich Prostata-Vorsorge. Kassenleistung. Männer sterben oft an behandelbaren Krankheiten weil sie nicht zum Arzt gehen.' },
+      { titel: 'Blutdruck monatlich messen', text: 'Ab 30 Jahren: Blutdruckmessgerät (15-30€) im Haushalt. Werte über 140/90 = Arzt. Stiller Killer wenn nicht erkannt.' }
     ]
   },
   {
@@ -1587,7 +1943,26 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'Too Good to Go App', text: 'Kurz vor Ladenschluss: Überraschungstüten von Bäckern und Restaurants für 2–5 €. Spart Geld und schont die Umwelt.' },
       { titel: 'Küche gemeinsam nutzen', text: 'Mit Kindern kochen fördert Selbstständigkeit, ist lehrreich und macht Essen zum Erlebnis. Ab 4 Jahren können Kinder einfache Aufgaben übernehmen.' },
       { titel: 'Frühstück ist Trumpf', text: 'Ein gutes Frühstück (Haferflocken, Obst, Brot) kostet < 0,50 € pro Person und gibt Energie für den ganzen Tag.' },
-      { titel: 'Tiefkühlgemüse gleich gut', text: 'Tiefkühlerbsen, Spinat, Bohnen sind ebenso vitaminreich wie frisches Gemüse und bis zu 80 % günstiger.' }
+      { titel: 'Tiefkühlgemüse gleich gut', text: 'Tiefkühlerbsen, Spinat, Bohnen sind ebenso vitaminreich wie frisches Gemüse und bis zu 80 % günstiger.' },
+      { titel: 'Mehrwegflasche statt Pet', text: 'Edelstahlflasche (10-15€) statt Plastik: Leitungswasser kostet 0,2 ct/Liter, in Flaschen 20-50 ct. Spart 200-400€/Jahr.' },
+      { titel: 'Hafermilch selber machen', text: '50g Haferflocken + 500ml Wasser + Prise Salz: pürieren, abseihen. 80 ct statt 2,50€ pro Liter Hafermilch.' },
+      { titel: 'Kinder dürfen mit-einkaufen', text: 'Lass Kinder beim Wochenmarkt aussuchen — sie essen, was sie selbst gewählt haben. Reduziert Mäkelei drastisch.' },
+      { titel: 'Eintopf-Sonntag', text: '1× pro Woche großer Eintopf: 8-12 Portionen, kostet 5-10€ total. 3 Tage Mittagessen, 2 Portionen einfrieren.' },
+      { titel: 'Zucker für Kinder reduzieren', text: 'WHO: Max 25g Zucker pro Tag für Kinder = 1 Schokoriegel. Ein Glas Saft hat schon 25g. Wasser-Apfelschorle als Alternative.' },
+      { titel: 'Bio kaufen wo wichtig', text: 'Bio-Schmutzige-Liste: Erdbeeren, Spinat, Trauben, Apfel — am höchsten belastet. Bei diesen Bio lohnt sich.' },
+      { titel: 'Reste-Kreativität', text: 'Aus Resten Pizza, Frittata, Curry: Bratreste + 2 Eier + Käse + Gemüse = neue Mahlzeit. App "Foodist" gibt Ideen.' },
+      { titel: 'Mealprep am Sonntag', text: '2-3h Sonntags vorkochen: 5 Lunch-Boxen, Snacks portioniert. Spart pro Woche 1-2h Hektik und 30-50€ Auswärts-Essen.' },
+      { titel: 'Wasserglas vor jeder Mahlzeit', text: 'Hilft beim Sättigen und reduziert ungewollte Snacks. Familienritual: bevor man isst, alle trinken.' },
+      { titel: 'Linsen statt Hackfleisch', text: 'Rote Linsen ersetzen Hackfleisch in Bolognese: 1€/kg statt 8€/kg, mehr Protein, mehr Sättigung — Kinder merken es nicht.' },
+      { titel: 'Saft aus Pulpa pressen', text: 'Pressen-statt-Kaufen: 1kg Orangen = 500ml Saft = 60 ct. Multivitaminsaft-Packung kostet 2€. Spart 10× mehr.' },
+      { titel: 'Brot selber backen', text: 'No-Knead-Brot: 12h gehen lassen, in Topf backen — 60 Min Arbeit, 50 ct Brot. Schmeckt 10× besser als Discounter.' },
+      { titel: 'Backofen mit Restwärme', text: '10 Min vor Ende ausschalten — Hitze reicht aus. Bei 3× Backen/Woche spart 15-25€/Jahr.' },
+      { titel: 'Smoothies aus Tiefkühl-Obst', text: 'Tiefkühl-Beeren + Banane + Milch = 1€ Smoothie. Frische Beeren kosten 4-6€/kg, Tiefkühl 2-3€.' },
+      { titel: 'Eier-Vielseitigkeit', text: '1 Ei = 30 ct, 7g Protein, sättigt 3h. Rührei, Omelette, Pfannkuchen — günstige Komplettmahlzeit für Kinder.' },
+      { titel: 'Salat länger frisch', text: 'In Tupperdose mit Küchenpapier (saugt Feuchtigkeit) — bleibt 1 Woche frisch statt 3 Tagen.' },
+      { titel: 'Kräuter selbst ziehen', text: 'Basilikum, Petersilie, Schnittlauch auf Fensterbank — 2€ pro Pflanze, geben monatelang Kräuter (statt 1,50€ pro Bund).' },
+      { titel: 'Lebensmittel richtig lagern', text: 'Brot in Papiertüte (nicht Plastik), Tomaten außerhalb Kühlschrank, Bananen separat. Halbe Haltbarkeit ist Fehlhandhabung.' },
+      { titel: 'Mahlzeiten-Apps für Kids', text: 'Yazio, MyFitnessPal: spielerisch sehen wie viel sie essen. Bei Mäkler-Kindern hilft visuelle Darstellung.' }
     ]
   },
   {
@@ -1602,7 +1977,27 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'BuT Schulausstattung', text: 'Bildungs- und Teilhabepaket: 195 € einmalig für Schulranzen, Stifte, Bücher bei Bürgergeld-Bezug — beim Jobcenter beantragen.' },
       { titel: 'Hausaufgaben-Lernumgebung', text: 'Fester Platz zum Lernen (ruhig, gute Beleuchtung, ohne Handy) hilft Kindern sich zu konzentrieren. Wichtiger als teures Material.' },
       { titel: 'Verein und Ehrenamt', text: 'Sportverein, Pfadfinder oder Musikschule fördert soziale Kompetenz. BuT übernimmt Beiträge bis 15 €/Monat.' },
-      { titel: 'Stipendien für Alleinerziehende', text: 'Bildungsfonds und Stipendien (z.B. Avicenna-Studienwerk, Rosa-Luxemburg-Stiftung) sind auch für Alleinerziehende zugänglich.' }
+      { titel: 'Stipendien für Alleinerziehende', text: 'Bildungsfonds und Stipendien (z.B. Avicenna-Studienwerk, Rosa-Luxemburg-Stiftung) sind auch für Alleinerziehende zugänglich.' },
+      { titel: 'Anton-App ab Klasse 1', text: 'Komplett kostenlos, Mathe + Deutsch + Sachunterricht für Klasse 1-10. Spielerisch, ohne Werbung. Top-Bewertung in Tests.' },
+      { titel: 'Bildschirm-Konsum vs. lernen', text: 'YouTube für Hausaufgaben OK — aber: "Lehrer Schmidt", "Daniel Jung Mathe", "Mr. Wissen2Go". Nicht zufälliges Scrollen.' },
+      { titel: 'Sprachreise alternative Wege', text: 'Erasmus+ ab 13 Jahre, Au-Pair ab 18, Wwoof (kostenloses Reisen für Mitarbeit) — Sprache lernen ohne 3.000€ Kursgebühr.' },
+      { titel: 'BAföG auch für Schüler', text: 'Schüler-BAföG für Berufsschule, Fachoberschule. Bis 400€/Monat zuschussfrei. Online: bafoeg-online.de prüfen.' },
+      { titel: 'Aufstiegs-BAföG für Eltern', text: 'Erwachsene mit Berufsabschluss: bis 893€/Monat + Studiengebühren für Meister/Techniker. 100% Zuschuss, 50% Darlehen.' },
+      { titel: 'Pomodoro-Technik üben', text: '25 Min lernen, 5 Min Pause — Kindern ab 8 Jahren beibringen. Timer kostenlos online. Verdoppelt Konzentration.' },
+      { titel: 'Karteikarten-App Anki', text: 'Kostenlos, wiederholt Vokabeln zu optimalem Zeitpunkt. Wer 10 Min/Tag macht, lernt 1.500 Vokabeln/Jahr.' },
+      { titel: 'Lern-Buddy organisieren', text: 'Mit Klassenkamerad zusammen lernen — gegenseitig erklären verdoppelt Lerneffekt. Auch online über Discord/Zoom möglich.' },
+      { titel: 'Hausaufgaben digitalisieren', text: 'Notizen abfotografieren, in Cloud speichern. Bei Verlust gerettet. iCloud, Google Drive — kostenfrei bis 5GB.' },
+      { titel: 'Stipendien-Datenbank', text: 'stipendiumplus.de zeigt 13 große Stipendien — auch leistungs-unabhängige für Engagement oder spezifische Bevölkerungsgruppen.' },
+      { titel: 'Berufsorientierungs-Tests', text: 'Arbeitsagentur "BERUFE.tv" und "Check-U": kostenlose Tests was passt. Spart später teure Umwege.' },
+      { titel: 'Praktikum ab Klasse 8 nutzen', text: 'Schul-Praktikum 1-2 Wochen — der einfachste Weg, Beruf von innen zu sehen. Kontakt für späteren Ausbildungsplatz.' },
+      { titel: 'Hochschulkompass-Test', text: 'hochschulkompass.de zeigt alle Studiengänge in Deutschland. Filter nach NC, Sprache, Ort. Für Eltern UND Kinder hilfreich.' },
+      { titel: 'Lernplan visuell aufhängen', text: 'Wochen-Lernplan an Wand: Was wann lernen. Verhindert Last-Minute-Stress vor Klassenarbeiten.' },
+      { titel: 'Konzentrations-Übungen Kids', text: 'Yoga für Kinder (YouTube: "Yoga Kids"), Achtsamkeit, 5-Minuten-Tagebuch. 10 Min/Tag, messbarer Effekt nach 8 Wochen.' },
+      { titel: 'Schlaf vor wichtigen Tests', text: '8h Schlaf vor Klassenarbeit > 1h zusätzliches Lernen. Studien sehr klar dazu — kommunizieren bei Kindern wichtig.' },
+      { titel: 'Schulpsychologe nutzen', text: 'Jede Schule hat einen Schulpsychologen — kostenlos, anonym. Bei Mobbing, Prüfungsangst, Schulverweigerung sofort hingehen.' },
+      { titel: 'Lese-Apps für Anfänger', text: '"Tibi lernt lesen", "Lese-Coach" — gamifizierte Apps für Erstklässler. Auf Tablet erlaubt → Bildschirmzeit sinnvoll genutzt.' },
+      { titel: 'Familien-Bildungsausweis', text: 'Bibliothek, Naturkundemuseum, Wissenschaftsmuseum — viele kostenlos für Familien. Lebensumstände: Volkshochschule fragt nach Tarifen.' },
+      { titel: 'Tag der offenen Tür planen', text: 'Bei Schulwechsel: 6-12 Monate vorher Tag der offenen Tür mehrerer Schulen besuchen. Vergleich zahlt sich aus.' }
     ]
   },
   {
@@ -1619,7 +2014,27 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'Kino-Kindertag nutzen', text: 'Viele Kinos haben Kinder-Vorstellungen ab 4,50 € (montags/dienstags). UCI, CineStar: Family-Kombi-Tickets recherchieren.' },
       { titel: 'Natur als kostenlose Bühne', text: 'Waldspaziergang mit Naturschatzsuche, Stöcke sammeln, Steine bemalen — Kinder brauchen keine teuren Unterhaltungsangebote.' },
       { titel: 'Sport mit App', text: 'Nike Training Club, YouTube-Fitness: 30 Min. Sport zu Hause wenn Kinder schlafen — kostenlos und stressabbauend.' },
-      { titel: 'Kindertheater und Puppenspiel', text: 'Stadttheater bieten Kindervorstellungen ab 4 € an. Viele Parks haben kostenlose Open-Air-Veranstaltungen im Sommer.' }
+      { titel: 'Kindertheater und Puppenspiel', text: 'Stadttheater bieten Kindervorstellungen ab 4 € an. Viele Parks haben kostenlose Open-Air-Veranstaltungen im Sommer.' },
+      { titel: 'Schatzsuche im Park', text: 'Vorab kleine Päckchen verstecken, Karte zeichnen. 30 Min Vorbereitung = 2h fasziniertes Spielen.' },
+      { titel: 'Geocaching-App', text: 'Kostenlose App, weltweite Schatzsuche. Schon 1.000.000+ Caches in Deutschland. Erkundung der Umgebung wird zum Abenteuer.' },
+      { titel: 'Wandertag selbst gemacht', text: 'Komoot, Outdooractive: kostenlose Wander-Apps. Picknick mitnehmen, mit Kindern Pflanzen bestimmen → Bildung im Vorbeigehen.' },
+      { titel: 'Family-Card der Stadt', text: 'Viele Großstädte bieten Family-Cards: 50% Rabatt in Bädern, Museen, Zoo. Stadt-Webseite: "Familienpass [Stadt]".' },
+      { titel: 'Zoo-Jahreskarte rechnen', text: 'Bei 4+ Besuchen/Jahr lohnt Jahreskarte. Pro Person 40-80€ statt 3× Einzeleintritt. Wetterunabhängiges Schlechtwetter-Programm.' },
+      { titel: 'Stadtbibliothek-Kinderprogramm', text: 'Bilderbuchkino, Lese-Pate, Bastel-Workshops — viele Bibliotheken haben wöchentliche Familien-Events kostenlos.' },
+      { titel: 'Familien-Schwimmkurs', text: 'Krankenkasse zahlt oft 50-100€ pro Person/Jahr für Sport. Schwimmkurs Kinder + Eltern: Eltern hier zusätzlich pas auf.' },
+      { titel: 'Brettspiele aus 70er-Jahre', text: 'Klassiker: Mensch ärgere dich, Halma, Memory — gebraucht 2-5€. Kein Bildschirm, fördert Geduld und Logik.' },
+      { titel: 'Stadtteil-Erkundung Bus', text: 'Mit ÖPNV-Tagesticket fremde Stadtteile erkunden. Spielplätze, Parks — neue Welt mit 0 Stress. 6-10€ statt 50€ Ausflug.' },
+      { titel: 'Wasser-Karaoke unter Dusche', text: 'Schlechtwetter-Tag: alle in Badehose, Wasser-Bombs aus Luftballons, Karaoke im Bad. Kein Geld, viel Freude.' },
+      { titel: 'Hörspiele für Autofahrten', text: 'Ohrka.de — Kinderbuchverlag mit kostenlosen Hörspielen (3+ Stunden, ohne Werbung). Bessere Fahrt, mehr Bildung.' },
+      { titel: 'Forest-App für Konzentration', text: 'Eltern: 25 Min nicht aufs Handy = digitaler Baum wächst. Spielerisch Selbstkontrolle trainieren.' },
+      { titel: 'Bowling/Minigolf in Nebensaison', text: 'Sommer: Bowling halb leer. Winter: Minigolf-Indoor günstig. Antizyklische Aktivitäten sparen 30-50%.' },
+      { titel: 'Familien-Sauna-Tag', text: 'Therme/Sauna 1×/Monat: Eltern entspannen, Kinder im Familien-Bereich. Sehr stressabbauend für Single-Parent.' },
+      { titel: 'Eltern-Selbsthilfegruppe', text: 'Über vamv.de oder Caritas: regionale Treffen alleinerziehender Eltern. Babysitting im Tausch, Erfahrungsaustausch.' },
+      { titel: 'Familien-Yoga zuhause', text: 'YouTube "Cosmic Kids Yoga" auf Deutsch: 15 Min Geschichten mit Yoga-Bewegungen. Beruhigt Kinder vor dem Schlaf.' },
+      { titel: 'Kreativ-AGs in Schule fragen', text: 'Schul-AGs (Theater, Musik, Sport) meist kostenlos. Ganztag mit AG = günstige Nachmittagsbetreuung + Hobby.' },
+      { titel: 'Großeltern-Spielenachmittag', text: '1× pro Monat Großeltern für Spiele-Nachmittag einladen. Generationen-Brücke + Eltern bekommen 3h Pause.' },
+      { titel: 'Stadt-Rallye selbst basteln', text: 'Vorab 5-7 Aufgaben in der Stadt verstecken (Foto, Suchaufgabe). Macht aus Spaziergang Abenteuer.' },
+      { titel: 'Tausch-Wochenende', text: 'Mit befreundeter Familie: ein Wochenende tauschen wir Kinder. Beide Familien haben Pause + Kinder neue Erlebnisse.' }
     ]
   },
   {
@@ -1634,7 +2049,27 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'Mietrecht kennen', text: 'Kündigung durch Vermieter: strenge Voraussetzungen. Mieterverein-Mitgliedschaft (ca. 10 €/Monat) lohnt sich für Schutz und Beratung.' },
       { titel: 'Unterhalt gerichtlich festlegen', text: 'Unterhaltstitel beim Jugendamt (kostenlos) oder Gericht festlegen lassen — dann kann bei Nichtzahlung vollstreckt werden.' },
       { titel: 'Prozesskostenhilfe beantragen', text: 'Bei Gerichtsverfahren: Prozesskostenhilfe kann alle Kosten übernehmen. Beim Gericht oder Sozialberatung beantragen.' },
-      { titel: 'VAMV-Rechtsberatung', text: 'Verband alleinerziehender Mütter und Väter (vamv.de) bietet rechtliche Beratung und Interessenvertretung an.' }
+      { titel: 'VAMV-Rechtsberatung', text: 'Verband alleinerziehender Mütter und Väter (vamv.de) bietet rechtliche Beratung und Interessenvertretung an.' },
+      { titel: 'Düsseldorfer Tabelle kennen', text: 'Tabelle zeigt Unterhalt nach Alter + Einkommen. Aktuelle Werte: olg-duesseldorf.nrw.de. Bei Streit: belastbarer Verhandlungsgrund.' },
+      { titel: 'Umgangsrecht durchsetzen', text: 'Bei verweigertem Umgang: erst Jugendamt einschalten (Mediator), dann Familiengericht. Recht beider Eltern: Kind hat Recht auf beide Eltern.' },
+      { titel: 'Versorgungsausgleich bei Scheidung', text: 'Rentenpunkte werden hälftig geteilt — auch Mütter ohne Berufstätigkeit haben Anspruch. Anwalt prüfen lassen.' },
+      { titel: 'Kindesentführung Hotline', text: 'Bei Sorge ein Elternteil entführt Kind: ZAB (Bonn) 0228 99 11020. Internationales Sorgerecht — schnelle Hilfe nötig.' },
+      { titel: 'Patientenverfügung erstellen', text: 'Wer entscheidet, wenn Sie krank sind und nicht ansprechbar? Vorlage kostenlos beim Bundesjustizministerium.' },
+      { titel: 'Vaterschaft anerkennen', text: 'Unverheiratet: Vaterschafts-Anerkennung beim Jugendamt (kostenlos, einfach). Sichert Unterhalt + Erbrecht des Kindes.' },
+      { titel: 'Adoption für Stiefkind', text: 'Wenn neuer Partner Kind adoptieren will: 6 Monate Zusammenleben + Zustimmung leiblicher Elternteil. Vereinfacht Sorgerecht.' },
+      { titel: 'Vormundschaft regeln', text: 'Im Testament Vormund für Kinder bestimmen — sonst entscheidet das Jugendamt. Wichtig bei plötzlichem Todesfall.' },
+      { titel: 'Schulische Sorgerecht', text: 'Bei gemeinsamem Sorgerecht: beide Eltern müssen Schulwahl, Klassenfahrten zustimmen. Bei Konflikt: Familiengericht.' },
+      { titel: 'Hartz-IV-Bescheid prüfen', text: 'Bescheide oft fehlerhaft. 1 Monat Widerspruchsfrist. Sozialberatung (Tafel, Caritas) prüft kostenlos.' },
+      { titel: 'Sozialgerichtsverfahren kostenlos', text: 'Klagen vor Sozialgericht (Jobcenter, Krankenkasse, Pflege): keine Anwaltspflicht, keine Gerichtskosten. Selbst klagen möglich.' },
+      { titel: 'Wohnungs-Vermieter-Tricks', text: 'Schimmel meist Mieter-Sache laut Vermieter: aber meist Bausubstanz schuld. Mieterverein-Gutachten als Beweis.' },
+      { titel: 'Kontopfändung verhindern', text: 'P-Konto einrichten (kostenlos) — schützt 1.410€/Monat vor Pfändung. Pro Kind +475€ Schutzbetrag. Wichtig bei Schulden.' },
+      { titel: 'Restschuldbefreiung 3 Jahre', text: 'Privatinsolvenz dauert nur noch 3 Jahre (seit 2020). Schulden weg nach Verfahren. Caritas und AWO begleiten kostenlos.' },
+      { titel: 'Datenschutz-Anfrage stellen', text: 'Auskunft was Firma über Sie speichert (Schufa, Banken, Versicherer): kostenlos einmal pro Jahr. Vorlage: musterbrief-datenschutz.de.' },
+      { titel: 'Mahnbescheid nicht ignorieren', text: 'Bei falschem Mahnbescheid: 2 Wochen Widerspruch! Sonst rechtskräftig — auch wenn Forderung Unsinn ist.' },
+      { titel: 'Bürgschaft vermeiden', text: 'Niemals für Verwandte/Freunde Bürgschaft unterschreiben — Haftung bis zur eigenen Existenzgrundlage. Sehr riskant.' },
+      { titel: 'Erbe ausschlagen wenn nötig', text: 'Bei verschuldetem Erbe: 6 Wochen Frist Erbe auszuschlagen (beim Nachlassgericht). Sonst Übernahme aller Schulden.' },
+      { titel: 'Vorsorgevollmacht Notfall', text: 'Wer entscheidet medizinisch wenn Sie nicht können? Vorlage beim Bundesjustizamt — eine Unterschrift kann Leben verändern.' },
+      { titel: 'Anti-Diskriminierung-Stelle', text: 'Bei Diskriminierung wegen Familie, Alleinerziehung: ADS Bund (antidiskriminierungsstelle.de) — kostenfreie Beratung und Klage-Hilfe.' }
     ]
   }
 ];
@@ -2062,7 +2497,46 @@ const REZEPTE = [
   { id:'kinder-pizza', name:'Mini-Pizza für Kinder', emoji:'🍕', bild:'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'25 Min.', kosten:'≈ 1,50 €', portionen:4, zutaten:['1 Pizzateig','200 g Tomatenmark','200 g geriebener Käse','Salami','Schinken','Gemüse zum Belegen','Oregano'], zubereitung:'Teig in 8 Mini-Pizzen ausrollen. Tomatenmark, Belag, Käse. Kinder lieben es selber zu belegen! 12 Min. bei 220°C.', tipp:'Belegen lassen ist Programm und Spaß zugleich' },
   { id:'gemuese-nuggets', name:'Gemüse-Nuggets', emoji:'🥦', bild:'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['1 Brokkoli','2 Karotten','1 Zucchini','100 g Cheddar','2 Eier','100 g Semmelbrösel','Salz, Pfeffer','Öl'], zubereitung:'Gemüse fein hacken, kurz kochen, ausdrücken. Mit Käse, Eiern, Bröseln vermengen. Nuggets formen, in Öl goldbraun braten.', tipp:'Sneak Vegetables in Kinder-Bauch - Pommes-Form macht es leichter' },
   { id:'pancakes-amerikanisch', name:'Amerikanische Pancakes', emoji:'🥞', bild:'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'25 Min.', kosten:'≈ 1,00 €', portionen:4, zutaten:['250 g Mehl','3 Eier','300 ml Milch','1 EL Backpulver','3 EL Zucker','1 Prise Salz','Butter','Ahornsirup, Beeren'], zubereitung:'Trockene und feuchte Zutaten getrennt mischen, dann zusammen. Pfanne einfetten, kleine Pancakes braten. Mit Sirup und Beeren servieren.', tipp:'Sonntagmorgen-Hit - Kinder helfen beim Wenden' },
-  { id:'haehnchen-nuggets', name:'Hähnchen-Nuggets selbstgemacht', emoji:'🍗', bild:'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'25 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['600 g Hähnchenbrust','100 g Mehl','3 Eier','150 g Cornflakes','Salz, Pfeffer, Paprika','Öl','Pommes, Ketchup'], zubereitung:'Hähnchen in Würfel. Cornflakes zerbröseln. Hähnchen würzen, panieren in Mehl, Ei, Cornflakes. In heißem Öl braten.', tipp:'Cornflakes sind Geheimtrick für extra Knusprig - viel besser als gekauft' }
+  { id:'haehnchen-nuggets', name:'Hähnchen-Nuggets selbstgemacht', emoji:'🍗', bild:'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'25 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['600 g Hähnchenbrust','100 g Mehl','3 Eier','150 g Cornflakes','Salz, Pfeffer, Paprika','Öl','Pommes, Ketchup'], zubereitung:'Hähnchen in Würfel. Cornflakes zerbröseln. Hähnchen würzen, panieren in Mehl, Ei, Cornflakes. In heißem Öl braten.', tipp:'Cornflakes sind Geheimtrick für extra Knusprig - viel besser als gekauft' },
+  // ===== 30 NEUE REZEPTE =====
+  { id:'kaesespaetzle', name:'Käsespätzle', emoji:'🧀', bild:'https://images.unsplash.com/photo-1572441713132-c542fc4fe282?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutscher Klassiker', dauer:'30 Min.', kosten:'≈ 1,80 €', portionen:4, zutaten:['400 g Spätzle','250 g geriebener Bergkäse','3 Zwiebeln','2 EL Butter','Salz, Pfeffer','Schnittlauch'], zubereitung:'Spätzle nach Packung kochen, abgießen. Zwiebeln in Ringe schneiden und in Butter goldbraun braten. Spätzle und Käse abwechselnd schichten, etwas in der Pfanne erhitzen bis der Käse schmilzt. Mit Röstzwiebeln und Schnittlauch servieren.', tipp:'Mit etwas Schmand wird es noch cremiger' },
+  { id:'rouladen', name:'Rinderrouladen klassisch', emoji:'🥩', bild:'https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutscher Klassiker', dauer:'2 Std.', kosten:'≈ 4,50 €', portionen:4, zutaten:['4 Rouladen vom Rind','4 EL Senf','8 Scheiben Speck','2 Gewürzgurken','2 Zwiebeln','500 ml Brühe','2 EL Tomatenmark','Salz, Pfeffer','Öl, Mehl zum Andicken'], zubereitung:'Rouladen mit Senf bestreichen, Speck, Gurken- und Zwiebelstreifen drauf, einrollen, mit Garn fixieren. In Öl rundum scharf anbraten. Mit Tomatenmark, Brühe ablöschen, 90 Min. bei niedriger Hitze schmoren. Sauce mit Mehl andicken.', tipp:'Mit Klößen und Rotkohl der ultimative Sonntags-Klassiker' },
+  { id:'kartoffelsalat-bayrisch', name:'Bayrischer Kartoffelsalat', emoji:'🥔', bild:'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutscher Klassiker', dauer:'40 Min.', kosten:'≈ 1,20 €', portionen:6, zutaten:['1 kg festkochende Kartoffeln','1 Zwiebel','300 ml warme Brühe','5 EL Essig','3 EL Öl','1 TL Senf','Salz, Pfeffer','Schnittlauch'], zubereitung:'Kartoffeln in Schale 20 Min. kochen, pellen, in Scheiben schneiden. Zwiebel fein hacken. Heiße Brühe mit Essig, Öl, Senf, Gewürzen verquirlen, über die noch warmen Kartoffeln gießen. 30 Min. ziehen lassen.', tipp:'Warm serviert mit Bratwürsten — pures Glück' },
+  { id:'maultaschen', name:'Maultaschen in Brühe', emoji:'🥟', bild:'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutscher Klassiker', dauer:'15 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['16 Maultaschen','1,5 L Gemüsebrühe','1 Lauchstange','2 Karotten','Schnittlauch','Salz, Pfeffer'], zubereitung:'Brühe aufkochen. Lauch und Karotten in feine Ringe schneiden, 5 Min. mitkochen. Maultaschen einlegen, 8-10 Min. ziehen lassen (nicht kochen!). Mit Schnittlauch servieren.', tipp:'Schwäbische Tradition: dazu Schmelzzwiebeln auf der Seite' },
+  { id:'goulasch', name:'Ungarisches Gulasch', emoji:'🍲', bild:'https://images.unsplash.com/photo-1547928576-b822bc410bdf?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutscher Klassiker', dauer:'2 Std.', kosten:'≈ 3,00 €', portionen:6, zutaten:['1 kg Rindergulasch','3 Zwiebeln','3 EL Paprikapulver edelsüß','2 Paprikaschoten','500 ml Brühe','200 ml Tomatensoße','Salz, Pfeffer, Kümmel','Öl'], zubereitung:'Zwiebeln glasig dünsten, Fleisch zugeben und scharf anbraten. Paprikapulver einrühren (nicht verbrennen!). Brühe und Tomatensoße zugießen, Paprikastreifen dazu. 90 Min. bei niedriger Hitze schmoren.', tipp:'Mit Knödeln, Spätzle oder Nudeln — ein Gulasch wärmt die Familie' },
+  { id:'risotto-pilze', name:'Pilzrisotto', emoji:'🍄', bild:'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&q=75', kategorie:'gesund', kategorieLabel:'International', dauer:'35 Min.', kosten:'≈ 2,80 €', portionen:4, zutaten:['300 g Risottoreis','500 g gemischte Pilze','1 Zwiebel','2 Knoblauchzehen','1,2 L heiße Brühe','100 ml Weißwein','80 g Parmesan','2 EL Butter','Petersilie'], zubereitung:'Zwiebel + Knoblauch glasig dünsten. Reis kurz mitrösten, mit Wein ablöschen. Pilze separat anbraten. Heiße Brühe schöpflöffelweise zugeben, ständig rühren. Nach 18 Min. Pilze, Butter, Parmesan unterrühren.', tipp:'Geduld zahlt sich aus - cremig wird es nur mit langsamem Rühren' },
+  { id:'lasagne', name:'Klassische Lasagne', emoji:'🍝', bild:'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=600&q=75', kategorie:'klassiker', kategorieLabel:'International', dauer:'1 Std.', kosten:'≈ 3,50 €', portionen:6, zutaten:['12 Lasagne-Platten','500 g Rinderhack','2 Dosen Tomaten','1 Zwiebel','2 Knoblauchzehen','500 ml Béchamelsauce','200 g Mozzarella','100 g Parmesan','Italienische Kräuter','Salz, Pfeffer'], zubereitung:'Hack mit Zwiebel und Knoblauch anbraten, Tomaten zugeben, 20 Min. köcheln. In Auflaufform schichten: Sauce, Lasagne, Bolognese, Béchamel — 3-4 Schichten. Oben Käse drüber, 35 Min. bei 180°C backen.', tipp:'Vorabends zubereiten, am nächsten Tag noch besser' },
+  { id:'paella', name:'Paella Valenciana', emoji:'🥘', bild:'https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=600&q=75', kategorie:'gesund', kategorieLabel:'International', dauer:'1 Std.', kosten:'≈ 5,00 €', portionen:4, zutaten:['300 g Paellareis','400 g Hähnchen','200 g Garnelen','200 g Tintenfischringe','1 Paprika','200 g Erbsen','1 Zwiebel','3 Knoblauchzehen','1 L Brühe','1 Prise Safran','Salz, Olivenöl'], zubereitung:'In großer Pfanne Hähnchen anbraten, dann Meeresfrüchte. Zwiebel + Knoblauch dünsten, Reis dazu, kurz rösten. Brühe mit Safran zugießen. 20 Min. ohne Rühren köcheln, Erbsen + Paprika oben drauf, 5 Min. ruhen lassen.', tipp:'Die Knusperschicht am Boden (Socarrat) ist das Beste' },
+  { id:'sushi-bowl', name:'Sushi-Bowl', emoji:'🍣', bild:'https://images.unsplash.com/photo-1583224964978-2257b960c3d3?w=600&q=75', kategorie:'gesund', kategorieLabel:'Gesund & Leicht', dauer:'25 Min.', kosten:'≈ 4,00 €', portionen:2, zutaten:['200 g Sushi-Reis','200 g Lachs (Sashimi-Qualität)','1 Avocado','1 Karotte','100 g Edamame','1 EL Sesam','4 EL Sojasauce','1 EL Reisessig','Wasabi nach Geschmack'], zubereitung:'Reis nach Packung kochen, mit Reisessig würzen. Lachs in Würfel schneiden, mit Sojasauce marinieren. Avocado und Karotte schneiden. Alles in Schüssel anrichten, mit Sesam bestreuen.', tipp:'Statt Lachs auch geräucherter Tofu — vegan und genauso lecker' },
+  { id:'falafel', name:'Falafel mit Hummus', emoji:'🧆', bild:'https://images.unsplash.com/photo-1593504049359-74330189a345?w=600&q=75', kategorie:'gesund', kategorieLabel:'International', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['400 g Kichererbsen (Dose)','1 Zwiebel','3 Knoblauchzehen','1 Bund Petersilie','2 TL Kreuzkümmel','2 EL Mehl','Salz, Pfeffer','Öl zum Frittieren','200 g Hummus','Pitabrot, Salat, Joghurt'], zubereitung:'Kichererbsen abtropfen, mit Zwiebel, Knoblauch, Petersilie und Gewürzen pürieren. Mehl unterrühren. Bällchen formen, in heißem Öl 4 Min. goldbraun braten. Mit Pitabrot, Hummus, Salat und Joghurt servieren.', tipp:'Statt Frittieren auch im Ofen bei 200°C — gesünder und genauso lecker' },
+  { id:'thai-curry', name:'Grünes Thai-Curry', emoji:'🍛', bild:'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=75', kategorie:'gesund', kategorieLabel:'International', dauer:'30 Min.', kosten:'≈ 3,50 €', portionen:4, zutaten:['400 g Hähnchen','2 EL grüne Currypaste','1 Dose Kokosmilch','1 Aubergine','1 Paprika','1 Zucchini','200 g grüne Bohnen','1 EL Fischsauce','1 TL Palmzucker','Thai-Basilikum','250 g Basmatireis'], zubereitung:'Currypaste in Öl anrösten, Hähnchen dazu, kurz braten. Kokosmilch zugießen, Gemüse einlegen. 15 Min. köcheln. Mit Fischsauce + Zucker abschmecken. Mit Basilikum und Reis servieren.', tipp:'Limettenblätter mitkochen — gibt das authentische Aroma' },
+  { id:'wraps-haehnchen', name:'Hähnchen-Wraps', emoji:'🌯', bild:'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=600&q=75', kategorie:'schnell', kategorieLabel:'Schnell & Einfach', dauer:'20 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['8 Tortilla-Wraps','400 g Hähnchenbrust','1 Eisbergsalat','2 Tomaten','1 Avocado','100 g Käse','4 EL Joghurt-Dressing','Gewürze (Paprika, Knoblauch)'], zubereitung:'Hähnchen würzen und in Pfanne braten, in Streifen schneiden. Wraps kurz erwärmen. Mit Salat, Tomaten, Avocado, Hähnchen, Käse, Dressing belegen. Einrollen und genießen.', tipp:'Mittwochs lieber Mittwochs-Wraps — Kinder lieben es selbst zu rollen' },
+  { id:'gnocchi-spinat', name:'Gnocchi mit Spinat-Sahne', emoji:'🥟', bild:'https://images.unsplash.com/photo-1572441713132-c542fc4fe282?w=600&q=75', kategorie:'schnell', kategorieLabel:'Schnell & Einfach', dauer:'20 Min.', kosten:'≈ 1,80 €', portionen:4, zutaten:['500 g Gnocchi','400 g Blattspinat','200 ml Sahne','1 Knoblauchzehe','100 g Parmesan','1 Prise Muskat','Salz, Pfeffer','Butter'], zubereitung:'Gnocchi nach Packung kochen. Spinat in Butter mit Knoblauch andünsten. Sahne dazu, einkochen lassen. Mit Muskat, Salz, Pfeffer abschmecken. Gnocchi unterheben, Parmesan drüber.', tipp:'In 20 Min auf dem Tisch — perfekt für stressige Wochenabende' },
+  { id:'flammkuchen', name:'Flammkuchen Klassiker', emoji:'🥧', bild:'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutscher Klassiker', dauer:'25 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['2 Rollen Flammkuchen-Teig','200 g Schmand','1 Zwiebel','150 g Speckwürfel','Salz, Pfeffer, Muskat','Schnittlauch'], zubereitung:'Teig auf Backpapier ausrollen. Schmand mit Salz, Pfeffer und Muskat würzen, dünn aufstreichen. Zwiebelringe und Speck verteilen. 12 Min. bei 220°C backen bis Ränder knusprig. Mit Schnittlauch bestreuen.', tipp:'Süße Variante: Apfel + Zimt + Sahne — auch lecker als Dessert' },
+  { id:'wok-gemuese', name:'Bunter Gemüse-Wok', emoji:'🥢', bild:'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=75', kategorie:'gesund', kategorieLabel:'Gesund & Leicht', dauer:'20 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['1 Brokkoli','1 Paprika rot','2 Karotten','100 g Champignons','1 Zwiebel','200 g Reis oder Nudeln','3 EL Sojasauce','2 EL Sesamöl','1 EL Ingwer','2 Knoblauchzehen','Sesam'], zubereitung:'Reis oder Nudeln vorkochen. Gemüse in Streifen schneiden. Im Wok mit Sesamöl, Ingwer, Knoblauch scharf anbraten — von hart nach weich. Sojasauce dazu, kurz schmurgeln. Mit Reis und Sesam servieren.', tipp:'Im Wok bleibt Gemüse knackig — niemals lange kochen' },
+  { id:'kartoffelpuffer', name:'Kartoffelpuffer mit Apfelmus', emoji:'🥔', bild:'https://images.unsplash.com/photo-1607103058027-4c5d8e8a7e1f?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutscher Klassiker', dauer:'25 Min.', kosten:'≈ 1,20 €', portionen:4, zutaten:['1 kg Kartoffeln','1 Zwiebel','2 Eier','3 EL Mehl','Salz, Pfeffer, Muskat','Öl zum Braten','Apfelmus'], zubereitung:'Kartoffeln und Zwiebel reiben, in Sieb gut ausdrücken. Mit Eiern, Mehl und Gewürzen vermengen. In heißem Öl portionsweise flache Puffer braten. Mit Apfelmus servieren.', tipp:'Auch süß mit Zucker und Zimt — Kinder lieben beides' },
+  { id:'shakshuka', name:'Shakshuka', emoji:'🍳', bild:'https://images.unsplash.com/photo-1590412200988-a436970781fa?w=600&q=75', kategorie:'gesund', kategorieLabel:'International', dauer:'25 Min.', kosten:'≈ 2,00 €', portionen:2, zutaten:['1 Zwiebel','2 Knoblauchzehen','1 Paprika','1 Dose gehackte Tomaten','1 TL Kreuzkümmel','1 TL Paprikapulver','4 Eier','100 g Feta','Petersilie','Brot zum Dippen'], zubereitung:'Zwiebel, Knoblauch und Paprika in Pfanne anbraten. Tomaten und Gewürze zugeben, 10 Min. köcheln. 4 Mulden eindrücken, Eier hineinschlagen. Mit Deckel 5 Min. stocken lassen. Feta drüber, Petersilie.', tipp:'Direkt aus der Pfanne servieren mit frischem Brot' },
+  { id:'gemueselasagne', name:'Gemüselasagne vegetarisch', emoji:'🍅', bild:'https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=600&q=75', kategorie:'gesund', kategorieLabel:'Vegetarisch', dauer:'1 Std.', kosten:'≈ 3,00 €', portionen:6, zutaten:['12 Lasagne-Platten','2 Zucchini','1 Aubergine','2 Paprika','500 g Tomatensoße','500 ml Béchamelsauce','200 g Mozzarella','100 g Parmesan','Basilikum','Olivenöl, Knoblauch'], zubereitung:'Gemüse in Scheiben schneiden und kurz anbraten. In Auflaufform schichten: Tomatensoße, Lasagne, Gemüse, Béchamel — 3-4 Schichten. Käse drüber, 35 Min. bei 180°C backen.', tipp:'Spinat dazwischen macht es noch hochwertiger' },
+  { id:'ofengemuese', name:'Ofengemüse mit Halloumi', emoji:'🧆', bild:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=75', kategorie:'gesund', kategorieLabel:'Vegetarisch', dauer:'40 Min.', kosten:'≈ 3,00 €', portionen:4, zutaten:['2 Süßkartoffeln','1 Zucchini','1 Paprika','1 rote Zwiebel','250 g Halloumi','3 EL Olivenöl','Rosmarin','Salz, Pfeffer','1 Zitrone'], zubereitung:'Gemüse in mundgerechte Stücke schneiden, mit Öl, Rosmarin, Salz, Pfeffer auf Blech verteilen. 25 Min. bei 200°C. Halloumi würfeln, die letzten 8 Min. mitbacken. Mit Zitronensaft beträufeln.', tipp:'Mit Couscous oder Quinoa als Hauptmahlzeit' },
+  { id:'tortellini-sahne', name:'Tortellini in Sahne-Sauce', emoji:'🍝', bild:'https://images.unsplash.com/photo-1587740908075-9e245070dfaa?w=600&q=75', kategorie:'schnell', kategorieLabel:'Schnell & Einfach', dauer:'15 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['500 g Tortellini','200 ml Sahne','100 g geriebener Parmesan','100 g Spinat','1 Knoblauchzehe','Salz, Pfeffer, Muskat','Butter'], zubereitung:'Tortellini nach Packung kochen. Parallel: Knoblauch in Butter dünsten, Sahne zugeben, Spinat einrühren bis er zusammenfällt. Parmesan dazu. Tortellini unterheben, mit Muskat würzen.', tipp:'Mit gerösteten Pinienkernen — extra Crunch' },
+  { id:'haehnchen-curry', name:'Hähnchen-Kokos-Curry', emoji:'🍛', bild:'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&q=75', kategorie:'gesund', kategorieLabel:'International', dauer:'30 Min.', kosten:'≈ 3,50 €', portionen:4, zutaten:['600 g Hähnchen','1 Dose Kokosmilch','2 EL Currypulver mild','1 Zwiebel','2 Knoblauchzehen','1 EL Ingwer','1 Apfel','250 g Reis','Koriander','Salz'], zubereitung:'Zwiebel, Knoblauch, Ingwer anbraten. Curry dazu, kurz rösten. Hähnchen anbraten, Kokosmilch und geriebenen Apfel dazu. 15 Min. köcheln. Mit Reis servieren, Koriander drüber.', tipp:'Mit Mango oder Rosinen wird es süßer und kinderfreundlicher' },
+  { id:'caesar-salad', name:'Caesar Salad', emoji:'🥗', bild:'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=600&q=75', kategorie:'gesund', kategorieLabel:'Gesund & Leicht', dauer:'20 Min.', kosten:'≈ 3,00 €', portionen:2, zutaten:['1 Romanasalat','2 Hähnchenbrüste','100 g Croutons','50 g Parmesan','3 EL Caesar-Dressing','1 EL Olivenöl','Salz, Pfeffer','Zitrone'], zubereitung:'Hähnchen würzen und braten, in Streifen schneiden. Salat in mundgerechte Stücke. Mit Dressing, Croutons, Hähnchen, Parmesan und Zitrone anrichten.', tipp:'Selbstgemachte Croutons aus altem Brot — schmecken doppelt so gut' },
+  { id:'spaghetti-carbonara', name:'Spaghetti Carbonara', emoji:'🍝', bild:'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=600&q=75', kategorie:'klassiker', kategorieLabel:'International', dauer:'20 Min.', kosten:'≈ 2,50 €', portionen:4, zutaten:['500 g Spaghetti','200 g Pancetta oder Speck','4 Eigelb','100 g Pecorino oder Parmesan','Schwarzer Pfeffer','Salz'], zubereitung:'Spaghetti kochen. Speck knusprig braten. Eigelb mit Käse und viel Pfeffer verquirlen. Heiße Spaghetti vom Herd nehmen, Speck und Ei-Käse-Mischung schnell unterheben. Restwärme bindet die Sauce.', tipp:'KEINE Sahne in echter Carbonara — die Italiener weinen sonst' },
+  { id:'kuerbissuppe', name:'Kürbissuppe', emoji:'🎃', bild:'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?w=600&q=75', kategorie:'gesund', kategorieLabel:'Gesund & Leicht', dauer:'40 Min.', kosten:'≈ 2,50 €', portionen:6, zutaten:['1 Hokkaido-Kürbis (ca. 1 kg)','1 Zwiebel','2 Karotten','1 Ingwer-Stück','200 ml Kokosmilch','1 L Brühe','Salz, Pfeffer','Kürbiskerne','Kürbiskernöl'], zubereitung:'Kürbis (Hokkaido mit Schale!) würfeln. Mit Zwiebel, Karotten und Ingwer in Brühe 25 Min. köcheln. Pürieren, Kokosmilch zugeben. Mit Kürbiskernen + Öl servieren.', tipp:'Mit etwas Curry oder Chili wird es würziger' },
+  { id:'gefuellte-paprika', name:'Gefüllte Paprika', emoji:'🫑', bild:'https://images.unsplash.com/photo-1604908554049-1e75dad9a83c?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutscher Klassiker', dauer:'1 Std.', kosten:'≈ 2,50 €', portionen:4, zutaten:['4 große Paprika','500 g Hackfleisch','150 g Reis','1 Zwiebel','1 Ei','500 ml Tomatensoße','Salz, Pfeffer, Paprikapulver'], zubereitung:'Reis halb gar kochen. Hack mit Zwiebel, Ei, Reis und Gewürzen mischen. Paprika oben aufschneiden, entkernen, mit Masse füllen. In Auflaufform stellen, Tomatensoße angießen, 50 Min. bei 180°C backen.', tipp:'Mit Mozzarella obendrauf die letzten 10 Min. — gratiniert perfekt' },
+  { id:'fischstaebchen-selbst', name:'Fischstäbchen selbstgemacht', emoji:'🐟', bild:'https://images.unsplash.com/photo-1604908550665-65b8fdc70ee2?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'25 Min.', kosten:'≈ 3,00 €', portionen:4, zutaten:['600 g Kabeljau- oder Seelachsfilet','3 Eier','150 g Semmelbrösel','100 g Mehl','Salz, Pfeffer, Zitrone','Öl zum Braten','Kartoffeln, Erbsen'], zubereitung:'Fisch in fingerdicke Streifen schneiden, würzen, mit Zitronensaft beträufeln. In Mehl, Ei, Bröseln panieren. In Pfanne in Öl von beiden Seiten 3 Min. braten. Mit Kartoffeln und Erbsen servieren.', tipp:'Frischer Fisch + selbstgemacht = doppelter Geschmack vs. Tiefkühl' },
+  { id:'milchreis', name:'Klassischer Milchreis', emoji:'🍚', bild:'https://images.unsplash.com/photo-1516684669134-de6f7c473a2a?w=600&q=75', kategorie:'kinder', kategorieLabel:'Kinder-Liebling', dauer:'40 Min.', kosten:'≈ 1,00 €', portionen:4, zutaten:['200 g Milchreis','1 L Milch','50 g Zucker','1 Vanilleschote','1 Prise Salz','Zimt und Zucker','Kirschen oder Apfelmus'], zubereitung:'Milch mit Vanille aufkochen. Milchreis und Zucker zugeben. Unter gelegentlichem Rühren 30 Min. quellen lassen. Mit Zimt und Zucker oder Kompott servieren.', tipp:'Kindheits-Erinnerung pur — Restmilch wird am nächsten Tag noch besser' },
+  { id:'apfelkuchen', name:'Versunkener Apfelkuchen', emoji:'🍎', bild:'https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?w=600&q=75', kategorie:'kinder', kategorieLabel:'Backen', dauer:'1 Std.', kosten:'≈ 2,00 €', portionen:12, zutaten:['250 g Butter','200 g Zucker','4 Eier','250 g Mehl','1 Päckchen Backpulver','1 kg Äpfel','Zimt, Zucker','Puderzucker'], zubereitung:'Butter und Zucker schaumig rühren. Eier einzeln einrühren. Mehl mit Backpulver dazu. In gefettete Springform geben. Äpfel schälen, achteln, in Teig drücken. Mit Zimtzucker bestreuen. 50 Min. bei 175°C backen.', tipp:'Mit Sahne oder Vanilleeis — sonntags ein Familien-Highlight' },
+  { id:'reis-pfanne', name:'Reis-Pfanne mit Gemüse', emoji:'🍚', bild:'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&q=75', kategorie:'schnell', kategorieLabel:'Schnell & Einfach', dauer:'20 Min.', kosten:'≈ 1,80 €', portionen:4, zutaten:['250 g Reis','400 g Hähnchen','1 Paprika','1 Zucchini','100 g Erbsen','1 Zwiebel','2 Knoblauchzehen','Sojasauce','Curry, Salz, Öl'], zubereitung:'Reis kochen. Hähnchen würfeln und in Pfanne braten. Zwiebel, Knoblauch dazu, dann Gemüse. Mit Curry würzen. Reis untermischen, Sojasauce drüber, kurz mitbraten.', tipp:'Reste vom Vortag perfekt verwerten — auch mit Erbsen aus Konserve' },
+  { id:'salat-bowl', name:'Bunte Salat-Bowl', emoji:'🥗', bild:'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=75', kategorie:'gesund', kategorieLabel:'Gesund & Leicht', dauer:'15 Min.', kosten:'≈ 2,50 €', portionen:2, zutaten:['100 g Salat (Rucola, Spinat)','100 g Quinoa','1 Avocado','1 Karotte','100 g Cherry-Tomaten','100 g Feta','30 g Walnüsse','3 EL Olivenöl','1 EL Balsamico','Salz, Pfeffer'], zubereitung:'Quinoa nach Packung kochen, abkühlen. Salat in Schüssel, alle Zutaten anrichten. Mit Dressing aus Öl, Essig, Salz, Pfeffer übergießen.', tipp:'Perfekt vorzubereiten — hält in Tupperdose 1 Tag im Kühlschrank' },
+  { id:'frikadellen-pueree', name:'Frikadellen mit Kartoffelpüree', emoji:'🍴', bild:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutsche Küche', dauer:'40 Min.', kosten:'≈ 2,20 €', portionen:4, zutaten:['500 g Hackfleisch gemischt','1 altes Brötchen','1 Zwiebel','1 Ei','1 kg Kartoffeln','200 ml Milch','30 g Butter','Salz, Pfeffer, Senf, Muskat','Öl zum Braten'], zubereitung:'Brötchen in Wasser einweichen und ausdrücken. Mit Hack, geriebener Zwiebel, Ei, Salz, Pfeffer und Senf verkneten. Flache Frikadellen formen und in Öl 4–5 Min. pro Seite braten. Kartoffeln kochen, mit Milch, Butter und Muskat zu Püree stampfen.', tipp:'Doppelte Menge Frikadellen machen — kalt aufs Brot sind sie ein Hit fürs Pausenbrot.' },
+  { id:'kartoffelpuffer', name:'Kartoffelpuffer mit Apfelmus', emoji:'🥔', bild:'https://images.unsplash.com/photo-1554520735-0a6b8b6ce8b7?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutsche Küche', dauer:'35 Min.', kosten:'≈ 1,20 €', portionen:4, zutaten:['1 kg Kartoffeln','1 Zwiebel','2 Eier','3 EL Mehl','Salz, Muskat','Öl zum Braten','Apfelmus zum Servieren'], zubereitung:'Kartoffeln und Zwiebel fein reiben, die Flüssigkeit gut ausdrücken. Mit Eiern, Mehl, Salz und Muskat mischen. Portionsweise als flache Puffer in heißem Öl goldbraun braten. Mit Apfelmus servieren.', tipp:'Geriebene Kartoffeln sofort verarbeiten, sonst werden sie braun.' },
+  { id:'bratkartoffeln-ei', name:'Bratkartoffeln mit Spiegelei', emoji:'🍳', bild:'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutsche Küche', dauer:'30 Min.', kosten:'≈ 1,00 €', portionen:2, zutaten:['600 g festkochende Kartoffeln','1 Zwiebel','100 g Speckwürfel','4 Eier','Salz, Pfeffer','Öl und Butter'], zubereitung:'Kartoffeln am Vortag kochen, pellen und in Scheiben schneiden. In Öl knusprig braten, Zwiebel und Speck zugeben und würzen. In einer zweiten Pfanne Spiegeleier braten und auf die Bratkartoffeln legen.', tipp:'Am besten gelingen Bratkartoffeln aus Kartoffeln vom Vortag — sie zerfallen dann nicht.' },
+  { id:'linseneintopf', name:'Linseneintopf mit Würstchen', emoji:'🍲', bild:'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutsche Küche', dauer:'50 Min.', kosten:'≈ 1,10 €', portionen:6, zutaten:['400 g Tellerlinsen','2 Karotten','2 Kartoffeln','1 Stange Lauch','1 Zwiebel','1,5 l Gemüsebrühe','2 EL Essig','4 Wiener Würstchen','Salz, Pfeffer, Lorbeerblatt'], zubereitung:'Zwiebel anschwitzen, das gewürfelte Gemüse zugeben. Linsen und Brühe dazugeben und mit Lorbeer 35–40 Min. weich köcheln. Mit Salz, Pfeffer und einem Schuss Essig abschmecken. Würstchen in Scheiben kurz miterwärmen.', tipp:'Der Schuss Essig am Ende macht den typischen Geschmack — nicht weglassen.' },
+  { id:'kaesespaetzle', name:'Käsespätzle mit Röstzwiebeln', emoji:'🧀', bild:'https://images.unsplash.com/photo-1587740908075-9e245070dfaa?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutsche Küche', dauer:'30 Min.', kosten:'≈ 2,00 €', portionen:4, zutaten:['500 g Spätzle','250 g geriebener Bergkäse','2 Zwiebeln','40 g Butter','Salz, Pfeffer, Muskat','Schnittlauch'], zubereitung:'Spätzle in Salzwasser kochen oder fertige nehmen. Zwiebeln in Butter langsam goldbraun rösten. Spätzle abwechselnd mit Käse in eine Schüssel schichten, sodass der Käse schmilzt. Mit Röstzwiebeln und Schnittlauch bestreuen.', tipp:'Schichtweise heiß arbeiten — so zieht der Käse schöne Fäden.' },
+  { id:'erbseneintopf', name:'Deftiger Erbseneintopf', emoji:'🥣', bild:'https://images.unsplash.com/photo-1547308283-b941de5747bf?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutsche Küche', dauer:'1 Std.', kosten:'≈ 1,00 €', portionen:6, zutaten:['400 g getrocknete Schälerbsen','3 Kartoffeln','2 Karotten','1 Zwiebel','1,5 l Brühe','4 Würstchen','Salz, Pfeffer, Majoran'], zubereitung:'Erbsen nach Packungsangabe gegebenenfalls einweichen. Zwiebel anschwitzen, das gewürfelte Gemüse und die Erbsen zugeben und mit Brühe 45–60 Min. weich kochen. Würzen und die Würstchen-Scheiben unterheben.', tipp:'Am zweiten Tag schmeckt der Eintopf noch kräftiger — gut zum Vorkochen.' },
+  { id:'haehnchengeschnetzeltes', name:'Hähnchengeschnetzeltes mit Reis', emoji:'🍛', bild:'https://images.unsplash.com/photo-1559847844-5315695dadae?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutsche Küche', dauer:'25 Min.', kosten:'≈ 2,60 €', portionen:4, zutaten:['600 g Hähnchenbrust','250 g Champignons','1 Zwiebel','200 ml Sahne','100 ml Brühe','250 g Reis','Salz, Pfeffer, Paprikapulver','Öl'], zubereitung:'Reis kochen. Hähnchen in Streifen scharf anbraten und herausnehmen. Zwiebel und Pilze anbraten, Sahne und Brühe angießen und kurz einkochen. Das Hähnchen zurück in die Sauce geben und würzen. Mit Reis servieren.', tipp:'Statt Sahne geht auch Schmand — die Sauce wird dann feiner säuerlich.' },
+  { id:'griessbrei', name:'Grießbrei mit Beeren', emoji:'🥣', bild:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=75', kategorie:'klassiker', kategorieLabel:'Deutsche Küche', dauer:'15 Min.', kosten:'≈ 0,90 €', portionen:4, zutaten:['1 l Milch','120 g Weichweizengrieß','40 g Zucker','1 Prise Salz','1 Päckchen Vanillezucker','200 g Beeren','Zimt und Zucker'], zubereitung:'Milch mit Zucker, Vanillezucker und Salz aufkochen. Den Grieß unter Rühren einrieseln lassen, kurz aufkochen und dann bei kleiner Hitze 5 Min. quellen lassen. Mit Beeren und Zimtzucker servieren.', tipp:'Ständig rühren, sonst klumpt der Grieß — Kinder lieben ihn warm.' }
 ];
 
 const CATERING_PORTALE = [
@@ -2213,3 +2687,19 @@ const CHECKLISTEN_DATEN = {
     ]
   }
 };
+
+// ===== FIT / GESUNDE REZEPTE (mit Portionen-Umrechner) =====
+const FIT_REZEPTE = [
+  { id:'fit-bowl', name:'Power-Bowl mit Quinoa', bild:'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=75', kategorie:'fit', kategorieLabel:'💪 Fitness', dauer:'20 Min.', kosten:'≈ 2,50 €', portionen:2, zutaten:['100 g Quinoa','1 Süßkartoffel','100 g Spinat','1 Hähnchenbrust','1/2 Avocado','30 g Granatapfel','2 EL Tahin','1 EL Zitronensaft','Salz, Pfeffer'], zubereitung:'Quinoa nach Packung kochen. Süßkartoffel würfeln, in Olivenöl 20 Min braten. Hähnchen in Streifen, ebenfalls braten. Spinat in Schüssel, alles drauf, mit Tahin-Zitrone übergießen.', tipp:'Am Wochenende vorbereiten, 3 Tage haltbar' },
+  { id:'fit-haehnchen', name:'Mageres Hähnchen mit Brokkoli', bild:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=75', kategorie:'fit', kategorieLabel:'💪 Fitness', dauer:'25 Min.', kosten:'≈ 2,80 €', portionen:2, zutaten:['2 Hähnchenbrüste','1 Brokkoli','100 g brauner Reis','2 EL Olivenöl','1 Zitrone','2 Knoblauchzehen','Salz, Pfeffer'], zubereitung:'Reis nach Packung kochen. Hähnchen mit Knoblauch in Pfanne braten. Brokkoli 5 Min dämpfen. Alles anrichten, mit Zitrone beträufeln.', tipp:'Wenig Fett, viel Protein — perfekt nach Training' },
+  { id:'fit-overnight', name:'Overnight Oats mit Beeren', bild:'https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=600&q=75', kategorie:'fit', kategorieLabel:'💪 Fitness', dauer:'5 Min. + Nacht', kosten:'≈ 1,20 €', portionen:1, zutaten:['50 g Haferflocken','200 ml Magermilch oder Mandelmilch','1 EL Chiasamen','100 g Beeren','1 EL Honig','10 g Nüsse'], zubereitung:'Hafer, Milch, Chia in Glas mischen. Über Nacht in Kühlschrank. Morgens Beeren, Honig und Nüsse oben drauf.', tipp:'Perfekt zum Abnehmen — sättigt lange' },
+  { id:'fit-lachs', name:'Lachs mit Spargel', bild:'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=75', kategorie:'fit', kategorieLabel:'💪 Fitness', dauer:'25 Min.', kosten:'≈ 4,50 €', portionen:2, zutaten:['2 Lachsfilets','500 g grüner Spargel','2 EL Olivenöl','1 Zitrone','Salz, Pfeffer','frischer Dill'], zubereitung:'Spargel waschen, Holzige Enden ab. In Pfanne 8 Min braten. Lachs würzen, in zweiter Pfanne 4 Min pro Seite. Mit Zitrone und Dill servieren.', tipp:'Omega-3, Low-Carb, sättigend' },
+  { id:'fit-suppe', name:'Detox-Gemüsesuppe', bild:'https://images.unsplash.com/photo-1547308283-b941de5747bf?w=600&q=75', kategorie:'gesund', kategorieLabel:'🥦 Gesund', dauer:'30 Min.', kosten:'≈ 1,50 €', portionen:6, zutaten:['4 Karotten','3 Selleriestangen','2 Lauchstangen','1 Bund Petersilie','30 g Ingwer','1 TL Kurkuma','1,5 L Gemüsebrühe','Salz, Pfeffer'], zubereitung:'Gemüse waschen, klein schneiden. In Topf mit Brühe + Ingwer + Kurkuma 25 Min köcheln. Mit Petersilie bestreuen.', tipp:'Entgiftend, kalorienarm — 6 Portionen für die Woche' },
+  { id:'fit-salat', name:'Eiweiß-Salat mit Ei und Avocado', bild:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=75', kategorie:'fit', kategorieLabel:'💪 Fitness', dauer:'15 Min.', kosten:'≈ 2,80 €', portionen:2, zutaten:['200 g Spinat','4 Eier','1 Avocado','200 g Cherry-Tomaten','1 Hähnchenbrust','30 g Walnüsse','3 EL Olivenöl','1 EL Balsamico'], zubereitung:'Eier 8 Min kochen. Hähnchen in Streifen braten. Spinat in Schüssel, alles drauf, mit Öl + Essig anmachen.', tipp:'Low Carb, High Protein — sättigt bis abends' },
+  { id:'fit-zoodles', name:'Zoodles mit Garnelen', bild:'https://images.unsplash.com/photo-1611270629569-8b357cb88da9?w=600&q=75', kategorie:'fit', kategorieLabel:'💪 Fitness', dauer:'15 Min.', kosten:'≈ 4,00 €', portionen:2, zutaten:['3 Zucchini','200 g Garnelen','3 Knoblauchzehen','200 g Cherry-Tomaten','2 EL Olivenöl','Petersilie','Salz, Pfeffer'], zubereitung:'Zucchini mit Spiralschneider zu Spaghetti machen. Garnelen mit Knoblauch in Öl 4 Min braten. Tomaten dazu. Zoodles 2 Min unterheben.', tipp:'Kohlenhydratarm, schmeckt wie Pasta' },
+  { id:'fit-smoothie', name:'Grüner Power-Smoothie', bild:'https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=600&q=75', kategorie:'gesund', kategorieLabel:'🥦 Gesund', dauer:'5 Min.', kosten:'≈ 1,80 €', portionen:1, zutaten:['100 g Spinat','1 Banane','1 Apfel','1 Selleriestange','20 g Ingwer','1 Zitrone','1 EL Chiasamen','200 ml Wasser'], zubereitung:'Alles in den Mixer geben, 1 Min mixen. Direkt trinken.', tipp:'Vitamin-Bombe — perfekt am Morgen' },
+  { id:'fit-buddha', name:'Buddha-Bowl Vegan', bild:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=75', kategorie:'gesund', kategorieLabel:'🥦 Gesund', dauer:'30 Min.', kosten:'≈ 2,20 €', portionen:2, zutaten:['100 g Hirse','200 g Kichererbsen','1 Karotte','1 Avocado','100 g Rotkohl','1 Süßkartoffel','3 EL Hummus','2 EL Tahin-Sauce'], zubereitung:'Hirse kochen. Süßkartoffel würfeln, im Ofen 20 Min bei 200°C. Kichererbsen kurz braten. Alles in Schüssel anrichten, mit Hummus und Sauce.', tipp:'Vegan, glutenfrei, gut für die Darmflora' },
+  { id:'fit-omelett', name:'Spinat-Feta-Omelett', bild:'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=75', kategorie:'fit', kategorieLabel:'💪 Fitness', dauer:'10 Min.', kosten:'≈ 1,80 €', portionen:1, zutaten:['3 Eier','50 g Spinat','30 g Feta','1 EL Olivenöl','Salz, Pfeffer'], zubereitung:'Eier verquirlen, Spinat unterheben. In Pfanne mit Öl gießen, Feta drüber. 5 Min auf mittlerer Stufe braten.', tipp:'Perfektes Eiweiß-Frühstück, sehr sättigend' },
+  { id:'fit-linsen', name:'Rote-Linsen-Curry', bild:'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=75', kategorie:'gesund', kategorieLabel:'🥦 Gesund', dauer:'25 Min.', kosten:'≈ 1,80 €', portionen:4, zutaten:['250 g rote Linsen','1 Dose Kokosmilch','1 Zwiebel','2 Knoblauchzehen','1 EL Currypaste','1 Dose gehackte Tomaten','Salz','200 g Reis'], zubereitung:'Zwiebel und Knoblauch dünsten. Currypaste anrösten. Linsen, Tomaten, Kokosmilch dazu. 20 Min köcheln. Mit Reis servieren.', tipp:'Vegan, gut für die Familie, sehr günstig' },
+  { id:'fit-quark', name:'Quark mit Beeren und Nüssen', bild:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&q=75', kategorie:'fit', kategorieLabel:'💪 Fitness', dauer:'5 Min.', kosten:'≈ 1,50 €', portionen:1, zutaten:['250 g Magerquark','100 g Beeren','20 g Nüsse','1 EL Honig','1 TL Chia'], zubereitung:'Quark in Schüssel. Beeren, Nüsse, Honig und Chia oben drauf. Fertig.', tipp:'25 g Protein, perfekt nach Sport' }
+];

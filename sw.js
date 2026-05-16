@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'familienapp-v11';
+const CACHE_VERSION = 'familienapp-v37';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
@@ -69,6 +69,8 @@ self.addEventListener('fetch', e => {
       url.hostname.includes('nominatim.openstreetmap.org') ||
       url.hostname.includes('tile.openstreetmap.org') ||
       url.hostname.includes('arbeitsagentur.de') ||
+      url.hostname.includes('open-meteo.com') ||
+      url.hostname.includes('pollinations.ai') ||
       url.hostname.includes('themealdb.com') ||
       url.hostname.includes('allorigins.win') ||
       url.hostname.includes('corsproxy.io') ||
@@ -139,4 +141,21 @@ self.addEventListener('message', e => {
   if (e.data?.type === 'CLEAR_CACHE') {
     caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
   }
+});
+
+// Klick auf eine Benachrichtigung: App fokussieren bzw. öffnen und zur passenden Sektion springen
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const sektion = e.notification.data && e.notification.data.zuSektion;
+  e.waitUntil((async () => {
+    const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of clientList) {
+      if ('focus' in c) {
+        await c.focus();
+        if (sektion) c.postMessage({ type: 'NAVIGATE', sektion });
+        return;
+      }
+    }
+    if (self.clients.openWindow) await self.clients.openWindow('./');
+  })());
 });
