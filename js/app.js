@@ -1365,7 +1365,7 @@ async function initDashWetter() {
   }
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=14`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=14`;
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error('Wetter-API Fehler');
     const data = await res.json();
@@ -1402,6 +1402,37 @@ function _wetterHtmlBauen(data, ort) {
   // Sonnenauf-/-untergang
   const sa = dly.sunrise?.[0] ? new Date(dly.sunrise[0]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
   const su = dly.sunset?.[0]  ? new Date(dly.sunset[0]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
+
+  // Stündliche Vorschau — nächste 12 Stunden
+  const hr = data.hourly || {};
+  let stundenHtml = '';
+  if (hr.time && hr.time.length) {
+    const jetztMs = Date.now();
+    let startIdx = hr.time.findIndex(t => new Date(t).getTime() + 3600000 > jetztMs);
+    if (startIdx < 0) startIdx = 0;
+    const karten = [];
+    for (let i = startIdx; i < Math.min(startIdx + 12, hr.time.length); i++) {
+      const dt = new Date(hr.time[i]);
+      const istJetzt = karten.length === 0;
+      const wi = wetterInfo(hr.weather_code?.[i] ?? 3);
+      const t = Math.round(hr.temperature_2m?.[i] ?? 0);
+      const rp = hr.precipitation_probability?.[i];
+      karten.push(`
+        <div class="wetter-stunde-karte${istJetzt ? ' wetter-stunde-jetzt' : ''}">
+          <div class="wetter-stunde-zeit">${istJetzt ? 'Jetzt' : dt.getHours() + ' Uhr'}</div>
+          <div class="wetter-stunde-emoji">${wi.emoji}</div>
+          <div class="wetter-stunde-temp">${t}°</div>
+          <div class="wetter-stunde-regen">${(rp != null && rp > 0) ? '💧 ' + rp + ' %' : ''}</div>
+        </div>`);
+    }
+    if (karten.length) {
+      stundenHtml = `
+      <div class="wetter-14tage wetter-stunden">
+        <div class="wetter-14tage-titel">Nächste Stunden</div>
+        <div class="wetter-14tage-scroll">${karten.join('')}</div>
+      </div>`;
+    }
+  }
 
   return `
   <div class="wetter-bg" style="background:linear-gradient(135deg, ${info.farbe1} 0%, ${info.farbe2} 100%)">
@@ -1458,6 +1489,8 @@ function _wetterHtmlBauen(data, ort) {
         </div>
       </div>` : ''}
     </div>
+
+    ${stundenHtml}
 
     ${dly.weather_code && dly.weather_code.length > 1 ? `
     <div class="wetter-14tage">

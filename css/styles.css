@@ -4343,6 +4343,44 @@ input::placeholder, textarea::placeholder {
   font-weight: 700;
 }
 .wetter-tag-trocken { opacity: .55; }
+
+/* Stündliche Wetter-Vorschau */
+.wetter-stunde-karte {
+  flex: 0 0 auto;
+  min-width: 62px;
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 14px;
+  padding: .55rem .35rem;
+  text-align: center;
+}
+.wetter-stunde-jetzt {
+  background: rgba(255,255,255,.32);
+  border-color: rgba(255,255,255,.45);
+}
+.wetter-stunde-zeit {
+  font-size: .72rem;
+  font-weight: 800;
+  opacity: .92;
+}
+.wetter-stunde-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+  margin: .3rem 0;
+}
+.wetter-stunde-temp {
+  font-size: .92rem;
+  font-weight: 800;
+}
+.wetter-stunde-regen {
+  font-size: .62rem;
+  font-weight: 700;
+  opacity: .85;
+  margin-top: .15rem;
+  min-height: .8rem;
+}
 .wetter-refresh {
   position: absolute;
   top: .65rem; right: .65rem;
