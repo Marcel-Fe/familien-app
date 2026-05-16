@@ -2129,7 +2129,7 @@ function renderDashboard() {
     </svg>
     <div class="hero-foto-overlay"></div>
     <div class="hero-deko1"></div><div class="hero-deko2"></div><div class="hero-deko3"></div>
-    <div class="hero-tag">${tageszeit()} ${tagesEmoji()}</div>
+    <div class="hero-tag">${tagesEmoji()} ${tageszeit()} <span class="hero-tag-datum">${new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' })}</span></div>
     <div class="hero-name">${user.vorname ? `Hallo ${esc(user.vorname)}!` : 'Willkommen!'}</div>
     <div class="hero-ort">
       ${bl ? `📍 ${esc(bl.name)}` : ''}
@@ -3447,14 +3447,14 @@ function renderRegSchritt() {
     <div class="reg-schritt-sub">Für länderspezifische Zuschüsse und Links</div>
     <div class="reg-feld">
       <label class="reg-label">Bundesland</label>
-      <select class="reg-select" id="r-bl">
+      <select class="reg-select" id="r-bl" onchange="state.regDaten.bundesland=this.value">
         <option value="">Bitte wählen...</option>
         ${BUNDESLAENDER.map(b => `<option value="${b.id}" ${d.bundesland===b.id?'selected':''}>${b.name}</option>`).join('')}
       </select>
     </div>
     <div class="reg-feld">
       <label class="reg-label">Ihr Alter (optional)</label>
-      <input class="reg-input" id="r-alter" type="number" min="16" max="120" placeholder="z.B. 38" value="${d.alter||''}" />
+      <input class="reg-input" id="r-alter" type="number" min="16" max="120" placeholder="z.B. 38" value="${d.alter||''}" onchange="state.regDaten.alter=parseInt(this.value)||null" />
       <div style="font-size:.75rem;color:#6B7280;margin-top:.3rem">Ab 65 stellt die App automatisch größere Schrift ein und zeigt den Senioren-Bereich.</div>
     </div>
     <div class="reg-feld">
