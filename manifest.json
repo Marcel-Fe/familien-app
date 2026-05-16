@@ -77,21 +77,21 @@
       "name": "Zuschüsse",
       "short_name": "Zuschüsse",
       "description": "Wohngeld, Kita, Unterhalt",
-      "url": "/?sektion=leistungen",
+      "url": "./?sektion=leistungen",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Umgebung",
       "short_name": "Karte",
       "description": "Umgebungssuche starten",
-      "url": "/?sektion=umgebung",
+      "url": "./?sektion=umgebung",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Budgetrechner",
       "short_name": "Budget",
       "description": "Haushalt berechnen",
-      "url": "/?sektion=extras",
+      "url": "./?sektion=extras",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
   ]
