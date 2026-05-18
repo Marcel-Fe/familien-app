@@ -5323,3 +5323,40 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   margin: .5rem 0 .6rem;
 }
 .wissen-heute-kat { font-size: .78rem; font-weight: 700; opacity: .82; }
+
+/* Übersetzer */
+.ueb-sprachzeile {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.ueb-sprachzeile .reg-select { flex: 1; min-width: 0; }
+.ueb-tausch {
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  border-radius: 99px;
+  border: 1.5px solid var(--g200);
+  background: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--akzent-1);
+  cursor: pointer;
+}
+.ueb-ergebnis-box {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 14px;
+  padding: .9rem 1rem;
+}
+.ueb-ergebnis-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #1E3A8A;
+  white-space: pre-wrap;
+}
+.ueb-ergebnis-aktionen {
+  display: flex;
+  gap: .5rem;
+  margin-top: .75rem;
+}

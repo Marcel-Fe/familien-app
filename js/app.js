@@ -259,6 +259,7 @@ const NAV = {
   erziehung:    [{s:'erziehung', l:'Erziehungshilfe'}],
   senioren:     [{s:'senioren', l:'Senioren'}],
   wissen:       [{s:'wissen', l:'Wissen'}],
+  uebersetzer:  [{s:'uebersetzer', l:'Übersetzer'}],
   album:        [{s:'album', l:'Familien-Album'}],
   kontakte:     [{s:'kontakte', l:'Kontakte'}],
   haushalt:     [{s:'haushalt', l:'Haushalt'}],
@@ -2186,6 +2187,7 @@ function render() {
     case 'album':          content.innerHTML = renderAlbum(); break;
     case 'kontakte':       content.innerHTML = renderKontakte(); break;
     case 'wissen':         content.innerHTML = renderWissen(); break;
+    case 'uebersetzer':    content.innerHTML = renderUebersetzer(); break;
     case 'einkaufsliste':  content.innerHTML = renderEinkaufslisteSektion(); break;
     default:           content.innerHTML = renderDashboard();
   }
@@ -10251,6 +10253,104 @@ function renderWissen() {
         <div class="tipp-karte-text">${esc(f.text)}</div>
       </div>`).join('')}
   </div>`;
+}
+
+// ===== SPRACHÜBERSETZER =====
+const UEB_SPRACHEN = [
+  { code:'de', name:'Deutsch' },
+  { code:'en', name:'Englisch' },
+  { code:'tr', name:'Türkisch' },
+  { code:'ar', name:'Arabisch' },
+  { code:'ru', name:'Russisch' },
+  { code:'uk', name:'Ukrainisch' },
+  { code:'pl', name:'Polnisch' },
+  { code:'fr', name:'Französisch' },
+  { code:'es', name:'Spanisch' },
+  { code:'it', name:'Italienisch' },
+  { code:'ro', name:'Rumänisch' },
+  { code:'nl', name:'Niederländisch' }
+];
+let _uebLetztesErgebnis = '';
+
+async function uebersetzeMyMemory(text, von, nach) {
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${von}|${nach}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const t = d?.responseData?.translatedText;
+    if (t && !/^(MYMEMORY WARNING|INVALID|'|")/i.test(t.trim())) return t.trim();
+    return null;
+  } catch { return null; }
+}
+async function uebersetzePollinations(text, von, nach) {
+  const name = c => (UEB_SPRACHEN.find(s => s.code === c)?.name || c);
+  const prompt = `Übersetze den folgenden Text von ${name(von)} nach ${name(nach)}. Gib NUR die reine Übersetzung zurück, ohne Kommentar und ohne Anführungszeichen:\n\n${text}`;
+  try {
+    const res = await fetch('https://text.pollinations.ai/' + encodeURIComponent(prompt) + '?model=openai&private=true', { signal: AbortSignal.timeout(20000) });
+    if (!res.ok) return null;
+    const t = (await res.text()).trim();
+    return t || null;
+  } catch { return null; }
+}
+async function uebersetzungStarten() {
+  const text = (el('ueb-text')?.value || '').trim();
+  const von = el('ueb-von')?.value || 'de';
+  const nach = el('ueb-nach')?.value || 'en';
+  const out = el('ueb-ergebnis');
+  if (!out) return;
+  if (!text) { toast('⚠️ Bitte einen Text eingeben'); return; }
+  if (von === nach) { toast('⚠️ Bitte zwei verschiedene Sprachen wählen'); return; }
+  out.innerHTML = '<div class="rezept-laden" style="padding:1.25rem;text-align:center">⏳ Übersetze…</div>';
+  let ergebnis = await uebersetzeMyMemory(text, von, nach);
+  if (!ergebnis) ergebnis = await uebersetzePollinations(text, von, nach);
+  if (ergebnis) {
+    _uebLetztesErgebnis = ergebnis;
+    out.innerHTML = `
+      <div class="ueb-ergebnis-box">
+        <div class="ueb-ergebnis-text">${esc(ergebnis)}</div>
+        <div class="ueb-ergebnis-aktionen">
+          <button class="btn btn-sm" onclick="uebersetzungVorlesen()">🔊 Vorlesen</button>
+          <button class="btn btn-sm" onclick="uebersetzungKopieren()">📋 Kopieren</button>
+        </div>
+      </div>`;
+  } else {
+    out.innerHTML = '<div class="info-box orange"><span class="ib-icon">⚠️</span><div class="ib-text">Übersetzung gerade nicht möglich — bitte Internetverbindung prüfen und erneut versuchen.</div></div>';
+  }
+}
+function uebersetzerTauschen() {
+  const vonEl = el('ueb-von'), nachEl = el('ueb-nach');
+  if (!vonEl || !nachEl) return;
+  const tmp = vonEl.value; vonEl.value = nachEl.value; nachEl.value = tmp;
+}
+function uebersetzungVorlesen() {
+  if (!window.speechSynthesis || !_uebLetztesErgebnis) { toast('⚠️ Vorlesen nicht möglich'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(_uebLetztesErgebnis);
+  u.lang = el('ueb-nach')?.value || 'en';
+  speechSynthesis.speak(u);
+}
+function uebersetzungKopieren() {
+  if (!_uebLetztesErgebnis) return;
+  try { navigator.clipboard.writeText(_uebLetztesErgebnis); toast('✓ Übersetzung kopiert'); }
+  catch { toast('⚠️ Kopieren nicht möglich'); }
+}
+function renderUebersetzer() {
+  const sel = (id, vorgabe) => `<select id="${id}" class="reg-select">${UEB_SPRACHEN.map(s => `<option value="${s.code}"${s.code === vorgabe ? ' selected' : ''}>${s.name}</option>`).join('')}</select>`;
+  return `
+  <div class="section-title">🌐 Übersetzer</div>
+  <p class="section-sub">Texte schnell in andere Sprachen übersetzen — 12 Sprachen</p>
+  <div class="card">
+    <div class="ueb-sprachzeile">
+      ${sel('ueb-von', 'de')}
+      <button class="ueb-tausch" onclick="uebersetzerTauschen()" title="Sprachen tauschen">⇄</button>
+      ${sel('ueb-nach', 'en')}
+    </div>
+    <textarea id="ueb-text" class="reg-input" rows="4" placeholder="Text zum Übersetzen eingeben…" style="margin-top:.6rem;resize:vertical;font-family:inherit"></textarea>
+    <button class="btn btn-primary" style="width:100%;margin-top:.5rem" onclick="uebersetzungStarten()">🌐 Übersetzen</button>
+  </div>
+  <div id="ueb-ergebnis" style="margin-top:1rem"></div>
+  <div class="info-box blau" style="margin-top:1rem;font-size:.8rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Die Übersetzung wird online erstellt und ist eine gute Alltagshilfe. Bei wichtigen Dokumenten (Ämter, Verträge) lieber einen vereidigten Übersetzer fragen.</div></div>`;
 }
 
 // ===== KONTAKTE =====
