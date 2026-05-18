@@ -4385,16 +4385,16 @@ function sparTabWaehlen(tab) { state.sparTab=tab; render(); }
 
 function renderSparen() {
   const tabs = [
+    {id:'supermarkt',label:'🛒 Angebote'},
     {id:'tipps',label:'💡 Spar-Tipps'},
     {id:'geldanlage',label:'🌱 Geldanlagen'},
     {id:'lebensmittel',label:'🥦 Günstig essen'},
-    {id:'supermarkt',label:'🛒 Supermarkt'},
     {id:'kleidung',label:'👕 Kleidung'},
     {id:'strom',label:'⚡ Strom & Handy'},
     {id:'vertraege',label:'🔄 Verträge'}
   ];
-  // Default- und Alt-Stände auf den Tipps-Tab umleiten
-  if (!state.sparTab || state.sparTab === 'liste') state.sparTab = 'tipps';
+  // Default- und Alt-Stände auf die Supermarkt-Angebote umleiten
+  if (!state.sparTab || state.sparTab === 'liste') state.sparTab = 'supermarkt';
   let inhalt = '';
   switch(state.sparTab) {
     case 'tipps':       inhalt = renderSparTipps(); break;
@@ -4404,7 +4404,7 @@ function renderSparen() {
     case 'strom':       inhalt = renderSparStrom(); break;
     case 'vertraege':   inhalt = renderVertraege(); break;
     case 'kleidung':    inhalt = renderSparKleidung(); break;
-    default:            inhalt = renderSparTipps();
+    default:            inhalt = renderSparSupermarkt();
   }
   return `
   <div class="section-title">💰 Sparen & Geld anlegen</div>
@@ -10296,6 +10296,52 @@ function zyklusZuruecksetzen() {
   render();
 }
 
+// --- Stimmungs-Tagebuch ---
+const ZYKLUS_STIMMUNGEN = [
+  { key:'gut',     icon:'😊', label:'Gut drauf' },
+  { key:'neutral', icon:'😐', label:'Neutral' },
+  { key:'traurig', icon:'😢', label:'Niedergeschlagen' },
+  { key:'schmerz', icon:'😣', label:'Schmerzen' },
+  { key:'muede',   icon:'😴', label:'Erschöpft' },
+  { key:'gereizt', icon:'😤', label:'Gereizt' },
+  { key:'energie', icon:'🤩', label:'Voller Energie' }
+];
+function zyklusEmotionenLaden() { try { return JSON.parse(localStorage.getItem('familienapp_zyklus_emotionen') || '{}'); } catch { return {}; } }
+function zyklusEmotionSetzen(key) {
+  const e = zyklusEmotionenLaden();
+  const heuteKey = new Date().toISOString().slice(0, 10);
+  if (e[heuteKey] === key) delete e[heuteKey]; else e[heuteKey] = key;
+  try { localStorage.setItem('familienapp_zyklus_emotionen', JSON.stringify(e)); } catch {}
+  render();
+}
+function zyklusEmotionBlock() {
+  const e = zyklusEmotionenLaden();
+  const heuteMood = e[new Date().toISOString().slice(0, 10)];
+  const tage = [];
+  for (let i = 6; i >= 0; i--) {
+    const dt = new Date(); dt.setDate(dt.getDate() - i);
+    const m = ZYKLUS_STIMMUNGEN.find(s => s.key === e[dt.toISOString().slice(0, 10)]);
+    tage.push({ label: dt.toLocaleDateString('de-DE', { weekday: 'short' }), icon: m ? m.icon : '·' });
+  }
+  return `
+  <div class="card" style="margin-top:1rem">
+    <div style="font-weight:800;margin-bottom:.55rem">🌈 Wie fühlst du dich heute?</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+      ${ZYKLUS_STIMMUNGEN.map(s => `
+        <button class="zyklus-mood${heuteMood === s.key ? ' aktiv' : ''}" onclick="zyklusEmotionSetzen('${s.key}')">
+          <span style="font-size:1.4rem">${s.icon}</span><span>${esc(s.label)}</span>
+        </button>`).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:.85rem;gap:.3rem">
+      ${tage.map(t => `<div style="text-align:center;flex:1">
+        <div style="font-size:1.2rem">${t.icon}</div>
+        <div style="font-size:.62rem;color:var(--g500);font-weight:700">${t.label}</div>
+      </div>`).join('')}
+    </div>
+    <div style="font-size:.72rem;color:var(--g500);margin-top:.5rem">Deine Stimmung über die Woche — so erkennst du Muster im Zyklus. Tippe erneut, um die Auswahl zu entfernen.</div>
+  </div>`;
+}
+
 function zyklusFormular(d) {
   return `
   <div class="card" style="margin-top:1rem">
@@ -10325,6 +10371,7 @@ function renderZykluskalender() {
     return `
     <div class="info-box lila"><span class="ib-icon">🌸</span><div class="ib-text"><strong>Zykluskalender:</strong> Behalte deinen Zyklus im Blick — hilfreich bei Kinderwunsch und um deinen Körper besser zu verstehen. Deine Daten bleiben nur auf diesem Gerät.</div></div>
     ${zyklusFormular(null)}
+    ${zyklusEmotionBlock()}
     <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Der Zykluskalender dient der <strong>Orientierung</strong> und ist <strong>keine Verhütungsmethode</strong>. Jeder Zyklus ist unterschiedlich.</div></div>`;
   }
   const tag = 86400000;
@@ -10367,6 +10414,7 @@ function renderZykluskalender() {
     ${statKarte('🌱', 'Fruchtbare Tage', fmt(fruchtbarVon) + ' – ' + fmt(fruchtbarBis))}
     ${statKarte('⭐', 'Eisprung (ca.)', fmt(eisprungDatum))}
   </div>
+  ${zyklusEmotionBlock()}
   ${zyklusFormular(d)}
   <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Alle Angaben sind <strong>Schätzungen zur Orientierung</strong> und keine Verhütungsmethode. Bei unregelmäßigem Zyklus, Kinderwunsch über längere Zeit oder Beschwerden hilft die Frauenärztin weiter.</div></div>`;
 }
