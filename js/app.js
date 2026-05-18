@@ -261,6 +261,7 @@ const NAV = {
   wissen:       [{s:'wissen', l:'Wissen'}],
   uebersetzer:  [{s:'uebersetzer', l:'Übersetzer'}],
   medbox:       [{s:'medbox', l:'Medikamente'}],
+  erkennen:     [{s:'erkennen', l:'Tiere & Pflanzen'}],
   album:        [{s:'album', l:'Familien-Album'}],
   kontakte:     [{s:'kontakte', l:'Kontakte'}],
   haushalt:     [{s:'haushalt', l:'Haushalt'}],
@@ -2192,6 +2193,7 @@ function render() {
     case 'wissen':         content.innerHTML = renderWissen(); break;
     case 'uebersetzer':    content.innerHTML = renderUebersetzer(); break;
     case 'medbox':         content.innerHTML = renderMedbox(); break;
+    case 'erkennen':       content.innerHTML = renderErkennen(); break;
     case 'einkaufsliste':  content.innerHTML = renderEinkaufslisteSektion(); break;
     default:           content.innerHTML = renderDashboard();
   }
@@ -10340,6 +10342,141 @@ function renderMedbox() {
     </div>`).join('')}
 
   <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">⚠️</span><div class="ib-text">Die App ist eine Gedächtnisstütze und ersetzt keine ärztliche Anweisung. Dosierung und Einnahme immer wie mit Arzt oder Apotheke besprochen.</div></div>`;
+}
+
+// ===== TIERE & PFLANZEN ERKENNEN =====
+// Foto eines Tieres oder einer Pflanze per KI-Bilderkennung bestimmen.
+
+// Foto fürs Erkennen verkleinern — kleiner als Album, damit der Upload schnell bleibt
+function erkennenBildKomprimieren(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 900;
+        let w = img.width, h = img.height;
+        if (w > max || h > max) {
+          if (w > h) { h = Math.round(h * max / w); w = max; }
+          else { w = Math.round(w * max / h); h = max; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function erkennenFotoGewaehlt(input) {
+  const file = (input.files || [])[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('⚠️ Bitte ein Foto auswählen'); return; }
+  try {
+    state.erkennenBild = await erkennenBildKomprimieren(file);
+    state.erkennenErgebnis = '';
+    render();
+  } catch (e) {
+    toast('⚠️ Foto konnte nicht geladen werden');
+  }
+  input.value = '';
+}
+
+function erkennenZuruecksetzen() {
+  state.erkennenBild = '';
+  state.erkennenErgebnis = '';
+  render();
+}
+
+async function erkennenStarten() {
+  if (!state.erkennenBild) { toast('⚠️ Bitte zuerst ein Foto aufnehmen'); return; }
+  const btn = el('erkennen-btn');
+  const ausgabe = el('erkennen-ausgabe');
+  if (btn) { btn.disabled = true; btn.textContent = '🔍 Wird erkannt…'; }
+  if (ausgabe) ausgabe.innerHTML = '<div class="erkennen-laden">🔎 Das Bild wird analysiert – einen Moment…</div>';
+  const prompt = 'Du bist ein Experte für Tier- und Pflanzenbestimmung. Bestimme, was auf diesem Foto zu sehen ist. ' +
+    'Antworte auf Deutsch, freundlich und für Familien verständlich, in genau diesem Format mit diesen Überschriften:\n' +
+    '**Das ist:** Name auf Deutsch, möglichst genau, plus ob es ein Tier oder eine Pflanze ist.\n' +
+    '**Beschreibung:** 2-3 Sätze – woran man es erkennt, wo es vorkommt.\n' +
+    '**Für Familien wichtig:** Ist es giftig, stechend oder gefährlich für Kinder oder Haustiere? Klar und ehrlich sagen. Wenn harmlos, das auch sagen.\n' +
+    '**Tipp:** Ein praktischer Tipp – Pflege bei Pflanzen, Verhalten bei Tieren.\n' +
+    'Wenn du dir nicht sicher bist, sage das ehrlich und nenne die wahrscheinlichste Möglichkeit. ' +
+    'Wenn auf dem Foto kein Tier und keine Pflanze zu erkennen ist, sage das freundlich.';
+  try {
+    const res = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'openai',
+        private: true,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: state.erkennenBild } }
+          ]
+        }]
+      }),
+      signal: AbortSignal.timeout(45000)
+    });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const data = await res.json();
+    const text = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '').trim();
+    if (!text) throw new Error('leer');
+    state.erkennenErgebnis = text;
+  } catch (e) {
+    state.erkennenErgebnis = '__FEHLER__';
+  }
+  render();
+}
+
+// Einfaches Markdown für die Erkennungs-Antwort: **fett** und Zeilenumbrüche
+function erkennenTextFormat(text) {
+  return esc(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\r?\n/g, '<br>');
+}
+
+function renderErkennen() {
+  const bild = state.erkennenBild;
+  const erg = state.erkennenErgebnis;
+  return `
+  <div class="section-title">🌿 Tiere & Pflanzen erkennen</div>
+  <p class="section-sub">Foto aufnehmen – die App bestimmt, was darauf zu sehen ist</p>
+
+  <div class="card" style="margin-bottom:1rem">
+    ${bild ? `
+      <div class="erkennen-vorschau"><img src="${bild}" alt="Aufgenommenes Foto" /></div>
+      <div class="erkennen-aktionen">
+        <button class="btn btn-primary" id="erkennen-btn" style="flex:1" onclick="erkennenStarten()">🔍 Jetzt erkennen</button>
+        <button class="btn btn-outline" onclick="erkennenZuruecksetzen()">✕ Neues Foto</button>
+      </div>
+    ` : `
+      <label class="erkennen-upload">
+        <input type="file" accept="image/*" capture="environment" onchange="erkennenFotoGewaehlt(this)" hidden />
+        <div class="erkennen-upload-icon">📷</div>
+        <div class="erkennen-upload-text">Foto aufnehmen oder auswählen</div>
+        <div class="erkennen-upload-sub">Tier, Pflanze, Blume, Insekt …</div>
+      </label>
+    `}
+  </div>
+
+  <div id="erkennen-ausgabe">
+    ${erg === '__FEHLER__' ? `
+      <div class="info-box orange"><span class="ib-icon">⚠️</span><div class="ib-text"><strong>Erkennung nicht möglich.</strong> Bitte Internetverbindung prüfen und es noch einmal versuchen – am besten mit einem scharfen, gut beleuchteten Foto.</div></div>`
+    : erg ? `
+      <div class="erkennen-ergebnis">
+        <div class="erkennen-ergebnis-titel">🔎 Erkennungs-Ergebnis</div>
+        <div class="erkennen-ergebnis-text">${erkennenTextFormat(erg)}</div>
+      </div>` : ''}
+  </div>
+
+  <div class="info-box blau" style="margin-top:1rem"><span class="ib-icon">💡</span><div class="ib-text">Die Erkennung ist eine KI-Schätzung und kann sich irren. Bei giftigen Pflanzen, Pilzen oder unbekannten Tieren im Zweifel <strong>nichts anfassen oder essen</strong> und Fachleute fragen.</div></div>`;
 }
 
 // ===== WISSEN =====

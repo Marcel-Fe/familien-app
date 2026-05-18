@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/styles.css?v=48" />
+  <link rel="stylesheet" href="css/styles.css?v=49" />
 </head>
 <body>
 
@@ -137,6 +137,7 @@
         <button class="menu-eintrag" data-gruppe="wissen"        onclick="menuKlick('wissen')">        <span class="menu-icon-emoji">💡</span> <span class="menu-eintrag-label">Wissen</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="uebersetzer"   onclick="menuKlick('uebersetzer')">   <span class="menu-icon-emoji">🌐</span> <span class="menu-eintrag-label">Übersetzer</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="medbox"        onclick="menuKlick('medbox')">        <span class="menu-icon-emoji">💊</span> <span class="menu-eintrag-label">Medikamente</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="erkennen"      onclick="menuKlick('erkennen')">      <span class="menu-icon-emoji">🌿</span> <span class="menu-eintrag-label">Tiere &amp; Pflanzen</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="album"         onclick="menuKlick('album')">         <span class="menu-icon-emoji">📷</span> <span class="menu-eintrag-label">Familien-Album</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="kontakte"      onclick="menuKlick('kontakte')">      <span class="menu-icon-emoji">📇</span> <span class="menu-eintrag-label">Kontakte</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="haushalt"      onclick="menuKlick('haushalt')">      <span class="menu-icon-emoji">🏡</span> <span class="menu-eintrag-label">Haushalt</span> <span class="menu-pfeil">›</span></button>
@@ -207,8 +208,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="js/data.js?v=48"></script>
-  <script src="js/app.js?v=48"></script>
+  <script src="js/data.js?v=49"></script>
+  <script src="js/app.js?v=49"></script>
   <script>
     // Scroll-to-Top Button-Sichtbarkeit
     window.addEventListener('scroll', () => {
@@ -236,7 +237,7 @@
             nw.addEventListener('statechange', () => {
               if (nw.state === 'activated') {
                 caches.keys().then(keys => Promise.all(
-                  keys.filter(k => !k.includes('familienapp-v48')).map(k => caches.delete(k))
+                  keys.filter(k => !k.includes('familienapp-v49')).map(k => caches.delete(k))
                 )).then(() => location.reload());
               }
             });
