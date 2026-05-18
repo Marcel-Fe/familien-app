@@ -3162,7 +3162,7 @@ async function routeMultiBerechnen(zielLat, zielLng, zielName) {
   // Drei OSRM-Profile parallel abfragen
   const profile = ['driving', 'cycling', 'foot'];
   const requests = profile.map(p =>
-    fetch(`https://router.project-osrm.org/route/v1/${p}/${standort.lng},${standort.lat};${zielLng},${zielLat}?overview=full&geometries=geojson`)
+    fetch(`https://router.project-osrm.org/route/v1/${p}/${standort.lng},${standort.lat};${zielLng},${zielLat}?overview=full&geometries=geojson`, { signal: AbortSignal.timeout(15000) })
       .then(r => r.ok ? r.json() : null).catch(() => null)
   );
   const [auto, fahrrad, fuss] = await Promise.all(requests);
@@ -3516,11 +3516,20 @@ async function routeBerechnen() {
       startLat = parseFloat(sData[0].lat); startLng = parseFloat(sData[0].lon);
     }
 
-    // OSRM Routing (kostenlos, kein API-Key)
+    // OSRM Routing (kostenlos, kein API-Key) — mit Zeitlimit und Wiederholversuch
     const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${zielLng},${zielLat}?overview=full&geometries=geojson`;
-    const routeRes = await fetch(osrmUrl);
-    const routeData = await routeRes.json();
-    if (routeData.code !== 'Ok' || !routeData.routes?.length) throw new Error('Route nicht berechenbar');
+    let routeData = null;
+    for (let v = 1; v <= 2 && !routeData; v++) {
+      try {
+        const routeRes = await fetch(osrmUrl, { signal: AbortSignal.timeout(15000) });
+        if (routeRes.ok) {
+          const d = await routeRes.json();
+          if (d.code === 'Ok' && d.routes?.length) routeData = d;
+        }
+      } catch (e) { /* nächster Versuch */ }
+      if (!routeData && v < 2) await new Promise(r => setTimeout(r, 700));
+    }
+    if (!routeData) throw new Error('Route nicht berechenbar');
 
     const route = routeData.routes[0];
     const distM = route.distance;
@@ -12905,38 +12914,51 @@ async function kiAPIAnfrage(frage, signal, streamEl) {
     '&system=' + encodeURIComponent(KI_SYSTEM_PROMPT) +
     '&private=true';
 
-  // Timeout: 30s gesamt
-  const timeout = setTimeout(() => { if (signal && !signal.aborted) try { _kiAbbruchController?.abort(); } catch {} }, 30000);
+  // Gesamt-Timeout 35s — deckt beide Versuche ab
+  const timeout = setTimeout(() => { if (signal && !signal.aborted) try { _kiAbbruchController?.abort(); } catch {} }, 35000);
 
   try {
-    const res = await fetch(url, { signal });
-    if (!res.ok) throw new Error('API-Fehler ' + res.status);
+    let letzterFehler;
+    // Bis zu 2 Versuche — macht den Assistenten zuverlässiger bei wackeligem Gratis-Dienst
+    for (let versuch = 1; versuch <= 2; versuch++) {
+      try {
+        const res = await fetch(url, { signal });
+        if (!res.ok) throw new Error('API-Fehler ' + res.status);
 
-    // Streaming-Anzeige: Body in Chunks lesen und Text live anzeigen
-    if (res.body && streamEl) {
-      streamEl.innerHTML = '<span id="ki-stream-text"></span><span class="ki-cursor">▋</span>';
-      const textEl = streamEl.querySelector('#ki-stream-text');
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let total = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        total += chunk;
-        if (textEl) {
-          const formatiert = esc(total).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-          textEl.innerHTML = formatiert;
-          // Auto-Scroll zum Ende des Texts
-          streamEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Streaming-Anzeige: Body in Chunks lesen und Text live anzeigen
+        if (res.body && streamEl) {
+          streamEl.innerHTML = '<span id="ki-stream-text"></span><span class="ki-cursor">▋</span>';
+          const textEl = streamEl.querySelector('#ki-stream-text');
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let total = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            total += decoder.decode(value, { stream: true });
+            if (textEl) {
+              textEl.innerHTML = esc(total).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+              streamEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
+          if (!total.trim()) throw new Error('Leere Antwort');
+          return total.trim();
+        }
+
+        // Fallback ohne Streaming
+        const text = (await res.text()).trim();
+        if (!text) throw new Error('Leere Antwort');
+        return text;
+      } catch (e) {
+        letzterFehler = e;
+        if (e.name === 'AbortError' || (signal && signal.aborted)) throw e; // Nutzer-Abbruch — nicht wiederholen
+        if (versuch < 2) {
+          if (streamEl) streamEl.innerHTML = '<div class="ki-fallback-hinweis"><span class="ki-typing"><span></span><span></span><span></span></span> Neuer Versuch …</div>';
+          await new Promise(r => setTimeout(r, 700));
         }
       }
-      return total.trim();
     }
-
-    // Fallback ohne Streaming
-    const text = await res.text();
-    return text.trim();
+    throw letzterFehler;
   } finally {
     clearTimeout(timeout);
   }
