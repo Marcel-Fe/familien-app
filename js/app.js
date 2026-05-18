@@ -1259,15 +1259,28 @@ function renderSenioren() {
   const aktiv = SENIOREN_DATEN[aktivId];
   const total = Object.values(SENIOREN_DATEN).reduce((s, k) => s + k.tipps.length, 0);
 
+  // Schnellzugriff auf die für Senioren wichtigsten App-Bereiche
+  const quick = [
+    { ic:'🗺️', l:'Ausflugsziele', s:'umgebung' },
+    { ic:'🚑', l:'Erste Hilfe',   s:'erstehilfe' },
+    { ic:'💊', l:'Medikamente',   s:'medbox' },
+    { ic:'📅', l:'Termine',       s:'kalender' }
+  ];
+
   return `
   <div class="bereich-hero">
     <div class="bereich-hero-titel">👵 Senioren</div>
     <div class="bereich-hero-sub">${total} Tipps · ${Object.keys(SENIOREN_DATEN).length} Themen</div>
-    <div class="bereich-hero-sub-2">Alles für ein gutes Leben im Alter — Rente, Pflege, Gesundheit, aktiv bleiben und Sicherheit</div>
+    <div class="bereich-hero-sub-2">Alles für ein gutes Leben im Alter — Rente, Pflege, Gesundheit, Ausflüge und Sicherheit</div>
   </div>
 
-  <div class="info-box gruen"><span class="ib-icon">🚶</span><div class="ib-text"><strong>Aktiv und unterwegs:</strong> Parks, Cafés, Spazierwege und Ausflugsziele in deiner Nähe findest du auf der Karte.</div></div>
-  <button class="btn btn-primary" style="width:100%;margin-bottom:1rem" onclick="zuSektion('umgebung')">🗺️ Umgebung & Ausflugsziele entdecken</button>
+  <div class="senioren-quick">
+    ${quick.map(q => `
+    <button class="senioren-quick-btn" onclick="zuSektion('${q.s}')">
+      <span class="senioren-quick-ic">${q.ic}</span>
+      <span class="senioren-quick-l">${q.l}</span>
+    </button>`).join('')}
+  </div>
 
   <div class="ges-tabs">
     ${Object.entries(SENIOREN_DATEN).map(([id, k]) => `
@@ -1279,6 +1292,13 @@ function renderSenioren() {
   </div>
 
   <div class="info-box gruen" style="margin-bottom:1rem"><span class="ib-icon">${aktiv.icon}</span><div class="ib-text"><strong>${esc(aktiv.label)}:</strong> ${esc(aktiv.intro)}</div></div>
+
+  ${aktivId === 'ausfluege' ? `
+  <div class="senioren-ausflug-aktionen">
+    <button class="btn btn-primary btn-sm" onclick="zuSektion('umgebung')">🗺️ Ziele in der Nähe</button>
+    <button class="btn btn-outline btn-sm" onclick="zuSektion('umgebung')">🚲 Fahrrad-Route</button>
+    <button class="btn btn-outline btn-sm" onclick="zuSektion('umgebung')">🚗 Auto-Route</button>
+  </div>` : ''}
 
   <div class="ges-tipp-grid">
     ${aktiv.tipps.map((t, i) => `

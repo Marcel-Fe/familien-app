@@ -1726,6 +1726,23 @@ const SENIOREN_DATEN = {
       { titel:'Ausflüge festhalten', text:'Der Kalender der App hilft, Termine und Ausflüge mit Familie und Freunden zu planen und nichts zu vergessen.', tipp:'Erinnerungen lassen sich pro Termin einstellen.' }
     ]
   },
+  ausfluege: {
+    icon:'🚲', label:'Ausflüge & Touren', farbe:'#0D9488', bg:'#CCFBF1',
+    intro:'Raus in die Natur — ob mit dem Rad, dem Auto oder der Bahn. Hier sind Ideen für entspannte Ausflüge im Alter.',
+    tipps:[
+      { titel:'Radtouren ganz entspannt', text:'Flussradwege sind flach, gut beschildert und führen an vielen Bänken und Cafés vorbei — ideal für gemütliche Touren ohne Anstrengung.', tipp:'Mit dem Routenplaner der App eine Fahrrad-Strecke planen — er zeigt Dauer und Weg.' },
+      { titel:'Mit dem E-Bike weiter kommen', text:'Ein E-Bike nimmt die Mühe aus Steigungen und Gegenwind. So sind auch längere Strecken bequem zu schaffen.', tipp:'Fahrradhändler und der ADFC bieten oft kostenlose E-Bike-Probefahrten an.' },
+      { titel:'Geführte Senioren-Radtouren', text:'ADFC-Ortsgruppen und Vereine bieten gemütliche Radtouren in der Gruppe — mit ruhigem Tempo und festen Pausen.', tipp:'In der Gruppe fährt es sich sicherer und man lernt nette Leute kennen.' },
+      { titel:'Tagesausflug mit dem Auto', text:'Mit dem Auto geht es bequem bis kurz vors Ziel: zu Seen, Schlössern, Gärten, Aussichtspunkten oder in hübsche Altstädte.', tipp:'Ziel und Route vorab im Routenplaner (Auto) festlegen — dann gibt es unterwegs keine Hektik.' },
+      { titel:'Barrierearme Ziele wählen', text:'Viele Parks, Gärten, Museen und Tierparks sind rollator- und rollstuhlgerecht, mit ebenen Wegen, Bänken und WC.', tipp:'Vorher kurz anrufen und nach Barrierefreiheit und Parkplätzen fragen.' },
+      { titel:'Mit Bus & Bahn ohne Stress', text:'Mit dem Deutschlandticket für 58 € im Monat bundesweit fahren — ganz ohne Parkplatzsuche und Stau.', tipp:'Außerhalb der Stoßzeiten fahren — dann ist es ruhiger und man bekommt leichter einen Sitzplatz.' },
+      { titel:'Schöne Spazierwege finden', text:'Leichte, ausgeschilderte Rundwege in Parks, am Wasser oder im Wald bieten viel Natur bei wenig Anstrengung.', tipp:'Unter „Umgebung" zeigt die App Parks und Wege in deiner Nähe direkt auf der Karte.' },
+      { titel:'Geführte Wanderungen', text:'Wandervereine, Volkshochschulen und Krankenkassen bieten gemütliche Senioren-Wanderungen — Tempo und Länge sind angepasst.', tipp:'Feste Schuhe und Wanderstöcke geben zusätzlich Sicherheit.' },
+      { titel:'Beliebte Ausflugsziele', text:'Botanische Gärten, Freilichtmuseen, Kurparks, Tierparks und Seen sind ideal: viel zu sehen, ebene Wege und meist ein Café vor Ort.', tipp:'Ein Kaffee oder Eis vor Ort macht aus dem Ausflug einen schönen Nachmittag.' },
+      { titel:'Pausen und Picknick einplanen', text:'Genug Trinkwasser, ein Sonnenhut, feste Schuhe und regelmäßige Sitzpausen machen jeden Ausflug angenehm.', tipp:'Lieber eine kürzere Strecke entspannt genießen als sich zu viel vorzunehmen.' },
+      { titel:'Gemeinsam unterwegs', text:'Seniorentreffs, Kirchengemeinden und Wohlfahrtsverbände organisieren regelmäßig Ausflüge, Busreisen und Wandertage.', tipp:'Beim Seniorenbüro der Stadt nach dem Ausflugs-Programm fragen — vieles ist günstig oder kostenlos.' }
+    ]
+  },
   alltag: {
     icon:'🏠', label:'Hilfe im Alltag', farbe:'#D97706', bg:'#FEF3C7',
     intro:'Niemand muss alles allein schaffen. Für fast jede Alltagsaufgabe gibt es Unterstützung.',
