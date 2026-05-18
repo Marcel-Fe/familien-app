@@ -258,6 +258,7 @@ const NAV = {
   schwangerschaft: [{s:'schwangerschaft', l:'Schwangerschaft'}],
   erziehung:    [{s:'erziehung', l:'Erziehungshilfe'}],
   senioren:     [{s:'senioren', l:'Senioren'}],
+  wissen:       [{s:'wissen', l:'Wissen'}],
   album:        [{s:'album', l:'Familien-Album'}],
   kontakte:     [{s:'kontakte', l:'Kontakte'}],
   haushalt:     [{s:'haushalt', l:'Haushalt'}],
@@ -2184,6 +2185,7 @@ function render() {
     case 'senioren':       content.innerHTML = renderSenioren(); break;
     case 'album':          content.innerHTML = renderAlbum(); break;
     case 'kontakte':       content.innerHTML = renderKontakte(); break;
+    case 'wissen':         content.innerHTML = renderWissen(); break;
     case 'einkaufsliste':  content.innerHTML = renderEinkaufslisteSektion(); break;
     default:           content.innerHTML = renderDashboard();
   }
@@ -4275,7 +4277,7 @@ async function wohnungenLiveLaden(ort) {
     } catch(e) { /* fallback unten */ }
   }
 
-  // 2. Fallback: direkte CORS-Proxy-Versuche
+  // 2. Fallback: RSS-Feeds über CORS-Proxies — ALLE Quellen kombinieren für mehr Treffer
   if (gefunden.length === 0) {
     const ortSlug = stadtSlug(ort);
     const versuche = [
@@ -4284,29 +4286,34 @@ async function wohnungenLiveLaden(ort) {
     ];
     const proxies = [
       u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      u => `https://corsproxy.io/?${encodeURIComponent(u)}`
+      u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
     ];
+    const gesehen = new Set();
     for (const v of versuche) {
       for (const p of proxies) {
         try {
-          const res = await fetch(p(v.url), { signal: AbortSignal.timeout(7000) });
+          const res = await fetch(p(v.url), { signal: AbortSignal.timeout(8000) });
           if (!res.ok) continue;
           const xml = await res.text();
           if (xml.length < 300 || !xml.includes('<item')) continue;
           const doc = new DOMParser().parseFromString(xml, 'text/xml');
-          Array.from(doc.querySelectorAll('item')).slice(0, 8).forEach(item => {
+          Array.from(doc.querySelectorAll('item')).slice(0, 15).forEach(item => {
             const titel = item.querySelector('title')?.textContent?.trim() || '';
             const link = item.querySelector('link')?.textContent?.trim() || '';
             let beschr = item.querySelector('description')?.textContent?.trim() || '';
             beschr = beschr.replace(/<[^>]*>/g, '').replace(/&nbsp;/g,' ').slice(0, 160);
             const bildMatch = beschr.match(/https?:\/\/[^\s"']+\.(jpg|jpeg|png|webp)/i);
-            if (titel && link) gefunden.push({ titel, link, beschr, bild: bildMatch?.[0], quelle: v.name });
+            if (titel && link && !gesehen.has(link)) {
+              gesehen.add(link);
+              gefunden.push({ titel, link, beschr, bild: bildMatch?.[0], quelle: v.name });
+            }
           });
-          if (gefunden.length > 0) { quelleName = v.name; break; }
+          break; // Quelle erfolgreich geladen — weiter zur nächsten Quelle (nicht abbrechen)
         } catch {}
       }
-      if (gefunden.length > 0) break;
     }
+    if (gefunden.length > 0) quelleName = [...new Set(gefunden.map(g => g.quelle))].join(' + ');
   }
 
   if (gefunden.length > 0) {
@@ -4333,19 +4340,17 @@ async function wohnungenLiveLaden(ort) {
         </a>`).join('')}
       </div>`;
   } else {
-    const hatWorker = !!einst.workerUrl;
     container.innerHTML = `
       <div class="info-box orange">
-        <span class="ib-icon">${hatWorker ? '😔' : '⚠️'}</span>
+        <span class="ib-icon">🏠</span>
         <div class="ib-text">
-          ${hatWorker
-            ? `<strong>Worker hat keine Daten geliefert.</strong> Vielleicht hat ${esc(ort)} gerade wenige Angebote in den Quellen, oder die Portale sind kurz down. Probier es später nochmal.`
-            : `<strong>Noch keinen Worker eingerichtet.</strong> Echte Live-Daten brauchen einen kleinen kostenlosen Server (Cloudflare Workers — 100.000 Anfragen/Tag gratis, keine Kreditkarte).
-               <br><br>
-               <button class="btn btn-primary btn-sm" onclick="zuSektion('einstellungen')">⚙️ Worker einrichten →</button>`
-          }
-          <br><br>
-          <button class="btn btn-sm" onclick="wohnungenLiveLaden('${esc(ort)}')">🔄 Erneut versuchen</button>
+          <strong>Gerade keine Live-Angebote ladbar.</strong> Die kostenlosen Wohnungs-Quellen sind manchmal nicht erreichbar.
+          <br><br>So siehst du sofort <strong>alle aktuellen Wohnungen</strong> in ${esc(ort)}:
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
+            <button class="btn btn-primary btn-sm" onclick="alleWohnungsportaleOeffnen('${esc(ort)}')">🔎 Alle Wohnungsportale öffnen</button>
+            <button class="btn btn-outline btn-sm" onclick="wohnungenLiveLaden('${esc(ort)}')">🔄 Erneut versuchen</button>
+          </div>
+          ${einst.workerUrl ? '' : '<div style="font-size:.78rem;color:var(--g500);margin-top:.7rem">Tipp: Für viele Live-Angebote dauerhaft direkt in der App lässt sich optional ein kostenloser Server (Cloudflare Worker) einrichten — siehe Einstellungen.</div>'}
         </div>
       </div>`;
   }
@@ -10196,6 +10201,42 @@ async function albumLoeschenBestaetigen(id) {
   await albumFotoLoeschen(id);
   toast('✓ Foto gelöscht');
   albumGridAktualisieren();
+}
+
+// ===== WISSEN =====
+function wissenKatWaehlen(k) { state.wissenKat = k; render(); }
+
+function renderWissen() {
+  const fakten = typeof WISSEN_FAKTEN !== 'undefined' ? WISSEN_FAKTEN : [];
+  if (!fakten.length) return '<div class="info-box orange"><span class="ib-icon">⚠️</span><div class="ib-text">Wissens-Daten sind nicht verfügbar.</div></div>';
+  const jahresStart = new Date(new Date().getFullYear(), 0, 0);
+  const tag = Math.floor((Date.now() - jahresStart) / 86400000);
+  const heute = fakten[tag % fakten.length];
+  const kats = [...new Set(fakten.map(f => f.kategorie))];
+  const aktiv = (state.wissenKat && kats.includes(state.wissenKat)) ? state.wissenKat : 'alle';
+  const gefiltert = aktiv === 'alle' ? fakten : fakten.filter(f => f.kategorie === aktiv);
+  return `
+  <div class="section-title">💡 Wissen</div>
+  <p class="section-sub">Jeden Tag ein neuer, echter Wissens-Fakt für die ganze Familie</p>
+
+  <div class="wissen-heute">
+    <div class="wissen-heute-label">🌅 Wissen des Tages</div>
+    <div class="wissen-heute-text">${esc(heute.text)}</div>
+    <div class="wissen-heute-kat">📚 ${esc(heute.kategorie)}</div>
+  </div>
+
+  <div class="block-title" style="margin-top:1.5rem">Zum Stöbern — ${fakten.length} Fakten</div>
+  <div class="tipps-filter">
+    <button class="tipps-filter-btn ${aktiv==='alle'?'aktiv':''}" onclick="wissenKatWaehlen('alle')">Alle</button>
+    ${kats.map(k => `<button class="tipps-filter-btn ${aktiv===k?'aktiv':''}" onclick="wissenKatWaehlen('${k}')">${esc(k)}</button>`).join('')}
+  </div>
+  <div class="grid-2">
+    ${gefiltert.map(f => `
+      <div class="tipp-karte">
+        <div class="tipp-karte-titel">💡 ${esc(f.kategorie)}</div>
+        <div class="tipp-karte-text">${esc(f.text)}</div>
+      </div>`).join('')}
+  </div>`;
 }
 
 // ===== KONTAKTE =====

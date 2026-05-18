@@ -5300,3 +5300,26 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   border-color: #EC4899;
   color: #BE185D;
 }
+
+/* Wissen des Tages */
+.wissen-heute {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  color: #fff;
+  border-radius: 18px;
+  padding: 1.25rem 1.2rem;
+  box-shadow: 0 10px 30px rgba(79,70,229,.3);
+}
+.wissen-heute-label {
+  font-size: .76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  opacity: .85;
+}
+.wissen-heute-text {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.45;
+  margin: .5rem 0 .6rem;
+}
+.wissen-heute-kat { font-size: .78rem; font-weight: 700; opacity: .82; }

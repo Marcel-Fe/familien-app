@@ -1787,6 +1787,58 @@ const SAISON_EVENTS = [
   { icon:'📚', name:'Bibliotheks- & Vorleseprogramme', monate:[1,2,3,4,5,6,7,8,9,10,11,12], text:'Stadtbüchereien bieten das ganze Jahr Vorlesestunden, Bastelnachmittage und Kinderprogramme — meist kostenlos.', suche:'Stadtbibliothek Kinderprogramm' }
 ];
 
+// ===== WISSEN — echte, faktenbasierte Wissens-Fakten (täglich wechselnd) =====
+const WISSEN_FAKTEN = [
+  { kategorie:'Körper und Gesundheit', text:'Das menschliche Herz schlägt etwa 100.000 Mal an einem einzigen Tag.' },
+  { kategorie:'Körper und Gesundheit', text:'Erwachsene haben 206 Knochen — Babys werden mit rund 300 geboren, viele wachsen später zusammen.' },
+  { kategorie:'Körper und Gesundheit', text:'Beim Niesen schießt die Luft mit über 100 km/h aus der Nase.' },
+  { kategorie:'Körper und Gesundheit', text:'Der menschliche Körper besteht zu etwa 60 Prozent aus Wasser.' },
+  { kategorie:'Körper und Gesundheit', text:'Kinder haben 20 Milchzähne, Erwachsene bis zu 32 bleibende Zähne.' },
+  { kategorie:'Körper und Gesundheit', text:'Im Schlaf sortiert und festigt das Gehirn das, was tagsüber gelernt wurde.' },
+  { kategorie:'Körper und Gesundheit', text:'Das Auge kann mehrere Millionen verschiedene Farbtöne unterscheiden.' },
+  { kategorie:'Körper und Gesundheit', text:'Lachen senkt Stresshormone und ist nachweislich gut für das Immunsystem.' },
+  { kategorie:'Natur und Tiere', text:'Honigbienen verständigen sich über einen Tanz, der anderen Bienen den Weg zu Blüten zeigt.' },
+  { kategorie:'Natur und Tiere', text:'Oktopusse haben drei Herzen und blaues Blut.' },
+  { kategorie:'Natur und Tiere', text:'Bäume tauschen über Wurzeln und feine Pilzfäden im Boden Nährstoffe und Signale aus.' },
+  { kategorie:'Natur und Tiere', text:'Ein Marienkäfer frisst pro Tag bis zu 50 Blattläuse und schützt so Pflanzen.' },
+  { kategorie:'Natur und Tiere', text:'Kolibris sind die einzigen Vögel, die auch rückwärts fliegen können.' },
+  { kategorie:'Natur und Tiere', text:'Eichhörnchen vergessen viele ihrer vergrabenen Nüsse — daraus wachsen neue Bäume.' },
+  { kategorie:'Natur und Tiere', text:'Ein Gewitter entsteht, wenn warme, feuchte Luft schnell nach oben steigt.' },
+  { kategorie:'Natur und Tiere', text:'Schnecken tragen ihr Haus ein Leben lang — es wächst mit ihnen mit.' },
+  { kategorie:'Alltag und Haushalt', text:'Honig wird praktisch nie schlecht — in alten Gräbern fand man noch essbaren Honig.' },
+  { kategorie:'Alltag und Haushalt', text:'Brot bleibt bei Zimmertemperatur länger frisch als im Kühlschrank.' },
+  { kategorie:'Alltag und Haushalt', text:'Eine LED-Lampe verbraucht bis zu 80 Prozent weniger Strom als eine alte Glühbirne.' },
+  { kategorie:'Alltag und Haushalt', text:'Stoßlüften — Fenster kurz ganz öffnen — ist sparsamer und wirksamer als ein gekipptes Fenster.' },
+  { kategorie:'Alltag und Haushalt', text:'Bananen geben ein Reifegas ab — daneben reift anderes Obst schneller.' },
+  { kategorie:'Alltag und Haushalt', text:'Nach dem Zähneputzen nur ausspucken statt nachzuspülen — so wirkt das Fluorid länger.' },
+  { kategorie:'Alltag und Haushalt', text:'Geräte im Standby verbrauchen weiter Strom — eine Steckerleiste mit Schalter spart Geld.' },
+  { kategorie:'Alltag und Haushalt', text:'Kaltes oder lauwarmes Waschen reinigt die meiste Wäsche genauso gut und spart viel Energie.' },
+  { kategorie:'Welt und Geschichte', text:'Das Licht der Sonne braucht etwa 8 Minuten, bis es die Erde erreicht.' },
+  { kategorie:'Welt und Geschichte', text:'Deutschland hat 16 Bundesländer — das kleinste ist Bremen, das größte Bayern.' },
+  { kategorie:'Welt und Geschichte', text:'Der höchste Berg Deutschlands ist die Zugspitze mit 2.962 Metern.' },
+  { kategorie:'Welt und Geschichte', text:'Der Bodensee ist der größte See Deutschlands.' },
+  { kategorie:'Welt und Geschichte', text:'Die Erde dreht sich am Äquator mit rund 1.600 km/h — wir merken es nicht, weil sich alles mitbewegt.' },
+  { kategorie:'Welt und Geschichte', text:'Ein Jahr hat 365 Tage, weil die Erde so lange für eine Runde um die Sonne braucht.' },
+  { kategorie:'Welt und Geschichte', text:'Manche Bäume auf der Erde sind über 4.000 Jahre alt.' },
+  { kategorie:'Welt und Geschichte', text:'Am Meer gibt es Ebbe und Flut, weil der Mond das Wasser der Erde anzieht.' },
+  { kategorie:'Kinder und Lernen', text:'Vorlesen fördert Wortschatz und Fantasie von Kindern mehr als die meisten Lern-Apps.' },
+  { kategorie:'Kinder und Lernen', text:'Das Gehirn wächst in den ersten drei Lebensjahren am schnellsten.' },
+  { kategorie:'Kinder und Lernen', text:'Kinder lernen Sprachen besonders leicht — in den ersten Jahren ist das Gehirn extrem aufnahmefähig.' },
+  { kategorie:'Kinder und Lernen', text:'Nach einer kurzen Bewegungspause merkt man sich Gelerntes besser.' },
+  { kategorie:'Kinder und Lernen', text:'Fehler sind wichtig — das Gehirn lernt gerade aus dem, was zuerst nicht klappt.' },
+  { kategorie:'Kinder und Lernen', text:'Singen und Reime helfen Kindern, sich Dinge viel leichter zu merken.' },
+  { kategorie:'Kinder und Lernen', text:'Lob für die Anstrengung — nicht nur fürs Ergebnis — macht Kinder ausdauernder.' },
+  { kategorie:'Kinder und Lernen', text:'Schulkinder brauchen je nach Alter etwa 9 bis 12 Stunden Schlaf pro Nacht.' },
+  { kategorie:'Technik und Zahlen', text:'Computer rechnen im Hintergrund nur mit zwei Zeichen: 0 und 1.' },
+  { kategorie:'Technik und Zahlen', text:'Ein Passwort ist umso sicherer, je länger es ist — Länge ist wichtiger als Sonderzeichen.' },
+  { kategorie:'Technik und Zahlen', text:'Der QR-Code wurde ursprünglich erfunden, um Autoteile in der Fabrik zu verfolgen.' },
+  { kategorie:'Technik und Zahlen', text:'Akkus halten länger, wenn man sie nicht ständig ganz leer und wieder ganz voll lädt.' },
+  { kategorie:'Technik und Zahlen', text:'Im Flugmodus lädt das Handy etwas schneller, weil es weniger funkt.' },
+  { kategorie:'Technik und Zahlen', text:'Eine E-Mail braucht meist nur Sekundenbruchteile einmal um die halbe Welt.' },
+  { kategorie:'Technik und Zahlen', text:'WLAN überträgt Daten über Funkwellen — ähnlich harmlos wie die eines Radios.' },
+  { kategorie:'Technik und Zahlen', text:'Das erste smartphone-ähnliche Gerät kam bereits 1994 auf den Markt.' }
+];
+
 // ===== ALLE FAMILIEN-TIPPS (80+) =====
 const FAMILIEN_TIPPS_ALLE = [
   {
