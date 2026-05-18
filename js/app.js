@@ -10383,7 +10383,7 @@ function erkennenBildKomprimieren(file) {
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.75));
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
       };
       img.onerror = reject;
       img.src = reader.result;
@@ -10420,6 +10420,8 @@ async function erkennenStarten() {
   if (btn) { btn.disabled = true; btn.textContent = '🔍 Wird erkannt…'; }
   if (ausgabe) ausgabe.innerHTML = '<div class="erkennen-laden">🔎 Das Bild wird analysiert – einen Moment…</div>';
   const prompt = 'Du bist ein Experte für Tier- und Pflanzenbestimmung. Bestimme, was auf diesem Foto zu sehen ist. ' +
+    'Auf dem Foto kann auch nur ein Teil zu sehen sein — ein einzelnes Blatt, eine Blüte, eine Frucht, Rinde, ein Pilz, eine Feder oder eine Tierspur. ' +
+    'Bestimme die Pflanze oder den Baum auch anhand eines einzelnen Blattes so genau wie möglich (achte auf Form, Rand und Blattadern). ' +
     'Antworte auf Deutsch, freundlich und für Familien verständlich, in genau diesem Format mit diesen Überschriften:\n' +
     '**Das ist:** Name auf Deutsch, möglichst genau, plus ob es ein Tier oder eine Pflanze ist.\n' +
     '**Beschreibung:** 2-3 Sätze – woran man es erkennt, wo es vorkommt.\n' +
@@ -10481,7 +10483,7 @@ function renderErkennen() {
         <input type="file" accept="image/*" capture="environment" onchange="erkennenFotoGewaehlt(this)" hidden />
         <div class="erkennen-upload-icon">📷</div>
         <div class="erkennen-upload-text">Foto aufnehmen oder auswählen</div>
-        <div class="erkennen-upload-sub">Tier, Pflanze, Blume, Insekt …</div>
+        <div class="erkennen-upload-sub">Tier, Pflanze, einzelnes Blatt, Blüte, Pilz …</div>
       </label>
     `}
   </div>
@@ -10612,19 +10614,20 @@ function renderWissen() {
 
 // ===== SPRACHÜBERSETZER =====
 const UEB_SPRACHEN = [
-  { code:'de', name:'Deutsch' },
-  { code:'en', name:'Englisch' },
-  { code:'tr', name:'Türkisch' },
-  { code:'ar', name:'Arabisch' },
-  { code:'ru', name:'Russisch' },
-  { code:'uk', name:'Ukrainisch' },
-  { code:'pl', name:'Polnisch' },
-  { code:'fr', name:'Französisch' },
-  { code:'es', name:'Spanisch' },
-  { code:'it', name:'Italienisch' },
-  { code:'ro', name:'Rumänisch' },
-  { code:'nl', name:'Niederländisch' }
+  { code:'de', name:'Deutsch',        bcp:'de-DE' },
+  { code:'en', name:'Englisch',       bcp:'en-US' },
+  { code:'tr', name:'Türkisch',       bcp:'tr-TR' },
+  { code:'ar', name:'Arabisch',       bcp:'ar-SA' },
+  { code:'ru', name:'Russisch',       bcp:'ru-RU' },
+  { code:'uk', name:'Ukrainisch',     bcp:'uk-UA' },
+  { code:'pl', name:'Polnisch',       bcp:'pl-PL' },
+  { code:'fr', name:'Französisch',    bcp:'fr-FR' },
+  { code:'es', name:'Spanisch',       bcp:'es-ES' },
+  { code:'it', name:'Italienisch',    bcp:'it-IT' },
+  { code:'ro', name:'Rumänisch',      bcp:'ro-RO' },
+  { code:'nl', name:'Niederländisch', bcp:'nl-NL' }
 ];
+function uebBcp(code) { return (UEB_SPRACHEN.find(s => s.code === code)?.bcp) || code; }
 let _uebLetztesErgebnis = '';
 
 async function uebersetzeMyMemory(text, von, nach) {
@@ -10682,8 +10685,33 @@ function uebersetzungVorlesen() {
   if (!window.speechSynthesis || !_uebLetztesErgebnis) { toast('⚠️ Vorlesen nicht möglich'); return; }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(_uebLetztesErgebnis);
-  u.lang = el('ueb-nach')?.value || 'en';
+  u.lang = uebBcp(el('ueb-nach')?.value || 'en');
   speechSynthesis.speak(u);
+}
+// Spracheingabe: gesprochenen Text in das Übersetzungsfeld schreiben und direkt übersetzen
+function uebersetzungSprechen() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('⚠️ Spracheingabe nicht unterstützt — bitte Chrome/Edge nutzen'); return; }
+  const feld = el('ueb-text');
+  const btn = el('ueb-mic');
+  const erk = new SR();
+  erk.lang = uebBcp(el('ueb-von')?.value || 'de');
+  erk.interimResults = false;
+  erk.continuous = false;
+  if (btn) btn.classList.add('aktiv');
+  toast('🎤 Jetzt sprechen…');
+  erk.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    if (feld) feld.value = text;
+    toast('✓ ' + text);
+    uebersetzungStarten();
+  };
+  erk.onerror = (e) => {
+    toast(e.error === 'not-allowed' ? '⚠️ Bitte Mikrofon-Zugriff erlauben' : '⚠️ Spracheingabe fehlgeschlagen');
+    if (btn) btn.classList.remove('aktiv');
+  };
+  erk.onend = () => { if (btn) btn.classList.remove('aktiv'); };
+  try { erk.start(); } catch { if (btn) btn.classList.remove('aktiv'); }
 }
 function uebersetzungKopieren() {
   if (!_uebLetztesErgebnis) return;
@@ -10701,11 +10729,14 @@ function renderUebersetzer() {
       <button class="ueb-tausch" onclick="uebersetzerTauschen()" title="Sprachen tauschen">⇄</button>
       ${sel('ueb-nach', 'en')}
     </div>
-    <textarea id="ueb-text" class="reg-input" rows="4" placeholder="Text zum Übersetzen eingeben…" style="margin-top:.6rem;resize:vertical;font-family:inherit"></textarea>
-    <button class="btn btn-primary" style="width:100%;margin-top:.5rem" onclick="uebersetzungStarten()">🌐 Übersetzen</button>
+    <textarea id="ueb-text" class="reg-input" rows="4" placeholder="Text eingeben oder über das Mikrofon sprechen…" style="margin-top:.6rem;resize:vertical;font-family:inherit"></textarea>
+    <div class="ueb-aktionszeile">
+      <button class="btn btn-outline ueb-mic" id="ueb-mic" onclick="uebersetzungSprechen()" title="Text sprechen">🎤 Sprechen</button>
+      <button class="btn btn-primary" style="flex:1" onclick="uebersetzungStarten()">🌐 Übersetzen</button>
+    </div>
   </div>
   <div id="ueb-ergebnis" style="margin-top:1rem"></div>
-  <div class="info-box blau" style="margin-top:1rem;font-size:.8rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Die Übersetzung wird online erstellt und ist eine gute Alltagshilfe. Bei wichtigen Dokumenten (Ämter, Verträge) lieber einen vereidigten Übersetzer fragen.</div></div>`;
+  <div class="info-box blau" style="margin-top:1rem;font-size:.8rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Sprechen und Vorlesen funktionieren in den meisten Browsern. Die Übersetzung wird online erstellt und ist eine gute Alltagshilfe. Bei wichtigen Dokumenten (Ämter, Verträge) lieber einen vereidigten Übersetzer fragen.</div></div>`;
 }
 
 // ===== KONTAKTE =====
