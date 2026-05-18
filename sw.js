@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'familienapp-v40';
+const CACHE_VERSION = 'familienapp-v41';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
@@ -81,9 +81,9 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // App-Dateien (eigene): Cache-first
+  // App-Dateien (eigene): Network-first — online immer aktuell, Cache nur als Offline-Reserve
   if (url.origin === self.location.origin) {
-    e.respondWith(cacheFirst(req, STATIC_CACHE));
+    e.respondWith(appAsset(req));
     return;
   }
 
@@ -91,7 +91,28 @@ self.addEventListener('fetch', e => {
   e.respondWith(networkFirst(req, RUNTIME_CACHE));
 });
 
-// Cache-First: erst Cache, dann Netz
+// App-Dateien: Network-first mit Cache-Reserve.
+// Online wird immer die frische Datei geladen — verhindert leere App durch alten Cache.
+// Offline greift der Cache (ignoreSearch, damit Versions-URLs wie app.js?v=41 passen).
+async function appAsset(req) {
+  const cache = await caches.open(STATIC_CACHE);
+  try {
+    const resp = await fetch(req);
+    if (resp.ok) cache.put(req, resp.clone());
+    return resp;
+  } catch (err) {
+    const cached = await cache.match(req, { ignoreSearch: true });
+    if (cached) return cached;
+    if (req.destination === 'document') {
+      const offline = await cache.match('./index.html', { ignoreSearch: true })
+        || await cache.match('./', { ignoreSearch: true });
+      if (offline) return offline;
+    }
+    throw err;
+  }
+}
+
+// Cache-First: erst Cache, dann Netz (für vorab gecachte Kern-Assets)
 async function cacheFirst(req, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(req);
