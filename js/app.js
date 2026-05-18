@@ -2075,20 +2075,38 @@ function iframeExternOeffnen() {
   iframeSchliessen();
 }
 
-// Globalen Klick-Handler: alle <a target="_blank"> abfangen und durchs Modal schicken
-// Ausnahmen: mailto, tel, Maps-Routenplaner (sollen natives Verhalten), Cloudflare-Eigene-Tunnel
+// Hosts, die das Einbetten in ein iframe technisch verbieten (X-Frame-Options /
+// CSP frame-ancestors). Diese Seiten würden im In-App-Fenster leer bleiben —
+// daher direkt im echten Browser öffnen.
+const IFRAME_BLOCKLIST = [
+  'google.', 'goo.gl', 'facebook.', 'fb.com', 'instagram.', 'twitter.', 'x.com',
+  'youtube.', 'youtu.be', 'amazon.', 'ebay.', 'tripadvisor.', 'lieferando.',
+  'ubereats.', 'wolt.com', 'linkedin.', 'pinterest.', 'tiktok.', 'spotify.',
+  'paypal.', 'maps.app.goo.gl', 'bing.com', 'yelp.'
+];
+function hostBlocktIframe(href) {
+  try {
+    const h = new URL(href, location.href).hostname.toLowerCase();
+    return IFRAME_BLOCKLIST.some(b => h.includes(b));
+  } catch { return false; }
+}
+
+// Globalen Klick-Handler: alle <a target="_blank"> abfangen.
+// data-extern="1" oder ein bekannt nicht-einbettbarer Host → echter Browser.
+// Alles andere → In-App-Fenster (iframe-Modal).
 document.addEventListener('click', e => {
   const a = e.target.closest && e.target.closest('a[target="_blank"]');
   if (!a) return;
   const href = a.getAttribute('href') || '';
   if (!href || href.startsWith('#')) return;
   if (/^(mailto:|tel:|blob:|data:)/i.test(href)) return;
-  // mailto/tel: extern lassen
-  // Maps-Deep-Links (mobile öffnen native App)
-  if (a.dataset.extern === '1') return;
   e.preventDefault();
   e.stopPropagation();
-  inAppOeffnen(href, a.title || a.textContent.trim().slice(0,80));
+  if (a.dataset.extern === '1' || hostBlocktIframe(href)) {
+    linkOeffnen(href);          // zuverlässig im Browser öffnen
+  } else {
+    inAppOeffnen(href, a.title || a.textContent.trim().slice(0,80));
+  }
 }, true);
 
 // ===== Menü-Drawer (Hauptmenü) =====
@@ -3011,9 +3029,9 @@ async function ladeOrte(karte) {
         ${oeffnung ? `<div class="popup-info">🕐 ${esc(oeffnung)}</div>` : ''}
         ${phone ? `<a href="tel:${esc(phone.replace(/\s/g,''))}" class="popup-link">📞 ${esc(phone)}</a>` : ''}
         ${website ? `<a href="${esc(website)}" target="_blank" rel="noopener" onclick="return linkOeffnen(this.href)" class="popup-link">🌐 Website öffnen</a>` : ''}
-        ${menuLink ? `<a href="${esc(menuLink)}" target="_blank" rel="noopener" onclick="return linkOeffnen(this.href)" class="popup-link">📋 Speisekarte ansehen</a>` : ''}
-        ${speisekarteSuche ? `<a href="${esc(speisekarteSuche)}" target="_blank" rel="noopener" onclick="return linkOeffnen(this.href)" class="popup-link">📋 Speisekarte suchen</a>` : ''}
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lon}" target="_blank" rel="noopener" onclick="return linkOeffnen(this.href)" class="popup-link popup-navi">🗺️ Route planen (Google Maps)</a>`;
+        ${menuLink ? `<a href="${esc(menuLink)}" target="_blank" rel="noopener" data-extern="1" onclick="return linkOeffnen(this.href)" class="popup-link">📋 Speisekarte ansehen</a>` : ''}
+        ${speisekarteSuche ? `<a href="${esc(speisekarteSuche)}" target="_blank" rel="noopener" data-extern="1" onclick="return linkOeffnen(this.href)" class="popup-link">📋 Speisekarte suchen</a>` : ''}
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lon}" target="_blank" rel="noopener" data-extern="1" onclick="return linkOeffnen(this.href)" class="popup-link popup-navi">🗺️ Route planen (Google Maps)</a>`;
       m.bindPopup(popup);
     });
 
@@ -3050,8 +3068,8 @@ async function ladeOrte(karte) {
                 ${(website || phone || menuLink || speisekarteSuche) ? `<div class="ort-links">
                   ${website ? `<a href="${esc(website)}" target="_blank" rel="noopener" onclick="event.stopPropagation();return linkOeffnen(this.href)" class="ort-link">🌐 Web</a>` : ''}
                   ${phone ? `<a href="tel:${esc(phone.replace(/\s/g,''))}" onclick="event.stopPropagation()" class="ort-link">📞 Anruf</a>` : ''}
-                  ${menuLink ? `<a href="${esc(menuLink)}" target="_blank" rel="noopener" onclick="event.stopPropagation();return linkOeffnen(this.href)" class="ort-link">📋 Speisekarte</a>` : ''}
-                  ${speisekarteSuche ? `<a href="${esc(speisekarteSuche)}" target="_blank" rel="noopener" onclick="event.stopPropagation();return linkOeffnen(this.href)" class="ort-link">📋 Speisekarte</a>` : ''}
+                  ${menuLink ? `<a href="${esc(menuLink)}" target="_blank" rel="noopener" data-extern="1" onclick="event.stopPropagation();return linkOeffnen(this.href)" class="ort-link">📋 Speisekarte</a>` : ''}
+                  ${speisekarteSuche ? `<a href="${esc(speisekarteSuche)}" target="_blank" rel="noopener" data-extern="1" onclick="event.stopPropagation();return linkOeffnen(this.href)" class="ort-link">📋 Speisekarte</a>` : ''}
                 </div>` : ''}
               </div>
             </div>
