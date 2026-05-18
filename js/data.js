@@ -1839,6 +1839,178 @@ const WISSEN_FAKTEN = [
   { kategorie:'Technik und Zahlen', text:'Das erste smartphone-ähnliche Gerät kam bereits 1994 auf den Markt.' }
 ];
 
+// ===== ERSTE-HILFE-ANLEITUNGEN =====
+// Bild-gestützte Schritt-für-Schritt-Anleitungen für typische Familien-Notfälle.
+const ERSTE_HILFE = [
+  {
+    id: 'notruf', titel: 'Notruf 112 absetzen', emoji: '📞', notfall: true,
+    kurz: 'Wie du im Notfall richtig Hilfe rufst.',
+    schritte: [
+      { icon:'📞', titel:'112 wählen', text:'Die 112 gilt in ganz Europa, ist kostenlos und funktioniert auch ohne Guthaben oder SIM-Karte.' },
+      { icon:'🗣️', titel:'Ruhig bleiben und melden', text:'Sage klar: Wo ist es passiert? Was ist passiert? Wie viele Personen sind betroffen? Welche Verletzungen?' },
+      { icon:'❓', titel:'Auf Rückfragen warten', text:'Die Leitstelle stellt gezielte Fragen und gibt dir Anweisungen. Beantworte sie ruhig.' },
+      { icon:'⏳', titel:'Nicht auflegen', text:'Beende das Gespräch erst, wenn die Leitstelle es sagt — sie braucht oft noch Informationen.' },
+      { icon:'🚪', titel:'Einweisen', text:'Wenn jemand da ist: zur Straße schicken, damit er den Rettungswagen einweist. Licht an, Hunde wegsperren.' }
+    ],
+    achtung: 'Im Zweifel immer anrufen — lieber einmal zu viel als zu spät. Die 112 ist auch für Feuerwehr und Rettungsdienst da.'
+  },
+  {
+    id: 'bewusstlos', titel: 'Bewusstlose Person', emoji: '😵', notfall: true,
+    kurz: 'Person reagiert nicht — prüfen, Notruf, stabile Seitenlage.',
+    schritte: [
+      { icon:'👋', titel:'Ansprechen und rütteln', text:'Laut ansprechen und vorsichtig an den Schultern rütteln. Keine Reaktion?' },
+      { icon:'📞', titel:'Notruf 112', text:'Sofort selbst rufen oder jemanden eindeutig damit beauftragen: „Sie dort, rufen Sie die 112!"' },
+      { icon:'👂', titel:'Atmung prüfen', text:'Kopf vorsichtig nach hinten überstrecken. 10 Sekunden lang sehen, hören und fühlen, ob die Person normal atmet.' },
+      { icon:'↪️', titel:'Stabile Seitenlage', text:'Atmet normal: zur Seite drehen, oberes Bein anwinkeln, Kopf überstrecken, Mund zeigt leicht nach unten.' },
+      { icon:'👀', titel:'Beobachten', text:'Bei der Person bleiben, warm halten und die Atmung weiter kontrollieren, bis der Rettungsdienst da ist.' }
+    ],
+    achtung: 'Atmet die Person NICHT normal (oder nur schnappend)? Sofort mit der Wiederbelebung beginnen — siehe „Wiederbelebung".'
+  },
+  {
+    id: 'reanimation', titel: 'Wiederbelebung (Erwachsene)', emoji: '🫀', notfall: true,
+    kurz: 'Herz-Lungen-Wiederbelebung bei Erwachsenen und größeren Kindern.',
+    schritte: [
+      { icon:'📞', titel:'Notruf und AED', text:'112 rufen lassen. Wenn möglich, jemanden einen Defibrillator (AED) holen lassen.' },
+      { icon:'🙌', titel:'Hände positionieren', text:'Handballen auf die Mitte des Brustkorbs (Brustbein), zweite Hand darüber, Finger verschränken.' },
+      { icon:'⬇️', titel:'30× drücken', text:'Kräftig und schnell drücken: 5–6 cm tief, etwa zweimal pro Sekunde. Arme gestreckt, Last aus den Schultern.' },
+      { icon:'😮‍💨', titel:'2× beatmen', text:'Kopf überstrecken, Nase zuhalten, zweimal Mund-zu-Mund beatmen. Traust du dich das nicht zu: einfach weiter drücken.' },
+      { icon:'🔁', titel:'30:2 wiederholen', text:'Immer im Wechsel 30-mal drücken, 2-mal beatmen — ohne Pause, bis Hilfe kommt oder die Person sich bewegt.' },
+      { icon:'🔋', titel:'AED einsetzen', text:'Defibrillator sofort einschalten und Elektroden aufkleben. Das Gerät sagt jeden Schritt per Sprache an.' }
+    ],
+    achtung: 'Drücken ist das Wichtigste — eine Wiederbelebung ohne Beatmung ist immer besser als gar keine.'
+  },
+  {
+    id: 'reanimation-kind', titel: 'Wiederbelebung bei Kindern', emoji: '👶', notfall: true,
+    kurz: 'Wiederbelebung bei Säuglingen und Kindern — mit wichtigen Unterschieden.',
+    schritte: [
+      { icon:'📞', titel:'Notruf 112', text:'Sofort 112 rufen. Bist du allein, erst eine Minute helfen, dann rufen.' },
+      { icon:'😮‍💨', titel:'Erst 5× beatmen', text:'Bei Kindern zuerst 5 vorsichtige Atemspenden geben — der Sauerstoffmangel ist meist die Ursache.' },
+      { icon:'🙌', titel:'Drücken', text:'Säugling: mit zwei Fingern. Kind: mit einer oder zwei Händen. Etwa ein Drittel des Brustkorbs tief.' },
+      { icon:'🔁', titel:'30:2 im Wechsel', text:'30-mal drücken, 2-mal beatmen — weiter, bis Hilfe kommt oder das Kind sich bewegt.' },
+      { icon:'⚠️', titel:'Kopf nicht überstrecken', text:'Beim Säugling den Kopf nur leicht in „Schnüffelstellung" bringen — nicht stark überstrecken.' }
+    ],
+    achtung: 'Bei Kindern ist Atemnot die häufigste Ursache. Deshalb hier mit 5 Beatmungen beginnen — anders als bei Erwachsenen.'
+  },
+  {
+    id: 'verschlucken', titel: 'Verschlucken / Ersticken', emoji: '😨', notfall: true,
+    kurz: 'Etwas steckt im Hals und blockiert die Atmung.',
+    schritte: [
+      { icon:'🗣️', titel:'Husten lassen', text:'Kann die Person noch husten oder sprechen? Dann zum kräftigen Husten ermutigen und nicht stören.' },
+      { icon:'👋', titel:'5 Schläge auf den Rücken', text:'Bekommt sie keine Luft: vornüberbeugen und mit der flachen Hand 5-mal kräftig zwischen die Schulterblätter schlagen.' },
+      { icon:'🤜', titel:'5× Heimlich-Griff', text:'Keine Besserung: von hinten umfassen, Faust zwischen Bauchnabel und Brustbein, 5-mal ruckartig nach innen-oben ziehen.' },
+      { icon:'🔁', titel:'Im Wechsel', text:'5 Rückenschläge und 5 Bauchstöße abwechseln. Wird die Person bewusstlos: 112 und Wiederbelebung beginnen.' },
+      { icon:'👶', titel:'Säugling anders!', text:'Bei Babys KEIN Heimlich-Griff. Bauch nach unten auf den Arm legen, 5× auf den Rücken, dann 5× mit 2 Fingern auf die Brust.' }
+    ],
+    achtung: 'Nach einem Heimlich-Griff sollte die Person immer ärztlich untersucht werden — auch wenn es ihr wieder gut geht.'
+  },
+  {
+    id: 'blutung', titel: 'Starke Blutung', emoji: '🩸', notfall: true,
+    kurz: 'Wunde blutet stark — Druck ist das Wichtigste.',
+    schritte: [
+      { icon:'🧤', titel:'Selbstschutz', text:'Wenn vorhanden, Einmalhandschuhe anziehen — zum Schutz vor Infektionen.' },
+      { icon:'✋', titel:'Druck auf die Wunde', text:'Mit einem sauberen Tuch fest und direkt auf die blutende Stelle drücken.' },
+      { icon:'⬆️', titel:'Hochhalten', text:'Den verletzten Arm oder das Bein nach Möglichkeit hochhalten — das verringert die Blutung.' },
+      { icon:'🩹', titel:'Druckverband', text:'Tuch fest mit einer Binde umwickeln. Nicht abbinden. Blutet es durch: zweites Polster darüber, nicht abnehmen.' },
+      { icon:'🛏️', titel:'Schock vorbeugen', text:'Person hinlegen, Beine hoch, warm zudecken und beruhigen. 112 rufen.' }
+    ],
+    achtung: 'Bei spritzender, sehr starker oder nicht stoppender Blutung sofort 112 rufen.'
+  },
+  {
+    id: 'verbrennung', titel: 'Verbrennung & Verbrühung', emoji: '🔥', notfall: false,
+    kurz: 'Heiße Flüssigkeit, Herdplatte, Feuer — schnell richtig kühlen.',
+    schritte: [
+      { icon:'🚿', titel:'Kühlen', text:'Sofort 10–20 Minuten mit lauwarmem (nicht eiskaltem) Wasser kühlen — nur die betroffene Stelle.' },
+      { icon:'💍', titel:'Enges entfernen', text:'Ringe, Uhr und enge Kleidung entfernen, solange es noch geht. Eingebrannte Kleidung NICHT abziehen.' },
+      { icon:'🚫', titel:'Keine Hausmittel', text:'Brandblasen nicht öffnen. Kein Öl, Mehl, Butter oder Zahnpasta — das schadet nur.' },
+      { icon:'🩹', titel:'Locker abdecken', text:'Mit einem sauberen, nicht fusselnden Tuch locker abdecken.' },
+      { icon:'🧒', titel:'Kinder schützen', text:'Bei Kindern nicht zu großflächig oder zu lange kühlen — sie kühlen sonst schnell aus.' }
+    ],
+    achtung: 'Bei großflächigen oder tiefen Verbrennungen, bei Verbrennungen im Gesicht, an Händen/Genital oder bei Kindern: 112 rufen.'
+  },
+  {
+    id: 'vergiftung', titel: 'Vergiftung', emoji: '☠️', notfall: true,
+    kurz: 'Kind hat etwas Giftiges geschluckt — Beeren, Reiniger, Tabletten.',
+    schritte: [
+      { icon:'☎️', titel:'Giftnotruf anrufen', text:'Sofort den Giftnotruf anrufen (Nummer je nach Bundesland) — im Zweifel die 112.' },
+      { icon:'📋', titel:'Infos bereithalten', text:'Was wurde geschluckt, wie viel, wann? Verpackung, Pflanze oder Rest aufbewahren und zeigen.' },
+      { icon:'🚫', titel:'Kein Erbrechen', text:'KEIN Erbrechen auslösen. Keine Milch, kein Salzwasser — beides kann die Lage verschlimmern.' },
+      { icon:'💧', titel:'Nur nach Anweisung', text:'Etwas Wasser oder Tee in kleinen Schlucken ist oft erlaubt — aber nur, wenn der Giftnotruf es sagt.' },
+      { icon:'👀', titel:'Zustand beobachten', text:'Bei Bewusstlosigkeit oder Atemnot: 112, stabile Seitenlage bzw. Wiederbelebung.' }
+    ],
+    achtung: 'Reinigungsmittel, Medikamente und kleine Batterien immer außer Reichweite von Kindern aufbewahren.'
+  },
+  {
+    id: 'knochenbruch', titel: 'Knochenbruch & Verstauchung', emoji: '🦴', notfall: false,
+    kurz: 'Sturz mit Verdacht auf Bruch, Verstauchung oder Prellung.',
+    schritte: [
+      { icon:'🚫', titel:'Nicht bewegen', text:'Den verletzten Körperteil nicht bewegen und auf keinen Fall „einrenken".' },
+      { icon:'❄️', titel:'Kühlen', text:'Mit einem Kühlpack kühlen — immer ein Tuch dazwischen, nie Eis direkt auf die Haut.' },
+      { icon:'🧣', titel:'Ruhigstellen', text:'In der Lage abstützen, in der es am wenigsten schmerzt — z. B. den Arm mit einem Tuch tragen.' },
+      { icon:'🩹', titel:'Offene Wunde', text:'Bei offenem Bruch die Wunde keimfrei abdecken. Herausstehende Knochen NICHT zurückdrücken.' },
+      { icon:'🚗', titel:'Zum Arzt', text:'Zur Notaufnahme bringen. Bei Fehlstellung, starkem Schmerz oder offenem Bruch: 112.' }
+    ],
+    achtung: 'Sichere Zeichen für einen Bruch sind eine Fehlstellung oder sichtbare Knochenenden — dann immer den Notruf wählen.'
+  },
+  {
+    id: 'kopf', titel: 'Sturz auf den Kopf', emoji: '🤕', notfall: false,
+    kurz: 'Kind ist gestürzt und hat sich den Kopf gestoßen.',
+    schritte: [
+      { icon:'🧊', titel:'Kühlen & beruhigen', text:'Die Beule vorsichtig kühlen, das Kind beruhigen und in Ruhe ausruhen lassen.' },
+      { icon:'👀', titel:'Beobachten', text:'Das Kind in den nächsten 24–48 Stunden genau im Blick behalten.' },
+      { icon:'🌙', titel:'Nachts prüfen', text:'Schlafen lassen ist in Ordnung — aber nachts 1–2× prüfen, ob es sich normal wecken lässt.' },
+      { icon:'🚨', titel:'Warnzeichen', text:'Sofort zum Arzt oder 112 bei: Erbrechen, starker Müdigkeit, Krampf, ungleich großen Pupillen, klarer Flüssigkeit aus Nase/Ohr.' }
+    ],
+    achtung: 'Bei Bewusstlosigkeit — auch nur kurz — oder anhaltender Übelkeit immer ärztlich abklären lassen.'
+  },
+  {
+    id: 'fieberkrampf', titel: 'Fieberkrampf beim Kind', emoji: '🌡️', notfall: false,
+    kurz: 'Das Kind krampft bei hohem Fieber — meist harmlos, aber beängstigend.',
+    schritte: [
+      { icon:'🛏️', titel:'Sicher lagern', text:'Kind auf eine weiche, sichere Fläche legen. Harte und spitze Gegenstände wegräumen.' },
+      { icon:'⏱️', titel:'Zeit stoppen', text:'Auf die Uhr schauen — wie lange dauert der Krampf? Das ist für den Arzt wichtig.' },
+      { icon:'🚫', titel:'Nicht festhalten', text:'Das Kind nicht festhalten und nichts in den Mund stecken.' },
+      { icon:'↪️', titel:'Seitenlage', text:'Wenn der Krampf vorbei ist, das Kind in die stabile Seitenlage bringen.' },
+      { icon:'🌡️', titel:'Danach Arzt', text:'Anschließend das Fieber senken und das Kind dem Kinderarzt vorstellen.' }
+    ],
+    achtung: '112 rufen, wenn der Krampf länger als 5 Minuten dauert, sich wiederholt oder es der allererste Fieberkrampf ist.'
+  },
+  {
+    id: 'insektenstich', titel: 'Insektenstich & Allergie', emoji: '🐝', notfall: false,
+    kurz: 'Stich von Biene oder Wespe — und wann es gefährlich wird.',
+    schritte: [
+      { icon:'🐝', titel:'Stachel entfernen', text:'Einen Bienenstachel seitlich wegkratzen — nicht quetschen, sonst gelangt mehr Gift in die Haut.' },
+      { icon:'❄️', titel:'Kühlen', text:'Die Stelle kühlen. Eine kühlende Salbe aus der Apotheke lindert den Juckreiz.' },
+      { icon:'👄', titel:'Stich im Mund', text:'Stich im Mund oder Rachen: sofort von innen und außen kühlen, Eis lutschen lassen und 112 rufen.' },
+      { icon:'🚨', titel:'Allergie erkennen', text:'Atemnot, Schwellung im Gesicht, Quaddeln am ganzen Körper oder Kreislaufprobleme: sofort 112.' },
+      { icon:'💉', titel:'Notfallset', text:'Ist ein Adrenalin-Pen (Notfallset) vorhanden, diesen nach Anweisung sofort anwenden.' }
+    ],
+    achtung: 'Eine starke allergische Reaktion kann lebensgefährlich werden — bei Atemnot keine Minute warten.'
+  },
+  {
+    id: 'nasenbluten', titel: 'Nasenbluten', emoji: '👃', notfall: false,
+    kurz: 'Die Nase blutet — meist harmlos und schnell gestoppt.',
+    schritte: [
+      { icon:'⬇️', titel:'Kopf nach vorne', text:'Den Kopf nach vorne beugen — NICHT in den Nacken legen, sonst läuft Blut in den Hals.' },
+      { icon:'🤏', titel:'Nase zuhalten', text:'Beide Nasenflügel mit Daumen und Zeigefinger 10 Minuten am Stück fest zusammendrücken.' },
+      { icon:'❄️', titel:'Nacken kühlen', text:'Einen kühlen, feuchten Lappen in den Nacken legen — das hilft, die Blutung zu stoppen.' },
+      { icon:'😮‍💨', titel:'Ruhig atmen', text:'Durch den Mund ruhig weiteratmen und sich nicht aufregen.' }
+    ],
+    achtung: 'Zum Arzt, wenn die Blutung nach 20 Minuten nicht aufhört, sehr stark ist oder nach einem Schlag/Sturz auftritt.'
+  },
+  {
+    id: 'hitze', titel: 'Sonnenstich & Hitzschlag', emoji: '☀️', notfall: false,
+    kurz: 'Zu viel Sonne oder Hitze — Kopfschmerz, Übelkeit, roter Kopf.',
+    schritte: [
+      { icon:'⛱️', titel:'In den Schatten', text:'Die Person sofort an einen kühlen, schattigen Ort bringen.' },
+      { icon:'🛏️', titel:'Hinlegen', text:'Hinlegen, Kopf und Oberkörper leicht erhöht lagern.' },
+      { icon:'💧', titel:'Kühlen', text:'Stirn, Kopf und Nacken mit feuchten, kühlen Tüchern kühlen.' },
+      { icon:'🥤', titel:'Trinken', text:'Ist die Person wach und klar: in kleinen Schlucken Wasser trinken lassen.' },
+      { icon:'🚨', titel:'Hitzschlag erkennen', text:'Heiße, trockene Haut, Verwirrtheit oder Bewusstlosigkeit: das ist ein Hitzschlag — sofort 112.' }
+    ],
+    achtung: 'Ein Hitzschlag ist ein lebensbedrohlicher Notfall. Babys und Kleinkinder nie im Auto oder in der prallen Sonne lassen.'
+  }
+];
+
 // ===== ALLE FAMILIEN-TIPPS (80+) =====
 const FAMILIEN_TIPPS_ALLE = [
   {

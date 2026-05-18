@@ -262,6 +262,7 @@ const NAV = {
   uebersetzer:  [{s:'uebersetzer', l:'Übersetzer'}],
   medbox:       [{s:'medbox', l:'Medikamente'}],
   erkennen:     [{s:'erkennen', l:'Tiere & Pflanzen'}],
+  erstehilfe:   [{s:'erstehilfe', l:'Erste Hilfe'}],
   album:        [{s:'album', l:'Familien-Album'}],
   kontakte:     [{s:'kontakte', l:'Kontakte'}],
   haushalt:     [{s:'haushalt', l:'Haushalt'}],
@@ -2194,6 +2195,7 @@ function render() {
     case 'uebersetzer':    content.innerHTML = renderUebersetzer(); break;
     case 'medbox':         content.innerHTML = renderMedbox(); break;
     case 'erkennen':       content.innerHTML = renderErkennen(); break;
+    case 'erstehilfe':     content.innerHTML = renderErsteHilfe(); break;
     case 'einkaufsliste':  content.innerHTML = renderEinkaufslisteSektion(); break;
     default:           content.innerHTML = renderDashboard();
   }
@@ -10477,6 +10479,81 @@ function renderErkennen() {
   </div>
 
   <div class="info-box blau" style="margin-top:1rem"><span class="ib-icon">💡</span><div class="ib-text">Die Erkennung ist eine KI-Schätzung und kann sich irren. Bei giftigen Pflanzen, Pilzen oder unbekannten Tieren im Zweifel <strong>nichts anfassen oder essen</strong> und Fachleute fragen.</div></div>`;
+}
+
+// ===== ERSTE HILFE =====
+// Bild-gestützte Schritt-für-Schritt-Anleitungen für Familien-Notfälle.
+function ersteHilfeOeffnen(id) {
+  state.ehThema = id;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function ersteHilfeZurueck() {
+  state.ehThema = null;
+  render();
+}
+
+function renderErsteHilfe() {
+  const daten = (typeof ERSTE_HILFE !== 'undefined') ? ERSTE_HILFE : [];
+  // Detailansicht eines Themas
+  if (state.ehThema) {
+    const t = daten.find(x => x.id === state.ehThema);
+    if (t) return renderErsteHilfeDetail(t);
+    state.ehThema = null;
+  }
+  // Übersicht: Notruf-Banner + Themen-Kacheln
+  return `
+  <div class="section-title">🚑 Erste Hilfe</div>
+  <p class="section-sub">Ruhig bleiben — Schritt für Schritt mit Bild-Anleitung</p>
+
+  <a href="tel:112" class="eh-notruf">
+    <div class="eh-notruf-icon">📞</div>
+    <div><div class="eh-notruf-zahl">Notruf 112</div>
+    <div class="eh-notruf-sub">Tippen, um direkt anzurufen</div></div>
+  </a>
+
+  <div class="eh-grid">
+    ${daten.map(t => `
+      <button class="eh-kachel${t.notfall ? ' notfall' : ''}" onclick="ersteHilfeOeffnen('${t.id}')">
+        <span class="eh-kachel-emoji">${t.emoji}</span>
+        <span class="eh-kachel-titel">${esc(t.titel)}</span>
+        <span class="eh-kachel-kurz">${esc(t.kurz)}</span>
+        ${t.notfall ? '<span class="eh-kachel-tag">Notfall</span>' : ''}
+      </button>`).join('')}
+  </div>
+
+  <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">⚠️</span><div class="ib-text">Diese Anleitungen ersetzen keinen Erste-Hilfe-Kurs. Bei jedem ernsten Notfall zuerst die <strong>112</strong> rufen.</div></div>`;
+}
+
+function renderErsteHilfeDetail(t) {
+  return `
+  <button class="eh-zurueck" onclick="ersteHilfeZurueck()">‹ Alle Themen</button>
+  <div class="eh-detail-kopf${t.notfall ? ' notfall' : ''}">
+    <span class="eh-detail-emoji">${t.emoji}</span>
+    <div><div class="eh-detail-titel">${esc(t.titel)}</div>
+    <div class="eh-detail-kurz">${esc(t.kurz)}</div></div>
+  </div>
+
+  ${t.notfall ? `<a href="tel:112" class="eh-notruf klein">
+    <div class="eh-notruf-icon">📞</div>
+    <div><div class="eh-notruf-zahl">Notruf 112 anrufen</div>
+    <div class="eh-notruf-sub">Bei diesem Notfall sofort Hilfe rufen</div></div>
+  </a>` : ''}
+
+  <div class="eh-schritte">
+    ${t.schritte.map((s, i) => `
+      <div class="eh-schritt">
+        <div class="eh-schritt-nr">${i + 1}</div>
+        <div class="eh-schritt-icon">${s.icon}</div>
+        <div class="eh-schritt-text">
+          <div class="eh-schritt-titel">${esc(s.titel)}</div>
+          <div class="eh-schritt-body">${esc(s.text)}</div>
+        </div>
+      </div>`).join('')}
+  </div>
+
+  <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">❗</span><div class="ib-text">${esc(t.achtung)}</div></div>
+  <div class="info-box blau" style="margin-top:.6rem"><span class="ib-icon">🎓</span><div class="ib-text">Am sichersten hilfst du nach einem echten Erste-Hilfe-Kurs. Kurse gibt es u. a. beim DRK, ASB, bei den Maltesern und Johannitern.</div></div>`;
 }
 
 // ===== WISSEN =====

@@ -5490,3 +5490,108 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   color: #14532D;
 }
 .erkennen-ergebnis-text strong { color: #065F46; }
+
+/* ===== Erste Hilfe ===== */
+.eh-notruf {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(220,38,38,.32);
+}
+.eh-notruf.klein { margin: .25rem 0 1rem; }
+.eh-notruf-icon { font-size: 1.9rem; flex-shrink: 0; }
+.eh-notruf-zahl { font-size: 1.2rem; font-weight: 800; }
+.eh-notruf-sub { font-size: .82rem; opacity: .92; }
+.eh-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .65rem;
+}
+.eh-kachel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  padding: .85rem .75rem;
+  border: 1px solid var(--g200);
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.eh-kachel.notfall { border-color: #FCA5A5; background: #FEF2F2; }
+.eh-kachel-emoji { font-size: 1.7rem; }
+.eh-kachel-titel { font-weight: 800; font-size: .95rem; line-height: 1.25; }
+.eh-kachel-kurz { font-size: .78rem; color: var(--g500); line-height: 1.35; }
+.eh-kachel-tag {
+  position: absolute;
+  top: .55rem; right: .55rem;
+  font-size: .62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: #fff;
+  background: #DC2626;
+  padding: .12rem .4rem;
+  border-radius: 99px;
+}
+.eh-zurueck {
+  border: none;
+  background: none;
+  color: var(--akzent-1);
+  font-weight: 700;
+  font-size: .92rem;
+  padding: .25rem 0;
+  margin-bottom: .5rem;
+  cursor: pointer;
+}
+.eh-detail-kopf {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: var(--g50, #F9FAFB);
+  border: 1px solid var(--g200);
+  margin-bottom: .75rem;
+}
+.eh-detail-kopf.notfall { background: #FEF2F2; border-color: #FCA5A5; }
+.eh-detail-emoji { font-size: 2.2rem; flex-shrink: 0; }
+.eh-detail-titel { font-size: 1.15rem; font-weight: 800; }
+.eh-detail-kurz { font-size: .85rem; color: var(--g500); margin-top: .15rem; }
+.eh-schritte {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+.eh-schritt {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  padding: .8rem .9rem;
+  border: 1px solid var(--g200);
+  border-radius: 14px;
+  background: #fff;
+}
+.eh-schritt-nr {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  border-radius: 99px;
+  background: var(--akzent-1);
+  color: #fff;
+  font-weight: 800;
+  font-size: .85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eh-schritt-icon { font-size: 1.7rem; flex-shrink: 0; line-height: 1.3; }
+.eh-schritt-text { min-width: 0; }
+.eh-schritt-titel { font-weight: 800; font-size: .95rem; }
+.eh-schritt-body { font-size: .88rem; line-height: 1.5; color: var(--g700, #374151); margin-top: .15rem; }
