@@ -260,6 +260,7 @@ const NAV = {
   senioren:     [{s:'senioren', l:'Senioren'}],
   wissen:       [{s:'wissen', l:'Wissen'}],
   uebersetzer:  [{s:'uebersetzer', l:'Übersetzer'}],
+  medbox:       [{s:'medbox', l:'Medikamente'}],
   album:        [{s:'album', l:'Familien-Album'}],
   kontakte:     [{s:'kontakte', l:'Kontakte'}],
   haushalt:     [{s:'haushalt', l:'Haushalt'}],
@@ -500,7 +501,9 @@ function erinnerungenPruefen() {
 function erinnerungenTick() {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const einst = einstellungenLaden();
-  if (einst.notifAus === true || einst.notifTodo === false) return;
+  if (einst.notifAus === true) return;
+  medboxErinnerungPruefen();
+  if (einst.notifTodo === false) return;
 
   const jetzt = Date.now();
   let gefeuert = [];
@@ -2188,6 +2191,7 @@ function render() {
     case 'kontakte':       content.innerHTML = renderKontakte(); break;
     case 'wissen':         content.innerHTML = renderWissen(); break;
     case 'uebersetzer':    content.innerHTML = renderUebersetzer(); break;
+    case 'medbox':         content.innerHTML = renderMedbox(); break;
     case 'einkaufsliste':  content.innerHTML = renderEinkaufslisteSektion(); break;
     default:           content.innerHTML = renderDashboard();
   }
@@ -8967,6 +8971,7 @@ function renderEinstellungen() {
         {key:'notifTermine',  label:'📅 Heutige Kalender-Termine', def:true},
         {key:'notifMuell',    label:'🗑️ Müllabfuhr morgen (Vorabend)', def:true},
         {key:'notifTodo',     label:'✅ To-do-Erinnerungen (mit Uhrzeit)', def:true},
+        {key:'notifMed',      label:'💊 Medikamenten-Erinnerungen', def:true},
         {key:'notifAngebote', label:'🏷️ Neue Supermarkt-Angebote', def:false},
         {key:'notifJobs',     label:'💼 Neue Jobs in der Nähe', def:false},
         {key:'notifAus',      label:'🔕 Alle Benachrichtigungen aus', def:false},
@@ -10217,6 +10222,124 @@ async function albumLoeschenBestaetigen(id) {
   await albumFotoLoeschen(id);
   toast('✓ Foto gelöscht');
   albumGridAktualisieren();
+}
+
+// ===== MEDBOX — Medikamenten-Erinnerung =====
+function _heuteISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function medboxLaden() { try { return JSON.parse(localStorage.getItem('familienapp_medbox') || '[]'); } catch { return []; } }
+function medboxSpeichern(l) { try { localStorage.setItem('familienapp_medbox', JSON.stringify(l)); } catch { toast('⚠️ Speicherfehler'); } }
+function medGenommenLaden() { try { return JSON.parse(localStorage.getItem('familienapp_medbox_genommen') || '{}'); } catch { return {}; } }
+function medGenommenSpeichern(g) { try { localStorage.setItem('familienapp_medbox_genommen', JSON.stringify(g)); } catch {} }
+
+const MED_ZEITEN = [
+  { id:'morgen', zeit:'08:00', label:'🌅 Morgens' },
+  { id:'mittag', zeit:'12:00', label:'☀️ Mittags' },
+  { id:'abend',  zeit:'18:00', label:'🌆 Abends' },
+  { id:'nacht',  zeit:'22:00', label:'🌙 Nachts' }
+];
+
+function medHinzu() {
+  const name = el('med-name')?.value.trim();
+  if (!name) { toast('⚠️ Bitte einen Namen eingeben'); el('med-name')?.focus(); return; }
+  const dosis = el('med-dosis')?.value.trim() || '';
+  const zeiten = MED_ZEITEN.filter(z => el('med-zeit-' + z.id)?.checked).map(z => z.zeit);
+  const l = medboxLaden();
+  l.push({ id: Date.now(), name, dosis, zeiten });
+  medboxSpeichern(l);
+  toast('✓ Medikament gespeichert');
+  if (zeiten.length && 'Notification' in window && Notification.permission === 'default') notificationsBerechtigung();
+  render();
+}
+function medLoeschen(id) {
+  if (!confirm('Dieses Medikament wirklich entfernen?')) return;
+  medboxSpeichern(medboxLaden().filter(m => m.id !== id));
+  toast('✓ Entfernt');
+  render();
+}
+function medGenommenToggle(medId, zeit) {
+  const g = medGenommenLaden();
+  const k = medId + '_' + zeit + '_' + _heuteISO();
+  if (g[k]) delete g[k]; else g[k] = true;
+  medGenommenSpeichern(g);
+  render();
+}
+
+// Medikamenten-Erinnerungen prüfen — wird von erinnerungenTick mitaufgerufen
+function medboxErinnerungPruefen() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const einst = einstellungenLaden();
+  if (einst.notifAus === true || einst.notifMed === false) return;
+  const meds = medboxLaden();
+  if (!meds.length) return;
+  const jetzt = new Date();
+  const hhmm = String(jetzt.getHours()).padStart(2,'0') + ':' + String(jetzt.getMinutes()).padStart(2,'0');
+  const heute = _heuteISO();
+  let gefeuert = [];
+  try { gefeuert = JSON.parse(localStorage.getItem('notif_med_gefeuert') || '[]'); } catch {}
+  const genommen = medGenommenLaden();
+  let geaendert = false;
+  meds.forEach(m => {
+    (m.zeiten || []).forEach(z => {
+      const key = m.id + '|' + z + '|' + heute;
+      if (z <= hhmm && !gefeuert.includes(key) && !genommen[m.id + '_' + z + '_' + heute]) {
+        notificationZeigen('💊 ' + m.name, {
+          body: (m.dosis ? m.dosis + ' — ' : '') + 'jetzt einnehmen (' + z + ' Uhr)',
+          tag: 'med-' + key, zuSektion: 'medbox', requireInteraction: true
+        });
+        gefeuert.push(key);
+        geaendert = true;
+      }
+    });
+  });
+  if (geaendert) {
+    gefeuert = gefeuert.filter(k => k.endsWith('|' + heute)); // nur heutige behalten
+    try { localStorage.setItem('notif_med_gefeuert', JSON.stringify(gefeuert)); } catch {}
+  }
+}
+
+function renderMedbox() {
+  const meds = medboxLaden();
+  const genommen = medGenommenLaden();
+  const heute = _heuteISO();
+  const zLabel = z => (MED_ZEITEN.find(x => x.zeit === z)?.label || z);
+  return `
+  <div class="section-title">💊 Medikamenten-Erinnerung</div>
+  <p class="section-sub">Behalte Medikamente und Einnahmezeiten im Blick</p>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div style="font-weight:800;margin-bottom:.6rem">➕ Medikament hinzufügen</div>
+    <div class="reg-feld"><label class="reg-label">Name</label><input id="med-name" class="reg-input" type="text" placeholder="z. B. Vitamin D" autocomplete="off" /></div>
+    <div class="reg-feld"><label class="reg-label">Dosis (optional)</label><input id="med-dosis" class="reg-input" type="text" placeholder="z. B. 1 Tablette" autocomplete="off" /></div>
+    <div class="reg-feld"><label class="reg-label">Einnahmezeiten</label>
+      <div class="med-zeit-wahl">
+        ${MED_ZEITEN.map(z => `<label class="med-zeit-opt"><input type="checkbox" id="med-zeit-${z.id}" /> ${z.label}</label>`).join('')}
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="medHinzu()">+ Speichern</button>
+  </div>
+
+  ${meds.length === 0 ? `
+  <div class="info-box lila"><span class="ib-icon">💊</span><div class="ib-text"><strong>Noch keine Medikamente eingetragen.</strong> Lege oben das erste an — die App erinnert dich dann zur Einnahmezeit.</div></div>`
+  : meds.map(m => `
+    <div class="med-karte">
+      <div class="med-karte-kopf">
+        <div style="min-width:0">
+          <div class="med-karte-name">💊 ${esc(m.name)}</div>
+          ${m.dosis ? `<div class="med-karte-dosis">${esc(m.dosis)}</div>` : ''}
+        </div>
+        <button class="med-del" onclick="medLoeschen(${m.id})" title="Entfernen">✕</button>
+      </div>
+      ${(m.zeiten || []).length ? `<div class="med-zeiten">
+        ${m.zeiten.map(z => {
+          const ist = !!genommen[m.id + '_' + z + '_' + heute];
+          return `<button class="med-dose${ist ? ' genommen' : ''}" onclick="medGenommenToggle(${m.id},'${z}')">
+            <span>${zLabel(z)} · ${z}</span><span>${ist ? '✓ genommen' : '○ offen'}</span>
+          </button>`;
+        }).join('')}
+      </div>` : '<div style="font-size:.8rem;color:var(--g500);margin-top:.4rem">Keine Einnahmezeit gewählt — es wird nicht erinnert.</div>'}
+    </div>`).join('')}
+
+  <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">⚠️</span><div class="ib-text">Die App ist eine Gedächtnisstütze und ersetzt keine ärztliche Anweisung. Dosierung und Einnahme immer wie mit Arzt oder Apotheke besprochen.</div></div>`;
 }
 
 // ===== WISSEN =====

@@ -5360,3 +5360,76 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   gap: .5rem;
   margin-top: .75rem;
 }
+
+/* ===== Medbox / Medikamenten-Erinnerung ===== */
+.med-zeit-wahl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+.med-zeit-opt {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .55rem .6rem;
+  border: 1.5px solid var(--g200);
+  border-radius: 12px;
+  background: #fff;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.med-zeit-opt input { accent-color: var(--akzent-1); width: 18px; height: 18px; }
+.med-karte {
+  background: #fff;
+  border: 1px solid var(--g200);
+  border-radius: 16px;
+  padding: .9rem 1rem;
+  margin-bottom: .75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.med-karte-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .6rem;
+}
+.med-karte-name { font-size: 1.05rem; font-weight: 800; overflow-wrap: anywhere; }
+.med-karte-dosis { font-size: .85rem; color: var(--g500); margin-top: .15rem; }
+.med-del {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 99px;
+  border: 1.5px solid var(--g200);
+  background: #fff;
+  color: var(--g500);
+  font-size: .9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.med-zeiten {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  margin-top: .7rem;
+}
+.med-dose {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  width: 100%;
+  padding: .6rem .8rem;
+  border: 1.5px solid var(--g200);
+  border-radius: 12px;
+  background: #F9FAFB;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--g700, #374151);
+  cursor: pointer;
+}
+.med-dose.genommen {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #047857;
+}
