@@ -788,7 +788,7 @@ function muellAutoEintragen(user, opts = {}) {
         const ds = `${aktuell.getFullYear()}-${String(aktuell.getMonth()+1).padStart(2,'0')}-${String(aktuell.getDate()).padStart(2,'0')}`;
         termine.push({
           id: Date.now() + Math.floor(Math.random()*1000000),
-          titel: art.label + ' rausstellen',
+          titel: art.label + ' rausstellen (geschätzt)',
           datum: ds,
           uhrzeit: '07:00',
           typ: art.id,
@@ -796,7 +796,7 @@ function muellAutoEintragen(user, opts = {}) {
           wiederholung: cfg.rhythmus === 7 ? 'woechentlich' : (cfg.rhythmus === 14 ? 'zweiwoechentlich' : 'monatlich'),
           ort: '',
           erinnerung,
-          notiz: `Automatisch durch Müllkalender · ${vorschlag._stadt || 'Standard-Rhythmus'} · alle ${cfg.rhythmus} Tage`
+          notiz: `Automatisch durch Müllkalender · ${vorschlag._stadt || 'Standard-Rhythmus'} · GESCHÄTZT — bitte mit dem offiziellen Abfuhrkalender deiner Stadt abgleichen`
         });
         generiert++;
         if (vorabend) {
@@ -804,7 +804,7 @@ function muellAutoEintragen(user, opts = {}) {
           const vorDS = `${vor.getFullYear()}-${String(vor.getMonth()+1).padStart(2,'0')}-${String(vor.getDate()).padStart(2,'0')}`;
           termine.push({
             id: Date.now() + Math.floor(Math.random()*1000000),
-            titel: art.label + ' — Vorabend rausstellen!',
+            titel: art.label + ' — Vorabend (geschätzt)',
             datum: vorDS,
             uhrzeit: '18:00',
             typ: art.id,
@@ -831,7 +831,7 @@ function muellSofortEintragen() {
   const ergebnis = muellAutoEintragen(user, { vorabend: true, erinnerung: true });
   if (ergebnis.generiert > 0) {
     state.muellAssistent = false;
-    toast(`✓ ${ergebnis.generiert} Müll-Termine für ${ergebnis.stadt || 'deutsche Standards'} im Kalender`);
+    toast(`✓ ${ergebnis.generiert} geschätzte Müll-Termine eingetragen — bitte mit offiziellem Kalender prüfen`);
     render();
   } else {
     toast('⚠️ Konnte keine Termine erstellen');
@@ -850,7 +850,7 @@ function muellAutoSicherstellen() {
     if (hatMuell) return;
     const ergebnis = muellAutoEintragen(user, { vorabend: true, erinnerung: true });
     if (ergebnis.generiert > 0) {
-      toast(`🗑️ ${ergebnis.generiert} Müll-Termine automatisch aus deinem Standort eingetragen`);
+      toast(`🗑️ ${ergebnis.generiert} geschätzte Müll-Termine eingetragen — bitte mit dem offiziellen Kalender prüfen`);
     }
   } catch {}
 }
@@ -3905,8 +3905,7 @@ async function profilSpeichern() {
   if (standortGeaendert && user.plz && !autoMuellAus) {
     const ergebnis = muellAutoEintragen(user, { vorabend: true, erinnerung: true });
     if (ergebnis.generiert > 0) {
-      const stadt = ergebnis.stadt || 'deutsche Standard-Rhythmen';
-      toast(`✓ ${ergebnis.generiert} Müll-Termine für ${stadt} im Kalender (${ergebnis.geloescht} alte entfernt)`);
+      toast(`🗑️ ${ergebnis.generiert} geschätzte Müll-Termine eingetragen — im Kalender mit dem offiziellen Plan prüfen`);
     }
   }
 
@@ -5339,6 +5338,8 @@ function renderKalender() {
   const mitglieder = getFamilienMitglieder();
   const filter = state.kalenderPersonFilter || 'alle';
   let inhalt = renderTermineInhalt(mitglieder, filter);
+  const muellGeschaetzt = (typeof getTermine === 'function') &&
+    getTermine().some(t => t.notiz && t.notiz.includes('Automatisch durch Müllkalender'));
 
   return `
   <div class="news-hero">
@@ -5361,6 +5362,13 @@ function renderKalender() {
     <button class="btn btn-outline btn-sm" onclick="kalenderTeilen('email')">✉️ E-Mail teilen</button>
     <button class="btn btn-outline btn-sm" onclick="kalenderTeilen('copy')">📋 Termin-Liste kopieren</button>
   </div>
+
+  ${muellGeschaetzt ? `
+  <div class="info-box orange" style="margin:.25rem 0 .6rem">
+    <span class="ib-icon">📌</span>
+    <div class="ib-text"><strong>Müll-Termine sind Schätzwerte.</strong> Einträge mit dem Zusatz „(geschätzt)" folgen typischen Rhythmen deiner Region und können je nach Straße abweichen. Die <strong>garantiert korrekten</strong> Tage stehen nur im offiziellen Kalender deiner Stadt.<br>
+    <button class="btn btn-sm btn-primary" style="margin-top:.5rem" onclick="muellAssistentOeffnen()">🗑️ Exakte Termine einrichten</button></div>
+  </div>` : ''}
 
   ${state.muellAssistent ? renderMuellAssistent() : ''}
   <div style="font-size:.75rem;color:var(--g700);margin-bottom:.5rem">→ Teilen mit Partner, Großeltern oder anderen Geräten. ICS-Datei funktioniert mit Google, Apple, Outlook.</div>
