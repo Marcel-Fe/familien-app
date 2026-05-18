@@ -3000,10 +3000,10 @@ async function ladeOrte(karte) {
         ${kueche ? `<div class="popup-info">🍴 ${esc(kueche.replace(/;/g,', '))}</div>` : ''}
         ${oeffnung ? `<div class="popup-info">🕐 ${esc(oeffnung)}</div>` : ''}
         ${phone ? `<a href="tel:${esc(phone.replace(/\s/g,''))}" class="popup-link">📞 ${esc(phone)}</a>` : ''}
-        ${website ? `<a href="${esc(website)}" target="_blank" class="popup-link">🌐 Website öffnen</a>` : ''}
-        ${menuLink ? `<a href="${esc(menuLink)}" target="_blank" class="popup-link">📋 Speisekarte</a>` : ''}
-        ${speisekarteSuche ? `<a href="${speisekarteSuche}" target="_blank" class="popup-link">📋 Speisekarte suchen</a>` : ''}
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lon}" target="_blank" class="popup-link popup-navi">🗺️ Route planen (Google Maps)</a>`;
+        ${website ? `<a href="${esc(website)}" target="_blank" rel="noopener" onclick="return linkOeffnen(this.href)" class="popup-link">🌐 Website öffnen</a>` : ''}
+        ${menuLink ? `<a href="${esc(menuLink)}" target="_blank" rel="noopener" onclick="return linkOeffnen(this.href)" class="popup-link">📋 Speisekarte ansehen</a>` : ''}
+        ${speisekarteSuche ? `<a href="${esc(speisekarteSuche)}" target="_blank" rel="noopener" onclick="return linkOeffnen(this.href)" class="popup-link">📋 Speisekarte suchen</a>` : ''}
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lon}" target="_blank" rel="noopener" onclick="return linkOeffnen(this.href)" class="popup-link popup-navi">🗺️ Route planen (Google Maps)</a>`;
       m.bindPopup(popup);
     });
 
@@ -3038,10 +3038,10 @@ async function ladeOrte(karte) {
                 ${oeffnung ? `<div class="ort-adresse">🕐 ${esc(oeffnung)}</div>` : ''}
                 <div class="ort-dist">📏 ${dist} entfernt</div>
                 ${(website || phone || menuLink || speisekarteSuche) ? `<div class="ort-links">
-                  ${website ? `<a href="${esc(website)}" target="_blank" onclick="event.stopPropagation()" class="ort-link">🌐 Web</a>` : ''}
+                  ${website ? `<a href="${esc(website)}" target="_blank" rel="noopener" onclick="event.stopPropagation();return linkOeffnen(this.href)" class="ort-link">🌐 Web</a>` : ''}
                   ${phone ? `<a href="tel:${esc(phone.replace(/\s/g,''))}" onclick="event.stopPropagation()" class="ort-link">📞 Anruf</a>` : ''}
-                  ${menuLink ? `<a href="${esc(menuLink)}" target="_blank" onclick="event.stopPropagation()" class="ort-link">📋 Karte</a>` : ''}
-                  ${speisekarteSuche ? `<a href="${speisekarteSuche}" target="_blank" onclick="event.stopPropagation()" class="ort-link">📋 Speisekarte</a>` : ''}
+                  ${menuLink ? `<a href="${esc(menuLink)}" target="_blank" rel="noopener" onclick="event.stopPropagation();return linkOeffnen(this.href)" class="ort-link">📋 Speisekarte</a>` : ''}
+                  ${speisekarteSuche ? `<a href="${esc(speisekarteSuche)}" target="_blank" rel="noopener" onclick="event.stopPropagation();return linkOeffnen(this.href)" class="ort-link">📋 Speisekarte</a>` : ''}
                 </div>` : ''}
               </div>
             </div>
@@ -3060,6 +3060,20 @@ async function ladeOrte(karte) {
 
 function karteFliegen(lat, lng) {
   if (state.karte) state.karte.flyTo([lat, lng], 16);
+}
+
+// Externen Link zuverlässig öffnen — auch in der installierten App (PWA),
+// wo normale target="_blank"-Links oft nicht reagieren.
+function linkOeffnen(url) {
+  if (url) {
+    try {
+      const w = window.open(url, '_blank', 'noopener');
+      if (!w) location.href = url; // Popup blockiert → im selben Fenster öffnen
+    } catch (e) {
+      location.href = url;
+    }
+  }
+  return false; // verhindert das Standard-Verhalten des <a>, kein Doppel-Öffnen
 }
 
 function haversine(lat1, lng1, lat2, lng2) {
