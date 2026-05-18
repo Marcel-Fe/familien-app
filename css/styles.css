@@ -4381,6 +4381,93 @@ input::placeholder, textarea::placeholder {
   margin-top: .15rem;
   min-height: .8rem;
 }
+
+/* Wetter-Tipps + Regenradar-Button */
+.wetter-tipps {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,.22);
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  position: relative; z-index: 2;
+}
+.wetter-tipp-chip {
+  background: rgba(255,255,255,.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 12px;
+  padding: .5rem .7rem;
+  font-size: .8rem;
+  font-weight: 700;
+  line-height: 1.35;
+  flex: 1 1 100%;
+}
+.wetter-radar-btn {
+  flex: 1 1 100%;
+  background: rgba(255,255,255,.92);
+  color: #1E3A8A;
+  border: none;
+  border-radius: 12px;
+  padding: .65rem;
+  font-size: .9rem;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: .15rem;
+}
+
+/* Regenradar-Overlay */
+.radar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(15,23,42,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.radar-box {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 560px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+}
+.radar-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .85rem 1rem;
+  font-weight: 800;
+  font-size: 1.05rem;
+  background: #1E3A8A;
+  color: #fff;
+}
+.radar-close {
+  width: 34px; height: 34px;
+  border-radius: 99px;
+  border: none;
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.radar-map { width: 100%; height: 62vh; max-height: 460px; background: #E2E8F0; }
+.radar-fuss {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .6rem 1rem;
+  font-size: .78rem;
+  font-weight: 700;
+  color: #334155;
+}
+.radar-legende { color: #64748B; font-weight: 600; }
 .wetter-refresh {
   position: absolute;
   top: .65rem; right: .65rem;

@@ -1384,6 +1384,38 @@ async function initDashWetter() {
   }
 }
 
+// Praktische Wetter-Tipps aus den Daten ableiten (Regenjacke, Sonnenschutz ...)
+function wetterTipps(data) {
+  const cur = data.current || {};
+  const dly = data.daily || {};
+  const hr = data.hourly || {};
+  const tipps = [];
+  const tMax = dly.temperature_2m_max?.[0] ?? cur.temperature_2m ?? 15;
+  const tMin = dly.temperature_2m_min?.[0] ?? cur.temperature_2m ?? 15;
+  const wind = cur.wind_speed_10m ?? 0;
+  // höchste Regenwahrscheinlichkeit der nächsten ~10 Stunden
+  let maxRegen = 0;
+  if (hr.time && hr.precipitation_probability) {
+    const jetztMs = Date.now();
+    let start = hr.time.findIndex(t => new Date(t).getTime() + 3600000 > jetztMs);
+    if (start < 0) start = 0;
+    for (let i = start; i < Math.min(start + 10, hr.time.length); i++) {
+      maxRegen = Math.max(maxRegen, hr.precipitation_probability[i] ?? 0);
+    }
+  }
+  const regenSumme = dly.precipitation_sum?.[0] ?? 0;
+  if (maxRegen >= 70 || regenSumme >= 5) tipps.push('☔ Regenschirm einpacken — heute wird es nass.');
+  else if (maxRegen >= 40 || regenSumme >= 1) tipps.push('🧥 Regenjacke mitnehmen — es kann regnen.');
+  if (tMin <= 0) tipps.push('🧊 Frostgefahr — dick anziehen, Vorsicht bei Glätte.');
+  else if (tMax < 8) tipps.push('🧣 Kalt — Mütze, Schal und warme Jacke anziehen.');
+  else if (tMax < 14) tipps.push('🧥 Eher kühl — eine Jacke ist sinnvoll.');
+  if (tMax >= 26) tipps.push('🧴 Heiß — Sonnencreme, Kopfbedeckung und viel trinken.');
+  else if (tMax >= 22 && maxRegen < 40) tipps.push('😎 Schönes Wetter — ideal für draußen.');
+  if (wind >= 35) tipps.push('💨 Kräftiger Wind — auf lose Gegenstände achten.');
+  if (!tipps.length) tipps.push('🌤️ Angenehmes Wetter — viel Spaß draußen!');
+  return tipps.slice(0, 4);
+}
+
 function _wetterHtmlBauen(data, ort) {
   const cur = data.current || {};
   const dly = data.daily || {};
@@ -1433,6 +1465,13 @@ function _wetterHtmlBauen(data, ort) {
       </div>`;
     }
   }
+
+  // Wetter-Tipps + Regenradar-Button
+  const tippsHtml = `
+    <div class="wetter-tipps">
+      ${wetterTipps(data).map(t => `<div class="wetter-tipp-chip">${t}</div>`).join('')}
+      <button class="wetter-radar-btn" onclick="regenradarOeffnen()">🌧️ Regenradar öffnen</button>
+    </div>`;
 
   return `
   <div class="wetter-bg" style="background:linear-gradient(135deg, ${info.farbe1} 0%, ${info.farbe2} 100%)">
@@ -1490,6 +1529,8 @@ function _wetterHtmlBauen(data, ort) {
       </div>` : ''}
     </div>
 
+    ${tippsHtml}
+
     ${stundenHtml}
 
     ${dly.weather_code && dly.weather_code.length > 1 ? `
@@ -1520,6 +1561,63 @@ function _wetterHtmlBauen(data, ort) {
 
     <button class="wetter-refresh" onclick="_wetterCache=null;initDashWetter()" title="Aktualisieren">🔄</button>
   </div>`;
+}
+
+// ===== REGENRADAR (Leaflet-Karte + RainViewer, kostenlos, kein API-Key) =====
+let _radarMap = null, _radarTimer = null;
+async function regenradarOeffnen() {
+  const u = getUser() || {};
+  const lat = state.umgebungStandort?.lat ?? u.lat;
+  const lng = state.umgebungStandort?.lng ?? u.lng;
+  if (lat == null) { toast('⚠️ Bitte zuerst deinen Standort im Profil eintragen'); return; }
+  if (typeof L === 'undefined') { toast('⚠️ Karte konnte nicht geladen werden'); return; }
+  regenradarSchliessen();
+  const o = document.createElement('div');
+  o.id = 'radar-overlay';
+  o.className = 'radar-overlay';
+  o.innerHTML = `
+    <div class="radar-box">
+      <div class="radar-kopf">
+        <span>🌧️ Regenradar</span>
+        <button class="radar-close" onclick="regenradarSchliessen()">✕</button>
+      </div>
+      <div id="radar-map" class="radar-map"></div>
+      <div class="radar-fuss">
+        <span id="radar-zeit">Radar wird geladen…</span>
+        <span class="radar-legende">leicht 🟦 · mäßig 🟩 · stark 🟥</span>
+      </div>
+    </div>`;
+  document.body.appendChild(o);
+  await new Promise(r => setTimeout(r, 80));
+  try {
+    _radarMap = L.map('radar-map').setView([lat, lng], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 11, attribution: '© OpenStreetMap' }).addTo(_radarMap);
+    L.circleMarker([lat, lng], { radius: 7, color: '#fff', weight: 2, fillColor: '#4F46E5', fillOpacity: 1 }).addTo(_radarMap);
+    _radarMap.invalidateSize();
+    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json', { signal: AbortSignal.timeout(10000) });
+    const d = await res.json();
+    const vergangen = d.radar?.past || [];
+    const frames = [...vergangen, ...(d.radar?.nowcast || [])];
+    if (!frames.length) { const z = el('radar-zeit'); if (z) z.textContent = 'Aktuell keine Radardaten verfügbar'; return; }
+    const layers = frames.map(f => L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5 }).addTo(_radarMap));
+    const zeige = i => {
+      layers.forEach((l, j) => l.setOpacity(j === i ? 0.62 : 0));
+      const dt = new Date(frames[i].time * 1000);
+      const z = el('radar-zeit');
+      if (z) z.textContent = (i >= vergangen.length ? 'Vorhersage ' : '') + dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+    };
+    let idx = 0;
+    zeige(0);
+    _radarTimer = setInterval(() => { idx = (idx + 1) % frames.length; zeige(idx); }, 700);
+  } catch (e) {
+    const z = el('radar-zeit'); if (z) z.textContent = 'Regenradar gerade nicht erreichbar';
+  }
+}
+function regenradarSchliessen() {
+  if (_radarTimer) { clearInterval(_radarTimer); _radarTimer = null; }
+  if (_radarMap) { try { _radarMap.remove(); } catch {} _radarMap = null; }
+  const o = document.getElementById('radar-overlay');
+  if (o) o.remove();
 }
 
 function motivNeu() {
