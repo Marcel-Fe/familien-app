@@ -838,6 +838,23 @@ function muellSofortEintragen() {
   }
 }
 
+// Müll-Termine automatisch aus dem Standort sicherstellen.
+// Läuft beim Öffnen des Kalenders — nur solange noch keine automatischen
+// Müll-Termine vorhanden sind, damit nichts doppelt erzeugt wird.
+function muellAutoSicherstellen() {
+  try {
+    if (einstellungenLaden().muellAutoAus === true) return;
+    const user = getUser();
+    if (!user || !user.plz || typeof getTermine !== 'function') return;
+    const hatMuell = getTermine().some(t => t.notiz && t.notiz.includes('Automatisch durch Müllkalender'));
+    if (hatMuell) return;
+    const ergebnis = muellAutoEintragen(user, { vorabend: true, erinnerung: true });
+    if (ergebnis.generiert > 0) {
+      toast(`🗑️ ${ergebnis.generiert} Müll-Termine automatisch aus deinem Standort eingetragen`);
+    }
+  } catch {}
+}
+
 function muellAutoVorschlagAnwenden() {
   const u = getUser() || {};
   const plz = u.plz || '';
@@ -878,8 +895,8 @@ function renderMuellAssistent() {
   <div class="muell-assistent" id="muell-assistent">
     <div class="muell-assistent-kopf">
       <div>
-        <div style="font-size:1.1rem;font-weight:800">🗑️ Müllkalender einrichten</div>
-        <div style="font-size:.82rem;color:var(--g700);margin-top:.15rem">Hol dir die echten Abfuhrtermine deiner Stadt und trage sie in den Kalender ein</div>
+        <div style="font-size:1.1rem;font-weight:800">🗑️ Müll-Termine anpassen</div>
+        <div style="font-size:.82rem;color:var(--g700);margin-top:.15rem">Typische Termine wurden automatisch nach deinem Standort eingetragen — hier korrigierst du sie mit den echten Tagen deiner Stadt.</div>
       </div>
       <button class="iframe-modal-btn iframe-modal-close" onclick="muellAssistentSchliessen()">✕</button>
     </div>
@@ -5318,6 +5335,7 @@ function getAlleTerminTypen() {
 function kalenderPersonFilter(id) { state.kalenderPersonFilter = id; render(); }
 
 function renderKalender() {
+  muellAutoSicherstellen();
   const mitglieder = getFamilienMitglieder();
   const filter = state.kalenderPersonFilter || 'alle';
   let inhalt = renderTermineInhalt(mitglieder, filter);
@@ -5333,7 +5351,7 @@ function renderKalender() {
   </div>
 
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;margin-bottom:.5rem">
-    <button class="btn btn-primary btn-sm" onclick="muellAssistentOeffnen()">🗑️ Müllkalender</button>
+    <button class="btn btn-outline btn-sm" onclick="muellAssistentOeffnen()">🗑️ Müll-Termine anpassen</button>
     <button class="btn btn-outline btn-sm" onclick="kalenderAlsICSExportieren()">📤 Exportieren (.ics)</button>
     <label class="btn btn-outline btn-sm" style="cursor:pointer">
       📥 Importieren
