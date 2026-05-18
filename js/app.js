@@ -607,11 +607,10 @@ function muellTermineGenerieren() {
   const auswahl = MUELL_ARTEN.map(art => {
     const checkbox = el(`muell-aktiv-${art.id}`);
     if (!checkbox?.checked) return null;
-    const wochentag = parseInt(el(`muell-tag-${art.id}`)?.value || '3');
     const rhythmus = parseInt(el(`muell-rhythmus-${art.id}`)?.value || '14');
     const start = el(`muell-start-${art.id}`)?.value;
     if (!start) return null;
-    return { ...art, wochentag, rhythmus, startDatum: start };
+    return { ...art, rhythmus, startDatum: start };
   }).filter(Boolean);
 
   if (auswahl.length === 0) { toast('⚠️ Bitte mindestens eine Müllart auswählen'); return; }
@@ -624,7 +623,9 @@ function muellTermineGenerieren() {
   let generiert = 0;
 
   auswahl.forEach(art => {
-    // Start-Datum auf nächstpassenden Wochentag bringen falls nötig
+    // Das eingegebene Datum der nächsten Abholung ist der Anker.
+    // Der Rhythmus ist immer ein Vielfaches von 7 Tagen — so bleibt jeder
+    // Termin automatisch auf demselben Wochentag wie die erste Abholung.
     let aktuell = new Date(art.startDatum + 'T00:00:00');
     while (aktuell <= endeJahr) {
       const ds = `${aktuell.getFullYear()}-${String(aktuell.getMonth()+1).padStart(2,'0')}-${String(aktuell.getDate()).padStart(2,'0')}`;
@@ -845,7 +846,6 @@ function muellAutoVorschlagAnwenden() {
   MUELL_ARTEN.forEach(art => {
     const v_a = v[art.id] || {};
     const cb = el(`muell-aktiv-${art.id}`); if (cb) cb.checked = !!v_a.aktiv;
-    const tag = el(`muell-tag-${art.id}`); if (tag && v_a.tag !== undefined) tag.value = v_a.tag;
     const rh = el(`muell-rhythmus-${art.id}`); if (rh && v_a.rhythmus !== undefined) rh.value = v_a.rhythmus;
     const st = el(`muell-start-${art.id}`); if (st && v_a.start) st.value = v_a.start;
   });
@@ -895,7 +895,7 @@ function renderMuellAssistent() {
     <div class="info-box blau" style="margin-bottom:1rem;font-size:.8rem"><span class="ib-icon">💡</span><div class="ib-text">Auf der Seite deiner Kommune deine Straße eingeben. Viele bieten einen <strong>iCal-/ICS-Download</strong> an — diese Datei kannst du im Kalender unter <strong>📥 Importieren</strong> direkt einlesen, dann stimmt alles automatisch.</div></div>
 
     <div class="block-title">2. Deine echten Abfuhrtage eintragen</div>
-    <div class="info-box blau" style="margin:.5rem 0 1rem"><span class="ib-icon">📋</span><div class="ib-text">Übertrage die Tage aus dem offiziellen Kalender: Müll-Art aktivieren, Wochentag und Rhythmus wählen und als „Nächste Abholung" den nächsten echten Termin eintragen.</div></div>
+    <div class="info-box blau" style="margin:.5rem 0 1rem"><span class="ib-icon">📋</span><div class="ib-text">Übertrage die Tage aus dem offiziellen Kalender: Müll-Art aktivieren, bei „Nächste Abholung" den nächsten echten Abholtag eintragen und den Rhythmus wählen. Alle weiteren Termine landen dann automatisch auf demselben Wochentag.</div></div>
 
     <div class="muell-arten-liste">
       ${MUELL_ARTEN.map(art => `
@@ -907,23 +907,17 @@ function renderMuellAssistent() {
         </label>
         <div class="muell-art-felder">
           <label class="muell-feld">
-            <span>Wochentag</span>
-            <select id="muell-tag-${art.id}" class="reg-select">
-              ${WOCHENTAGE.map((t,i) => `<option value="${i}" ${i===3?'selected':''}>${t}</option>`).join('')}
-            </select>
+            <span>Nächste Abholung</span>
+            <input type="date" id="muell-start-${art.id}" class="reg-input" value="${heute}" />
           </label>
           <label class="muell-feld">
             <span>Rhythmus</span>
             <select id="muell-rhythmus-${art.id}" class="reg-select">
               <option value="7">Wöchentlich</option>
-              <option value="14" selected>Alle 14 Tage</option>
+              <option value="14" selected>Alle 2 Wochen</option>
+              <option value="21">Alle 3 Wochen</option>
               <option value="28">Alle 4 Wochen</option>
-              <option value="30">Monatlich</option>
             </select>
-          </label>
-          <label class="muell-feld">
-            <span>Nächste Abholung</span>
-            <input type="date" id="muell-start-${art.id}" class="reg-input" value="${heute}" />
           </label>
         </div>
       </div>`).join('')}
@@ -3353,6 +3347,7 @@ function naviAnsagen(text) {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'de-DE'; u.rate = 1.0;
+    stimmeAnwenden(u);
     speechSynthesis.speak(u);
   } catch {}
 }
@@ -8833,6 +8828,42 @@ function einstellungToggle(key) {
   render();
 }
 
+// ===== Vorlese-Stimme (Sprachausgabe) =====
+// Wählt anhand der Einstellung eine weibliche oder männliche Stimme.
+const _STIMME_WEIBLICH = ['katja','hedda','anna','marlene','petra','seraphina','klara','female','frau','google'];
+const _STIMME_MAENNLICH = ['stefan','conrad','klaus','markus','hans','bernd','male','mann'];
+function stimmeFuer(lang) {
+  const wahl = einstellungenLaden().stimme || 'auto';
+  if (wahl === 'auto' || !window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices() || [];
+  if (!voices.length) return null;
+  const sprache = String(lang || 'de').slice(0, 2).toLowerCase();
+  const passend = voices.filter(v => (v.lang || '').toLowerCase().startsWith(sprache));
+  const pool = passend.length ? passend : voices;
+  const liste = wahl === 'm' ? _STIMME_MAENNLICH : _STIMME_WEIBLICH;
+  return pool.find(v => liste.some(n => (v.name || '').toLowerCase().includes(n))) || null;
+}
+// Auf eine SpeechSynthesisUtterance die gewählte Stimme anwenden
+function stimmeAnwenden(u) {
+  try { const v = stimmeFuer(u.lang); if (v) u.voice = v; } catch {}
+  return u;
+}
+function stimmeWaehlen(wert) {
+  const einst = einstellungenLaden();
+  einst.stimme = wert;
+  einstellungenSpeichern(einst);
+  render();
+  stimmeTesten();
+}
+function stimmeTesten() {
+  if (!window.speechSynthesis) { toast('⚠️ Sprachausgabe wird nicht unterstützt'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance('Hallo! So klingt die Vorlese-Stimme der FamilienApp.');
+  u.lang = 'de-DE';
+  stimmeAnwenden(u);
+  speechSynthesis.speak(u);
+}
+
 function renderEinstellungen() {
   const einst = einstellungenLaden();
   const user = getUser() || {};
@@ -9030,6 +9061,20 @@ function renderEinstellungen() {
       }).join('')}
     </div>
     <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text"><strong>So funktionieren Erinnerungen:</strong> Bei To-dos kannst du eine Uhrzeit setzen. Die Erinnerung erscheint sofort, wenn sie fällig ist und die App geöffnet (auch im Hintergrund) ist — sonst wird sie beim nächsten Öffnen der App nachgeholt. Tipp: App auf den Home-Bildschirm legen (PWA), dann bleiben Erinnerungen am zuverlässigsten.</div></div>
+  </div>
+
+  <!-- Vorlese-Stimme -->
+  <div class="einst-gruppe">
+    <div class="einst-gruppe-titel">🔊 Vorlese-Stimme</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Welche Stimme soll Texte vorlesen — z. B. Übersetzungen, Assistenten-Antworten oder die Navigations-Ansagen?</div>
+    <div class="stimm-wahl">
+      ${[['auto','🎲 Automatisch'],['w','👩 Weiblich'],['m','👨 Männlich']].map(([v,l]) => {
+        const aktiv = (einst.stimme || 'auto') === v;
+        return `<button class="stimm-opt${aktiv?' aktiv':''}" onclick="stimmeWaehlen('${v}')">${l}</button>`;
+      }).join('')}
+    </div>
+    <button class="btn btn-outline btn-sm" style="margin-top:.7rem" onclick="stimmeTesten()">▶ Stimme anhören</button>
+    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Welche Stimmen verfügbar sind, hängt vom Gerät und Browser ab. Klappt „Weiblich" oder „Männlich" nicht, nutzt die App automatisch die Standard-Stimme.</div></div>
   </div>
 
   <!-- Live-Wohnungs-API (Cloudflare Worker) -->
@@ -10706,6 +10751,7 @@ function uebersetzungVorlesen() {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(_uebLetztesErgebnis);
   u.lang = uebBcp(el('ueb-nach')?.value || 'en');
+  stimmeAnwenden(u);
   speechSynthesis.speak(u);
 }
 // Spracheingabe: gesprochenen Text in das Übersetzungsfeld schreiben und direkt übersetzen
@@ -13539,6 +13585,7 @@ function kiVorlesen() {
   u.lang = 'de-DE';
   u.rate = 1.0;
   u.pitch = 1.0;
+  stimmeAnwenden(u);
   speechSynthesis.speak(u);
 }
 
