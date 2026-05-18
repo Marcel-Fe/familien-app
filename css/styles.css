@@ -4456,18 +4456,70 @@ input::placeholder, textarea::placeholder {
   font-weight: 800;
   cursor: pointer;
 }
-.radar-map { width: 100%; height: 62vh; max-height: 460px; background: #E2E8F0; }
-.radar-fuss {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .5rem;
-  padding: .6rem 1rem;
-  font-size: .78rem;
-  font-weight: 700;
-  color: #334155;
+.radar-map { width: 100%; height: 50vh; max-height: 400px; background: #E2E8F0; }
+.radar-steuerung { padding: .7rem 1rem .9rem; }
+.radar-zeit-zeile { display: flex; align-items: center; gap: .7rem; }
+.radar-play {
+  flex-shrink: 0;
+  width: 44px; height: 44px;
+  border-radius: 99px;
+  border: none;
+  background: #1E3A8A;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
 }
-.radar-legende { color: #64748B; font-weight: 600; }
+.radar-zeit-box {
+  flex: 1;
+  min-width: 0;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+  padding: .4rem .7rem;
+}
+.radar-zeit-gross {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #1E3A8A;
+  line-height: 1.15;
+}
+.radar-zeit-sub { font-size: .78rem; font-weight: 700; color: #2563EB; }
+.radar-legende {
+  display: flex;
+  flex-direction: column;
+  gap: .12rem;
+  font-size: .66rem;
+  font-weight: 700;
+  color: #64748B;
+  text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.radar-skala { margin-top: .75rem; }
+.radar-seg-reihe { display: flex; gap: 2px; align-items: flex-end; height: 26px; }
+.radar-seg {
+  flex: 1;
+  height: 11px;
+  border: none;
+  border-radius: 3px;
+  background: #BFDBFE;
+  cursor: pointer;
+  padding: 0;
+  transition: height .12s, background .12s;
+}
+.radar-seg.zukunft { background: #FDE68A; }
+.radar-seg.aktiv { height: 26px; background: #1E3A8A; }
+.radar-seg.zukunft.aktiv { background: #D97706; }
+.radar-stunden-reihe { display: flex; gap: 2px; margin-top: .3rem; }
+.radar-stunde {
+  flex: 1;
+  text-align: center;
+  font-size: .68rem;
+  font-weight: 800;
+  color: #475569;
+  line-height: 1.1;
+}
+.radar-stunde small { font-size: .8em; font-weight: 600; opacity: .65; display: block; }
 .wetter-refresh {
   position: absolute;
   top: .65rem; right: .65rem;

@@ -1564,7 +1564,8 @@ function _wetterHtmlBauen(data, ort) {
 }
 
 // ===== REGENRADAR (Leaflet-Karte + RainViewer, kostenlos, kein API-Key) =====
-let _radarMap = null, _radarTimer = null;
+let _radarMap = null, _radarTimer = null, _radarState = null;
+
 async function regenradarOeffnen() {
   const u = getUser() || {};
   const lat = state.umgebungStandort?.lat ?? u.lat;
@@ -1582,9 +1583,16 @@ async function regenradarOeffnen() {
         <button class="radar-close" onclick="regenradarSchliessen()">✕</button>
       </div>
       <div id="radar-map" class="radar-map"></div>
-      <div class="radar-fuss">
-        <span id="radar-zeit">Radar wird geladen…</span>
-        <span class="radar-legende">leicht 🟦 · mäßig 🟩 · stark 🟥</span>
+      <div class="radar-steuerung">
+        <div class="radar-zeit-zeile">
+          <button class="radar-play" id="radar-play" onclick="radarPlayToggle()" title="Abspielen / Pause">⏸</button>
+          <div class="radar-zeit-box">
+            <div class="radar-zeit-gross" id="radar-zeit">–:–</div>
+            <div class="radar-zeit-sub" id="radar-zeit-sub">Radar wird geladen…</div>
+          </div>
+          <div class="radar-legende"><span>🟦 leicht</span><span>🟩 mäßig</span><span>🟥 stark</span></div>
+        </div>
+        <div class="radar-skala" id="radar-skala"></div>
       </div>
     </div>`;
   document.body.appendChild(o);
@@ -1598,24 +1606,72 @@ async function regenradarOeffnen() {
     const d = await res.json();
     const vergangen = d.radar?.past || [];
     const frames = [...vergangen, ...(d.radar?.nowcast || [])];
-    if (!frames.length) { const z = el('radar-zeit'); if (z) z.textContent = 'Aktuell keine Radardaten verfügbar'; return; }
+    if (!frames.length) { const z = el('radar-zeit-sub'); if (z) z.textContent = 'Aktuell keine Radardaten verfügbar'; return; }
     const layers = frames.map(f => L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5 }).addTo(_radarMap));
-    const zeige = i => {
-      layers.forEach((l, j) => l.setOpacity(j === i ? 0.62 : 0));
-      const dt = new Date(frames[i].time * 1000);
-      const z = el('radar-zeit');
-      if (z) z.textContent = (i >= vergangen.length ? 'Vorhersage ' : '') + dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
-    };
-    let idx = 0;
-    zeige(0);
-    _radarTimer = setInterval(() => { idx = (idx + 1) % frames.length; zeige(idx); }, 700);
+    _radarState = { frames, layers, vergangenAnzahl: vergangen.length, idx: 0, playing: true };
+    radarSkalaBauen();
+    radarZeige(0);
+    _radarTimer = setInterval(() => {
+      if (!_radarState || !_radarState.playing) return;
+      radarZeige((_radarState.idx + 1) % _radarState.frames.length);
+    }, 750);
   } catch (e) {
-    const z = el('radar-zeit'); if (z) z.textContent = 'Regenradar gerade nicht erreichbar';
+    const z = el('radar-zeit-sub'); if (z) z.textContent = 'Regenradar gerade nicht erreichbar';
   }
 }
+
+// Stunden-Skala unter der Karte aufbauen
+function radarSkalaBauen() {
+  const skala = el('radar-skala');
+  if (!skala || !_radarState) return;
+  const { frames, vergangenAnzahl } = _radarState;
+  let segs = '', labels = '', letzteStunde = -1;
+  frames.forEach((f, i) => {
+    const zukunft = i >= vergangenAnzahl;
+    segs += `<button class="radar-seg${zukunft ? ' zukunft' : ''}" onclick="radarGeheZu(${i})"></button>`;
+    const std = new Date(f.time * 1000).getHours();
+    labels += `<div class="radar-stunde">${std !== letzteStunde ? std + '<small>Uhr</small>' : ''}</div>`;
+    letzteStunde = std;
+  });
+  skala.innerHTML = `<div class="radar-seg-reihe">${segs}</div><div class="radar-stunden-reihe">${labels}</div>`;
+}
+
+// Einen einzelnen Radar-Zeitpunkt anzeigen
+function radarZeige(i) {
+  if (!_radarState) return;
+  const { frames, layers } = _radarState;
+  _radarState.idx = i;
+  layers.forEach((l, j) => l.setOpacity(j === i ? 0.62 : 0));
+  const dt = new Date(frames[i].time * 1000);
+  const z = el('radar-zeit');
+  if (z) z.textContent = dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+  const sub = el('radar-zeit-sub');
+  if (sub) {
+    const diffMin = Math.round((frames[i].time * 1000 - Date.now()) / 60000);
+    sub.textContent = diffMin <= -2 ? `vor ${Math.abs(diffMin)} Minuten`
+      : diffMin >= 2 ? `Vorhersage · in ${diffMin} Minuten`
+      : '● Jetzt';
+  }
+  document.querySelectorAll('#radar-skala .radar-seg').forEach((s, j) => s.classList.toggle('aktiv', j === i));
+}
+
+function radarGeheZu(i) {
+  if (!_radarState) return;
+  _radarState.playing = false;
+  const pb = el('radar-play'); if (pb) pb.textContent = '▶';
+  radarZeige(i);
+}
+
+function radarPlayToggle() {
+  if (!_radarState) return;
+  _radarState.playing = !_radarState.playing;
+  const pb = el('radar-play'); if (pb) pb.textContent = _radarState.playing ? '⏸' : '▶';
+}
+
 function regenradarSchliessen() {
   if (_radarTimer) { clearInterval(_radarTimer); _radarTimer = null; }
   if (_radarMap) { try { _radarMap.remove(); } catch {} _radarMap = null; }
+  _radarState = null;
   const o = document.getElementById('radar-overlay');
   if (o) o.remove();
 }
