@@ -251,7 +251,7 @@ const NAV = {
   start:        [{s:'dashboard',  l:'Übersicht'}],
   geld:         [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'}],
   formulare:    [{s:'formular',   l:'Alle Formulare'}],
-  ort:          [{s:'umgebung',   l:'Umgebung'},{s:'wohnung', l:'Wohnung'}],
+  ort:          [{s:'umgebung',   l:'Umgebung'}],
   familie:      [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'beratung', l:'Beratung'}],
   kinder:       [{s:'basteln', l:'Bastelideen'},{s:'hausaufgaben', l:'Hausaufgaben'}],
   gesund:       [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'}],
@@ -270,7 +270,8 @@ const NAV = {
   einkaufsliste:[{s:'einkaufsliste', l:'Einkaufsliste'}],
   tipps:        [{s:'tipps', l:'Tipps'}],
   einstellungen:[{s:'einstellungen', l:'Einstellungen'}],
-  mehr:         [{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'urlaub', l:'Urlaub'},{s:'jobs', l:'Jobs'},{s:'suche', l:'Suche'}]
+  urlaub:       [{s:'urlaub', l:'Urlaub'}],
+  mehr:         [{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'jobs', l:'Jobs'},{s:'suche', l:'Suche'}]
 };
 
 function sektionZuGruppe(s) {
@@ -2484,7 +2485,6 @@ function renderDashboard() {
       { icon:'💰', titel:'Zuschüsse & Anträge', sub:'Wohngeld, Kita, Unterhalt', badge:'8 Leistungen', farbe:'#4F46E5', bg:'#EDE9FE', s:'leistungen' },
       { icon:'📋', titel:'Formular-Assistent', sub:'Schritt-für-Schritt Ausfüllhilfe', badge:'13 Anträge', farbe:'#059669', bg:'#D1FAE5', s:'formular' },
       { icon:'📍', titel:'Umgebung', sub:'Läden, Spielplätze, Restaurants, Kino', badge:'Live-Karte', farbe:'#2563EB', bg:'#DBEAFE', s:'umgebung' },
-      { icon:'🏘️', titel:'Wohnung finden', sub:'Fotos sofort · ohne Anmeldung', badge:'6 Portale', farbe:'#D97706', bg:'#FEF3C7', s:'wohnung' },
       { icon:'💡', titel:'Sparen im Alltag', sub:'Angebote, Secondhand, 80+ Tipps', badge:'≤400 €/Mo.', farbe:'#EC4899', bg:'#FCE7F3', s:'sparen' },
       { icon:'📞', titel:'Beratung & Hilfe', sub:'Kostenlose Beratungsstellen', badge:'Kostenlos', farbe:'#7C3AED', bg:'#EDE9FE', s:'beratung' },
       { icon:'🗓️', titel:'Kalender & Checklisten', sub:'Termine, Reise, Einschulung', badge:'Persönlich', farbe:'#0EA5E9', bg:'#E0F2FE', s:'kalender' },
@@ -5116,11 +5116,6 @@ function sucheAktualisieren(val) {
       ergebnisse.push({ icon:'🍳', titel:r.name, sub:r.dauer+' · '+r.kosten, betrag:r.kategorieLabel, aktion:`state.familieTab='rezepte';state.rezeptFilter='${r.kategorie}';zuSektion('familie')`, sek:'Rezepte' });
   });
 
-  WOHNUNGSPORTALE.forEach(p => {
-    if ((p.name+p.beschreibung).toLowerCase().includes(q))
-      ergebnisse.push({ icon:'🏘️', titel:p.name, sub:p.beschreibung, betrag:'Wohnungsportal', aktion:`zuSektion('wohnung')`, sek:'Wohnung' });
-  });
-
   if (typeof KRANKENKASSE_LEISTUNGEN !== 'undefined') KRANKENKASSE_LEISTUNGEN.forEach(k => {
     if ((k.name+k.beschreibung).toLowerCase().includes(q))
       ergebnisse.push({ icon:'🏥', titel:k.name, sub:k.anspruch, betrag:'Krankenkasse', aktion:`state.extrasTab='krankenkasse';zuSektion('extras')`, sek:'Extras' });
@@ -7102,7 +7097,45 @@ function renderUrlaub() {
         </div>
       </a>`).join('');
     })()}
-  </div>`;
+  </div>
+
+  <div class="block-title" style="margin-top:1.75rem">🧳 Pack-Checkliste für den Familienurlaub</div>
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-weight:800;margin-bottom:.5rem">📄 Dokumente</div>
+      <div style="font-size:.85rem;line-height:1.8;color:var(--g700)">Personalausweise / Reisepässe<br>Kinderreisepässe<br>Krankenversichertenkarte<br>Auslandskrankenschein (EU)<br>Impfpässe<br>Buchungsbestätigungen<br>Führerschein & Fahrzeugpapiere</div>
+    </div>
+    <div class="card">
+      <div style="font-weight:800;margin-bottom:.5rem">🧒 Für die Kinder</div>
+      <div style="font-size:.85rem;line-height:1.8;color:var(--g700)">Lieblings-Kuscheltier<br>Wechselkleidung im Handgepäck<br>Snacks & Trinkflasche<br>Beschäftigung für unterwegs<br>Sonnenhut & Badesachen<br>vertraute Einschlafhilfe</div>
+    </div>
+    <div class="card">
+      <div style="font-weight:800;margin-bottom:.5rem">💊 Reiseapotheke</div>
+      <div style="font-size:.85rem;line-height:1.8;color:var(--g700)">Fieber- & Schmerzmittel (Kinder)<br>Pflaster & Wunddesinfektion<br>Sonnencreme LSF 50+<br>Mittel gegen Insektenstiche<br>Mittel gegen Reiseübelkeit<br>persönliche Medikamente</div>
+    </div>
+    <div class="card">
+      <div style="font-weight:800;margin-bottom:.5rem">🔌 Technik & Sonstiges</div>
+      <div style="font-size:.85rem;line-height:1.8;color:var(--g700)">Ladekabel & Powerbank<br>Reise-Steckdosenadapter<br>Bargeld in Landeswährung<br>wiederverwendbare Wasserflaschen<br>kleine Auto-Hausapotheke<br>Müllbeutel & Feuchttücher</div>
+    </div>
+  </div>
+
+  <div class="block-title" style="margin-top:1.75rem">💡 Reise-Tipps für Familien</div>
+  <div class="grid-2">
+    ${[
+      {i:'🚗', t:'Lange Autofahrt', x:'Alle 2 Stunden eine Pause einplanen. Früh morgens losfahren — kleine Kinder schlafen dann oft weiter. Hörspiele helfen gegen Langeweile.'},
+      {i:'✈️', t:'Fliegen mit Kind', x:'Beim Start und bei der Landung etwas trinken oder einen Schnuller geben — das hilft gegen den Ohrendruck. Sitzplätze früh reservieren.'},
+      {i:'💶', t:'Günstig verreisen', x:'Die Nebensaison ist deutlich billiger. Pauschalreisen vergleichen. Mit kleinem Einkommen: Sozialurlaub über AWO, Caritas oder Diakonie.'},
+      {i:'🏥', t:'Im Notfall', x:'In ganz Europa gilt die Notrufnummer 112. Den Auslandskrankenschein der gesetzlichen Krankenkasse nicht vergessen.'},
+      {i:'🌞', t:'Sonnenschutz', x:'Kinder brauchen LSF 50+, eine Kopfbedeckung und viel zu trinken. Die Mittagssonne zwischen 11 und 15 Uhr möglichst meiden.'},
+      {i:'📱', t:'Offline vorbereiten', x:'Übersetzer und Erste-Hilfe-Anleitungen der App funktionieren auch offline — einmal vor der Reise öffnen, dann sind sie gespeichert.'}
+    ].map(t=>`
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:.3rem">${t.i} ${t.t}</div>
+        <div style="font-size:.83rem;line-height:1.6;color:var(--g700)">${t.x}</div>
+      </div>`).join('')}
+  </div>
+
+  <div class="info-box blau" style="margin-top:1rem"><span class="ib-icon">🧭</span><div class="ib-text">Tipp: Mit dem <strong>Routenplaner</strong> unter „Orte" planst du die Anfahrt — und mit dem <strong>Übersetzer</strong> kommst du auch im Ausland gut zurecht.</div></div>`;
 }
 
 function urlaubFilterSetzen(f) { state.urlaubFilter = f; render(); }
@@ -9687,7 +9720,6 @@ function globalSuchen(query) {
   // Sektionen direkt
   const sektionen = [
     { titel: 'Umgebungssuche', sub: 'Läden, Friseure, Restaurants', icon: '📍', sektion: 'umgebung', schluessel: 'umgebung läden friseur supermarkt restaurant' },
-    { titel: 'Wohnung finden', sub: '6 Portale, Fotos sofort', icon: '🏘️', sektion: 'wohnung', schluessel: 'wohnung mieten wohnen immobilien' },
     { titel: 'Kalender & Termine', sub: 'Familientermine verwalten', icon: '📅', sektion: 'kalender', schluessel: 'kalender termin termine erinnerung' },
     { titel: 'Jobs in der Nähe', sub: 'Live-Jobsuche', icon: '💼', sektion: 'jobs', schluessel: 'jobs arbeit job arbeitsamt' },
     { titel: 'Urlaubsangebote', sub: 'Familienurlaub günstig', icon: '✈️', sektion: 'urlaub', schluessel: 'urlaub reise reisen ferien' },
@@ -9763,7 +9795,6 @@ const ALLE_BEREICHE = [
   { id:'leistungen',      icon:'💰', titel:'Zuschüsse',  sub:'Wohngeld, Kita, Unterhalt', sektion:'leistungen' },
   { id:'formular',        icon:'📋', titel:'Formulare',  sub:'Schritt-für-Schritt', sektion:'formular' },
   { id:'umgebung',        icon:'📍', titel:'Umgebung',   sub:'Läden in der Nähe', sektion:'umgebung' },
-  { id:'wohnung',         icon:'🏘️', titel:'Wohnung',    sub:'6 Portale', sektion:'wohnung' },
   { id:'sparen',          icon:'💡', titel:'Sparen',     sub:'80+ Tipps', sektion:'sparen' },
   { id:'beratung',        icon:'📞', titel:'Beratung',   sub:'Kostenlose Hilfe', sektion:'beratung' },
   { id:'kalender',        icon:'📅', titel:'Kalender',   sub:'Termine', sektion:'kalender' },
@@ -13710,7 +13741,6 @@ function kiAntwortFinden(frage) {
   }
 
   const sektionen = [
-    { schluessel:['wohnung','mieten','immobilien'], titel:'Wohnung finden', icon:'🏘️', action:`zuSektion('wohnung')` },
     { schluessel:['spielplatz','park','restaurant','umgebung','läden'], titel:'Umgebung', icon:'📍', action:`zuSektion('umgebung')` },
     { schluessel:['kalender','termin'], titel:'Kalender', icon:'📅', action:`zuSektion('kalender')` },
     { schluessel:['jobs','arbeit','arbeitsstelle'], titel:'Jobs in der Nähe', icon:'💼', action:`zuSektion('jobs')` },
