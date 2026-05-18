@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/styles.css?v=53" />
+  <link rel="stylesheet" href="css/styles.css?v=54" />
 </head>
 <body>
 
@@ -124,29 +124,43 @@
         <button class="menu-drawer-close" onclick="menuSchliessen()" aria-label="Menü schließen">✕</button>
       </div>
       <nav class="menu-drawer-liste" id="menu-drawer-liste" role="navigation" aria-label="Hauptkategorien">
-        <button class="menu-eintrag" data-gruppe="start"         onclick="menuKlick('start')">         <span class="menu-icon-emoji">🏠</span> <span class="menu-eintrag-label">Start</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="geld"          onclick="menuKlick('geld')">          <span class="menu-icon-emoji">💶</span> <span class="menu-eintrag-label">Geld</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="formulare"     onclick="menuKlick('formulare')">     <span class="menu-icon-emoji">📋</span> <span class="menu-eintrag-label">Formulare</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="ort"           onclick="menuKlick('ort')">           <span class="menu-icon-emoji">📍</span> <span class="menu-eintrag-label">Orte</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="familie"       onclick="menuKlick('familie')">       <span class="menu-icon-emoji">👨‍👩‍👧</span> <span class="menu-eintrag-label">Familie</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="kinder"        onclick="menuKlick('kinder')">        <span class="menu-icon-emoji">🎨</span> <span class="menu-eintrag-label">Kinder</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="gesund"        onclick="menuKlick('gesund')">        <span class="menu-icon-emoji">🌿</span> <span class="menu-eintrag-label">Gesundheit</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="start" onclick="menuKlick('start')"><span class="menu-icon-emoji">🏠</span> <span class="menu-eintrag-label">Start</span> <span class="menu-pfeil">›</span></button>
+
+        <div class="menu-sektion-titel">💶 Geld &amp; Anträge</div>
+        <button class="menu-eintrag" data-gruppe="geld" onclick="menuKlick('geld')"><span class="menu-icon-emoji">💶</span> <span class="menu-eintrag-label">Geld &amp; Zuschüsse</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="formulare" onclick="menuKlick('formulare')"><span class="menu-icon-emoji">📋</span> <span class="menu-eintrag-label">Formulare</span> <span class="menu-pfeil">›</span></button>
+
+        <div class="menu-sektion-titel">📍 Wohnen &amp; Umgebung</div>
+        <button class="menu-eintrag" data-gruppe="ort" onclick="menuKlick('ort')"><span class="menu-icon-emoji">📍</span> <span class="menu-eintrag-label">Orte &amp; Wohnung</span> <span class="menu-pfeil">›</span></button>
+
+        <div class="menu-sektion-titel">👨‍👩‍👧 Familie &amp; Kinder</div>
+        <button class="menu-eintrag" data-gruppe="familie" onclick="menuKlick('familie')"><span class="menu-icon-emoji">👨‍👩‍👧</span> <span class="menu-eintrag-label">Familie</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="kinder" onclick="menuKlick('kinder')"><span class="menu-icon-emoji">🎨</span> <span class="menu-eintrag-label">Kinder</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="erziehung" onclick="menuKlick('erziehung')"><span class="menu-icon-emoji">🧸</span> <span class="menu-eintrag-label">Erziehungshilfe</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="album" onclick="menuKlick('album')"><span class="menu-icon-emoji">📷</span> <span class="menu-eintrag-label">Familien-Album</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="kontakte" onclick="menuKlick('kontakte')"><span class="menu-icon-emoji">📇</span> <span class="menu-eintrag-label">Kontakte</span> <span class="menu-pfeil">›</span></button>
+
+        <div class="menu-sektion-titel">🩺 Gesundheit &amp; Vorsorge</div>
+        <button class="menu-eintrag" data-gruppe="gesund" onclick="menuKlick('gesund')"><span class="menu-icon-emoji">🌿</span> <span class="menu-eintrag-label">Gesundheit</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="schwangerschaft" onclick="menuKlick('schwangerschaft')"><span class="menu-icon-emoji">🤰</span> <span class="menu-eintrag-label">Schwangerschaft</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="erziehung"     onclick="menuKlick('erziehung')">     <span class="menu-icon-emoji">🧸</span> <span class="menu-eintrag-label">Erziehungshilfe</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="senioren"      onclick="menuKlick('senioren')">      <span class="menu-icon-emoji">👵</span> <span class="menu-eintrag-label">Senioren</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="wissen"        onclick="menuKlick('wissen')">        <span class="menu-icon-emoji">💡</span> <span class="menu-eintrag-label">Wissen</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="uebersetzer"   onclick="menuKlick('uebersetzer')">   <span class="menu-icon-emoji">🌐</span> <span class="menu-eintrag-label">Übersetzer</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="medbox"        onclick="menuKlick('medbox')">        <span class="menu-icon-emoji">💊</span> <span class="menu-eintrag-label">Medikamente</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="erkennen"      onclick="menuKlick('erkennen')">      <span class="menu-icon-emoji">🌿</span> <span class="menu-eintrag-label">Tiere &amp; Pflanzen</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="erstehilfe"    onclick="menuKlick('erstehilfe')">    <span class="menu-icon-emoji">🚑</span> <span class="menu-eintrag-label">Erste Hilfe</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="album"         onclick="menuKlick('album')">         <span class="menu-icon-emoji">📷</span> <span class="menu-eintrag-label">Familien-Album</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="kontakte"      onclick="menuKlick('kontakte')">      <span class="menu-icon-emoji">📇</span> <span class="menu-eintrag-label">Kontakte</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="haushalt"      onclick="menuKlick('haushalt')">      <span class="menu-icon-emoji">🏡</span> <span class="menu-eintrag-label">Haushalt</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="kochbuch"      onclick="menuKlick('kochbuch')">      <span class="menu-icon-emoji">📔</span> <span class="menu-eintrag-label">Mein Kochbuch</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="senioren" onclick="menuKlick('senioren')"><span class="menu-icon-emoji">👵</span> <span class="menu-eintrag-label">Senioren</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="medbox" onclick="menuKlick('medbox')"><span class="menu-icon-emoji">💊</span> <span class="menu-eintrag-label">Medikamente</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="erstehilfe" onclick="menuKlick('erstehilfe')"><span class="menu-icon-emoji">🚑</span> <span class="menu-eintrag-label">Erste Hilfe</span> <span class="menu-pfeil">›</span></button>
+
+        <div class="menu-sektion-titel">🍳 Haushalt &amp; Küche</div>
+        <button class="menu-eintrag" data-gruppe="haushalt" onclick="menuKlick('haushalt')"><span class="menu-icon-emoji">🏡</span> <span class="menu-eintrag-label">Haushalt</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="kochbuch" onclick="menuKlick('kochbuch')"><span class="menu-icon-emoji">📔</span> <span class="menu-eintrag-label">Mein Kochbuch</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="einkaufsliste" onclick="menuKlick('einkaufsliste')"><span class="menu-icon-emoji">🛒</span> <span class="menu-eintrag-label">Einkaufsliste</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="tipps"         onclick="menuKlick('tipps')">         <span class="menu-icon-emoji">💡</span> <span class="menu-eintrag-label">Tipps</span> <span class="menu-pfeil">›</span></button>
+
+        <div class="menu-sektion-titel">🧰 Praktische Helfer</div>
+        <button class="menu-eintrag" data-gruppe="wissen" onclick="menuKlick('wissen')"><span class="menu-icon-emoji">💡</span> <span class="menu-eintrag-label">Wissen</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="uebersetzer" onclick="menuKlick('uebersetzer')"><span class="menu-icon-emoji">🌐</span> <span class="menu-eintrag-label">Übersetzer</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="erkennen" onclick="menuKlick('erkennen')"><span class="menu-icon-emoji">🌿</span> <span class="menu-eintrag-label">Tiere &amp; Pflanzen</span> <span class="menu-pfeil">›</span></button>
+
+        <div class="menu-sektion-titel">✨ Mehr</div>
+        <button class="menu-eintrag" data-gruppe="tipps" onclick="menuKlick('tipps')"><span class="menu-icon-emoji">💡</span> <span class="menu-eintrag-label">Tipps</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="mehr" onclick="menuKlick('mehr')"><span class="menu-icon-emoji">✨</span> <span class="menu-eintrag-label">Events, News &amp; mehr</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="einstellungen" onclick="menuKlick('einstellungen')"><span class="menu-icon-emoji">⚙️</span> <span class="menu-eintrag-label">Einstellungen</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="mehr"          onclick="menuKlick('mehr')">          <span class="menu-icon-emoji">✨</span> <span class="menu-eintrag-label">Mehr</span> <span class="menu-pfeil">›</span></button>
       </nav>
       <div class="menu-drawer-fuss">
         <p>🏠 FamilienApp · Für die ganze Familie</p>
@@ -209,8 +223,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="js/data.js?v=53"></script>
-  <script src="js/app.js?v=53"></script>
+  <script src="js/data.js?v=54"></script>
+  <script src="js/app.js?v=54"></script>
   <script>
     // Scroll-to-Top Button-Sichtbarkeit
     window.addEventListener('scroll', () => {
@@ -238,7 +252,7 @@
             nw.addEventListener('statechange', () => {
               if (nw.state === 'activated') {
                 caches.keys().then(keys => Promise.all(
-                  keys.filter(k => !k.includes('familienapp-v53')).map(k => caches.delete(k))
+                  keys.filter(k => !k.includes('familienapp-v54')).map(k => caches.delete(k))
                 )).then(() => location.reload());
               }
             });

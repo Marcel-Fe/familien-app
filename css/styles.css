@@ -5008,6 +5008,17 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   gap: .3rem;
 }
 
+.menu-sektion-titel {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--g500, #64748B);
+  padding: .9rem .65rem .15rem;
+  margin-top: .2rem;
+}
+.menu-sektion-titel:first-child { margin-top: 0; }
+
 .menu-eintrag {
   display: flex;
   align-items: center;
