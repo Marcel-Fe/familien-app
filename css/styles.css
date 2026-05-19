@@ -1394,33 +1394,42 @@ body {
 .route-typ { background: var(--p1); color: white; border-radius: 99px; padding: .1rem .55rem; font-size: .75rem; }
 
 /* ===== Supermarkt Angebote ===== */
-.angebote-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: .75rem; margin-bottom: 1rem; }
+.angebote-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: .8rem; margin-bottom: 1rem; }
 .angebot-karte {
-  background: white; border-radius: var(--r); overflow: hidden;
-  box-shadow: var(--s1); transition: transform .15s, box-shadow .15s;
+  background: white; border-radius: 16px; overflow: hidden;
+  border: 1px solid var(--g100);
+  box-shadow: 0 4px 14px rgba(2,6,23,.07);
+  transition: transform .15s, box-shadow .15s;
+  display: flex; flex-direction: column;
 }
-.angebot-karte:hover { transform: translateY(-3px); box-shadow: var(--s3); }
+.angebot-karte:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(2,6,23,.13); }
 .angebot-bild {
-  height: 110px; background-size: cover; background-position: center;
+  aspect-ratio: 4 / 3; background-size: cover; background-position: center;
   position: relative;
 }
 .angebot-laden {
-  position: absolute; top: .4rem; left: .4rem;
-  color: white; font-size: .65rem; font-weight: 800;
-  padding: .15rem .5rem; border-radius: 99px; letter-spacing: .02em;
+  position: absolute; top: .45rem; left: .45rem;
+  color: white; font-size: .62rem; font-weight: 800;
+  padding: .18rem .5rem; border-radius: 99px; letter-spacing: .03em;
+  box-shadow: 0 2px 6px rgba(0,0,0,.28);
 }
+.angebot-rabatt {
+  position: absolute; top: .45rem; right: .45rem;
+  background: var(--rot); color: white;
+  font-size: .74rem; font-weight: 900;
+  padding: .2rem .45rem; border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.28);
+}
+.angebot-body { padding: .65rem .7rem .8rem; display: flex; flex-direction: column; flex: 1; }
 .angebot-kat {
-  position: absolute; bottom: .4rem; right: .4rem;
-  background: rgba(0,0,0,.55); color: white; font-size: .6rem; font-weight: 700;
-  padding: .1rem .4rem; border-radius: 99px;
+  font-size: .58rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--g400); margin-bottom: .15rem;
 }
-.angebot-body { padding: .6rem .7rem; }
-.angebot-name { font-weight: 700; font-size: .82rem; margin-bottom: .15rem; color: var(--g900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.angebot-einheit { font-size: .7rem; color: var(--g400); margin-bottom: .3rem; }
-.angebot-preiszeile { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
-.angebot-preis { font-size: 1.05rem; font-weight: 900; color: var(--rot); }
-.angebot-alt { font-size: .7rem; color: var(--g400); text-decoration: line-through; }
-.angebot-rabatt { font-size: .65rem; font-weight: 800; background: var(--rot); color: white; border-radius: 99px; padding: .1rem .35rem; }
+.angebot-name { font-weight: 700; font-size: .85rem; margin-bottom: .1rem; color: var(--g900); line-height: 1.25; }
+.angebot-einheit { font-size: .72rem; color: var(--g500); margin-bottom: .45rem; }
+.angebot-preiszeile { display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; margin-top: auto; }
+.angebot-preis { font-size: 1.18rem; font-weight: 900; color: var(--rot); }
+.angebot-alt { font-size: .72rem; color: var(--g400); text-decoration: line-through; }
 
 .supermarkt-logo-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: .5rem; margin-top: .75rem; }
 .supermarkt-logo-btn {

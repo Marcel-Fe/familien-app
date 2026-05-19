@@ -4562,50 +4562,81 @@ function renderEinkaufsliste() {
   </div>`;
 }
 
+const _ANGEBOT_BILD = {
+  fleisch:  'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&q=75',
+  kaese:    'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&q=75',
+  obst:     'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&q=75',
+  apfel:    'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&q=75',
+  milch:    'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=75',
+  saft:     'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&q=75',
+  joghurt:  'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=75',
+  kartoffel:'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&q=75',
+  pasta:    'https://images.unsplash.com/photo-1551462147-37885acc36f1?w=400&q=75',
+  brot:     'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=75',
+  salat:    'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&q=75',
+  fisch:    'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=400&q=75'
+};
 const SUPERMARKT_ANGEBOTE_DIESE_WOCHE = [
-  { laden:'REWE',    farbe:'#CC0000', produkt:'Hähnchenbrustfilet',  preis:'2,49 €', einheit:'500g', alt:'3,49 €', bild:'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&q=75', kat:'Fleisch' },
-  { laden:'ALDI',    farbe:'#00519E', produkt:'Gouda Scheiben',       preis:'1,79 €', einheit:'400g', alt:'2,39 €', bild:'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&q=75', kat:'Käse' },
-  { laden:'LIDL',    farbe:'#003399', produkt:'Erdbeeren',            preis:'1,49 €', einheit:'500g', alt:'2,49 €', bild:'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&q=75', kat:'Obst' },
-  { laden:'EDEKA',   farbe:'#F2912A', produkt:'Bio Äpfel Elstar',     preis:'1,99 €', einheit:'1 kg', alt:'2,49 €', bild:'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&q=75', kat:'Obst' },
-  { laden:'REWE',    farbe:'#CC0000', produkt:'Frische Vollmilch',    preis:'0,99 €', einheit:'1 Liter', alt:'1,29 €', bild:'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=75', kat:'Milch' },
-  { laden:'PENNY',   farbe:'#EE2E24', produkt:'Orangensaft',          preis:'1,29 €', einheit:'1 Liter', alt:'1,99 €', bild:'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&q=75', kat:'Getränk' },
-  { laden:'ALDI',    farbe:'#00519E', produkt:'Naturjoghurt',         preis:'0,79 €', einheit:'500g', alt:'1,09 €', bild:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=75', kat:'Milch' },
-  { laden:'NETTO',   farbe:'#DC0025', produkt:'Kartoffeln festkochend',preis:'1,49 €', einheit:'2 kg', alt:'2,19 €', bild:'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&q=75', kat:'Gemüse' },
-  { laden:'KAUFLAND', farbe:'#E31837', produkt:'Pasta Penne',         preis:'0,69 €', einheit:'500g', alt:'0,99 €', bild:'https://images.unsplash.com/photo-1551462147-37885acc36f1?w=400&q=75', kat:'Grundnahrung' },
-  { laden:'EDEKA',   farbe:'#F2912A', produkt:'Vollkornbrot',         preis:'1,39 €', einheit:'750g', alt:'1,89 €', bild:'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=75', kat:'Brot' },
-  { laden:'LIDL',    farbe:'#003399', produkt:'Gemischter Salat',     preis:'0,99 €', einheit:'200g', alt:'1,59 €', bild:'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&q=75', kat:'Gemüse' },
-  { laden:'REWE',    farbe:'#CC0000', produkt:'Lachsfilet Atlantik',  preis:'3,99 €', einheit:'300g', alt:'5,49 €', bild:'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=400&q=75', kat:'Fisch' }
+  { laden:'REWE',      farbe:'#CC0000', produkt:'Hähnchenbrustfilet',   preis:'2,49 €', einheit:'500 g',   alt:'3,49 €', kat:'Fleisch',       bild:_ANGEBOT_BILD.fleisch },
+  { laden:'ALDI Süd',  farbe:'#00519E', produkt:'Gouda Scheiben',       preis:'1,79 €', einheit:'400 g',   alt:'2,39 €', kat:'Käse',          bild:_ANGEBOT_BILD.kaese },
+  { laden:'LIDL',      farbe:'#003399', produkt:'Erdbeeren',            preis:'1,49 €', einheit:'500 g',   alt:'2,49 €', kat:'Obst',          bild:_ANGEBOT_BILD.obst },
+  { laden:'EDEKA',     farbe:'#F2912A', produkt:'Bio Äpfel Elstar',     preis:'1,99 €', einheit:'1 kg',    alt:'2,49 €', kat:'Obst',          bild:_ANGEBOT_BILD.apfel },
+  { laden:'REWE',      farbe:'#CC0000', produkt:'Frische Vollmilch',    preis:'0,99 €', einheit:'1 Liter', alt:'1,29 €', kat:'Milch',         bild:_ANGEBOT_BILD.milch },
+  { laden:'PENNY',     farbe:'#EE2E24', produkt:'Orangensaft',          preis:'1,29 €', einheit:'1 Liter', alt:'1,99 €', kat:'Getränke',      bild:_ANGEBOT_BILD.saft },
+  { laden:'ALDI Süd',  farbe:'#00519E', produkt:'Naturjoghurt',         preis:'0,79 €', einheit:'500 g',   alt:'1,09 €', kat:'Milchprodukte', bild:_ANGEBOT_BILD.joghurt },
+  { laden:'NETTO',     farbe:'#DC0025', produkt:'Kartoffeln festkochend',preis:'1,49 €',einheit:'2 kg',    alt:'2,19 €', kat:'Gemüse',        bild:_ANGEBOT_BILD.kartoffel },
+  { laden:'Kaufland',  farbe:'#E31837', produkt:'Pasta Penne',          preis:'0,69 €', einheit:'500 g',   alt:'0,99 €', kat:'Grundnahrung',  bild:_ANGEBOT_BILD.pasta },
+  { laden:'EDEKA',     farbe:'#F2912A', produkt:'Vollkornbrot',         preis:'1,39 €', einheit:'750 g',   alt:'1,89 €', kat:'Brot',          bild:_ANGEBOT_BILD.brot },
+  { laden:'LIDL',      farbe:'#003399', produkt:'Gemischter Salat',     preis:'0,99 €', einheit:'200 g',   alt:'1,59 €', kat:'Gemüse',        bild:_ANGEBOT_BILD.salat },
+  { laden:'REWE',      farbe:'#CC0000', produkt:'Lachsfilet Atlantik',  preis:'3,99 €', einheit:'300 g',   alt:'5,49 €', kat:'Fisch',         bild:_ANGEBOT_BILD.fisch },
+  { laden:'ALDI Nord', farbe:'#2D2D87', produkt:'Deutsche Markenbutter',preis:'1,69 €', einheit:'250 g',   alt:'2,29 €', kat:'Milchprodukte', bild:_ANGEBOT_BILD.joghurt },
+  { laden:'LIDL',      farbe:'#003399', produkt:'Hackfleisch gemischt', preis:'3,33 €', einheit:'500 g',   alt:'4,49 €', kat:'Fleisch',       bild:_ANGEBOT_BILD.fleisch },
+  { laden:'PENNY',     farbe:'#EE2E24', produkt:'Bananen',              preis:'1,11 €', einheit:'1 kg',    alt:'1,59 €', kat:'Obst',          bild:_ANGEBOT_BILD.obst },
+  { laden:'EDEKA',     farbe:'#F2912A', produkt:'Eier Bodenhaltung',    preis:'1,89 €', einheit:'10 Stück',alt:'2,39 €', kat:'Grundnahrung',  bild:_ANGEBOT_BILD.milch },
+  { laden:'Kaufland',  farbe:'#E31837', produkt:'Rispentomaten',        preis:'1,29 €', einheit:'500 g',   alt:'1,99 €', kat:'Gemüse',        bild:_ANGEBOT_BILD.salat },
+  { laden:'NETTO',     farbe:'#DC0025', produkt:'Tiefkühl-Pizza',       preis:'1,99 €', einheit:'350 g',   alt:'2,99 €', kat:'Tiefkühl',      bild:_ANGEBOT_BILD.pasta },
+  { laden:'REWE',      farbe:'#CC0000', produkt:'Mozzarella',           preis:'0,59 €', einheit:'125 g',   alt:'0,99 €', kat:'Käse',          bild:_ANGEBOT_BILD.kaese },
+  { laden:'ALDI Süd',  farbe:'#00519E', produkt:'Apfelsaft naturtrüb',  preis:'1,49 €', einheit:'1 Liter', alt:'1,99 €', kat:'Getränke',      bild:_ANGEBOT_BILD.saft },
+  { laden:'LIDL',      farbe:'#003399', produkt:'Mehl Type 405',        preis:'0,45 €', einheit:'1 kg',    alt:'0,69 €', kat:'Grundnahrung',  bild:_ANGEBOT_BILD.pasta },
+  { laden:'EDEKA',     farbe:'#F2912A', produkt:'Putenschnitzel',       preis:'3,49 €', einheit:'400 g',   alt:'4,79 €', kat:'Fleisch',       bild:_ANGEBOT_BILD.fleisch },
+  { laden:'dm',        farbe:'#CC0066', produkt:'Bio-Haferflocken',     preis:'0,85 €', einheit:'500 g',   alt:'1,19 €', kat:'Grundnahrung',  bild:_ANGEBOT_BILD.brot },
+  { laden:'PENNY',     farbe:'#EE2E24', produkt:'Karotten',             preis:'0,69 €', einheit:'1 kg',    alt:'0,99 €', kat:'Gemüse',        bild:_ANGEBOT_BILD.kartoffel },
+  { laden:'Kaufland',  farbe:'#E31837', produkt:'Frischkäse',           preis:'0,79 €', einheit:'200 g',   alt:'1,29 €', kat:'Käse',          bild:_ANGEBOT_BILD.kaese },
+  { laden:'NETTO',     farbe:'#DC0025', produkt:'Weizenbrötchen 6er',   preis:'0,99 €', einheit:'6 Stück', alt:'1,49 €', kat:'Brot',          bild:_ANGEBOT_BILD.brot },
+  { laden:'ALDI Nord', farbe:'#2D2D87', produkt:'Kaffee gemahlen',      preis:'3,99 €', einheit:'500 g',   alt:'5,49 €', kat:'Getränke',      bild:_ANGEBOT_BILD.saft },
+  { laden:'dm',        farbe:'#CC0066', produkt:'Mineralwasser',        preis:'0,19 €', einheit:'1,5 Liter',alt:'0,35 €',kat:'Getränke',      bild:_ANGEBOT_BILD.saft }
 ];
 
 function renderSparSupermarkt() {
-  const heute = new Date();
-  const wochenende = new Date(heute); wochenende.setDate(heute.getDate() + (6 - heute.getDay() + 1));
-  const gueltigBis = wochenende.toLocaleDateString('de-DE', {day:'numeric',month:'long'});
+  const preisZahl = s => parseFloat(String(s).replace(',', '.').replace(/[^0-9.]/g, '')) || 0;
 
   return `
   <div class="info-box blau" style="margin-bottom:1.25rem"><span class="ib-icon">📰</span><div class="ib-text"><strong>Profi-Tipp:</strong> Donnerstag die neuen Prospekte auf Kaufda ansehen → gezielt nur Angebote kaufen. Spart 20–40 % der Einkaufskosten.</div></div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
-    <div class="block-title" style="margin-bottom:0">🏷️ Diese Woche im Angebot</div>
-    <div style="font-size:.78rem;color:var(--g500);font-weight:600">Gültig bis ${gueltigBis}</div>
+    <div class="block-title" style="margin-bottom:0">🏷️ Beispiel-Angebote</div>
+    <div style="font-size:.74rem;color:var(--g500);font-weight:600">Typische Preise — echte Angebote über die Portale unten</div>
   </div>
   <div class="angebote-grid">
-    ${SUPERMARKT_ANGEBOTE_DIESE_WOCHE.map(a => `
+    ${SUPERMARKT_ANGEBOTE_DIESE_WOCHE.map(a => {
+      const rabatt = Math.round((1 - preisZahl(a.preis) / preisZahl(a.alt)) * 100);
+      return `
     <div class="angebot-karte">
       <div class="angebot-bild" style="background-image:url('${a.bild}')">
-        <span class="angebot-laden" style="background:${a.farbe}">${a.laden}</span>
-        <span class="angebot-kat">${a.kat}</span>
+        <span class="angebot-laden" style="background:${a.farbe}">${esc(a.laden)}</span>
+        ${rabatt > 0 ? `<span class="angebot-rabatt">-${rabatt}%</span>` : ''}
       </div>
       <div class="angebot-body">
+        <div class="angebot-kat">${esc(a.kat)}</div>
         <div class="angebot-name">${esc(a.produkt)}</div>
         <div class="angebot-einheit">${esc(a.einheit)}</div>
         <div class="angebot-preiszeile">
-          <span class="angebot-preis">${a.preis}</span>
-          <span class="angebot-alt">${a.alt}</span>
-          <span class="angebot-rabatt">-${Math.round((1-parseFloat(a.preis)/parseFloat(a.alt))*100)}%</span>
+          <span class="angebot-preis">${esc(a.preis)}</span>
+          <span class="angebot-alt">${esc(a.alt)}</span>
         </div>
       </div>
-    </div>`).join('')}
+    </div>`;
+    }).join('')}
   </div>
   <a href="https://www.kaufda.de" target="_blank" class="btn btn-primary" style="width:100%;text-align:center;margin-top:.75rem;text-decoration:none;display:block">
     📰 Alle Angebote auf Kaufda.de ansehen →
