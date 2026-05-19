@@ -2468,25 +2468,23 @@ function renderDashboard() {
   </div>`}
 
   ${z('zeigSchnellzugriff', true) ? `
-  <!-- SCHNELLZUGRIFF (Übersicht aller Bereiche) -->
+  <!-- SCHNELLZUGRIFF — bunte Verlauf-Kacheln (Design 1) -->
   <div class="block-title">📌 Alle Bereiche im Überblick</div>
-  <div class="schnell-grid">
+  <div class="dash-kachel-grid">
     ${[
-      { icon:'💰', titel:'Zuschüsse & Anträge', sub:'Wohngeld, Kita, Unterhalt', badge:'8 Leistungen', farbe:'#4F46E5', bg:'#EDE9FE', s:'leistungen' },
-      { icon:'📋', titel:'Formular-Assistent', sub:'Schritt-für-Schritt Ausfüllhilfe', badge:'13 Anträge', farbe:'#059669', bg:'#D1FAE5', s:'formular' },
-      { icon:'📍', titel:'Umgebung', sub:'Läden, Spielplätze, Restaurants, Kino', badge:'Live-Karte', farbe:'#2563EB', bg:'#DBEAFE', s:'umgebung' },
-      { icon:'💡', titel:'Sparen im Alltag', sub:'Angebote, Secondhand, 80+ Tipps', badge:'≤400 €/Mo.', farbe:'#EC4899', bg:'#FCE7F3', s:'sparen' },
-      { icon:'📞', titel:'Beratung & Hilfe', sub:'Kostenlose Beratungsstellen', badge:'Kostenlos', farbe:'#7C3AED', bg:'#EDE9FE', s:'beratung' },
-      { icon:'🗓️', titel:'Kalender & Checklisten', sub:'Termine, Reise, Einschulung', badge:'Persönlich', farbe:'#0EA5E9', bg:'#E0F2FE', s:'kalender' },
-      { icon:'👨‍👩‍👧', titel:'Familie & Freizeit', sub:'Ausflüge, Rezepte (300+), Catering', badge:'300+ Rezepte', farbe:'#059669', bg:'#D1FAE5', s:'familie' },
-      { icon:'💶', titel:'Budget & Extras', sub:'Haushaltsrechner, Steuer, KK', badge:'Neu!', farbe:'#B45309', bg:'#FEF3C7', s:'extras' },
-      { icon:'🔍', titel:'Suche', sub:'Alle Inhalte durchsuchen', badge:'Schnellsuche', farbe:'#4B5563', bg:'#F1F5F9', s:'suche' }
+      { icon:'💰', kurz:'Zuschüsse', farbe:'#4F46E5', farbe2:'#6366F1', s:'leistungen' },
+      { icon:'📋', kurz:'Formulare', farbe:'#059669', farbe2:'#10B981', s:'formular' },
+      { icon:'📍', kurz:'Umgebung', farbe:'#2563EB', farbe2:'#3B82F6', s:'umgebung' },
+      { icon:'💡', kurz:'Sparen', farbe:'#DB2777', farbe2:'#EC4899', s:'sparen' },
+      { icon:'📞', kurz:'Beratung', farbe:'#7C3AED', farbe2:'#8B5CF6', s:'beratung' },
+      { icon:'🗓️', kurz:'Kalender', farbe:'#0EA5E9', farbe2:'#38BDF8', s:'kalender' },
+      { icon:'👨‍👩‍👧', kurz:'Familie', farbe:'#0D9488', farbe2:'#14B8A6', s:'familie' },
+      { icon:'💶', kurz:'Budget', farbe:'#B45309', farbe2:'#D97706', s:'extras' },
+      { icon:'🔍', kurz:'Suche', farbe:'#475569', farbe2:'#64748B', s:'suche' }
     ].map(k => `
-      <button class="schnell-karte" style="--farbe:${k.farbe}" onclick="${k.s==='extras'?`state.extrasTab='budget';`:''}zuSektion('${k.s}')">
-        <div class="schnell-icon-box" style="background:${k.bg}">${k.icon}</div>
-        <div class="schnell-titel">${k.titel}</div>
-        <div class="schnell-sub">${k.sub}</div>
-        <span class="schnell-badge">${k.badge}</span>
+      <button class="dash-kachel" style="background:linear-gradient(135deg,${k.farbe},${k.farbe2})" onclick="${k.s==='extras'?`state.extrasTab='budget';`:''}zuSektion('${k.s}')">
+        <span class="dash-kachel-icon">${k.icon}</span>
+        <span class="dash-kachel-label">${k.kurz}</span>
       </button>`).join('')}
   </div>` : ''}
 

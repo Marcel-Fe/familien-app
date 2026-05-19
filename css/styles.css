@@ -435,6 +435,22 @@ body {
   color: var(--weiss);
 }
 
+/* ===== Dashboard-Schnellzugriff-Kacheln (Design 1) ===== */
+.dash-kachel-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: .6rem; margin-bottom: 1.5rem;
+}
+.dash-kachel {
+  display: flex; flex-direction: column; gap: .35rem;
+  border: none; cursor: pointer; text-align: left;
+  border-radius: 16px; padding: .85rem;
+  color: var(--weiss); font-weight: 700; font-size: .9rem;
+  box-shadow: var(--s1); transition: transform .15s, box-shadow .15s;
+}
+.dash-kachel:hover { transform: translateY(-2px); box-shadow: var(--s3); }
+.dash-kachel-icon { font-size: 1.5rem; }
+.dash-kachel-label { font-weight: 700; }
+
 /* ===== Abschnitt-Titel ===== */
 .section-title { font-size: 1.3rem; font-weight: 800; color: var(--g900); margin-bottom: .2rem; }
 .section-sub { font-size: .88rem; color: var(--g500); margin-bottom: 1.1rem; }
