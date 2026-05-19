@@ -8882,16 +8882,29 @@ function einstellungToggle(key) {
 // Wählt anhand der Einstellung eine weibliche oder männliche Stimme.
 const _STIMME_WEIBLICH = ['katja','hedda','anna','marlene','petra','seraphina','klara','female','frau','google'];
 const _STIMME_MAENNLICH = ['stefan','conrad','klaus','markus','hans','bernd','male','mann'];
+// Alle deutschen Stimmen, die das Gerät/Browser anbietet
+function deutscheStimmen() {
+  if (!window.speechSynthesis) return [];
+  return (window.speechSynthesis.getVoices() || [])
+    .filter(v => (v.lang || '').toLowerCase().startsWith('de'));
+}
 function stimmeFuer(lang) {
   const wahl = einstellungenLaden().stimme || 'auto';
   if (wahl === 'auto' || !window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices() || [];
   if (!voices.length) return null;
-  const sprache = String(lang || 'de').slice(0, 2).toLowerCase();
-  const passend = voices.filter(v => (v.lang || '').toLowerCase().startsWith(sprache));
-  const pool = passend.length ? passend : voices;
-  const liste = wahl === 'm' ? _STIMME_MAENNLICH : _STIMME_WEIBLICH;
-  return pool.find(v => liste.some(n => (v.name || '').toLowerCase().includes(n))) || null;
+  // Konkret per Name gewählte Stimme
+  const direkt = voices.find(v => v.name === wahl);
+  if (direkt) return direkt;
+  // Abwärtskompatibel: 'w' = weiblich, 'm' = männlich
+  if (wahl === 'w' || wahl === 'm') {
+    const sprache = String(lang || 'de').slice(0, 2).toLowerCase();
+    const passend = voices.filter(v => (v.lang || '').toLowerCase().startsWith(sprache));
+    const pool = passend.length ? passend : voices;
+    const liste = wahl === 'm' ? _STIMME_MAENNLICH : _STIMME_WEIBLICH;
+    return pool.find(v => liste.some(n => (v.name || '').toLowerCase().includes(n))) || null;
+  }
+  return null;
 }
 // Auf eine SpeechSynthesisUtterance die gewählte Stimme anwenden
 function stimmeAnwenden(u) {
@@ -8904,6 +8917,11 @@ function stimmeWaehlen(wert) {
   einstellungenSpeichern(einst);
   render();
   stimmeTesten();
+}
+// Stimme per Index aus deutscheStimmen() wählen — vermeidet Quoting-Probleme mit Stimm-Namen
+function stimmeWaehlenIdx(i) {
+  const v = deutscheStimmen()[i];
+  stimmeWaehlen(v ? v.name : 'auto');
 }
 function stimmeTesten() {
   if (!window.speechSynthesis) { toast('⚠️ Sprachausgabe wird nicht unterstützt'); return; }
@@ -9064,15 +9082,20 @@ function renderEinstellungen() {
   <!-- Vorlese-Stimme -->
   <div class="einst-gruppe">
     <div class="einst-gruppe-titel">🔊 Vorlese-Stimme</div>
-    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Welche Stimme soll Texte vorlesen — z. B. Übersetzungen, Assistenten-Antworten oder die Navigations-Ansagen?</div>
-    <div class="stimm-wahl">
-      ${[['auto','🎲 Automatisch'],['w','👩 Weiblich'],['m','👨 Männlich']].map(([v,l]) => {
-        const aktiv = (einst.stimme || 'auto') === v;
-        return `<button class="stimm-opt${aktiv?' aktiv':''}" onclick="stimmeWaehlen('${v}')">${l}</button>`;
-      }).join('')}
-    </div>
-    <button class="btn btn-outline btn-sm" style="margin-top:.7rem" onclick="stimmeTesten()">▶ Stimme anhören</button>
-    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Welche Stimmen verfügbar sind, hängt vom Gerät und Browser ab. Klappt „Weiblich" oder „Männlich" nicht, nutzt die App automatisch die Standard-Stimme.</div></div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Welche Stimme soll Texte vorlesen — z. B. Übersetzungen, Assistenten-Antworten oder die Navigations-Ansagen? Tippe eine Stimme an, um sie sofort zu hören.</div>
+    ${(() => {
+      const stimmen = (typeof deutscheStimmen === 'function') ? deutscheStimmen() : [];
+      const aktuell = einst.stimme || 'auto';
+      if (!stimmen.length && window.speechSynthesis) {
+        setTimeout(() => { if (state.sektion === 'einstellungen' && deutscheStimmen().length) render(); }, 700);
+      }
+      const buttons = `<button class="stimm-opt${aktuell==='auto'?' aktiv':''}" onclick="stimmeWaehlen('auto')">🎲 Automatisch</button>`
+        + stimmen.map((v, i) => `<button class="stimm-opt${aktuell===v.name?' aktiv':''}" onclick="stimmeWaehlenIdx(${i})">🗣️ ${esc(v.name)}</button>`).join('');
+      return `<div class="stimm-wahl">${buttons}</div>`
+        + (stimmen.length ? '' : '<div style="font-size:.78rem;color:var(--g500);margin-top:.5rem">Stimmen werden geladen — falls leer, Einstellungen kurz erneut öffnen.</div>');
+    })()}
+    <button class="btn btn-outline btn-sm" style="margin-top:.7rem" onclick="stimmeTesten()">▶ Aktuelle Stimme anhören</button>
+    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Welche Stimmen verfügbar sind, hängt von Gerät und Browser ab. Für besonders natürlich klingende Stimmen lassen sich am Handy in den System-Einstellungen zusätzliche Sprachausgabe-Stimmen installieren.</div></div>
   </div>
 
   <!-- Live-Wohnungs-API (Cloudflare Worker) -->
