@@ -13570,53 +13570,61 @@ function kiAbbrechen() {
 
 // Pollinations.ai — kostenlose KI ohne API-Key, mit Streaming
 async function kiAPIAnfrage(frage, signal, streamEl) {
-  const url = 'https://text.pollinations.ai/' + encodeURIComponent(frage) +
-    '?model=openai' +
-    '&system=' + encodeURIComponent(KI_SYSTEM_PROMPT) +
-    '&private=true';
+  // POST-Endpoint: System-Prompt im Body statt in der URL — keine ueberlange URL,
+  // dadurch deutlich zuverlaessiger als die alte GET-Variante.
+  const koerper = JSON.stringify({
+    model: 'openai',
+    referrer: 'familienapp',
+    private: true,
+    messages: [
+      { role: 'system', content: KI_SYSTEM_PROMPT },
+      { role: 'user', content: frage }
+    ]
+  });
 
-  // Gesamt-Timeout 35s — deckt beide Versuche ab
-  const timeout = setTimeout(() => { if (signal && !signal.aborted) try { _kiAbbruchController?.abort(); } catch {} }, 35000);
+  // Gesamt-Timeout 45s — deckt alle Versuche ab
+  const timeout = setTimeout(() => { if (signal && !signal.aborted) try { _kiAbbruchController?.abort(); } catch {} }, 45000);
 
   try {
     let letzterFehler;
-    // Bis zu 2 Versuche — macht den Assistenten zuverlässiger bei wackeligem Gratis-Dienst
-    for (let versuch = 1; versuch <= 2; versuch++) {
+    // Bis zu 3 Versuche — macht den Assistenten zuverlässiger bei wackeligem Gratis-Dienst
+    for (let versuch = 1; versuch <= 3; versuch++) {
       try {
-        const res = await fetch(url, { signal });
+        if (streamEl) {
+          streamEl.innerHTML = '<div class="ki-fallback-hinweis"><span class="ki-typing"><span></span><span></span><span></span></span> '
+            + (versuch === 1 ? 'Der Familien-Assistent denkt nach …' : 'Neuer Versuch …') + '</div>';
+        }
+        const res = await fetch('https://text.pollinations.ai/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: koerper,
+          signal
+        });
         if (!res.ok) throw new Error('API-Fehler ' + res.status);
 
-        // Streaming-Anzeige: Body in Chunks lesen und Text live anzeigen
-        if (res.body && streamEl) {
-          streamEl.innerHTML = '<span id="ki-stream-text"></span><span class="ki-cursor">▋</span>';
-          const textEl = streamEl.querySelector('#ki-stream-text');
-          const reader = res.body.getReader();
-          const decoder = new TextDecoder();
-          let total = '';
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            total += decoder.decode(value, { stream: true });
-            if (textEl) {
-              textEl.innerHTML = esc(total).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-              streamEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-          }
-          if (!total.trim()) throw new Error('Leere Antwort');
-          return total.trim();
-        }
+        const roh = (await res.text()).trim();
+        if (!roh) throw new Error('Leere Antwort');
 
-        // Fallback ohne Streaming
-        const text = (await res.text()).trim();
-        if (!text) throw new Error('Leere Antwort');
-        return text;
+        // Antwort kann OpenAI-JSON oder reiner Text sein
+        let antwort = roh;
+        try {
+          const j = JSON.parse(roh);
+          antwort = j?.choices?.[0]?.message?.content || j?.choices?.[0]?.text || roh;
+        } catch { /* reiner Text — direkt verwenden */ }
+        antwort = String(antwort).trim();
+        if (!antwort) throw new Error('Leere Antwort');
+
+        if (streamEl) {
+          streamEl.innerHTML = '<span id="ki-stream-text">'
+            + esc(antwort).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')
+            + '</span>';
+          streamEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        return antwort;
       } catch (e) {
         letzterFehler = e;
         if (e.name === 'AbortError' || (signal && signal.aborted)) throw e; // Nutzer-Abbruch — nicht wiederholen
-        if (versuch < 2) {
-          if (streamEl) streamEl.innerHTML = '<div class="ki-fallback-hinweis"><span class="ki-typing"><span></span><span></span><span></span></span> Neuer Versuch …</div>';
-          await new Promise(r => setTimeout(r, 700));
-        }
+        if (versuch < 3) await new Promise(r => setTimeout(r, 800));
       }
     }
     throw letzterFehler;
