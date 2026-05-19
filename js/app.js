@@ -1400,6 +1400,7 @@ async function initDashWetter() {
   const jetzt = Date.now();
   if (_wetterCache && _wetterKoord === koord && (jetzt - _wetterZeit) < 30 * 60 * 1000) {
     widget.innerHTML = _wetterHtmlBauen(_wetterCache, ort);
+    heroWetterChipSetzen();
     return;
   }
 
@@ -1412,6 +1413,7 @@ async function initDashWetter() {
     _wetterZeit = jetzt;
     _wetterKoord = koord;
     widget.innerHTML = _wetterHtmlBauen(data, ort);
+    heroWetterChipSetzen();
   } catch (e) {
     widget.innerHTML = `
       <div class="wetter-leer">
@@ -2269,6 +2271,56 @@ function render() {
 }
 
 // ===== MODERNES DASHBOARD =====
+// Wetter-Chip-Text aus dem In-Memory-Wetter-Cache (null, solange nicht geladen)
+function heroWetterChipText() {
+  if (!_wetterCache || !_wetterCache.current) return null;
+  const cur = _wetterCache.current;
+  const t = cur.temperature_2m;
+  if (t === undefined || t === null) return null;
+  const info = (typeof wetterInfo === 'function') ? wetterInfo(cur.weather_code) : null;
+  return `${info ? info.emoji : '🌡️'} ${Math.round(t)}°`;
+}
+
+// Füllt den Wetter-Chip im Hero nach, sobald die Wetterdaten geladen sind
+function heroWetterChipSetzen() {
+  const chip = el('heroChipWetter');
+  if (!chip) return;
+  const txt = heroWetterChipText();
+  if (!txt) return;
+  chip.textContent = txt;
+  chip.hidden = false;
+}
+
+// Nächster anstehender Termin als Kurztext (oder null)
+function naechsterTermin() {
+  const heute = new Date();
+  const heute0 = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  const liste = (typeof getTermine === 'function' ? getTermine() : [])
+    .filter(t => t && t.datum)
+    .filter(t => new Date(t.datum + 'T00:00:00') >= heute0)
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+  if (!liste.length) return null;
+  const td = new Date(liste[0].datum + 'T00:00:00');
+  const diff = Math.round((td - heute0) / 86400000);
+  if (diff === 0) return 'Termin heute';
+  if (diff === 1) return 'Termin morgen';
+  if (diff < 7) return `Termin in ${diff} Tagen`;
+  return 'Termin ' + td.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
+}
+
+// Info-Chip-Reihe im Hero: Wetter, nächster Termin, mögliche Leistungen
+function dashboardHeroChips(max) {
+  const chips = [];
+  const wetter = heroWetterChipText();
+  chips.push(wetter
+    ? `<span class="chip">${esc(wetter)}</span>`
+    : `<span class="chip" id="heroChipWetter" hidden></span>`);
+  const termin = naechsterTermin();
+  if (termin) chips.push(`<span class="chip">📅 ${esc(termin)}</span>`);
+  if (max > 0) chips.push(`<span class="chip">💰 bis ${max.toLocaleString('de-DE')} €</span>`);
+  return `<div class="hero-chips">${chips.join('')}</div>`;
+}
+
 function renderDashboard() {
   const user = getUser() || {};
   const kinder = user.kinder || [];
@@ -2309,94 +2361,15 @@ function renderDashboard() {
     <button class="install-banner-zu" onclick="installBannerAusblenden()" title="Ausblenden">✕</button>
   </div>` : ''}
 
-  <!-- HERO mit echtem Familien-Foto (austauschbar in Einstellungen) -->
+  <!-- HERO im Design-1-Verlauf-Look -->
   <div class="dash-hero">
-    <div class="hero-foto-bg" style="background-image:url('${einst.familienfoto || "https://images.pexels.com/photos/3933027/pexels-photo-3933027.jpeg?auto=compress&cs=tinysrgb&w=1200"}')"></div>
-    <svg class="hero-svg-bg" style="display:none" viewBox="0 0 600 280" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="himmel" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#312E81"/>
-          <stop offset="40%" stop-color="#7C3AED"/>
-          <stop offset="100%" stop-color="#EC4899"/>
-        </linearGradient>
-        <radialGradient id="sonne" cx="80%" cy="20%" r="40%">
-          <stop offset="0%" stop-color="#FBBF24" stop-opacity=".7"/>
-          <stop offset="100%" stop-color="transparent"/>
-        </radialGradient>
-      </defs>
-      <rect width="600" height="280" fill="url(#himmel)"/>
-      <rect width="600" height="280" fill="url(#sonne)"/>
-      <circle cx="490" cy="60" r="38" fill="#FEF3C7" opacity=".75"/>
-      <!-- Hügel -->
-      <path d="M0 220 Q150 195 300 215 T600 210 L600 280 L0 280 Z" fill="#1E1B4B" opacity=".4"/>
-      <path d="M0 240 Q200 220 400 235 T600 230 L600 280 L0 280 Z" fill="#0F172A" opacity=".55"/>
-      <!-- Familie: Mutter (links, größer) -->
-      <g transform="translate(360, 165)">
-        <!-- Haar -->
-        <path d="M-13 -25 Q-13 -32 0 -32 Q13 -32 13 -25 L13 -8 L-13 -8 Z" fill="#7C3AED"/>
-        <!-- Kopf -->
-        <circle cx="0" cy="-15" r="12" fill="#FDE7C8"/>
-        <!-- Augen -->
-        <circle cx="-3.5" cy="-16" r="1.2" fill="#1E293B"/>
-        <circle cx="3.5" cy="-16" r="1.2" fill="#1E293B"/>
-        <!-- Lächeln -->
-        <path d="M-4 -11 Q0 -8 4 -11" stroke="#92400E" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-        <!-- Körper / Kleid -->
-        <path d="M-14 -3 L-18 60 L18 60 L14 -3 Z" fill="#EC4899"/>
-        <!-- Arm zum Kind hin -->
-        <path d="M-14 5 Q-25 18 -32 28" stroke="#FDE7C8" stroke-width="6" fill="none" stroke-linecap="round"/>
-      </g>
-      <!-- Kind 1 (links neben Mutter) -->
-      <g transform="translate(322, 195)">
-        <path d="M-9 -14 Q-9 -20 0 -20 Q9 -20 9 -14 L9 -3 L-9 -3 Z" fill="#F97316"/>
-        <circle cx="0" cy="-9" r="9" fill="#FDE7C8"/>
-        <circle cx="-2.5" cy="-10" r="1" fill="#1E293B"/>
-        <circle cx="2.5" cy="-10" r="1" fill="#1E293B"/>
-        <path d="M-3 -6 Q0 -3 3 -6" stroke="#92400E" stroke-width="1" fill="none" stroke-linecap="round"/>
-        <path d="M-10 0 L-13 28 L13 28 L10 0 Z" fill="#3B82F6"/>
-        <path d="M10 5 Q22 12 30 16" stroke="#FDE7C8" stroke-width="4" fill="none" stroke-linecap="round"/>
-      </g>
-      <!-- Kind 2 (kleiner, rechts) -->
-      <g transform="translate(280, 210)">
-        <path d="M-7 -11 Q-7 -16 0 -16 Q7 -16 7 -11 L7 -2 L-7 -2 Z" fill="#92400E"/>
-        <circle cx="0" cy="-7" r="7" fill="#FDE7C8"/>
-        <circle cx="-2" cy="-8" r=".9" fill="#1E293B"/>
-        <circle cx="2" cy="-8" r=".9" fill="#1E293B"/>
-        <path d="M-2.5 -5 Q0 -3 2.5 -5" stroke="#92400E" stroke-width=".9" fill="none" stroke-linecap="round"/>
-        <path d="M-8 1 L-10 22 L10 22 L8 1 Z" fill="#16A34A"/>
-      </g>
-      <!-- Kleines Haus links -->
-      <g opacity=".6">
-        <polygon points="100,180 70,205 130,205" fill="#FECACA"/>
-        <rect x="78" y="205" width="44" height="30" fill="#FECACA"/>
-        <rect x="93" y="218" width="14" height="17" fill="#92400E"/>
-      </g>
-      <!-- Sterne -->
-      <circle cx="80" cy="30" r="1.5" fill="white" opacity=".8"/>
-      <circle cx="180" cy="50" r="1" fill="white" opacity=".7"/>
-      <circle cx="240" cy="35" r="1.2" fill="white" opacity=".7"/>
-    </svg>
-    <div class="hero-foto-overlay"></div>
-    <div class="hero-deko1"></div><div class="hero-deko2"></div><div class="hero-deko3"></div>
     <div class="hero-tag">${tagesEmoji()} ${tageszeit()} <span class="hero-tag-datum">${new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' })}</span></div>
     <div class="hero-name">${user.vorname ? `Hallo ${esc(user.vorname)}!` : 'Willkommen!'}</div>
     <div class="hero-ort">
       ${bl ? `📍 ${esc(bl.name)}` : ''}
       ${kinder.length > 0 ? ` · 👶 ${kinder.length} ${kinder.length===1?'Kind':'Kinder'}` : ''}
     </div>
-    ${max > 0 && z('zeigBetrag', true) ? `
-    <div class="hero-betrag-box">
-      <div>
-        <div class="hero-betrag-label">Mögliche Leistungen</div>
-        <div class="hero-betrag-zahl">${betragText}</div>
-        <div class="hero-betrag-sub">Kindergeld + Wohngeld + Unterhaltsvorschuss</div>
-      </div>
-    </div>` : ''}
-    <div class="hero-btns">
-      <button class="hero-btn hero-btn-prim" onclick="zuSektion('leistungen')">💰 Meine Ansprüche</button>
-      <button class="hero-btn hero-btn-sek" onclick="zuSektion('umgebung')">📍 Umgebung</button>
-      <button class="hero-btn hero-btn-sek" onclick="profilOeffnen()">✏️ Profil</button>
-    </div>
+    ${dashboardHeroChips(max)}
   </div>
 
   ${!einst.zitateAus && motivationsZitat() ? `
