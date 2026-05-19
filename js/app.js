@@ -2335,7 +2335,6 @@ function renderDashboard() {
   max += 370 + kinder.length * 292; // Wohngeld + Kinderzuschlag
   if (kinder.length === 0) { min = 0; max = 0; }
 
-  const betragText = max > 0 ? `bis ${max.toLocaleString('de-DE')} €/Monat` : 'Profil ausfüllen';
   const standort = state.umgebungStandort || (user.lat ? { lat:user.lat, lng:user.lng, name:user.ort } : null);
 
   const einst = einstellungenLaden();
@@ -2376,7 +2375,7 @@ function renderDashboard() {
   <!-- MÖGLICHE LEISTUNGEN — Verlauf-Karte (Design 1) -->
   <div class="dash-leist-karte">
     <div class="leist-label">Mögliche Leistungen im Monat</div>
-    <div class="leist-zahl">${betragText}</div>
+    <div class="leist-zahl">bis ${max.toLocaleString('de-DE')} €</div>
     <div class="leist-sub">Kindergeld + Wohngeld + Unterhaltsvorschuss</div>
   </div>` : ''}
 
