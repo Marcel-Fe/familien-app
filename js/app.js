@@ -1788,6 +1788,25 @@ function dashboardTagesTipp() {
   </div>`;
 }
 
+function dashboardWissen() {
+  if (typeof WISSEN_FAKTEN === 'undefined' || !WISSEN_FAKTEN.length) return '';
+  const f = WISSEN_FAKTEN[_tagDesJahres() % WISSEN_FAKTEN.length];
+  if (!f) return '';
+  return `
+  <div class="dash-widget">
+    <div class="dash-widget-kopf">
+      <span class="dash-widget-emoji">🧠</span>
+      <div class="dash-widget-titel-block">
+        <div class="dash-widget-titel">Wissen des Tages</div>
+        <div class="dash-widget-sub">${esc(f.kategorie || '')}</div>
+      </div>
+    </div>
+    <div class="dash-tipp-karte">
+      <div class="dash-tipp-text">${esc(f.text || '')}</div>
+    </div>
+  </div>`;
+}
+
 function dashboardAusflugTipp() {
   const tipps = [
     { titel:'Spielplatz besuchen', emoji:'🎠', text:'Schau auf der Karte unter „Orte → Umgebung" — Spielplätze in deiner Nähe.', action:`state.umgebungKat='spielplatz';zuSektion('umgebung')` },
@@ -2399,6 +2418,7 @@ function renderDashboard() {
 
   ${z('zeigTagesRezept', true) ? dashboardTagesRezept() : ''}
   ${z('zeigTagesTipp', true) ? dashboardTagesTipp() : ''}
+  ${z('zeigWissen', true) ? dashboardWissen() : ''}
   ${z('zeigAusflugTipp', true) ? dashboardAusflugTipp() : ''}
   ${z('zeigNewsHeadlines', true) ? dashboardNewsHeadlines() : ''}
   ${z('zeigPinnwand', true) ? dashboardPinnwandVorschau() : ''}
@@ -9047,6 +9067,7 @@ function renderEinstellungen() {
         {key:'zeigTagesRezept',  label:'🍽️ Tages-Rezept-Vorschlag',       def:true},
         {key:'zeigNewsHeadlines',label:'📰 News-Schlagzeilen',             def:true},
         {key:'zeigTagesTipp',    label:'💡 Tipp des Tages',                def:true},
+        {key:'zeigWissen',       label:'🧠 Wissen des Tages',              def:true},
         {key:'zeigHeuteTermine', label:'📅 Heutige & nächste Termine',     def:true},
         {key:'zeigAusflugTipp',  label:'🎠 Ausflugs-Vorschlag für heute',  def:true},
         {key:'zeigPinnwand',     label:'📌 Letzte Pinnwand-Notizen',       def:true},
