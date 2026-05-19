@@ -2416,7 +2416,6 @@ function renderDashboard() {
 
   ${kiSuchBox('dashboard')}
 
-  ${z('zeigTagesRezept', true) ? dashboardTagesRezept() : ''}
   ${z('zeigTagesTipp', true) ? dashboardTagesTipp() : ''}
   ${z('zeigWissen', true) ? dashboardWissen() : ''}
   ${z('zeigAusflugTipp', true) ? dashboardAusflugTipp() : ''}
@@ -5127,7 +5126,7 @@ function sucheAktualisieren(val) {
 
   if (typeof REZEPTE !== 'undefined') REZEPTE.forEach(r => {
     if ((r.name+(r.zutaten||[]).join(' ')+r.zubereitung).toLowerCase().includes(q))
-      ergebnisse.push({ icon:'🍳', titel:r.name, sub:r.dauer+' · '+r.kosten, betrag:r.kategorieLabel, aktion:`state.familieTab='rezepte';state.rezeptFilter='${r.kategorie}';zuSektion('familie')`, sek:'Rezepte' });
+      ergebnisse.push({ icon:'🍳', titel:r.name, sub:r.dauer+' · '+r.kosten, betrag:r.kategorieLabel, aktion:`rezeptOeffnen('${r.id}')`, sek:'Rezepte' });
   });
 
   if (typeof KRANKENKASSE_LEISTUNGEN !== 'undefined') KRANKENKASSE_LEISTUNGEN.forEach(k => {
@@ -5580,16 +5579,14 @@ function familieTabWaehlen(tab) { state.familieTab = tab; render(); }
 function renderFamilie() {
   const tabs = [
     {id:'ausfluege', label:'🗺️ Ausflüge & Freizeit'},
-    {id:'rezepte',   label:'🍳 Rezepte'},
     {id:'catering',  label:'🎉 Catering'}
   ];
   let inhalt = '';
-  if (state.familieTab === 'rezepte') inhalt = renderRezepte();
-  else if (state.familieTab === 'catering') inhalt = renderCatering();
+  if (state.familieTab === 'catering') inhalt = renderCatering();
   else inhalt = renderAusfluege();
   return `
   <div class="section-title">👨‍👩‍👧 Familie & Freizeit</div>
-  <p class="section-sub">Ausflugsziele, günstige Rezepte und Catering für Familienfeiern</p>
+  <p class="section-sub">Ausflugsziele und Catering für Familienfeiern — Rezepte findest du im Kochbuch</p>
   <div class="antrag-tabs" style="margin-bottom:1.25rem">
     ${tabs.map(t=>`<button class="antrag-tab ${state.familieTab===t.id?'aktiv':''}" onclick="familieTabWaehlen('${t.id}')">${t.label}</button>`).join('')}
   </div>
@@ -5940,13 +5937,9 @@ function renderRezepte() {
 // Rezept-Detail mit Portionsskalierung
 function rezeptOeffnen(id) {
   const r = rezeptFinden(id);
-  state.sektion = 'familie';
-  state.familieTab = 'rezepte';
-  state.rezeptTab = 'lokal';
-  state.navGruppe = 'familie';
   state.rezeptDetail = id;
   state.rezeptPortionen = r ? r.portionen : 4;
-  render(); window.scrollTo({top:0,behavior:'smooth'});
+  zuSektion('kochbuch');
 }
 
 function rezeptFinden(id) {
@@ -9012,7 +9005,6 @@ function renderEinstellungen() {
         {key:'zeigWetter',       label:'🌤️ Wetter heute',                  def:true},
         {key:'zeigHeuteBox',     label:'⏰ Heute zu tun (Termine, Müll, To-dos)', def:true},
         {key:'zeigFreizeit',     label:'🎠 Freizeit in der Nähe',         def:true},
-        {key:'zeigTagesRezept',  label:'🍽️ Tages-Rezept-Vorschlag',       def:true},
         {key:'zeigNewsHeadlines',label:'📰 News-Schlagzeilen',             def:true},
         {key:'zeigTagesTipp',    label:'💡 Tipp des Tages',                def:true},
         {key:'zeigWissen',       label:'🧠 Wissen des Tages',              def:true},
@@ -9636,7 +9628,7 @@ function globalSuchen(query) {
   if (typeof REZEPTE !== 'undefined') {
     REZEPTE.forEach(r => {
       if (enthaelt(r.name) || enthaelt(r.kategorieLabel) || enthaelt(r.zubereitung) || enthaelt(r.tipp) || (r.zutaten || []).some(z => enthaelt(z))) {
-        ergebnisse.push({ typ: '🍳 Rezept', titel: r.name, sub: r.dauer + ' · ' + r.kosten + '/Person', icon: r.emoji, farbe: '#D97706', bild: r.bild, action: `state.familieTab='rezepte';state.rezeptTab='lokal';rezeptOeffnen('${r.id}')` });
+        ergebnisse.push({ typ: '🍳 Rezept', titel: r.name, sub: r.dauer + ' · ' + r.kosten + '/Person', icon: r.emoji, farbe: '#D97706', bild: r.bild, action: `rezeptOeffnen('${r.id}')` });
       }
     });
   }
@@ -9971,6 +9963,11 @@ function eigenesRezeptHinzu() {
 }
 
 function renderKochbuch() {
+  if (state.rezeptDetail) {
+    const r = rezeptFinden(state.rezeptDetail);
+    if (r) return renderRezeptDetail(r);
+    state.rezeptDetail = null;
+  }
   const buch = kochbuchLaden();
   const alleRezepte = (typeof REZEPTE !== 'undefined' ? REZEPTE : []);
   const aktiverTab = state.kochbuchTab || 'alle';
@@ -10021,7 +10018,6 @@ function renderKochbuch() {
 
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
     <button class="btn btn-primary" onclick="eigenesRezeptHinzu()">+ Eigenes Rezept anlegen</button>
-    <button class="btn btn-outline" onclick="state.familieTab='rezeptApi';zuSektion('familie')">🌍 Internationale Rezepte (TheMealDB 300+)</button>
   </div>
 
   <div class="filter-tabs" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem">
