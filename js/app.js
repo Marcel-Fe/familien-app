@@ -2372,6 +2372,14 @@ function renderDashboard() {
     ${dashboardHeroChips(max)}
   </div>
 
+  ${max > 0 && z('zeigBetrag', true) ? `
+  <!-- MÖGLICHE LEISTUNGEN — Verlauf-Karte (Design 1) -->
+  <div class="dash-leist-karte">
+    <div class="leist-label">Mögliche Leistungen im Monat</div>
+    <div class="leist-zahl">${betragText}</div>
+    <div class="leist-sub">Kindergeld + Wohngeld + Unterhaltsvorschuss</div>
+  </div>` : ''}
+
   ${!einst.zitateAus && motivationsZitat() ? `
   <div class="motiv-karte">
     <div class="motiv-glanz"></div>
