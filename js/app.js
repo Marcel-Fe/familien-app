@@ -8983,58 +8983,6 @@ function renderEinstellungen() {
     ${(einst.lieblinge||[]).length>0 ? `<div style="font-size:.75rem;color:var(--gruen);margin-top:.5rem;font-weight:700">✓ ${(einst.lieblinge||[]).length} von ${MAX_LIEBLINGE} Bereichen gewählt</div>` : ''}
   </div>
 
-  <!-- Theme -->
-  <div class="einst-gruppe">
-    <div class="einst-gruppe-titel">📸 Familienfoto auf Startseite</div>
-    <div style="font-size:.78rem;color:var(--g500);margin-bottom:.65rem">Wählen Sie ein Bild oder laden Sie ein eigenes Familienfoto hoch.</div>
-    <div class="foto-vorschlaege">
-      ${[
-        'https://images.pexels.com/photos/3933027/pexels-photo-3933027.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1648377/pexels-photo-1648377.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1620655/pexels-photo-1620655.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/3661266/pexels-photo-3661266.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/5638742/pexels-photo-5638742.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/8941658/pexels-photo-8941658.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1648387/pexels-photo-1648387.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1684149/pexels-photo-1684149.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/3933025/pexels-photo-3933025.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4473864/pexels-photo-4473864.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4474035/pexels-photo-4474035.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4259140/pexels-photo-4259140.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/7282809/pexels-photo-7282809.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/3661266/pexels-photo-3661266.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/3661356/pexels-photo-3661356.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/1648376/pexels-photo-1648376.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/8554544/pexels-photo-8554544.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/8554569/pexels-photo-8554569.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/5638706/pexels-photo-5638706.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4715098/pexels-photo-4715098.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4587965/pexels-photo-4587965.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4473409/pexels-photo-4473409.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4473775/pexels-photo-4473775.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4473863/pexels-photo-4473863.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/5063577/pexels-photo-5063577.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/3771071/pexels-photo-3771071.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/3771518/pexels-photo-3771518.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/5497919/pexels-photo-5497919.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/4473608/pexels-photo-4473608.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/3812743/pexels-photo-3812743.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/3933025/pexels-photo-3933025.jpeg?auto=compress&cs=tinysrgb&w=800',
-        'https://images.pexels.com/photos/6849469/pexels-photo-6849469.jpeg?auto=compress&cs=tinysrgb&w=800'
-      ].map(url => `
-        <button class="foto-option ${einst.familienfoto===url?'aktiv':''}"
-          style="background-image:url('${url}')"
-          onclick="familienfotoSetzen('${url}')"></button>
-      `).join('')}
-    </div>
-    <div style="margin-top:.65rem;display:flex;gap:.5rem;flex-wrap:wrap">
-      <label class="btn btn-primary btn-sm" style="cursor:pointer">
-        📤 Eigenes Foto hochladen
-        <input type="file" accept="image/*" style="display:none" onchange="familienfotoUpload(this)" />
-      </label>
-      ${einst.familienfoto ? `<button class="btn btn-outline btn-sm" onclick="familienfotoSetzen('')">Standard wiederherstellen</button>` : ''}
-    </div>
-  </div>
   <div class="einst-gruppe">
     <div class="einst-gruppe-titel">🎨 Farbthema</div>
     <div class="theme-grid">
