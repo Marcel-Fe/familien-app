@@ -1414,6 +1414,25 @@ body {
 }
 .ziel-loesch:hover { background: var(--rot-hell); color: var(--rot); }
 
+/* ===== Wander- & Spazierwege ===== */
+.ww-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .7rem; }
+.ww-karte {
+  background: white; border-radius: 14px;
+  padding: .8rem .9rem;
+  box-shadow: 0 4px 14px rgba(2,6,23,.07);
+  border: 1px solid var(--g100);
+  display: flex; flex-direction: column;
+}
+.ww-karte-titel {
+  font-size: .68rem; font-weight: 800; color: var(--g500);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.ww-karte-name {
+  font-size: .95rem; font-weight: 700; color: var(--g900);
+  margin-top: .2rem; line-height: 1.3;
+}
+.ww-karte-aktionen { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .55rem; }
+
 /* ===== Supermarkt Angebote ===== */
 .angebote-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: .8rem; margin-bottom: 1rem; }
 .angebot-karte {

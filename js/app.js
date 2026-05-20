@@ -252,7 +252,7 @@ const NAV = {
   geld:         [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'}],
   formulare:    [{s:'formular',   l:'Alle Formulare'}],
   ort:          [{s:'umgebung',   l:'Umgebung'}],
-  familie:      [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'beratung', l:'Beratung'}],
+  familie:      [{s:'familie', l:'Freizeit'},{s:'wanderwege', l:'Wanderwege'},{s:'kalender', l:'Kalender'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'beratung', l:'Beratung'}],
   kinder:       [{s:'basteln', l:'Bastelideen'},{s:'hausaufgaben', l:'Hausaufgaben'}],
   gesund:       [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'}],
   schwangerschaft: [{s:'schwangerschaft', l:'Schwangerschaft'}],
@@ -1273,6 +1273,7 @@ function renderSenioren() {
 
   // Schnellzugriff auf die für Senioren wichtigsten App-Bereiche
   const quick = [
+    { ic:'🥾', l:'Wanderwege',    s:'wanderwege' },
     { ic:'🗺️', l:'Ausflugsziele', s:'umgebung' },
     { ic:'🚑', l:'Erste Hilfe',   s:'erstehilfe' },
     { ic:'💊', l:'Medikamente',   s:'medbox' },
@@ -2263,6 +2264,7 @@ function render() {
     case 'album':          content.innerHTML = renderAlbum(); break;
     case 'kontakte':       content.innerHTML = renderKontakte(); break;
     case 'wissen':         content.innerHTML = renderWissen(); break;
+    case 'wanderwege':     content.innerHTML = renderWanderwege(); break;
     case 'uebersetzer':    content.innerHTML = renderUebersetzer(); break;
     case 'medbox':         content.innerHTML = renderMedbox(); break;
     case 'erkennen':       content.innerHTML = renderErkennen(); break;
@@ -3562,6 +3564,170 @@ function naviOverlayAktualisieren(distZ) {
         <button class="navi-btn-beenden" onclick="naviBeenden()">✕ Navigation beenden</button>
       </div>
     </div>`;
+}
+
+// ===== Wander- & Spazierwege (live aus OpenStreetMap) =====
+function _wegHaversine(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function gespeicherteWanderwege() {
+  try { return JSON.parse(localStorage.getItem('familienapp_wanderwege') || '[]'); }
+  catch { return []; }
+}
+function _wanderwegeSpeichernListe(arr) {
+  try { localStorage.setItem('familienapp_wanderwege', JSON.stringify(arr.slice(0, 50))); } catch {}
+}
+function wanderwegSpeichern(w) {
+  if (!w || !w.id) return;
+  const liste = gespeicherteWanderwege();
+  if (liste.some(x => x.id === w.id)) { toast('💾 Bereits gespeichert.'); return; }
+  liste.unshift({ id: w.id, name: w.name, lat: w.lat, lng: w.lng, typ: w.typ });
+  _wanderwegeSpeichernListe(liste);
+  toast('💾 Weg gespeichert');
+  render();
+}
+function wanderwegSpeichernIdx(i) {
+  const w = (state.wanderwegeListe || [])[i];
+  if (w) wanderwegSpeichern(w);
+}
+function wanderwegLoeschen(id) {
+  _wanderwegeSpeichernListe(gespeicherteWanderwege().filter(w => w.id !== id));
+  render();
+}
+async function wanderwegeStandortSuchen() {
+  const inp = el('ww-standort-input');
+  const q = inp?.value.trim();
+  if (!q) return;
+  inp.disabled = true;
+  try {
+    const url = /^\d{5}$/.test(q)
+      ? `https://nominatim.openstreetmap.org/search?postalcode=${q}&country=de&format=json&limit=1`
+      : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&accept-language=de`;
+    const res = await fetch(url);
+    const d = await res.json();
+    if (!d.length) { toast('⚠️ Ort nicht gefunden'); inp.disabled = false; return; }
+    state.umgebungStandort = { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon), name: q };
+    state.wanderwegeListe = null;
+    render();
+  } catch {
+    toast('⚠️ Suche fehlgeschlagen');
+    if (inp) inp.disabled = false;
+  }
+}
+async function wanderwegeLaden() {
+  const s = state.umgebungStandort;
+  if (!s) { toast('⚠️ Bitte zuerst einen Standort eingeben.'); return; }
+  state.wanderwegeLaden = true;
+  state.wanderwegeListe = null;
+  render();
+  const radius = state.wanderwegeRadius || 8000;
+  const query = `[out:json][timeout:25];
+(
+  relation["route"~"hiking|foot|walking"]["name"](around:${radius},${s.lat},${s.lng});
+  way["highway"~"path|footway"]["name"](around:${radius},${s.lat},${s.lng});
+);
+out tags center 80;`;
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(query),
+      signal: AbortSignal.timeout(30000)
+    });
+    if (!res.ok) throw new Error('Overpass ' + res.status);
+    const d = await res.json();
+    const liste = (d.elements || []).map(e => {
+      const lat = e.lat ?? e.center?.lat;
+      const lng = e.lon ?? e.center?.lon;
+      if (lat == null || lng == null) return null;
+      const name = e.tags?.name;
+      if (!name) return null;
+      const r = e.tags?.route;
+      const typ = r === 'hiking' ? '🥾 Wanderweg'
+        : (r === 'foot' || r === 'walking') ? '🚶 Spazierweg'
+        : '🚶 Weg';
+      return {
+        id: e.type + '/' + e.id,
+        name, lat, lng, typ,
+        distKm: _wegHaversine(s.lat, s.lng, lat, lng)
+      };
+    }).filter(Boolean);
+    // Doppelte Namen entfernen, nach Distanz sortieren, auf 60 begrenzen
+    const gesehen = new Set();
+    state.wanderwegeListe = liste
+      .filter(w => { const k = w.name.toLowerCase(); if (gesehen.has(k)) return false; gesehen.add(k); return true; })
+      .sort((a, b) => a.distKm - b.distKm)
+      .slice(0, 60);
+  } catch (e) {
+    state.wanderwegeListe = [];
+    toast('⚠️ Wege konnten nicht geladen werden.');
+  }
+  state.wanderwegeLaden = false;
+  render();
+}
+function renderWanderwege() {
+  const s = state.umgebungStandort;
+  const liste = state.wanderwegeListe;
+  const laden = state.wanderwegeLaden;
+  const gespeichert = gespeicherteWanderwege();
+  const radius = state.wanderwegeRadius || 8000;
+  return `
+  <div class="section-title">🥾 Wander- & Spazierwege</div>
+  <p class="section-sub">Echte Wege aus OpenStreetMap in Ihrer Umgebung — finden, anschauen und speichern. Ideal für gemütliche Spaziergänge und Wanderungen.</p>
+
+  <div class="standort-box">
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+      <input id="ww-standort-input" class="standort-input" type="text"
+        placeholder="PLZ, Stadt oder Adresse"
+        value="${esc(s?.name || '')}"
+        onkeydown="if(event.key==='Enter')wanderwegeStandortSuchen()" />
+      <button class="btn btn-primary" onclick="wanderwegeStandortSuchen()">🔍 Suchen</button>
+      <button class="btn btn-outline gps-btn" onclick="gpsStandort()">📡 GPS</button>
+    </div>
+    ${s ? `<div style="margin-top:.5rem;font-size:.82rem;color:var(--g700)">📍 <strong>${esc(s.name)}</strong> · Radius:
+      <select onchange="state.wanderwegeRadius=parseInt(this.value);render()" style="margin-left:.3rem;padding:.2rem .35rem;border-radius:.4rem;border:1px solid var(--g200)">
+        ${[2000,5000,8000,15000,25000].map(r => `<option value="${r}" ${radius===r?'selected':''}>${r/1000} km</option>`).join('')}
+      </select>
+      <button class="btn btn-primary" style="margin-top:.6rem;width:100%" onclick="wanderwegeLaden()" ${laden?'disabled':''}>
+        ${laden ? '⏳ Suche läuft…' : '🥾 Wege in der Nähe suchen'}
+      </button>
+    </div>` : `<div style="margin-top:.5rem;font-size:.82rem;color:var(--g500)">Bitte zuerst einen Standort eingeben.</div>`}
+  </div>
+
+  ${gespeichert.length ? `
+  <div class="block-title" style="margin-top:1.25rem">💾 Gespeicherte Wege (${gespeichert.length})</div>
+  <div class="ww-grid">
+    ${gespeichert.map(w => `
+    <div class="ww-karte">
+      <div class="ww-karte-titel">${esc(w.typ || '🚶 Weg')}</div>
+      <div class="ww-karte-name">${esc(w.name)}</div>
+      <div class="ww-karte-aktionen">
+        <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${w.lat}&mlon=${w.lng}#map=15/${w.lat}/${w.lng}">🗺️ Auf Karte</a>
+        <button class="btn btn-outline btn-sm" onclick="wanderwegLoeschen('${esc(w.id)}')">✕ Entfernen</button>
+      </div>
+    </div>`).join('')}
+  </div>` : ''}
+
+  ${liste === null ? '' : !liste.length ? `
+  <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">😕</span><div class="ib-text"><strong>Keine Wege gefunden.</strong> Radius vergrößern oder anderen Standort wählen.</div></div>
+  ` : `
+  <div class="block-title" style="margin-top:1.25rem">📍 Wege in der Nähe (${liste.length})</div>
+  <div class="ww-grid">
+    ${liste.map((w, i) => `
+    <div class="ww-karte">
+      <div class="ww-karte-titel">${esc(w.typ)} · ${w.distKm.toFixed(1)} km</div>
+      <div class="ww-karte-name">${esc(w.name)}</div>
+      <div class="ww-karte-aktionen">
+        <button class="btn btn-primary btn-sm" onclick="wanderwegSpeichernIdx(${i})">💾 Speichern</button>
+        <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${w.lat}&mlon=${w.lng}#map=15/${w.lat}/${w.lng}">🗺️ Karte</a>
+      </div>
+    </div>`).join('')}
+  </div>`}`;
 }
 
 // ===== Gespeicherte Ziele =====
