@@ -1853,7 +1853,32 @@ const WISSEN_FAKTEN = [
   { kategorie:'Technik und Zahlen', text:'Im Flugmodus lädt das Handy etwas schneller, weil es weniger funkt.' },
   { kategorie:'Technik und Zahlen', text:'Eine E-Mail braucht meist nur Sekundenbruchteile einmal um die halbe Welt.' },
   { kategorie:'Technik und Zahlen', text:'WLAN überträgt Daten über Funkwellen — ähnlich harmlos wie die eines Radios.' },
-  { kategorie:'Technik und Zahlen', text:'Das erste smartphone-ähnliche Gerät kam bereits 1994 auf den Markt.' }
+  { kategorie:'Technik und Zahlen', text:'Das erste smartphone-ähnliche Gerät kam bereits 1994 auf den Markt.' },
+  // Erweiterungen Mai 2026
+  { kategorie:'Körper und Gesundheit', text:'Ein lautes Lachen kann den Puls so stark heben wie eine kurze Sporteinheit.' },
+  { kategorie:'Körper und Gesundheit', text:'Tränen enthalten je nach Anlass unterschiedliche Stoffe — Trauer-Tränen enthalten mehr Stresshormone als Reflex-Tränen.' },
+  { kategorie:'Körper und Gesundheit', text:'Der Geruchssinn ist eng mit dem Erinnerungs-Zentrum im Gehirn verknüpft — deshalb erinnert ein Duft sofort an einen Moment.' },
+  { kategorie:'Körper und Gesundheit', text:'Schon 10 Minuten Gehen am Tag senken nachweislich das Risiko für Herz-Kreislauf-Erkrankungen.' },
+  { kategorie:'Natur und Tiere', text:'Bienen tanzen, um anderen Bienen den Weg zur Blüte zu zeigen — Forscher entschlüsseln diese Sprache seit 80 Jahren.' },
+  { kategorie:'Natur und Tiere', text:'Eichhörnchen vergraben Nüsse — vergessen tausende davon, woraus oft neue Bäume wachsen.' },
+  { kategorie:'Natur und Tiere', text:'Eine ausgewachsene Eiche kann an einem Sommertag über 400 Liter Wasser verdunsten.' },
+  { kategorie:'Natur und Tiere', text:'Schmetterlinge schmecken mit den Füßen — sie erkennen so direkt, ob eine Pflanze für ihre Eier passt.' },
+  { kategorie:'Alltag und Haushalt', text:'Backpulver mit Wasser löst angebrannte Töpfe besser als die meisten Spezial-Reiniger.' },
+  { kategorie:'Alltag und Haushalt', text:'Lüften für 5 Minuten Stoß-Lüftung spart mehr Energie als Fenster lange in Kipp-Stellung.' },
+  { kategorie:'Alltag und Haushalt', text:'Eine volle Spülmaschine verbraucht weniger Wasser als von Hand abwaschen — wenn man sie gut beladen lässt.' },
+  { kategorie:'Alltag und Haushalt', text:'Bananen reifen schneller, wenn sie neben Äpfeln liegen — beide Früchte geben Reifgas (Ethylen) ab.' },
+  { kategorie:'Welt und Geschichte', text:'Die deutsche Sprache hat über 5 Millionen Wörter — Englisch nur etwa 1 Million.' },
+  { kategorie:'Welt und Geschichte', text:'Die Berliner Mauer fiel am 9. November 1989 — durch eine missverständliche Pressekonferenz.' },
+  { kategorie:'Welt und Geschichte', text:'Die ältesten Schuhe der Welt sind rund 5.500 Jahre alt und wurden in Armenien gefunden.' },
+  { kategorie:'Welt und Geschichte', text:'Antarktis ist der trockenste Kontinent — manche Regionen haben seit über 2 Millionen Jahren keinen Regen mehr.' },
+  { kategorie:'Kinder und Lernen', text:'Vorlesen baut den Wortschatz von Kindern stärker auf als Bildschirm-Inhalte.' },
+  { kategorie:'Kinder und Lernen', text:'Kinder unter 6 Jahren lernen eine neue Sprache fast wie ihre Muttersprache.' },
+  { kategorie:'Kinder und Lernen', text:'Mit der Hand schreiben verankert Lerninhalte im Gehirn besser als Tippen.' },
+  { kategorie:'Kinder und Lernen', text:'Pausen alle 25 Minuten machen das Lernen für Schulkinder deutlich wirksamer (Pomodoro-Methode).' },
+  { kategorie:'Technik und Zahlen', text:'Eine moderne Smartwatch hat mehr Rechenleistung als der Computer, der Apollo 11 zum Mond brachte.' },
+  { kategorie:'Technik und Zahlen', text:'Über die Hälfte des weltweiten Internet-Verkehrs sind Videos.' },
+  { kategorie:'Technik und Zahlen', text:'Die erste deutsche E-Mail wurde 1984 empfangen — drei Tage nach dem Absenden.' },
+  { kategorie:'Technik und Zahlen', text:'„0" wurde als Zahl im heutigen Sinn erst um das Jahr 600 in Indien eingeführt.' }
 ];
 
 // ===== ERSTE-HILFE-ANLEITUNGEN =====
@@ -2062,7 +2087,15 @@ const FAMILIEN_TIPPS_ALLE = [
       { titel: 'Patenkind-Konzept', text: 'Vertraute Bezugsperson außerhalb der Familie (Pate, Tante, Freund) — Kinder profitieren von zusätzlicher Bezugsperson, gerade bei Single-Eltern.' },
       { titel: 'Eigenes Zimmer respektieren', text: 'Ab 8 Jahren: Anklopfen vor dem Eintreten. Lehrt Privatsphäre und gegenseitigen Respekt.' },
       { titel: 'Geschenke selbst basteln', text: 'Für Großeltern/Verwandte: Selbstgemachtes ist wertvoller und kostet nichts. Kinder lernen: Schenken ≠ Geld.' },
-      { titel: 'Familien-Hobby pflegen', text: 'Ein gemeinsames Hobby (Wandern, Brettspiele, Backen) prägt Kindheit nachhaltig — wichtiger als teure Aktivitäten.' }
+      { titel: 'Familien-Hobby pflegen', text: 'Ein gemeinsames Hobby (Wandern, Brettspiele, Backen) prägt Kindheit nachhaltig — wichtiger als teure Aktivitäten.' },
+      { titel: 'Bildschirmzeit nach Alter', text: 'Faustregel: pro Lebensjahr max. 10 Minuten Bildschirm/Tag bis 10 Jahre — danach feste Zeitfenster vereinbaren statt Verbote.' },
+      { titel: 'Lob ist konkret', text: '„Toll, dass du den Tisch ohne Erinnerung gedeckt hast" wirkt deutlich stärker als „Brave/r Junge/Mädchen". Konkret = wirksam.' },
+      { titel: 'Wahl statt Befehl', text: 'Statt „Zieh die Jacke an!" lieber „Möchtest du die rote oder die blaue?" — kleine Wahlmöglichkeiten reduzieren Machtkämpfe.' },
+      { titel: 'Vorlesen — auch für Ältere', text: 'Auch Grundschulkinder profitieren noch vom Vorlesen: gemeinsame Zeit, größerer Wortschatz, weniger Bildschirm.' },
+      { titel: 'Streit fair beenden', text: 'Geschwisterstreit nicht entscheiden, sondern moderieren: „Was war Ihre Sicht? Was war seine?" — fördert Empathie.' },
+      { titel: 'Taschengeld früh starten', text: 'Ab 6 Jahren wöchentlich kleinen Betrag — Kinder lernen so spielerisch sparen, planen und Konsequenzen.' },
+      { titel: 'Hausaufgaben mit Plan', text: 'Feste Uhrzeit, ruhiger Platz, eine schwere Aufgabe nach einer leichten — verkürzt die tägliche Diskussion um die Hälfte.' },
+      { titel: 'Familien-Konferenz', text: 'Einmal pro Woche 15 Min. zusammensitzen: was war gut, was läuft schief, was planen wir? Schon Sechsjährige beteiligen sich gerne.' }
     ]
   },
   {
