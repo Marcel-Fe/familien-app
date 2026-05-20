@@ -1392,6 +1392,27 @@ body {
 }
 .route-ergebnis-item { font-size: .85rem; font-weight: 700; color: var(--p1); }
 .route-typ { background: var(--p1); color: white; border-radius: 99px; padding: .1rem .55rem; font-size: .75rem; }
+.ziele-block { margin-top: .85rem; padding-top: .65rem; border-top: 1px dashed var(--g200); }
+.ziele-titel { font-size: .78rem; font-weight: 800; color: var(--g700); margin-bottom: .45rem; }
+.ziele-liste { display: flex; flex-wrap: wrap; gap: .4rem; }
+.ziel-chip {
+  display: inline-flex; align-items: center; gap: 0;
+  background: var(--lila-hell); border-radius: 99px;
+  border: 1px solid var(--g200); overflow: hidden;
+}
+.ziel-btn {
+  background: transparent; border: none; cursor: pointer;
+  font-size: .78rem; font-weight: 600; color: var(--p1);
+  padding: .35rem .7rem; max-width: 200px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ziel-btn:hover { background: rgba(124,58,237,.08); }
+.ziel-loesch {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--g400); font-size: .85rem; font-weight: 700;
+  padding: .3rem .55rem; border-left: 1px solid var(--g200);
+}
+.ziel-loesch:hover { background: var(--rot-hell); color: var(--rot); }
 
 /* ===== Supermarkt Angebote ===== */
 .angebote-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: .8rem; margin-bottom: 1rem; }

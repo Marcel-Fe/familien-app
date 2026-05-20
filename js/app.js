@@ -2713,7 +2713,7 @@ function renderUmgebung() {
     <div class="standort-eingabe">
       <input id="standort-input" class="standort-input" autocomplete="off"
         type="text"
-        placeholder="PLZ oder Ort eingeben, z.B. München"
+        placeholder="PLZ, Adresse oder Stadt — auch international (z. B. Paris)"
         value="${esc(state.umgebungStandort?.name || ortVorausgefuellt || '')}"
         onkeydown="if(event.key==='Enter')standortSuchen()" />
       <button class="btn btn-primary" onclick="standortSuchen()">🔍 Suchen</button>
@@ -2755,7 +2755,7 @@ function renderUmgebung() {
       <button class="btn btn-primary" style="flex:1" onclick="routeBerechnen()">
         ${state.routeLaden ? '⏳ Berechne...' : '🗺️ Route berechnen'}
       </button>
-      ${state.routeDaten ? `<button class="btn btn-outline" onclick="routeZurücksetzen()">✕ Route löschen</button>` : ''}
+      ${state.routeDaten ? `<button class="btn btn-outline" onclick="zielSpeichern()">💾 Ziel speichern</button><button class="btn btn-outline" onclick="routeZurücksetzen()">✕</button>` : ''}
     </div>
     ${state.routeDaten ? `
     <div class="route-ergebnis">
@@ -2768,6 +2768,21 @@ function renderUmgebung() {
       </a>
     </div>` : ''}
     <div id="route-fehler" style="display:none;margin-top:.5rem;padding:.5rem .75rem;background:#FEE2E2;color:#DC2626;border-radius:.5rem;font-size:.82rem;font-weight:600"></div>
+    ${(() => {
+      const ziele = (typeof zieleLaden === 'function') ? zieleLaden() : [];
+      if (!ziele.length) return '';
+      return `
+    <div class="ziele-block">
+      <div class="ziele-titel">💾 Gespeicherte Ziele</div>
+      <div class="ziele-liste">
+        ${ziele.map(z => `
+        <div class="ziel-chip">
+          <button class="ziel-btn" onclick="zielAufrufen('${esc(z.id)}')" title="Route hierhin">📍 ${esc(z.name)}</button>
+          <button class="ziel-loesch" onclick="zielLoeschen('${esc(z.id)}')" title="Ziel löschen">✕</button>
+        </div>`).join('')}
+      </div>
+    </div>`;
+    })()}
   </div>` : ''}
 
   <div class="dash-suche-box" style="margin-bottom:.65rem">
@@ -2840,18 +2855,18 @@ async function standortSuchen() {
   input.value = '🔍 Suche läuft...';
 
   try {
-    // PLZ-only Suche mit dediziertem Nominatim-Parameter
+    // 5-stellige Eingabe = deutsche PLZ (dediziertes Feld); sonst weltweite Adress-Suche
     const isPLZ = /^\d{5}$/.test(query);
     const url = isPLZ
       ? `https://nominatim.openstreetmap.org/search?postalcode=${query}&country=de&format=json&limit=1&accept-language=de&addressdetails=1`
-      : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query+', Deutschland')}&format=json&limit=3&countrycodes=de&accept-language=de&addressdetails=1`;
+      : `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=3&accept-language=de&addressdetails=1`;
 
-    const res = await fetch(url, { headers: { 'User-Agent': 'FamilienApp/1.0' } });
+    const res = await fetch(url);
     const daten = await res.json();
 
     if (!daten.length) {
       input.disabled = false; input.value = orig;
-      standortFehler('Ort nicht gefunden. Bitte PLZ (z.B. 80333) oder Stadtname eingeben.');
+      standortFehler('Ort nicht gefunden. Bitte PLZ (z.B. 80333), Stadt oder Adresse eingeben — auch international.');
       return;
     }
 
@@ -3549,6 +3564,42 @@ function naviOverlayAktualisieren(distZ) {
     </div>`;
 }
 
+// ===== Gespeicherte Ziele =====
+function zieleLaden() {
+  try { return JSON.parse(localStorage.getItem('familienapp_ziele') || '[]'); }
+  catch { return []; }
+}
+function zieleSpeichern(arr) {
+  try { localStorage.setItem('familienapp_ziele', JSON.stringify(arr.slice(0, 30))); } catch {}
+}
+function zielSpeichern() {
+  const name = (state.routeZiel || '').trim();
+  const k = state.routeZielKoord;
+  if (!name || !k) { toast('⚠️ Erst eine Route berechnen, dann speichern.'); return; }
+  const liste = zieleLaden();
+  if (liste.some(z => z.name.toLowerCase() === name.toLowerCase())) {
+    toast('💾 Ziel ist bereits gespeichert.');
+    return;
+  }
+  liste.unshift({ id: Date.now().toString(36), name, lat: k.lat, lng: k.lng });
+  zieleSpeichern(liste);
+  toast('💾 Ziel gespeichert');
+  render();
+}
+function zielLoeschen(id) {
+  zieleSpeichern(zieleLaden().filter(z => z.id !== id));
+  render();
+}
+function zielAufrufen(id) {
+  const z = zieleLaden().find(x => x.id === id);
+  if (!z) return;
+  state.routeZiel = z.name;
+  state.routeZielKoord = { lat: z.lat, lng: z.lng };
+  const inp = el('route-ziel');
+  if (inp) inp.value = z.name;
+  routeBerechnen();
+}
+
 async function routeBerechnen() {
   const startEl = el('route-start');
   const zielEl  = el('route-ziel');
@@ -3578,6 +3629,7 @@ async function routeBerechnen() {
     const geoData = await geoRes.json();
     if (!geoData.length) throw new Error('Ziel nicht gefunden — bitte Adresse prüfen (z. B. Stadt + Straße angeben).');
     const zielLat = parseFloat(geoData[0].lat), zielLng = parseFloat(geoData[0].lon);
+    state.routeZielKoord = { lat: zielLat, lng: zielLng };
 
     // Start bestimmen
     let startLat, startLng;
