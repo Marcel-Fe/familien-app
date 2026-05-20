@@ -3553,26 +3553,30 @@ async function routeBerechnen() {
   const startEl = el('route-start');
   const zielEl  = el('route-ziel');
   const fehlerEl = el('route-fehler');
+  const fehlerZeigen = (txt) => { if (fehlerEl) { fehlerEl.textContent = txt; fehlerEl.style.display = 'block'; } };
   if (!zielEl || !zielEl.value.trim()) {
-    if (fehlerEl) { fehlerEl.textContent = 'Bitte Zieladresse eingeben.'; fehlerEl.style.display = 'block'; }
+    fehlerZeigen('Bitte Zieladresse eingeben.');
     return;
   }
   if (fehlerEl) fehlerEl.style.display = 'none';
   state.routeZiel = zielEl.value.trim();
   const startName = startEl?.value.trim() || state.umgebungStandort?.name || '';
+  if (!state.umgebungStandort && !startName) {
+    fehlerZeigen('Bitte oben einen Standort eingeben oder den Start ausfüllen.');
+    return;
+  }
 
   state.routeLaden = true;
   const btn = document.querySelector('[onclick="routeBerechnen()"]');
   if (btn) btn.textContent = '⏳ Berechne...';
 
   try {
-    // Ziel geocodieren
+    // Ziel geocodieren — weltweit, damit auch Urlaubs-Adressen funktionieren
     const geoRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(state.routeZiel + ', Deutschland')}&format=json&limit=1&countrycodes=de`,
-      { headers: { 'User-Agent': 'FamilienApp/1.0' } }
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(state.routeZiel)}&format=json&limit=1`
     );
     const geoData = await geoRes.json();
-    if (!geoData.length) throw new Error('Ziel nicht gefunden');
+    if (!geoData.length) throw new Error('Ziel nicht gefunden — bitte Adresse prüfen (z. B. Stadt + Straße angeben).');
     const zielLat = parseFloat(geoData[0].lat), zielLng = parseFloat(geoData[0].lon);
 
     // Start bestimmen
@@ -3581,11 +3585,10 @@ async function routeBerechnen() {
       startLat = state.umgebungStandort.lat; startLng = state.umgebungStandort.lng;
     } else {
       const sRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(startName + ', Deutschland')}&format=json&limit=1&countrycodes=de`,
-        { headers: { 'User-Agent': 'FamilienApp/1.0' } }
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(startName)}&format=json&limit=1`
       );
       const sData = await sRes.json();
-      if (!sData.length) throw new Error('Startpunkt nicht gefunden');
+      if (!sData.length) throw new Error('Startpunkt nicht gefunden — bitte oben einen Standort eingeben.');
       startLat = parseFloat(sData[0].lat); startLng = parseFloat(sData[0].lon);
     }
 
@@ -3602,7 +3605,7 @@ async function routeBerechnen() {
       } catch (e) { /* nächster Versuch */ }
       if (!routeData && v < 2) await new Promise(r => setTimeout(r, 700));
     }
-    if (!routeData) throw new Error('Route nicht berechenbar');
+    if (!routeData) throw new Error('Route konnte nicht berechnet werden — Internetverbindung prüfen und erneut versuchen.');
 
     const route = routeData.routes[0];
     const distM = route.distance;
