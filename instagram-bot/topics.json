@@ -1,0 +1,1313 @@
+{
+  "_info": "30 Starter-Themen für Instagram-Reels. Jeder Eintrag wird zu einem ~18-Sekunden-Video: Hook → Problem → Lösung → CTA. Felder: id, kategorie, hook, problem, loesung, cta, hashtags, scene (wohnzimmer|kueche|kinderzimmer|park|buero).",
+  "topics": [
+    {
+      "id": "kindergeld-antrag",
+      "kategorie": "finanzen",
+      "hook": "Kennst du das? Kindergeld-Antrag und du weißt nicht wo anfangen.",
+      "problem": "Papa sitzt seit Stunden vor dem Antrag. Welche Anlage zuerst? Welche Belege?",
+      "loesung": "Mit der FamilienApp gehst du Schritt für Schritt durch. Jedes Feld erklärt. Alle Unterlagen-Listen dabei.",
+      "cta": "FamilienApp laden. Anträge endlich verstehen.",
+      "hashtags": ["#familie", "#kindergeld", "#elterngeld", "#familienleben", "#mamasein", "#papasein", "#familienapp", "#elternalltag"],
+      "scene": "buero"
+    },
+    {
+      "id": "wohngeld-check",
+      "kategorie": "finanzen",
+      "hook": "Hast du gewusst dass dir Wohngeld zusteht?",
+      "problem": "Über 60 Prozent aller berechtigten Familien beantragen es nicht. Schade ums Geld.",
+      "loesung": "Die FamilienApp prüft in 30 Sekunden ob du Anspruch hast. Mit Rechner für dein Bundesland.",
+      "cta": "Check jetzt was dir zusteht. Kostenlos.",
+      "hashtags": ["#wohngeld", "#familienfinanzen", "#sparen", "#familie", "#zuschuss", "#elterntipp", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "unterhaltsvorschuss",
+      "kategorie": "finanzen",
+      "hook": "Alleinerziehend? Der andere Elternteil zahlt nicht?",
+      "problem": "Dann kannst du Unterhaltsvorschuss bekommen. Bis zu 530 Euro pro Monat vom Staat.",
+      "loesung": "Die FamilienApp zeigt dir den Antrag, alle Belege und das Jugendamt in deiner Nähe.",
+      "cta": "Hol dir was dir zusteht. App laden.",
+      "hashtags": ["#alleinerziehend", "#unterhaltsvorschuss", "#singlemom", "#singledad", "#familie", "#familienapp", "#elterntipp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "essensplan",
+      "kategorie": "alltag",
+      "hook": "Mama, was gibts heute zum Essen?",
+      "problem": "Jeden Tag die gleiche Frage. Jeden Tag der gleiche Stress.",
+      "loesung": "Essensplan für die ganze Woche in der FamilienApp. Mit Einkaufsliste die sich selbst macht.",
+      "cta": "Nie wieder Was-koch-ich-heute-Stress.",
+      "hashtags": ["#essensplan", "#mealprep", "#familienkueche", "#familienrezepte", "#mamaalltag", "#familienapp", "#kochen"],
+      "scene": "kueche"
+    },
+    {
+      "id": "spar-vertrag",
+      "kategorie": "sparen",
+      "hook": "Du zahlst zu viel für Strom Internet Versicherung.",
+      "problem": "Familien verschenken im Schnitt 600 Euro pro Jahr an alte Verträge.",
+      "loesung": "Die FamilienApp zeigt dir genau wo du wechseln kannst. Mit Direktlink zum Vergleich.",
+      "cta": "600 Euro im Jahr zurückholen.",
+      "hashtags": ["#sparen", "#sparenimalltag", "#vertragswechsel", "#familienfinanzen", "#familienapp", "#hausfrauentipp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "kita-platz",
+      "kategorie": "antraege",
+      "hook": "Kita-Platz gesucht? Kommst nicht weiter?",
+      "problem": "In manchen Städten wartet man Monate. Manche Anträge sind richtig kompliziert.",
+      "loesung": "FamilienApp hat alle Kita-Anträge nach Bundesland. Mit Tipps wann man sich am besten meldet.",
+      "cta": "Schneller zum Kita-Platz.",
+      "hashtags": ["#kita", "#kitaplatz", "#kindergarten", "#elternzeit", "#familienapp", "#mamaleben"],
+      "scene": "buero"
+    },
+    {
+      "id": "rezept-1euro",
+      "kategorie": "kochen",
+      "hook": "Mittagessen für die ganze Familie. Unter einem Euro pro Person.",
+      "problem": "Frische Kost ist teuer? Falsch. Du musst nur wissen wie.",
+      "loesung": "Über 100 günstige Familien-Rezepte in der App. Mit Einkaufsliste und Kindersicherheit.",
+      "cta": "Sparen ohne Geschmacks-Verzicht.",
+      "hashtags": ["#sparen", "#rezepte", "#familienrezepte", "#günstigkochen", "#mealprep", "#familienapp", "#hausfrau"],
+      "scene": "kueche"
+    },
+    {
+      "id": "spielplatz-finden",
+      "kategorie": "umgebung",
+      "hook": "Kindern wird langweilig? Du weißt nicht wohin?",
+      "problem": "Spielplätze, Kinderkinos, Schwimmbäder. Wer hat den Überblick?",
+      "loesung": "FamilienApp zeigt dir alles in deiner Nähe auf der Karte. Mit Bewertung und Route.",
+      "cta": "Nie wieder gelangweilte Kinder.",
+      "hashtags": ["#familienausflug", "#mitkindern", "#spielplatz", "#familienzeit", "#familienapp", "#wochenende"],
+      "scene": "park"
+    },
+    {
+      "id": "fieber-kind",
+      "kategorie": "gesundheit",
+      "hook": "Mitten in der Nacht. Kind hat 39 Grad Fieber.",
+      "problem": "Was tun? Wann zum Arzt? Welches Hausmittel hilft?",
+      "loesung": "Die FamilienApp hat 659 Heilmittel und Notfall-Tipps. Mit Symptom-Check.",
+      "cta": "Im Notfall richtig handeln.",
+      "hashtags": ["#kindergesundheit", "#fieber", "#mamaleben", "#hausmittel", "#familienapp", "#elterntipp", "#krankesKind"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "schwanger-app",
+      "kategorie": "schwangerschaft",
+      "hook": "Schwanger? Glückwunsch.",
+      "problem": "Jetzt kommen 100 Fragen. Welche Vorsorge wann? Welche Anträge schon jetzt?",
+      "loesung": "Die FamilienApp begleitet dich Woche für Woche. Mit Antrags-Checkliste und Vorsorge-Plan.",
+      "cta": "Entspannt durch die Schwangerschaft.",
+      "hashtags": ["#schwanger", "#schwangerschaft", "#mamatobe", "#babybauch", "#schwangerschaftswoche", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hausaufgaben",
+      "kategorie": "kinder",
+      "hook": "Hausaufgaben. Wieder mal Streit.",
+      "problem": "Kind versteht es nicht. Du weißt nicht mehr wie es ging.",
+      "loesung": "Die FamilienApp hat Hausaufgaben-Hilfe Klasse 1 bis 12. Erklärt einfach.",
+      "cta": "Endlich entspannte Nachmittage.",
+      "hashtags": ["#hausaufgaben", "#schulkind", "#mamaleben", "#schule", "#familienapp", "#lernen", "#grundschule"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "basteln-regen",
+      "kategorie": "kinder",
+      "hook": "Regen am Wochenende. Kinder drehen durch.",
+      "problem": "Was machen wenn man nicht raus kann?",
+      "loesung": "Bastelideen in der FamilienApp. Mit Video-Anleitung. Material hast du zuhause.",
+      "cta": "Verregnete Sonntage gerettet.",
+      "hashtags": ["#basteln", "#mitkindern", "#diy", "#bastelnmitkindern", "#regenwetter", "#familienapp", "#mamaleben"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "wohnung-suche",
+      "kategorie": "wohnen",
+      "hook": "Wohnungssuche mit Familie? Ein Albtraum.",
+      "problem": "Hunderte Inserate, alle weg. Du kommst nicht hinterher.",
+      "loesung": "Die FamilienApp bündelt 12 Portale gleichzeitig. Du siehst Wohnung als erster.",
+      "cta": "Wohnungssuche endlich erleichtern.",
+      "hashtags": ["#wohnungssuche", "#umzug", "#familienleben", "#wohnen", "#familienapp", "#zuhause"],
+      "scene": "buero"
+    },
+    {
+      "id": "budget-rechner",
+      "kategorie": "finanzen",
+      "hook": "Am Ende vom Monat ist noch viel Monat übrig.",
+      "problem": "Wo geht das Geld eigentlich hin?",
+      "loesung": "Budget-Rechner in der FamilienApp mit Ampel. Du siehst sofort wo du sparen kannst.",
+      "cta": "Endlich Überblick über deine Familien-Finanzen.",
+      "hashtags": ["#haushaltsbuch", "#sparen", "#familienfinanzen", "#budget", "#familienapp", "#geldsparen"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "ferien-planen",
+      "kategorie": "freizeit",
+      "hook": "Ferien stehen vor der Tür. Kein Plan was machen.",
+      "problem": "Urlaub teuer. Daheim langweilig. Was jetzt?",
+      "loesung": "30 günstige Familien-Urlaube in der App. Plus Ausflugs-Tipps für daheim.",
+      "cta": "Ferien retten. Familie glücklich.",
+      "hashtags": ["#familienurlaub", "#urlaub", "#ferien", "#mitkindern", "#familienreise", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "bafoeg-antrag",
+      "kategorie": "antraege",
+      "hook": "Kind geht studieren. BAföG-Antrag wartet.",
+      "problem": "30 Seiten Formular. Welcher Nachweis wo?",
+      "loesung": "FamilienApp führt dich Schritt für Schritt. Mit allen Belegen-Listen.",
+      "cta": "BAföG endlich richtig beantragen.",
+      "hashtags": ["#bafög", "#studium", "#elternsein", "#abitur", "#familienapp", "#student"],
+      "scene": "buero"
+    },
+    {
+      "id": "ausmalbilder",
+      "kategorie": "kinder",
+      "hook": "Kind will malen. Wo bekommst du jetzt Ausmalbilder her?",
+      "problem": "Suchen und drucken kostet Zeit die du nicht hast.",
+      "loesung": "Hunderte Ausmalbilder in der FamilienApp. Direkt drucken. Sortiert nach Alter.",
+      "cta": "Eine ruhige Stunde gewonnen.",
+      "hashtags": ["#ausmalbilder", "#malenmitkindern", "#mamaleben", "#kindergarten", "#familienapp", "#diy"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "kalender-familie",
+      "kategorie": "alltag",
+      "hook": "Termine. Termine. Wer hat heute was?",
+      "problem": "Eltern-Abend, Arzt, Sport, Geburtstag. Alles parallel.",
+      "loesung": "Familien-Kalender in der App. Alle sehen alles. Erinnerungen automatisch.",
+      "cta": "Nie wieder einen Termin vergessen.",
+      "hashtags": ["#familienkalender", "#organisieren", "#mamaleben", "#planung", "#familienapp", "#alltag"],
+      "scene": "kueche"
+    },
+    {
+      "id": "elterngeld-trick",
+      "kategorie": "finanzen",
+      "hook": "Elterngeld optimieren. Es gibt Tricks die kaum jemand kennt.",
+      "problem": "Wer den falschen Bezugszeitraum wählt verschenkt tausende Euro.",
+      "loesung": "FamilienApp rechnet alle Varianten durch. Du wählst die optimale.",
+      "cta": "Mehr Elterngeld holen. Legal.",
+      "hashtags": ["#elterngeld", "#elternzeit", "#familienfinanzen", "#familienapp", "#mamatobe", "#papawerden"],
+      "scene": "buero"
+    },
+    {
+      "id": "tipps-baby-schlaf",
+      "kategorie": "baby",
+      "hook": "Baby schläft nicht. Du auch nicht.",
+      "problem": "Jedes Buch sagt was anderes. Was hilft wirklich?",
+      "loesung": "FamilienApp mit erprobten Schlaf-Tipps. Von Hebammen empfohlen.",
+      "cta": "Endlich wieder schlafen.",
+      "hashtags": ["#babyschlaf", "#mamasein", "#baby", "#newbornmom", "#familienapp", "#schlafmangel"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "checkliste-baby",
+      "kategorie": "baby",
+      "hook": "Erstausstattung Baby. Was brauchst du wirklich?",
+      "problem": "Im Laden empfehlen sie dir alles. Das meiste brauchst du nicht.",
+      "loesung": "Checkliste in der FamilienApp. Was wirklich nötig ist. Was du dir sparen kannst.",
+      "cta": "Hunderte Euro sparen bei der Erstausstattung.",
+      "hashtags": ["#erstausstattung", "#baby", "#mamatobe", "#schwangerschaft", "#familienapp", "#sparen"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "geburtstag-planen",
+      "kategorie": "freizeit",
+      "hook": "Kindergeburtstag steht an. Panik?",
+      "problem": "10 Kinder, 4 Stunden, was machen ohne dass das Wohnzimmer verwüstet wird?",
+      "loesung": "Kindergeburtstag-Spiele in der App. Plus Einladungs-Vorlagen und Rezepte.",
+      "cta": "Entspannter Kindergeburtstag. Versprochen.",
+      "hashtags": ["#kindergeburtstag", "#mitkindern", "#mamaleben", "#party", "#familienapp", "#geburtstag"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "sparen-supermarkt",
+      "kategorie": "sparen",
+      "hook": "Supermarkt-Quittung. Schon wieder über 100 Euro.",
+      "problem": "Wie kannst du an Lebensmitteln sparen ohne Verzicht?",
+      "loesung": "Spar-Strategien in der FamilienApp. Plus aktuelle Prospekte aller Supermärkte.",
+      "cta": "Bis zu 200 Euro im Monat sparen.",
+      "hashtags": ["#sparen", "#lebensmittel", "#supermarkt", "#sparenimalltag", "#familienapp", "#haushalt"],
+      "scene": "kueche"
+    },
+    {
+      "id": "feiertage-kinder",
+      "kategorie": "alltag",
+      "hook": "Wann sind nochmal Schulferien?",
+      "problem": "Brückentage, Feiertage, Schulferien. Wer plant das alles?",
+      "loesung": "FamilienApp mit allen Feiertagen und Ferien deines Bundeslands. Plus Brückentag-Tipps.",
+      "cta": "Urlaub clever planen.",
+      "hashtags": ["#ferien", "#urlaub", "#familienplanung", "#feiertage", "#familienapp", "#mamaleben"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "schule-einschulung",
+      "kategorie": "kinder",
+      "hook": "Erste Klasse. Was muss in den Schulranzen?",
+      "problem": "Liste vom Lehrer hilft, aber was vergisst du immer?",
+      "loesung": "Komplette Einschulungs-Checkliste in der FamilienApp. Mit Spar-Tipps für die Erstausstattung.",
+      "cta": "Stress-frei in die erste Klasse.",
+      "hashtags": ["#einschulung", "#schulkind", "#erstklässler", "#mamaleben", "#familienapp", "#schule"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "freizeit-mit-baby",
+      "kategorie": "baby",
+      "hook": "Mit Baby raus aber wohin?",
+      "problem": "Café mit Wickeltisch? Park mit Schatten? Wer weiß das?",
+      "loesung": "Familien-Orte in der App. Mit Babywickel-Filter und Stillplatz-Hinweisen.",
+      "cta": "Babyfreundliche Orte finden.",
+      "hashtags": ["#babyleben", "#mamasein", "#elternzeit", "#mitbabyunterwegs", "#familienapp"],
+      "scene": "park"
+    },
+    {
+      "id": "konflikt-erziehung",
+      "kategorie": "erziehung",
+      "hook": "Trotz-Phase. Tränen jeden Tag.",
+      "problem": "Wie reagierst du richtig ohne lauter zu werden?",
+      "loesung": "Erziehungshilfe in der FamilienApp. Mit konkreten Tipps für jede Alters-Phase.",
+      "cta": "Entspannter durch schwierige Phasen.",
+      "hashtags": ["#erziehung", "#trotzphase", "#mamaleben", "#kindererziehung", "#familienapp", "#mamatipp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "muellkalender",
+      "kategorie": "alltag",
+      "hook": "Vergessen die gelbe Tonne rauszustellen. Wieder.",
+      "problem": "Müll-Kalender hängt irgendwo. Erinnerung gibts nicht.",
+      "loesung": "FamilienApp mit Müll-Erinnerung. Direkt aufs Handy. Nie wieder vergessen.",
+      "cta": "Nie wieder im Pyjama zur Tonne sprinten.",
+      "hashtags": ["#alltagsstress", "#organisieren", "#familienleben", "#mülltrennung", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "berater-finden",
+      "kategorie": "support",
+      "hook": "Manchmal brauchst du einfach Hilfe von außen.",
+      "problem": "Familienberatung, Schuldnerberatung, Hebamme. Wo findest du das in deiner Nähe?",
+      "loesung": "Über 1000 Beratungsstellen in der FamilienApp. Mit Telefon und Adresse.",
+      "cta": "Hilfe holen wenn du sie brauchst.",
+      "hashtags": ["#beratung", "#hilfeholen", "#familienunterstützung", "#mentalhealth", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "motivation-mama",
+      "kategorie": "alltag",
+      "hook": "Mama-Alltag. Zwischen Wäschebergen und Hausaufgaben.",
+      "problem": "Wer denkt eigentlich an dich?",
+      "loesung": "Die FamilienApp hat einen Spruch des Tages. Klein aber täglich. Für dich.",
+      "cta": "Eine App die auch an dich denkt.",
+      "hashtags": ["#mamaleben", "#mamasein", "#selflove", "#mamamotivation", "#familienapp", "#mamatobe"],
+      "scene": "kueche"
+    },
+    {
+      "id": "trotzphase-supermarkt",
+      "kategorie": "erziehung",
+      "hook": "Dein Kind tobt mitten im Supermarkt. Alle gucken.",
+      "problem": "Trotzphase. Du fühlst dich hilflos. Schimpfen macht es schlimmer. Nachgeben auch.",
+      "loesung": "Die FamilienApp hat 12 Sätze die wirklich helfen. Plus Beratungsstellen wenn es regelmäßig eskaliert.",
+      "cta": "Ruhig bleiben mit der richtigen Strategie.",
+      "hashtags": ["#trotzphase", "#kleinkind", "#elternsein", "#erziehung", "#kinderwut", "#familienapp", "#elterntipps"],
+      "scene": "wohnzimmer",
+      "dialog": [
+        {
+          "speaker": "kind",
+          "label": "Lina (5)",
+          "text": "Mama, ich will den Schokoriegel! Bitte Mama, bitte!",
+          "scenePrompt": "stylized Pixar 3D 5-year-old girl with chestnut pigtails pink polka dot dress, pointing excitedly at a candy shelf in a colorful German supermarket, big pleading eyes, hopeful mouth open, candy shelf in background, Disney animation movie aesthetic, cinematic warm lighting, 9:16 vertical"
+        },
+        {
+          "speaker": "mama",
+          "label": "Mama",
+          "text": "Schatz, du hattest doch heute Morgen schon einen.",
+          "scenePrompt": "stylized Pixar 3D mother around 32 with chestnut brown hair in a soft bun mustard yellow cardigan, looking calmly down at her daughter in a supermarket aisle, kind patient gentle expression, slight worry in eyes, Disney movie aesthetic warm lighting, 9:16 vertical"
+        },
+        {
+          "speaker": "kind",
+          "label": "Lina",
+          "text": "Aber ich will noch einen! Ich brauche ihn!",
+          "scenePrompt": "stylized Pixar 3D 5-year-old girl with chestnut pigtails pink dress stomping her foot in a supermarket aisle, frustrated determined face, fists clenched, dramatic Disney movie emotional scene, cinematic warm lighting, 9:16 vertical"
+        },
+        {
+          "speaker": "mama",
+          "label": "Mama",
+          "text": "Heute nicht mehr, mein Schatz. Komm wir gehen weiter.",
+          "scenePrompt": "stylized Pixar 3D mother with chestnut bun mustard cardigan gently offering her hand to her daughter in a supermarket, calm patient smile, the daughter looking unsure, Disney movie aesthetic warm soft lighting, 9:16 vertical"
+        },
+        {
+          "speaker": "kind",
+          "label": "Lina",
+          "text": "NEIN! Ich will! Ich will! Ich will!",
+          "scenePrompt": "stylized Pixar 3D 5-year-old girl with chestnut pigtails screaming in frustration on the supermarket floor, dramatic tantrum, tears flying, fists pounding the floor, Disney movie dramatic emotional scene, dynamic angle, cinematic warm lighting, 9:16 vertical"
+        },
+        {
+          "speaker": "papa",
+          "label": "Papa",
+          "text": "Hey... hey. Was ist denn hier los?",
+          "scenePrompt": "stylized Pixar 3D father around 34 with short dark brown hair short beard soft blue shirt, kneeling down concerned and gentle next to his crying daughter in a supermarket aisle, kind warm expression, Disney movie cinematic warm lighting, 9:16 vertical"
+        },
+        {
+          "speaker": "kind",
+          "label": "Lina",
+          "text": "Ich bin so müde, Papa...",
+          "scenePrompt": "stylized Pixar 3D exhausted 5-year-old girl with chestnut pigtails leaning into her fathers chest in a supermarket aisle, tears drying on her cheeks, soft tired expression, comforting moment, Disney movie warm soft lighting, 9:16 vertical"
+        },
+        {
+          "speaker": "mama",
+          "label": "Mama",
+          "text": "Komm Schatz. Atme tief durch. Wir machen das zusammen.",
+          "scenePrompt": "stylized Pixar 3D mother and father gently hugging their 5-year-old daughter on the supermarket floor, family circle, warm comforting embrace, soft tears, mothers calm face, fathers supportive arm, Disney movie deeply emotional uplifting moment, soft cinematic warm lighting, 9:16 vertical"
+        },
+        {
+          "speaker": "narrator",
+          "label": "Erzähler",
+          "text": "Trotzphase. Jede Familie kennt das. Du bist nicht allein.",
+          "scenePrompt": "stylized Pixar 3D wide shot of a family group hug in a supermarket aisle, other shoppers blurred in background looking with empathy, soft documentary cinematic warm lighting, Disney movie emotional moment, 9:16 vertical"
+        },
+        {
+          "speaker": "narrator",
+          "label": "Erzähler",
+          "text": "Die FamilienApp hat zwölf Sätze die wirklich helfen.",
+          "scenePrompt": "stylized Pixar 3D close up of a smartphone in a parents hand displaying a friendly colorful family app with parenting tips, soft glow around the screen, family blurred warmly in background, Pixar movie aesthetic, 9:16 vertical",
+          "showApp": true
+        },
+        {
+          "speaker": "narrator",
+          "label": "Erzähler",
+          "text": "Ruhig bleiben. Mit der FamilienApp.",
+          "scenePrompt": "stylized Pixar 3D wholesome happy family at home: father short dark hair short beard soft blue shirt, mother chestnut bun mustard cardigan, 5-year-old daughter pigtails pink dress, baby peach onesie, fluffy golden retriever puppy, all together in a sunlit cozy living room laughing together, soft golden hour Disney movie cinematic lighting, joyful wholesome moment, 9:16 vertical",
+          "showApp": true
+        }
+      ]
+    },
+    {
+      "id": "hausaufgaben-streit",
+      "kategorie": "erziehung",
+      "hook": "Hausaufgaben sind jeden Tag ein Drama?",
+      "problem": "Dein Kind verweigert, du wirst laut, am Ende weinen beide. So kann es nicht weitergehen.",
+      "loesung": "Die FamilienApp erklärt jede Aufgabe von Klasse 1 bis 12. Schritt für Schritt. Du musst nicht alles wissen.",
+      "cta": "Hausaufgaben ohne Tränen. Endlich.",
+      "hashtags": ["#hausaufgaben", "#schulkind", "#elternalltag", "#lernen", "#schule", "#familienapp", "#erziehungstipps"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "kind-kann-nicht-einschlafen",
+      "kategorie": "erziehung",
+      "hook": "Dein Kind kann seit Wochen nicht einschlafen?",
+      "problem": "Jeden Abend zwei Stunden Kampf. Du bist erschöpft. Dein Kind auch.",
+      "loesung": "Die FamilienApp hat Schlafrituale, Einschlaftipps und wenn nichts hilft die nächste Schlafberatung.",
+      "cta": "Endlich wieder schlafen. Alle.",
+      "hashtags": ["#schlafprobleme", "#einschlafen", "#kinderschlaf", "#elterntipps", "#schlafritual", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "geschwister-streit",
+      "kategorie": "erziehung",
+      "hook": "Deine Kinder streiten den ganzen Tag?",
+      "problem": "Du bist Schiedsrichter im Dauerstreit. Mama mama er hat. Schwester schwester sie hat. Jeder Tag.",
+      "loesung": "Die FamilienApp hat 8 erprobte Methoden für Geschwisterstreit. Damit Kinder lernen es selbst zu lösen.",
+      "cta": "Frieden zuhause. Es geht.",
+      "hashtags": ["#geschwister", "#geschwisterstreit", "#mehrkindfamilie", "#erziehung", "#familienleben", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "handy-mediennutzung",
+      "kategorie": "erziehung",
+      "hook": "Dein Kind hängt nur noch am Smartphone?",
+      "problem": "Du nimmst es weg, es gibt Drama. Du lässt es zu, du machst dir Sorgen. Keine richtige Antwort?",
+      "loesung": "Die FamilienApp hat altersgerechte Bildschirmzeit-Empfehlungen. Plus Familien-Regeln zum Ausdrucken.",
+      "cta": "Klare Regeln statt täglicher Streit.",
+      "hashtags": ["#mediennutzung", "#bildschirmzeit", "#kinder", "#smartphone", "#digitalefamilie", "#erziehung", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "kind-redet-nicht-mehr",
+      "kategorie": "erziehung",
+      "hook": "Dein Teenager redet nicht mehr mit dir?",
+      "problem": "Früher hat er alles erzählt. Jetzt nur Einsilber. Du machst dir Sorgen aber willst nicht aufdringlich sein.",
+      "loesung": "Die FamilienApp hat Gesprächs-Starter für Teenager. Plus Beratungsstellen wenn du Sorge hast.",
+      "cta": "Den Draht behalten. Auch jetzt.",
+      "hashtags": ["#teenager", "#pubertät", "#familie", "#kommunikation", "#elternsein", "#familienapp", "#elterntipps"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "schulangst",
+      "kategorie": "erziehung",
+      "hook": "Dein Kind weint jeden Morgen vor der Schule?",
+      "problem": "Bauchweh, Kopfweh, ich will nicht. Schulangst nimmt zu in Deutschland. Was tust du?",
+      "loesung": "Die FamilienApp hat Erste-Hilfe-Tipps gegen Schulangst. Plus Schulpsychologen und Beratungsstellen in deiner Nähe.",
+      "cta": "Dein Kind nicht alleine lassen.",
+      "hashtags": ["#schulangst", "#schule", "#kindergesundheit", "#mentalhealth", "#elternsein", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "essen-verweigern",
+      "kategorie": "erziehung",
+      "hook": "Dein Kind isst nur noch Nudeln mit Butter?",
+      "problem": "Gemüse wird gehasst. Du machst dir Sorgen um die Ernährung. Aber du willst auch kein Drama beim Essen.",
+      "loesung": "Die FamilienApp hat 30 kinderfreundliche Rezepte mit verstecktem Gemüse. Plus Tipps gegen Mäkeligkeit.",
+      "cta": "Gesund essen ohne Streit.",
+      "hashtags": ["#kindergerichte", "#mäkligkeit", "#kinderernährung", "#familienküche", "#kochenmitkindern", "#familienapp"],
+      "scene": "kueche"
+    },
+    {
+      "id": "wutanfall-gefuehle",
+      "kategorie": "erziehung",
+      "hook": "Dein Kind explodiert wegen Kleinigkeiten?",
+      "problem": "Tasse umgefallen, falsche Socke an. Wutanfall. Du verstehst nicht warum.",
+      "loesung": "Die FamilienApp erklärt kindliche Gefühlsregulation. Mit Wut-Werkzeugkasten zum Mitnehmen.",
+      "cta": "Gefühle verstehen. Wut nutzen.",
+      "hashtags": ["#wutanfall", "#kinderwut", "#gefühle", "#erziehung", "#elternsein", "#kinderpsychologie", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "alleinerziehend-erschoepfung",
+      "kategorie": "erziehung",
+      "hook": "Alleinerziehend und am Ende deiner Kräfte?",
+      "problem": "Niemand wechselt sich mit dir ab. Du funktionierst nur noch. Kraftreserve null.",
+      "loesung": "Die FamilienApp listet alle Hilfen für Alleinerziehende. Familienpfleger, Mütterzentrum, Online-Beratung.",
+      "cta": "Du musst das nicht allein schaffen.",
+      "hashtags": ["#alleinerziehend", "#singlemom", "#singledad", "#elternsein", "#hilfeholen", "#familienapp", "#selfcare"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "kinderzuschlag",
+      "kategorie": "finanzen",
+      "hook": "Bis zu 297 Euro im Monat — pro Kind. Und kaum jemand holt es ab.",
+      "problem": "Der Kinderzuschlag steht vielen Familien zu. Aber der Antrag wirkt kompliziert, also lassen ihn die meisten liegen.",
+      "loesung": "Die FamilienApp prüft in 2 Minuten ob du Anspruch hast und führt dich durch den ganzen Antrag.",
+      "cta": "Hol dir was deiner Familie zusteht.",
+      "hashtags": ["#kinderzuschlag", "#familienfinanzen", "#familie", "#zuschuss", "#elterngeld", "#sparen", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "elterngeld-plus",
+      "kategorie": "finanzen",
+      "hook": "Elterngeld oder ElterngeldPlus? Die falsche Wahl kostet dich tausende Euro.",
+      "problem": "Die meisten Eltern kennen den Unterschied nicht und verschenken dabei bares Geld.",
+      "loesung": "Die FamilienApp erklärt beide Varianten einfach und rechnet dir aus was sich für dich lohnt.",
+      "cta": "Plan dein Elterngeld richtig.",
+      "hashtags": ["#elterngeld", "#elterngeldplus", "#elternzeit", "#schwanger", "#familie", "#familienapp", "#mamatobe"],
+      "scene": "buero"
+    },
+    {
+      "id": "bildungspaket",
+      "kategorie": "finanzen",
+      "hook": "Klassenfahrt, Schulessen, Nachhilfe — alles bezahlt vom Staat.",
+      "problem": "Das Bildungspaket übernimmt diese Kosten. Aber viele Familien wissen gar nicht dass es das gibt.",
+      "loesung": "Die FamilienApp zeigt dir alle Leistungen aus Bildung und Teilhabe und wie du sie beantragst.",
+      "cta": "Dein Kind soll überall mitmachen können.",
+      "hashtags": ["#bildungspaket", "#schule", "#familienfinanzen", "#zuschuss", "#familie", "#familienapp", "#elterntipp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "gez-befreiung",
+      "kategorie": "finanzen",
+      "hook": "Du zahlst Rundfunkbeitrag obwohl du befreit sein könntest?",
+      "problem": "Viele Familien mit geringem Einkommen oder Sozialleistungen können sich befreien lassen. Sie wissen es nur nicht.",
+      "loesung": "Die FamilienApp prüft ob eine Befreiung für dich möglich ist und hat den Antrag direkt dabei.",
+      "cta": "Spar dir den Beitrag wenn er dir zusteht.",
+      "hashtags": ["#rundfunkbeitrag", "#sparen", "#familienfinanzen", "#familie", "#geldsparen", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "erstausstattung-baby",
+      "kategorie": "finanzen",
+      "hook": "Babyausstattung kostet schnell tausend Euro. Es geht auch anders.",
+      "problem": "Bett, Wickelkommode, Kinderwagen — die Erstausstattung sprengt jedes Budget.",
+      "loesung": "Die FamilienApp zeigt dir den Zuschuss für die Erstausstattung beim Jobcenter und wie du ihn beantragst.",
+      "cta": "Starte entspannt ins Familienleben.",
+      "hashtags": ["#erstausstattung", "#babyausstattung", "#schwanger", "#familienfinanzen", "#baby", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "morgenstress",
+      "kategorie": "alltag",
+      "hook": "Jeder Morgen ein Wettrennen gegen die Uhr?",
+      "problem": "Anziehen, Frühstück, Zähne, Schuhe — und am Ende doch zu spät und alle genervt.",
+      "loesung": "Die FamilienApp hat eine Morgenroutine mit Checkliste, die Kinder selbst abhaken können.",
+      "cta": "Entspannt in den Tag starten.",
+      "hashtags": ["#morgenroutine", "#familienalltag", "#elternalltag", "#mamaleben", "#kinder", "#familienapp"],
+      "scene": "kueche"
+    },
+    {
+      "id": "waescheberg",
+      "kategorie": "alltag",
+      "hook": "Der Wäscheberg wird nie kleiner. Kennst du das?",
+      "problem": "Waschen, trocknen, zusammenlegen, wegräumen — die Wäsche frisst deine ganze Woche.",
+      "loesung": "Die FamilienApp hat ein Wäsche-System für Familien und einen Aufgabenplan den alle teilen.",
+      "cta": "Hol dir deine Zeit zurück.",
+      "hashtags": ["#haushalt", "#familienalltag", "#mamaleben", "#haushaltmitkindern", "#ordnung", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "aufraeumen-kinder",
+      "kategorie": "alltag",
+      "hook": "Aufräumen endet bei euch immer im Streit?",
+      "problem": "Du bittest zehnmal, dann schimpfst du, dann räumst du doch selbst auf. Jeden Tag.",
+      "loesung": "Die FamilienApp hat Aufräum-Spiele und einen Plan der Kindern zeigt was wann dran ist.",
+      "cta": "Aufräumen ohne Drama. Es geht.",
+      "hashtags": ["#aufräumen", "#kinderzimmer", "#erziehung", "#familienalltag", "#ordnungmitkindern", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "familienkalender",
+      "kategorie": "alltag",
+      "hook": "Wer hat wann Fußball, Arzttermin und Kindergeburtstag?",
+      "problem": "Bei mehreren Kindern verliert man komplett den Überblick — und vergisst dann den wichtigen Termin.",
+      "loesung": "Die FamilienApp hat einen gemeinsamen Familienkalender mit Erinnerungen für alle.",
+      "cta": "Nie wieder einen Termin vergessen.",
+      "hashtags": ["#familienkalender", "#familienorganisation", "#mehrkindfamilie", "#elternalltag", "#familie", "#familienapp"],
+      "scene": "kueche"
+    },
+    {
+      "id": "fieber-kind",
+      "kategorie": "gesundheit",
+      "hook": "Dein Kind hat Fieber — und du fragst dich: Arzt oder abwarten?",
+      "problem": "Mitten in der Nacht weißt du nicht ob es harmlos ist oder ernst. Die Unsicherheit ist das Schlimmste.",
+      "loesung": "Die FamilienApp hat einen Fieber-Ratgeber: ab wann zum Arzt, was hilft, welche Warnzeichen zählen.",
+      "cta": "Sicher entscheiden statt grübeln.",
+      "hashtags": ["#fieber", "#kindergesundheit", "#elternsein", "#kinderkrankheiten", "#mamaleben", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "erste-hilfe-kind",
+      "kategorie": "gesundheit",
+      "hook": "Wenn dein Kind sich verletzt — weißt du in dem Moment was zu tun ist?",
+      "problem": "Im Notfall ist der Kopf leer. Den Erste-Hilfe-Kurs hat man vor Jahren gemacht.",
+      "loesung": "Die FamilienApp hat Erste-Hilfe-Anleitungen für Kinder-Notfälle. Klar, Schritt für Schritt, immer dabei.",
+      "cta": "Im Notfall vorbereitet sein.",
+      "hashtags": ["#erstehilfe", "#kindersicherheit", "#kindergesundheit", "#elternsein", "#familie", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "zahnpflege-kinder",
+      "kategorie": "gesundheit",
+      "hook": "Zähneputzen ist jeden Abend ein Kampf?",
+      "problem": "Dein Kind verweigert, weint oder rennt weg. Und du machst dir Sorgen um die kleinen Zähne.",
+      "loesung": "Die FamilienApp hat Zahnputz-Tricks die wirklich funktionieren und einen Putz-Plan zum Mitmachen.",
+      "cta": "Gesunde Zähne ohne Theater.",
+      "hashtags": ["#zähneputzen", "#kindergesundheit", "#zahnpflege", "#erziehung", "#kleinkind", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "gesunde-snacks",
+      "kategorie": "gesundheit",
+      "hook": "Dein Kind will nur Süßes naschen?",
+      "problem": "Zwischen den Mahlzeiten gibt es Quengeln nach Schokolade — und du gibst irgendwann nach.",
+      "loesung": "Die FamilienApp hat 25 gesunde Snack-Ideen die Kindern wirklich schmecken. Schnell gemacht.",
+      "cta": "Naschen ohne schlechtes Gewissen.",
+      "hashtags": ["#kinderernährung", "#gesundesnacks", "#familienküche", "#kinder", "#gesundessen", "#familienapp"],
+      "scene": "kueche"
+    },
+    {
+      "id": "beikost-start",
+      "kategorie": "baby",
+      "hook": "Beikost-Start — und du weißt nicht wo du anfangen sollst?",
+      "problem": "Brei oder Fingerfood? Wann womit? Jeder sagt etwas anderes und du bist verunsichert.",
+      "loesung": "Die FamilienApp hat einen Beikost-Plan Woche für Woche, mit Rezepten und Verträglichkeits-Tipps.",
+      "cta": "Entspannt in die Beikost starten.",
+      "hashtags": ["#beikost", "#baby", "#beikoststart", "#babyled", "#mamaleben", "#babyernährung", "#familienapp"],
+      "scene": "kueche"
+    },
+    {
+      "id": "baby-schlaf",
+      "kategorie": "baby",
+      "hook": "Dein Baby schläft nicht durch — und du bist völlig erschöpft.",
+      "problem": "Nacht für Nacht aufstehen. Du funktionierst nur noch und fragst dich ob das normal ist.",
+      "loesung": "Die FamilienApp hat sanfte Schlaf-Methoden, Einschlafrituale und sagt dir wann Hilfe sinnvoll ist.",
+      "cta": "Endlich wieder ruhige Nächte.",
+      "hashtags": ["#babyschlaf", "#baby", "#schlafmangel", "#mamaleben", "#elternsein", "#babylife", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "baby-blues",
+      "kategorie": "baby",
+      "hook": "Nach der Geburt fühlst du dich traurig statt glücklich?",
+      "problem": "Alle erwarten Glück, aber du fühlst dich leer oder überfordert. Und du traust dich nicht darüber zu reden.",
+      "loesung": "Die FamilienApp erklärt den Unterschied zwischen Baby-Blues und Wochenbettdepression und listet Hilfe in deiner Nähe.",
+      "cta": "Du bist nicht allein. Hol dir Hilfe.",
+      "hashtags": ["#wochenbett", "#babyblues", "#mamasein", "#mentalhealth", "#postpartum", "#familienapp", "#mamaleben"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "kliniktasche",
+      "kategorie": "schwangerschaft",
+      "hook": "Wehen können jederzeit losgehen — ist deine Kliniktasche gepackt?",
+      "problem": "Im letzten Moment hektisch suchen was alles mit muss — das willst du nicht.",
+      "loesung": "Die FamilienApp hat eine komplette Kliniktaschen-Checkliste für Mama, Baby und Partner.",
+      "cta": "Entspannt warten statt hektisch packen.",
+      "hashtags": ["#kliniktasche", "#schwanger", "#geburt", "#schwangerschaft", "#mamatobe", "#babyzeit", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "hebamme-finden",
+      "kategorie": "schwangerschaft",
+      "hook": "Eine Hebamme zu finden ist fast wie ein Lottogewinn?",
+      "problem": "Du rufst zehn Hebammen an und alle sind ausgebucht. Die Zeit läuft und du wirst nervös.",
+      "loesung": "Die FamilienApp listet Hebammen in deiner Nähe und erklärt welche Leistungen die Kasse zahlt.",
+      "cta": "Such deine Hebamme rechtzeitig.",
+      "hashtags": ["#hebamme", "#schwanger", "#schwangerschaft", "#geburt", "#wochenbett", "#mamatobe", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "regentag-kinder",
+      "kategorie": "freizeit",
+      "hook": "Es regnet, die Kinder drehen durch — und dir fällt nichts ein.",
+      "problem": "Drinnen wird es schnell laut und langweilig. Der Fernseher ist die einfachste, aber nicht die beste Lösung.",
+      "loesung": "Die FamilienApp hat 40 Ideen für Regentage: Basteln, Spiele, Experimente. Ohne viel Material.",
+      "cta": "Regentage werden zu Lieblingstagen.",
+      "hashtags": ["#regentag", "#beschäftigung", "#kinder", "#basteln", "#familienzeit", "#spielideen", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "kostenlose-ausfluege",
+      "kategorie": "freizeit",
+      "hook": "Familienausflug muss nicht teuer sein.",
+      "problem": "Freizeitpark und Zoo reißen ein Loch in die Kasse — dabei wollt ihr einfach nur Zeit zusammen.",
+      "loesung": "Die FamilienApp zeigt dir kostenlose Ausflugsziele in deiner Umgebung — Wälder, Spielplätze, Museen mit Gratis-Tagen.",
+      "cta": "Schöne Tage ohne teures Ticket.",
+      "hashtags": ["#familienausflug", "#ausflugmitkindern", "#gratis", "#familienzeit", "#freizeit", "#familienapp"],
+      "scene": "park"
+    },
+    {
+      "id": "langeweile-kinder",
+      "kategorie": "freizeit",
+      "hook": "Mama, mir ist langweilig — schon wieder?",
+      "problem": "Dein Kind weiß nichts mit sich anzufangen und du sollst ständig Animateur sein.",
+      "loesung": "Die FamilienApp hat eine Ideen-Box gegen Langeweile, aus der Kinder selbst ziehen können.",
+      "cta": "Langeweile war gestern.",
+      "hashtags": ["#langeweile", "#beschäftigung", "#kinder", "#spielideen", "#erziehung", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "familienurlaub-guenstig",
+      "kategorie": "freizeit",
+      "hook": "Familienurlaub — und der Preis schockt dich jedes Mal?",
+      "problem": "Mit Kindern wird Reisen teuer. Viele Familien verzichten ganz auf Urlaub.",
+      "loesung": "Die FamilienApp hat über 30 günstige Familien-Reiseziele und Tipps für bezuschusste Familienferien.",
+      "cta": "Urlaub ist auch mit kleinem Budget drin.",
+      "hashtags": ["#familienurlaub", "#reisenmitkindern", "#urlaub", "#günstigreisen", "#familienzeit", "#familienapp"],
+      "scene": "park"
+    },
+    {
+      "id": "einschulung",
+      "kategorie": "kinder",
+      "hook": "Dein Kind kommt in die Schule — und du bist aufgeregter als es selbst?",
+      "problem": "Schultüte, Ranzen, Anmeldung, der erste Tag — so viel zu bedenken und zu organisieren.",
+      "loesung": "Die FamilienApp hat eine komplette Einschulungs-Checkliste und Tipps für einen guten Start.",
+      "cta": "Entspannt in die Schulzeit.",
+      "hashtags": ["#einschulung", "#schulkind", "#schulanfang", "#erstklässler", "#familie", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "lesen-lernen",
+      "kategorie": "kinder",
+      "hook": "Lesen üben endet bei euch in Tränen?",
+      "problem": "Dein Kind hat keine Lust, du wirst ungeduldig, und Lesen wird zum Stressthema.",
+      "loesung": "Die FamilienApp hat spielerische Lese-Übungen die Druck rausnehmen und Spaß machen.",
+      "cta": "Lesen lernen mit Freude.",
+      "hashtags": ["#lesenlernen", "#schulkind", "#lernenmitkindern", "#grundschule", "#erziehung", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "zeugnis-schlecht",
+      "kategorie": "kinder",
+      "hook": "Schlechtes Zeugnis — und du weißt nicht wie du reagieren sollst?",
+      "problem": "Schimpfen demotiviert, Ignorieren hilft nicht. Du willst dein Kind unterstützen statt unter Druck setzen.",
+      "loesung": "Die FamilienApp hat Tipps für das Zeugnisgespräch und zeigt Lern-Hilfen und Nachhilfe-Zuschüsse.",
+      "cta": "Aus Noten Motivation machen.",
+      "hashtags": ["#zeugnis", "#schule", "#schulkind", "#erziehung", "#lernen", "#elterntipp", "#familienapp"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "quality-time",
+      "kategorie": "erziehung",
+      "hook": "Wann hattest du das letzte Mal richtig Zeit mit deinem Kind?",
+      "problem": "Zwischen Arbeit, Haushalt und Terminen bleibt echte gemeinsame Zeit oft auf der Strecke.",
+      "loesung": "Die FamilienApp hat Ideen für kleine Quality-Time-Momente die in jeden Alltag passen.",
+      "cta": "Kleine Momente, große Wirkung.",
+      "hashtags": ["#qualitytime", "#familienzeit", "#bindung", "#erziehung", "#familie", "#elternsein", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "loben-richtig",
+      "kategorie": "erziehung",
+      "hook": "Toll gemacht — und warum dieses Lob deinem Kind sogar schaden kann.",
+      "problem": "Pauschales Lob klingt nett, motiviert aber kaum und macht abhängig von Bestätigung.",
+      "loesung": "Die FamilienApp zeigt dir wie du so lobst dass dein Kind wirklich Selbstvertrauen aufbaut.",
+      "cta": "Richtig loben will gelernt sein.",
+      "hashtags": ["#erziehung", "#loben", "#selbstvertrauen", "#kinderpsychologie", "#elternsein", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "grenzen-setzen",
+      "kategorie": "erziehung",
+      "hook": "Nein sagen — und dann doch wieder einknicken?",
+      "problem": "Klare Grenzen sind wichtig, aber im Alltag fällt das Durchhalten unglaublich schwer.",
+      "loesung": "Die FamilienApp zeigt dir wie du liebevoll aber klar Grenzen setzt, die wirklich halten.",
+      "cta": "Grenzen mit Liebe statt Härte.",
+      "hashtags": ["#grenzensetzen", "#erziehung", "#elternsein", "#konsequenz", "#kinder", "#elterntipps", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "patchwork-familie",
+      "kategorie": "erziehung",
+      "hook": "Patchwork-Familie — und manchmal weiß keiner so recht wohin er gehört?",
+      "problem": "Zwei Familien werden eine. Das bringt Eifersucht, Loyalitätskonflikte und viele offene Fragen.",
+      "loesung": "Die FamilienApp hat Tipps für Patchwork-Alltag und Beratungsstellen die euch zusammen begleiten.",
+      "cta": "Zusammenwachsen braucht Zeit — und gute Tipps.",
+      "hashtags": ["#patchworkfamilie", "#bonusmama", "#familie", "#erziehung", "#stieffamilie", "#familienapp"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "morgen-chaos",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Sieben Uhr morgens. Eigentlich sollten jetzt alle wach und fast fertig sein.",
+        "Eigentlich. Ein Kind sucht den zweiten Schuh, eins will das falsche Müsli, das Baby hat einfach keine Lust.",
+        "Acht Uhr zehn. Irgendwie sitzen jetzt doch alle angezogen am Tisch. Frag lieber nicht wie.",
+        "Und morgen früh geht das ganze Theater wieder von vorne los. Aber hey — ihr habt es geschafft."
+      ],
+      "moods": [
+        "peaceful early morning, cozy home, soft warm light, family just waking up",
+        "playful chaotic morning, parents searching, kids not ready, gently funny stressed expressions",
+        "family finally together at the breakfast table, a bit messy but happy and relieved",
+        "family heading out the door together, warm morning light, tired but smiling"
+      ],
+      "hashtags": ["#familienmorgen", "#elternalltag", "#mamaleben", "#relatable", "#familienleben", "#elternsein"],
+      "scene": "kueche"
+    },
+    {
+      "id": "eltern-sagen-meinen",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Was Eltern sagen — und was sie eigentlich meinen.",
+        "Wir schauen mal. Das heißt: Die Antwort ist nein, aber ich will jetzt keine Diskussion.",
+        "Gleich. Das heißt: irgendwann in den nächsten zwei Stunden, vielleicht.",
+        "Ich zähle bis drei. Und keiner weiß, was bei drei eigentlich passiert. Auch wir nicht."
+      ],
+      "moods": [
+        "warm family living room, parents talking to kids, friendly funny mood",
+        "mother gently smiling at a hopeful child, cozy living room",
+        "father distracted while child waits expectantly, light humorous tone",
+        "parents with a playful resigned look, kids grinning, warm wholesome humor"
+      ],
+      "hashtags": ["#elternsprüche", "#relatable", "#elternalltag", "#mamaleben", "#papaleben", "#familienhumor"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "kind-schlaeft-endlich",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Der magischste Moment des Tages für alle Eltern.",
+        "Nach drei Gute-Nacht-Geschichten, zwei Gläsern Wasser und einem letzten dringenden Gespräch.",
+        "Endlich. Das Kind schläft. Du schleichst aus dem Zimmer wie ein Geheimagent.",
+        "Und dann sitzt du da, schaust auf Fotos vom Tag — und vermisst es fast ein kleines bisschen."
+      ],
+      "moods": [
+        "softly lit child's bedroom at night, peaceful warm tone",
+        "parent reading a bedtime story to a sleepy child, cozy lamp light",
+        "parent tiptoeing out of the room, gentle humor, dim warm light",
+        "parent sitting alone on the couch looking at phone photos, tender warm emotional mood"
+      ],
+      "hashtags": ["#gutenacht", "#elternleben", "#mamaleben", "#kinderschlaf", "#familienmomente", "#relatable"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "geschwister-countdown",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Zwei Kinder. Ein Spielzeug. Du weißt schon, wohin das führt.",
+        "Eben haben sie noch friedlich nebeneinander gespielt. Ein perfekter Moment.",
+        "Drei. Zwei. Eins. Und da ist er — der Streit um genau dasselbe Auto.",
+        "Fünf Minuten später kuscheln sie wieder zusammen. Geschwister eben. Ein Rätsel."
+      ],
+      "moods": [
+        "two cartoon siblings near a single toy, playful tension, warm living room",
+        "two kids playing peacefully side by side, calm happy moment",
+        "two siblings tugging at the same toy, gently funny dramatic scene",
+        "two siblings cuddling together happily again, warm wholesome reconciliation"
+      ],
+      "hashtags": ["#geschwister", "#geschwisterliebe", "#relatable", "#elternalltag", "#mehrkindfamilie", "#familienleben"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "nachts-im-elternbett",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Das Elternbett. Eigentlich groß genug für zwei Erwachsene.",
+        "Eigentlich. Bis nachts um drei ein kleiner Besucher lautlos hereinklettert.",
+        "Am Morgen liegst du am äußersten Rand. Das Kind quer in der Mitte. Wie immer.",
+        "Es ist anstrengend. Und trotzdem — diese kleinen warmen Füße wirst du irgendwann vermissen."
+      ],
+      "moods": [
+        "cozy parents bedroom at night, large bed, soft moonlight",
+        "small child quietly climbing into the parents bed at night, tender humor",
+        "parent squeezed to the edge of the bed, child sprawled sideways, gently funny morning",
+        "parent looking lovingly at sleeping child in bed, warm tender emotional morning light"
+      ],
+      "hashtags": ["#elternbett", "#familienbett", "#relatable", "#mamaleben", "#kinderschlaf", "#elternalltag"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "waesche-niemals-fertig",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Es gibt ein Mysterium in jeder Familie, das die Wissenschaft nicht erklären kann.",
+        "Du wäschst. Du trocknest. Du legst zusammen. Der Korb ist endlich leer.",
+        "Du drehst dich einmal um — und der Wäscheberg ist auf magische Weise wieder da.",
+        "Irgendwann hörst du auf zu kämpfen. Der Wäscheberg gehört jetzt zur Familie."
+      ],
+      "moods": [
+        "cozy home with a laundry basket, warm light, gently humorous",
+        "parent happily folding laundry, empty basket, satisfied moment",
+        "huge pile of laundry magically reappearing, funny exaggerated scene",
+        "family relaxing next to a laundry pile, accepting it with humor, warm cozy mood"
+      ],
+      "hashtags": ["#wäscheberg", "#haushalt", "#elternalltag", "#mamaleben", "#relatable", "#familienhumor"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "was-gekocht-was-gegessen",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Du hast heute mit Liebe gekocht. Frisch, gesund, bunt.",
+        "Gemüse, das du extra klein geschnitten hast. Eine Soße nach Omas Rezept.",
+        "Was die Kinder davon essen? Die Nudeln. Pur. Und ein einziges Stück Karotte.",
+        "Aber morgen versuchst du es trotzdem wieder. Weil du eine Mama oder ein Papa bist."
+      ],
+      "moods": [
+        "parent lovingly cooking a fresh colorful family meal in a warm kitchen",
+        "beautiful healthy home cooked meal on the table, warm appetizing light",
+        "kids eating only plain pasta, ignoring the vegetables, gently funny scene",
+        "parent smiling with determination in the kitchen, warm hopeful mood"
+      ],
+      "hashtags": ["#kinderessen", "#familienküche", "#relatable", "#mamaleben", "#elternalltag", "#familienleben"],
+      "scene": "kueche"
+    },
+    {
+      "id": "spielzeug-ueberall",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Du betrittst das Wohnzimmer. Barfuß. Ein Fehler.",
+        "Irgendwo wartet immer ein einzelner Baustein. Genau an der falschen Stelle.",
+        "Du räumst auf. Zehn Minuten später sieht es aus wie vorher. Oder schlimmer.",
+        "Aber dieses fröhliche Chaos bedeutet: Hier wird gespielt, gelacht und gelebt."
+      ],
+      "moods": [
+        "living room floor covered with colorful toys, warm cozy home, gently funny",
+        "a single building block on the floor, close up, humorous tension",
+        "parent tidying a toy-covered room, gently exhausted humorous mood",
+        "happy family playing together among the toys, joyful warm chaotic living room"
+      ],
+      "hashtags": ["#kinderzimmer", "#spielzeugchaos", "#relatable", "#elternalltag", "#mamaleben", "#familienleben"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "sie-werden-gross",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Gestern noch hast du es im Arm gehalten, so winzig und neu.",
+        "Heute zieht es sich schon selbst die Schuhe an. Verkehrt herum, aber selbst.",
+        "Die Tage sind manchmal lang. Aber die Jahre — die Jahre sind unglaublich kurz.",
+        "Drück dein Kind heute einmal extra fest. Genau für diesen Moment."
+      ],
+      "moods": [
+        "parent tenderly holding a newborn baby, soft emotional warm light",
+        "young child proudly putting on shoes by themselves, heartwarming scene",
+        "family together over the years, warm nostalgic emotional tone, golden light",
+        "parent hugging their child tightly, deeply tender emotional warm moment"
+      ],
+      "hashtags": ["#kinderwerdengross", "#elternliebe", "#familienmomente", "#mamaleben", "#emotional", "#familienleben"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "kranke-woche",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Es fängt immer mit einem kleinen Hüsteln an. Du ahnst schon, was kommt.",
+        "Ein Kind wird krank. Dann das nächste. Dann meistens du selbst.",
+        "Eine Woche Kuscheldecke, Tee und Trickfilme. Die Welt draußen wartet einfach.",
+        "Und wenn alle wieder gesund sind, fühlt sich der erste normale Tag an wie ein kleines Fest."
+      ],
+      "moods": [
+        "child with a slight cough on the couch, cozy worried warm home scene",
+        "family resting under blankets, mild illness, tender cozy mood",
+        "family snuggled on the couch with tea and blankets watching cartoons, warm",
+        "healthy happy family enjoying a normal bright day again, joyful relieved mood"
+      ],
+      "hashtags": ["#kinderkrank", "#elternalltag", "#mamaleben", "#relatable", "#familienleben", "#elternsein"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "warum-phase",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Es beginnt ganz harmlos mit einer einzigen kleinen Frage.",
+        "Warum ist der Himmel blau? Und warum? Und warum das? Und warum überhaupt?",
+        "Irgendwann gehen dir die Antworten aus und du sagst einfach: Das ist eben so.",
+        "Aber diese endlose Neugier — genau sie macht aus kleinen Menschen kluge Menschen."
+      ],
+      "moods": [
+        "curious child asking a question outdoors in a sunny park",
+        "child pointing at the sky asking why, bright cheerful park scene",
+        "parent gently overwhelmed by endless questions, warm humorous outdoor mood",
+        "parent and curious child looking at the world together, warm inspiring sunny scene"
+      ],
+      "hashtags": ["#warumphase", "#kinderfragen", "#relatable", "#elternalltag", "#kindererziehung", "#familienleben"],
+      "scene": "park"
+    },
+    {
+      "id": "samstag-familie",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Samstag. Kein Wecker, keine Termine, kein Stress. Theoretisch.",
+        "Die Kinder sind trotzdem um halb sieben hellwach und voller Energie.",
+        "Also: Frühstück im Schlafanzug, ein Ausflug in den Park, Eis für alle.",
+        "Kein perfekter Tag. Aber genau so ein Tag, an den sich deine Kinder später erinnern."
+      ],
+      "moods": [
+        "relaxed cozy saturday morning at home, warm soft light",
+        "energetic kids fully awake early, parents sleepy, gently funny warm scene",
+        "happy family enjoying a sunny day in the park together, joyful warm light",
+        "family walking home together at golden hour, content tired happy mood"
+      ],
+      "hashtags": ["#familienzeit", "#wochenende", "#familienmomente", "#relatable", "#familienleben", "#elternsein"],
+      "scene": "park"
+    },
+    {
+      "id": "hausaufgaben-abend",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Siebzehn Uhr. Eine einzige Seite Mathe. Das kann ja nicht so lange dauern.",
+        "Eine Stunde später sitzt ihr immer noch da. Der Bleistift wurde dreimal gespitzt.",
+        "Plötzlich ist der Hunger riesig, der Durst auch, und der Radiergummi unauffindbar.",
+        "Am Ende ist die Seite fertig. Und ihr beide habt es zusammen geschafft."
+      ],
+      "moods": [
+        "child sitting down for homework at a desk, cozy children's room, warm light",
+        "parent and child working on homework, slightly tired, warm patient mood",
+        "child distracted from homework, gently funny relatable scene",
+        "parent and child celebrating finished homework together, proud warm happy moment"
+      ],
+      "hashtags": ["#hausaufgaben", "#schulkind", "#elternalltag", "#relatable", "#mamaleben", "#familienleben"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "kind-zieht-sich-an",
+      "kategorie": "situation",
+      "typ": "situation",
+      "segments": [
+        "Ich mach das alleine. Drei Worte, die jeden Zeitplan sprengen.",
+        "Der Pullover landet erst auf dem Kopf, dann verkehrt herum, dann fast richtig.",
+        "Es dauert zehnmal so lange. Und du stehst daneben und atmest tief durch.",
+        "Aber dann dieser stolze Blick: Ich hab's geschafft. Und dafür hat sich jede Minute gelohnt."
+      ],
+      "moods": [
+        "determined toddler wanting to get dressed alone, cozy children's room",
+        "child struggling with a pullover stuck on their head, gently funny warm scene",
+        "parent patiently waiting while child dresses slowly, warm calm mood",
+        "proud happy child fully dressed, beaming, heartwarming warm light"
+      ],
+      "hashtags": ["#kleinkind", "#selbständigkeit", "#relatable", "#elternalltag", "#mamaleben", "#familienleben"],
+      "scene": "kinderzimmer"
+    },
+    {
+      "id": "hund-eichhoernchen",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "Ein ganz normaler Spaziergang im Park. Bis er es sieht.",
+        "Eichhörnchen. Das eine Wort, das jeden Trainingsplan in zwei Sekunden zerstört.",
+        "Drei Sekunden später bist du derjenige, der hinterhergezogen wird. Mit der Leine.",
+        "Aber dieser fokussierte Blick — den vergisst du nie. Hunde eben."
+      ],
+      "moods": [
+        "fluffy black Newfoundland dog with a distinctive white chest patch walking calmly on a leash in a sunny green park, gentle warm peaceful expression",
+        "the big black Newfoundland suddenly alert, ears perked up, eyes wide and focused on something off-screen, comic dramatic moment, sunny park",
+        "the Newfoundland enthusiastically pulling on the leash, friendly young owner being dragged playfully across the park, gently funny scene",
+        "the proud Newfoundland sitting in the grass with a satisfied happy expression, warm golden hour light, the squirrel safely far away on a tree"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#eichhörnchen", "#hundeliebe", "#newfoundland", "#dogsofinstagram", "#hundetipps"],
+      "scene": "park"
+    },
+    {
+      "id": "hund-regen",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "Es nieselt leicht. Zeit für die Gassirunde — denkt sich der Mensch.",
+        "Balu schaut kurz aus der Tür, sieht den Regen und legt sich demonstrativ wieder hin.",
+        "Fünf Minuten gutes Zureden später trottet er los — mit dem Blick eines tief beleidigten Königs.",
+        "Aber kaum ist die Runde rum, ist alles vergessen. Hunde nachtragend? Niemals."
+      ],
+      "moods": [
+        "big black Newfoundland dog Balu standing in a doorway looking out at light rain, reluctant skeptical expression, cozy home entrance",
+        "the big black Newfoundland lying back down dramatically refusing to go outside, gently funny scene, soft warm indoor light",
+        "the black Newfoundland trudging slowly through a drizzly green park with a grumpy offended expression, comic mood, soft grey light",
+        "the happy black Newfoundland shaking water from his fur back at home, cheerful relieved expression, warm cozy light"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#regen", "#relatable", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "park"
+    },
+    {
+      "id": "hund-spiegelbild",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "Balu entdeckt im Flur etwas Großes, Schwarzes, Flauschiges im Spiegel.",
+        "Er bellt. Es bellt zurück. Er legt den Kopf schief. Es legt den Kopf schief.",
+        "Nach langem Nachdenken trifft er eine Entscheidung: vorsichtshalber anfreunden.",
+        "Jetzt hat er jeden Tag einen Freund im Flur. Manchmal ist die Welt ganz einfach."
+      ],
+      "moods": [
+        "big black Newfoundland dog Balu staring curiously at his own reflection in a large floor mirror, head tilted, cozy living room",
+        "the black Newfoundland barking playfully at the mirror, comic confused expression, warm indoor light",
+        "the black Newfoundland sitting calmly in front of the mirror studying his reflection, thoughtful gently funny mood",
+        "the content black Newfoundland lying happily next to the mirror, sweet heartwarming expression, warm cozy light"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#spiegel", "#relatable", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hund-schlafposen",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "Ein Hund kann überall schlafen. Wirklich überall.",
+        "Halb auf dem Sofa, halb auf dem Boden, die Pfoten in der Luft — Hauptsache unbequem.",
+        "Du machst heimlich zwölf Fotos, weil jede Pose absurder ist als die letzte.",
+        "Und dann legt er sich doch ins teure Hundebett. Genau dann, wenn keiner hinschaut."
+      ],
+      "moods": [
+        "big black Newfoundland dog Balu sleeping in a hilariously awkward pose half on the sofa half on the floor, paws in the air, cozy living room",
+        "the big black Newfoundland sprawled upside down sleeping deeply, comic relatable scene, soft warm light",
+        "the sleeping black Newfoundland with a blissful peaceful expression in a silly twisted position, gently funny mood",
+        "the black Newfoundland finally curled up neatly in his dog bed, peaceful sweet expression, warm cozy light"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#hundeschlaf", "#relatable", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hund-postbote",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "Es klingelt. Balu weiß sofort: Der gefährlichste Mensch der Welt steht vor der Tür.",
+        "Der Postbote. Jeden Tag aufs Neue eine Bedrohung von höchster Dringlichkeit.",
+        "Großes Gebell, große Aufregung — und der Postbote legt einfach das Paket ab und winkt freundlich.",
+        "Mission erfüllt, denkt Balu stolz. Er hat das Haus mal wieder gerettet."
+      ],
+      "moods": [
+        "big black Newfoundland dog Balu standing alert at the front door barking importantly, ears up, cozy home hallway",
+        "the big black Newfoundland looking dramatically watchful and serious, comic exaggerated guard-dog mood, warm light",
+        "the black Newfoundland peeking out as a friendly mailman waves cheerfully, gently funny harmless scene, bright daylight",
+        "the proud black Newfoundland sitting tall with a satisfied accomplished expression, warm heartwarming light"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#postbote", "#relatable", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hund-schnee",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "Heute Nacht hat es geschneit. Balu sieht zum ersten Mal eine ganz weiße Welt.",
+        "Vorsichtig die erste Pfote rein — dann hält ihn nichts mehr.",
+        "Er springt, schnappt nach Flocken und buddelt mit der Nase tiefe Tunnel.",
+        "Manchmal braucht es nur etwas Weißes vom Himmel, um den größten Hund zum Welpen zu machen."
+      ],
+      "moods": [
+        "big black Newfoundland dog Balu standing at the edge of fresh white snow looking amazed, snowy park, soft winter light",
+        "the black Newfoundland carefully placing one paw into the deep snow, curious wide-eyed expression, bright snowy scene",
+        "the black Newfoundland joyfully leaping and snapping at falling snowflakes, playful happy energy, sparkling snowy park",
+        "the black Newfoundland with a snow-covered nose beaming pure joy, heartwarming winter scene, soft golden light"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#schnee", "#hundeimschnee", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "park"
+    },
+    {
+      "id": "hund-badewanne",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "Das Wort Bad. Balu kennt es. Und er ist eindeutig dagegen.",
+        "Plötzlich ist er unauffindbar — ein riesiger Hund, scheinbar perfekt versteckt hinter einer Zimmerpflanze.",
+        "In der Wanne dann der Blick eines zutiefst verratenen Wesens. Schaum inklusive.",
+        "Aber danach? Flauschig, stolz und schneller als der Wind durchs ganze Haus."
+      ],
+      "moods": [
+        "big black Newfoundland dog Balu hearing the word bath and looking deeply suspicious, cozy home, warm light",
+        "the large black Newfoundland comically trying to hide behind a small houseplant, gently funny scene, warm indoor light",
+        "the wet black Newfoundland sitting in a bathtub full of foam with a betrayed dramatic expression, comic heartwarming mood",
+        "the fluffy clean black Newfoundland zooming happily through the house after the bath, joyful energetic scene, warm light"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#hundebad", "#relatable", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hund-staubsauger",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "Es gibt einen Feind, dem Balu niemals den Rücken zudreht: den Staubsauger.",
+        "Sobald das Brummen losgeht, zieht er sich strategisch aufs Sofa zurück.",
+        "Von dort beobachtet er das laute Monster ganz genau. Sicherheitsabstand: das halbe Wohnzimmer.",
+        "Ist der Spuk vorbei, ist er sofort wieder der mutigste Hund der Welt."
+      ],
+      "moods": [
+        "big black Newfoundland dog Balu eyeing a vacuum cleaner with deep suspicion, ears slightly back, cozy living room",
+        "the big black Newfoundland retreating onto the sofa watching the vacuum nervously, gently funny relatable scene, warm light",
+        "the black Newfoundland keeping a dramatic safe distance from the vacuum, comic watchful expression, warm indoor light",
+        "the relieved confident black Newfoundland stretching proudly after the vacuum is off, heartwarming warm light"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#staubsauger", "#relatable", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hund-leckerli-blick",
+      "kategorie": "situation",
+      "typ": "situation",
+      "brand": "hund",
+      "segments": [
+        "In der Küche raschelt eine Tüte. Und plötzlich ist Balu hellwach.",
+        "Er setzt sich kerzengerade hin und aktiviert ihn: den Blick.",
+        "Große Augen, leicht schief gelegter Kopf, absolute Hingabe — kein Mensch kann da standhalten.",
+        "Ein winziges Leckerli später ist er der glücklichste Hund der Welt. Und du weißt: Er hat gewonnen."
+      ],
+      "moods": [
+        "big black Newfoundland dog Balu suddenly alert at the sound of a treat bag, bright kitchen, warm morning light",
+        "the black Newfoundland sitting up perfectly straight giving the ultimate begging puppy eyes, irresistible sweet expression",
+        "the black Newfoundland tilting his head with huge soulful pleading eyes, gently funny heartwarming kitchen scene",
+        "the overjoyed black Newfoundland happily receiving a small treat, pure happiness, warm cozy kitchen light"
+      ],
+      "hashtags": ["#hundeleben", "#hundealltag", "#leckerli", "#relatable", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "kueche"
+    },
+    {
+      "id": "hund-hitze-auto",
+      "kategorie": "gesundheit",
+      "brand": "hund",
+      "hook": "Im Sommer kurz das Auto parken — für einen Hund kann das lebensgefährlich werden.",
+      "problem": "Schon bei 20 Grad draußen wird ein geschlossenes Auto in Minuten zur tödlichen Falle. Auch im Schatten, auch mit Fensterspalt.",
+      "loesung": "Nimm deinen Hund an heißen Tagen gar nicht erst mit, wenn du ihn nicht überallhin mitnehmen kannst. Lieber zuhause im Kühlen lassen — mit frischem Wasser und schattigem Platz.",
+      "cta": "Mehr Hunde-Tipps für jeden Tag — folge @familienapp.",
+      "moods": [
+        "big black Newfoundland dog Balu panting in warm summer sunlight outdoors, concerned gentle expression, bright scene",
+        "the big black Newfoundland looking uncomfortable and overheated, soft worried expression, intense warm light",
+        "the black Newfoundland resting cool and content in a shady spot at home with a water bowl, relaxed happy expression, soft light",
+        "the cheerful healthy black Newfoundland lying comfortably in a cool home, calm happy expression, warm soft light"
+      ],
+      "hashtags": ["#hundetipps", "#hundegesundheit", "#sommerhitze", "#hundeleben", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hund-giftige-lebensmittel",
+      "kategorie": "gesundheit",
+      "brand": "hund",
+      "hook": "Ein Stück Schokolade vom Tisch — für deinen Hund kann das richtig gefährlich werden.",
+      "problem": "Schokolade, Weintrauben, Zwiebeln, Knoblauch und Xylit aus Kaugummi: Viele ganz normale Lebensmittel sind für Hunde giftig.",
+      "loesung": "Halte diese Sachen außer Reichweite und gib im Zweifel nichts vom Tisch ab. Bei Verdacht auf eine Vergiftung sofort zum Tierarzt — je schneller, desto besser.",
+      "cta": "Mehr Hunde-Wissen — folge @familienapp.",
+      "moods": [
+        "big black Newfoundland dog Balu looking longingly up at a kitchen table, sweet hopeful expression, bright kitchen",
+        "the black Newfoundland sniffing curiously near food on a counter, gentle innocent expression, warm kitchen light",
+        "the black Newfoundland sitting calmly receiving a safe dog treat, content trusting expression, cozy kitchen scene",
+        "the happy healthy black Newfoundland with a bright cheerful expression, warm cozy kitchen light"
+      ],
+      "hashtags": ["#hundetipps", "#hundegesundheit", "#hundeernährung", "#hundeleben", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "kueche"
+    },
+    {
+      "id": "hund-welpe-stubenrein",
+      "kategorie": "erziehung",
+      "brand": "hund",
+      "hook": "Ein neuer Welpe zuhause — und überall kleine Pfützen.",
+      "problem": "Welpen können noch nicht lange anhalten. Schimpfen hilft nicht, es macht den kleinen Hund nur unsicher und ängstlich.",
+      "loesung": "Bring ihn nach jedem Schlafen, Fressen und Spielen sofort raus und lob ihn überschwänglich, wenn es klappt. Mit ein paar Wochen Geduld sitzt es.",
+      "cta": "Mehr Welpen-Tipps — folge @familienapp.",
+      "moods": [
+        "a young fluffy black Newfoundland puppy looking curious in a cozy living room, sweet big soulful eyes, warm light",
+        "the little black Newfoundland puppy looking up shyly and unsure, gentle soft expression, warm home light",
+        "the black Newfoundland puppy being praised happily outdoors in a sunny garden, joyful proud little expression",
+        "the cheerful confident black Newfoundland puppy wagging its tail, heartwarming warm light"
+      ],
+      "hashtags": ["#hundetipps", "#welpe", "#stubenrein", "#hundeerziehung", "#hundeleben", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hund-tierarzt-angst",
+      "kategorie": "erziehung",
+      "brand": "hund",
+      "hook": "Schon beim Wort Tierarzt drückt sich dein Hund in die Ecke?",
+      "problem": "Viele Hunde verbinden die Praxis nur mit Stress, fremden Gerüchen und unangenehmen Momenten.",
+      "loesung": "Übe entspannt: kurze Besuche nur zum Streicheln und für ein Leckerli, ruhige Stimme, vertrautes Spielzeug mitnehmen. So wird der Tierarzt weniger zum Schreckgespenst.",
+      "cta": "Mehr Tipps für entspannte Hunde — folge @familienapp.",
+      "moods": [
+        "big black Newfoundland dog Balu looking timid and nervous, ears slightly back, gentle soft expression, calm quiet room",
+        "the black Newfoundland pressing low to the ground anxiously, soft worried eyes, muted calm light",
+        "the black Newfoundland being gently calmed and reassured, trusting relaxing expression, warm soft light",
+        "the calm relaxed black Newfoundland with a content trusting expression, reassured happy mood, warm light"
+      ],
+      "hashtags": ["#hundetipps", "#tierarzt", "#hundegesundheit", "#hundeerziehung", "#hundeleben", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    },
+    {
+      "id": "hund-zecken",
+      "kategorie": "gesundheit",
+      "brand": "hund",
+      "hook": "Nach jedem Spaziergang im Grünen lauert ein winziger Mitbewohner: die Zecke.",
+      "problem": "Zecken können Krankheiten übertragen. Im hohen Gras und im Unterholz sitzen sie besonders oft.",
+      "loesung": "Such deinen Hund nach jeder Runde gründlich ab — vor allem an Kopf, Ohren und Pfoten. Eine gefundene Zecke ruhig mit einer Zeckenzange ganz herausdrehen.",
+      "cta": "Mehr Hunde-Gesundheitstipps — folge @familienapp.",
+      "moods": [
+        "big black Newfoundland dog Balu walking happily through tall green grass in a sunny meadow, relaxed cheerful expression",
+        "the black Newfoundland standing in dense green underbrush, gentle alert expression, soft natural light",
+        "the black Newfoundland being gently checked over by careful hands, calm trusting expression, warm light",
+        "the healthy happy black Newfoundland lying in soft grass, content cheerful expression, golden afternoon light"
+      ],
+      "hashtags": ["#hundetipps", "#zecken", "#hundegesundheit", "#hundeleben", "#hundeliebe", "#newfoundland", "#dogsofinstagram"],
+      "scene": "park"
+    },
+    {
+      "id": "hund-krallenpflege",
+      "kategorie": "gesundheit",
+      "brand": "hund",
+      "hook": "Klick, klick, klick — hörst du die Krallen deines Hundes auf dem Boden?",
+      "problem": "Dann sind sie zu lang. Zu lange Krallen tun beim Laufen weh und können die Pfotenstellung verändern.",
+      "loesung": "Kürze sie regelmäßig mit einer Krallenschere — immer nur die Spitze, niemals ins durchblutete Leben. Unsicher? Tierarzt oder Hundesalon zeigen es dir.",
+      "cta": "Mehr Pflege-Tipps — folge @familienapp.",
+      "moods": [
+        "big black Newfoundland dog Balu standing on a wooden floor showing his large fluffy paws, gentle calm expression",
+        "the big black Newfoundland sitting calmly with a focus on his paw, soft cozy indoor light",
+        "the black Newfoundland having his paw gently held and cared for, trusting relaxed expression, warm light",
+        "the comfortable happy black Newfoundland walking proudly across the room, cheerful content expression, warm cozy light"
+      ],
+      "hashtags": ["#hundetipps", "#krallenpflege", "#hundepflege", "#hundegesundheit", "#hundeleben", "#newfoundland", "#dogsofinstagram"],
+      "scene": "wohnzimmer"
+    }
+  ]
+}
