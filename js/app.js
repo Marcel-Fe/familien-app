@@ -136,6 +136,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const einst = JSON.parse(localStorage.getItem('familienapp_einstellungen') || '{}');
     if (einst.familienfoto) {
       document.documentElement.style.setProperty('--familien-foto', `url('${String(einst.familienfoto).replace(/'/g, "\\'")}')`);
+      const sp = document.getElementById('splash');
+      if (sp) sp.classList.add('hat-foto');
     }
   } catch(e) {}
   setTimeout(splashSchliessen, 3000);
@@ -247,31 +249,16 @@ function zeigeRegistrierung() {
 }
 
 // ===== NAVIGATION =====
+// 7 Hauptkategorien — jede mit ihren Sektionen als Untermenü
 const NAV = {
-  start:        [{s:'dashboard',  l:'Übersicht'}],
-  geld:         [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'}],
-  formulare:    [{s:'formular',   l:'Alle Formulare'}],
-  ort:          [{s:'umgebung',   l:'Umgebung'}],
-  familie:      [{s:'familie', l:'Freizeit'},{s:'wanderwege', l:'Wanderwege'},{s:'kalender', l:'Kalender'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'beratung', l:'Beratung'}],
-  kinder:       [{s:'basteln', l:'Bastelideen'},{s:'hausaufgaben', l:'Hausaufgaben'}],
-  gesund:       [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'}],
-  schwangerschaft: [{s:'schwangerschaft', l:'Schwangerschaft'}],
-  erziehung:    [{s:'erziehung', l:'Erziehungshilfe'}],
-  senioren:     [{s:'senioren', l:'Senioren'}],
-  wissen:       [{s:'wissen', l:'Wissen'}],
-  uebersetzer:  [{s:'uebersetzer', l:'Übersetzer'}],
-  medbox:       [{s:'medbox', l:'Medikamente'}],
-  erkennen:     [{s:'erkennen', l:'Tiere & Pflanzen'}],
-  erstehilfe:   [{s:'erstehilfe', l:'Erste Hilfe'}],
-  album:        [{s:'album', l:'Familien-Album'}],
-  kontakte:     [{s:'kontakte', l:'Kontakte'}],
-  haushalt:     [{s:'haushalt', l:'Haushalt'}],
-  kochbuch:     [{s:'kochbuch', l:'Mein Kochbuch'}],
-  einkaufsliste:[{s:'einkaufsliste', l:'Einkaufsliste'}],
-  tipps:        [{s:'tipps', l:'Tipps'}],
-  einstellungen:[{s:'einstellungen', l:'Einstellungen'}],
-  urlaub:       [{s:'urlaub', l:'Urlaub'}],
-  mehr:         [{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'jobs', l:'Jobs'},{s:'suche', l:'Suche'}]
+  start:     [{s:'dashboard', l:'Übersicht'}],
+  geld:      [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'},{s:'formular', l:'Formulare'}],
+  unterwegs: [{s:'umgebung', l:'Umgebung'},{s:'routenplaner', l:'Routenplaner'},{s:'wanderwege', l:'Wanderwege'},{s:'urlaub', l:'Reise-Ideen'}],
+  familie:   [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'einkaufsliste', l:'Einkaufsliste'},{s:'kochbuch', l:'Kochbuch'},{s:'haushalt', l:'Haushalt'},{s:'handwerker', l:'Handwerker'},{s:'kontakte', l:'Kontakte'},{s:'album', l:'Album'},{s:'beratung', l:'Beratung'}],
+  kinder:    [{s:'basteln', l:'Basteln'},{s:'spielideen', l:'Spielideen'},{s:'hausaufgaben', l:'Hausaufgaben'},{s:'erziehung', l:'Erziehung'}],
+  gesund:    [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'},{s:'schwangerschaft', l:'Schwangerschaft'},{s:'erstehilfe', l:'Erste Hilfe'},{s:'medbox', l:'Medikamente'}],
+  senioren:  [{s:'senioren', l:'Senioren'}],
+  wissen:    [{s:'wissen', l:'Wissen'},{s:'tipps', l:'Tipps'},{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'jobs', l:'Jobs'},{s:'uebersetzer', l:'Übersetzer'},{s:'erkennen', l:'Tiere & Pflanzen'},{s:'suche', l:'Suche'},{s:'einstellungen', l:'Einstellungen'}]
 };
 
 function sektionZuGruppe(s) {
@@ -2246,6 +2233,7 @@ function render() {
     case 'news':            content.innerHTML = renderNews(); setTimeout(initNews, 100); break;
     case 'schwangerschaft': content.innerHTML = renderSchwangerschaft(); break;
     case 'basteln':         content.innerHTML = renderBasteln(); break;
+    case 'spielideen':      content.innerHTML = renderSpielideen(); break;
     case 'ausmalen':        zuSektion('basteln'); return;
     case 'hausaufgaben':    content.innerHTML = renderHausaufgaben(); break;
     case 'todo':            content.innerHTML = renderTodo(); break;
@@ -2259,12 +2247,14 @@ function render() {
     case 'tipps':          content.innerHTML = renderTippsTab(); break;
     case 'notizen':        content.innerHTML = renderNotizen(); break;
     case 'haushalt':       content.innerHTML = renderHaushalt(); break;
+    case 'handwerker':     content.innerHTML = renderHandwerker(); break;
     case 'erziehung':      content.innerHTML = renderErziehung(); break;
     case 'senioren':       content.innerHTML = renderSenioren(); break;
     case 'album':          content.innerHTML = renderAlbum(); break;
     case 'kontakte':       content.innerHTML = renderKontakte(); break;
     case 'wissen':         content.innerHTML = renderWissen(); break;
-    case 'wanderwege':     content.innerHTML = renderWanderwege(); break;
+    case 'wanderwege':     content.innerHTML = renderWanderwege(); setTimeout(initWanderwegeKarte, 120); break;
+    case 'routenplaner':   content.innerHTML = renderRoutenplaner(); setTimeout(initRoutenplanerKarte, 120); break;
     case 'uebersetzer':    content.innerHTML = renderUebersetzer(); break;
     case 'medbox':         content.innerHTML = renderMedbox(); break;
     case 'erkennen':       content.innerHTML = renderErkennen(); break;
@@ -2706,9 +2696,26 @@ function renderUmgebung() {
     { id:'kino',       label:'🎬 Kino',            farbe:'#BE185D', radius:15000 }
   ];
 
+  const aktiveKat = kategorien.find(k => k.id === state.umgebungKat);
+  const heroChips = [];
+  if (standort) {
+    heroChips.push(`<span class="chip chip-ok">✓ ${esc(standort.name)}</span>`);
+  } else {
+    heroChips.push(`<span class="chip">📍 Kein Standort gewählt</span>`);
+  }
+  if (aktiveKat && aktiveKat.id !== 'route') {
+    heroChips.push(`<span class="chip">${esc(aktiveKat.label)}</span>`);
+  } else if (aktiveKat && aktiveKat.id === 'route') {
+    heroChips.push(`<span class="chip">🗺️ Routenplaner</span>`);
+  }
+
   return `
-  <div class="section-title">📍 Umgebungssuche</div>
-  <p class="section-sub">Läden, Tankstellen, Friseure und mehr in Ihrer Nähe — mit aktuellem Standort</p>
+  <div class="umg-hero">
+    <div class="umg-hero-tag">📍 Umgebung</div>
+    <div class="umg-hero-name">Was suchen Sie in Ihrer Nähe?</div>
+    <div class="umg-hero-sub">Läden, Ärzte, Spielplätze, Tankstellen — weltweit per Adresse oder GPS finden</div>
+    <div class="hero-chips">${heroChips.join('')}</div>
+  </div>
 
   <div class="standort-box">
     <div style="font-weight:700;font-size:.95rem;margin-bottom:.75rem">🔍 Ihren Standort eingeben</div>
@@ -2722,7 +2729,6 @@ function renderUmgebung() {
       <button class="gps-btn" onclick="gpsStandort()">📡 GPS</button>
     </div>
     <div id="standort-fehler" style="display:none;margin-top:.6rem;padding:.5rem .75rem;background:#FEE2E2;color:#DC2626;border-radius:.5rem;font-size:.82rem;font-weight:600"></div>
-    ${standort ? `<div style="font-size:.82rem;color:#059669;margin-top:.6rem;font-weight:600">✓ Standort: ${esc(standort.name)}</div>` : ''}
   </div>
 
   <div class="radius-control" style="${state.umgebungKat==='route'?'display:none':''}">
@@ -2800,18 +2806,20 @@ function renderUmgebung() {
     ${kategorien.filter(k => !state.umgebungKatSuche || k.label.toLowerCase().includes(state.umgebungKatSuche.toLowerCase())).map(k => `
       <button class="kat-tab ${state.umgebungKat===k.id?'aktiv':''}"
         onclick="umgebungKatWaehlen('${k.id}')"
-        style="${state.umgebungKat===k.id?`background:${k.farbe};border-color:${k.farbe};`:''}">
+        style="${state.umgebungKat===k.id?`background:linear-gradient(135deg,${k.farbe},${k.farbe}dd);border-color:${k.farbe};`:''}">
+        <span class="kat-tab-dot" style="background:${k.farbe}"></span>
         ${k.label}
       </button>`).join('')}
   </div>
 
   ${!standort ? `
-  <div class="info-box lila">
-    <span class="ib-icon">📍</span>
-    <div class="ib-text"><strong>Standort eingeben</strong>Geben Sie Ihre PLZ oder Ihren Ort ein um Angebote in Ihrer Nähe zu sehen.</div>
+  <div class="umg-empty">
+    <div class="umg-empty-icon">📍</div>
+    <div class="umg-empty-titel">Standort eingeben</div>
+    <div class="umg-empty-text">Geben Sie oben eine PLZ, Adresse oder einen Ort ein — oder nutzen Sie den GPS-Button, um Angebote in Ihrer Nähe zu sehen.</div>
   </div>
-  <div id="karte" style="height:400px;background:linear-gradient(135deg,#F1F5F9,#E2E8F0);display:flex;align-items:center;justify-content:center;color:#94A3B8;border-radius:20px;font-size:1.1rem;font-weight:700;border:2px dashed #CBD5E1">
-    📍 Bitte Standort eingeben
+  <div id="karte" style="height:360px;background:linear-gradient(135deg,#EFF6FF,#ECFDF5);display:flex;align-items:center;justify-content:center;color:#64748B;border-radius:20px;font-size:1rem;font-weight:700;border:2px dashed #BAE6FD">
+    📍 Karte erscheint nach Standort-Eingabe
   </div>` : state.umgebungKat === 'route' ? `
   <div id="karte" style="height:480px;border-radius:20px"></div>` : `
   <div class="umgebung-layout">
@@ -3238,9 +3246,13 @@ async function routeMultiBerechnen(zielLat, zielLng, zielName) {
   state.routeMultiModi = { laden: true, ergebnisse: null, ziel: zielName };
   render();
 
+  // Im Routenplaner zeichnet initRoutenplanerKarte() die Route nach dem render() —
+  // hier nur für die Umgebungs-Sektion direkt auf die Karte zeichnen.
+  const aufKarteZeichnen = state.sektion !== 'routenplaner';
+
   // Karte zentrieren & Marker setzen
-  if (state.routeSchicht) state.routeSchicht.clearLayers();
-  if (state.karte) {
+  if (aufKarteZeichnen && state.routeSchicht) state.routeSchicht.clearLayers();
+  if (aufKarteZeichnen && state.karte) {
     const zielIcon = L.divIcon({
       html: '<div style="background:#DC2626;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(220,38,38,.6)"></div>',
       iconSize:[14,14], iconAnchor:[7,7], className:''
@@ -3270,11 +3282,11 @@ async function routeMultiBerechnen(zielLat, zielLng, zielName) {
     }
   });
 
-  // Schnellste Route auf der Karte zeichnen
+  // Schnellste Route auf der Karte zeichnen (nur Umgebungs-Sektion)
   const aktivProfil = state.routeAktivProfil || 'auto';
-  if (ergebnisse[aktivProfil] && state.karte) {
+  if (aufKarteZeichnen && ergebnisse[aktivProfil] && state.karte) {
     const layer = L.geoJSON(ergebnisse[aktivProfil].geoJson, { style: { color: ergebnisse[aktivProfil].farbe, weight: 5, opacity: .85 } }).addTo(state.routeSchicht);
-    state.karte.fitBounds(layer.getBounds(), { padding: [40, 40] });
+    state.karte.fitBounds(layer.getBounds(), { padding: [40, 40], animate: false });
   }
 
   state.routeMultiModi = { laden: false, ergebnisse, ziel: zielName, lat: zielLat, lng: zielLng };
@@ -3699,6 +3711,10 @@ function renderWanderwege() {
     </div>` : `<div style="margin-top:.5rem;font-size:.82rem;color:var(--g500)">Bitte zuerst einen Standort eingeben.</div>`}
   </div>
 
+  ${(liste && liste.length) || gespeichert.length ? `
+  <div id="ww-karte" style="height:380px;border-radius:20px;margin-top:1rem;border:1px solid var(--g200);box-shadow:var(--s2);z-index:1"></div>
+  <div style="font-size:.74rem;color:var(--g500);margin-top:.4rem;text-align:center">💡 Tippe einen Weg unten an, um ihn auf der Karte zu zeigen</div>` : ''}
+
   ${gespeichert.length ? `
   <div class="block-title" style="margin-top:1.25rem">💾 Gespeicherte Wege (${gespeichert.length})</div>
   <div class="ww-grid">
@@ -3707,13 +3723,13 @@ function renderWanderwege() {
       <div class="ww-karte-titel">${esc(w.typ || '🚶 Weg')}</div>
       <div class="ww-karte-name">${esc(w.name)}</div>
       <div class="ww-karte-aktionen">
-        <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${w.lat}&mlon=${w.lng}#map=15/${w.lat}/${w.lng}">🗺️ Auf Karte</a>
+        <button class="btn btn-primary btn-sm" onclick="wanderwegAufKarte(${w.lat},${w.lng},'${esc((w.name||'').replace(/'/g,''))}')">🗺️ Auf Karte zeigen</button>
         <button class="btn btn-outline btn-sm" onclick="wanderwegLoeschen('${esc(w.id)}')">✕ Entfernen</button>
       </div>
     </div>`).join('')}
   </div>` : ''}
 
-  ${liste === null ? '' : !liste.length ? `
+  ${liste == null ? '' : !liste.length ? `
   <div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">😕</span><div class="ib-text"><strong>Keine Wege gefunden.</strong> Radius vergrößern oder anderen Standort wählen.</div></div>
   ` : `
   <div class="block-title" style="margin-top:1.25rem">📍 Wege in der Nähe (${liste.length})</div>
@@ -3723,11 +3739,244 @@ function renderWanderwege() {
       <div class="ww-karte-titel">${esc(w.typ)} · ${w.distKm.toFixed(1)} km</div>
       <div class="ww-karte-name">${esc(w.name)}</div>
       <div class="ww-karte-aktionen">
-        <button class="btn btn-primary btn-sm" onclick="wanderwegSpeichernIdx(${i})">💾 Speichern</button>
-        <a class="btn btn-outline btn-sm" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${w.lat}&mlon=${w.lng}#map=15/${w.lat}/${w.lng}">🗺️ Karte</a>
+        <button class="btn btn-primary btn-sm" onclick="wanderwegAufKarte(${w.lat},${w.lng},'${esc((w.name||'').replace(/'/g,''))}')">🗺️ Auf Karte</button>
+        <button class="btn btn-outline btn-sm" onclick="wanderwegSpeichernIdx(${i})">💾 Speichern</button>
       </div>
     </div>`).join('')}
   </div>`}`;
+}
+
+// Leaflet-Karte für die Wanderwege-Sektion aufbauen
+function initWanderwegeKarte() {
+  const mapEl = el('ww-karte');
+  if (!mapEl || typeof L === 'undefined') return;
+  const s = state.umgebungStandort;
+  const liste = state.wanderwegeListe || [];
+  const gespeichert = (typeof gespeicherteWanderwege === 'function') ? gespeicherteWanderwege() : [];
+  if (!s && !liste.length && !gespeichert.length) return;
+
+  if (state.wwKarte) { state.wwKarte.remove(); state.wwKarte = null; }
+  const center = s ? [s.lat, s.lng] : (liste[0] ? [liste[0].lat, liste[0].lng] : [51.16, 10.45]);
+  const karte = L.map('ww-karte').setView(center, 12);
+  state.wwKarte = karte;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>', maxZoom: 19
+  }).addTo(karte);
+
+  const punkte = [];
+  if (s) {
+    const ich = L.divIcon({ html:'<div style="background:#2563EB;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(37,99,235,.6)"></div>', iconSize:[16,16], iconAnchor:[8,8], className:'' });
+    L.marker([s.lat, s.lng], { icon: ich }).addTo(karte).bindPopup('<strong>📍 Ihr Standort</strong>');
+    punkte.push([s.lat, s.lng]);
+  }
+  const wegIcon = (farbe) => L.divIcon({ html:`<div style="background:${farbe};width:13px;height:13px;border-radius:50%;border:2.5px solid white;box-shadow:0 1px 5px rgba(0,0,0,.4)"></div>`, iconSize:[13,13], iconAnchor:[6,6], className:'' });
+  liste.forEach(w => {
+    L.marker([w.lat, w.lng], { icon: wegIcon('#059669') }).addTo(karte)
+      .bindPopup(`<strong>${esc(w.typ || '🚶 Weg')}</strong><br>${esc(w.name)}<br>${w.distKm != null ? w.distKm.toFixed(1) + ' km entfernt' : ''}`);
+    punkte.push([w.lat, w.lng]);
+  });
+  gespeichert.forEach(w => {
+    L.marker([w.lat, w.lng], { icon: wegIcon('#D97706') }).addTo(karte)
+      .bindPopup(`<strong>💾 ${esc(w.name)}</strong><br>Gespeicherter Weg`);
+    punkte.push([w.lat, w.lng]);
+  });
+  if (punkte.length > 1) {
+    karte.fitBounds(punkte, { padding: [40, 40], maxZoom: 14 });
+  }
+}
+
+// Einen Weg auf der Wanderwege-Karte anzeigen
+function wanderwegAufKarte(lat, lng, name) {
+  const mapEl = el('ww-karte');
+  if (!mapEl) { toast('⚠️ Karte nicht verfügbar'); return; }
+  mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (!state.wwKarte) initWanderwegeKarte();
+  if (state.wwKarte) {
+    state.wwKarte.flyTo([lat, lng], 15, { duration: .8 });
+    L.popup().setLatLng([lat, lng]).setContent(`<strong>${esc(name || 'Weg')}</strong>`).openOn(state.wwKarte);
+  }
+}
+
+// ===== Routenplaner (eigene Sektion) =====
+function renderRoutenplaner() {
+  const user = getUser() || {};
+  const start = state.routenplanerStart || state.umgebungStandort?.name || user.ort || '';
+  const ziel  = state.routeZiel || '';
+  const ziele = zieleLaden();
+  const ergebnis = state.routeMultiModi;
+
+  return `
+  <div class="umg-hero" style="background:linear-gradient(140deg,#4F46E5 0%,#7C3AED 55%,#EC4899 100%);box-shadow:0 10px 30px rgba(124,58,237,.28)">
+    <div class="umg-hero-tag">🗺️ Routenplaner</div>
+    <div class="umg-hero-name">Wohin geht die Reise?</div>
+    <div class="umg-hero-sub">Plane Routen mit Auto, Fahrrad und zu Fuß — Ziele werden für später gespeichert</div>
+    <div class="hero-chips">
+      <span class="chip">📍 Start: ${esc(start || 'noch nicht gesetzt')}</span>
+      ${ziel ? `<span class="chip">🎯 ${esc(ziel)}</span>` : ''}
+      ${ziele.length ? `<span class="chip">💾 ${ziele.length} gespeichert</span>` : ''}
+    </div>
+  </div>
+
+  <div class="standort-box">
+    <div style="font-weight:700;font-size:.95rem;margin-bottom:.75rem">📍 Start &amp; Ziel</div>
+    <div style="display:flex;flex-direction:column;gap:.55rem">
+      <input id="rp-start" class="standort-input" type="text"
+        placeholder="Startadresse oder PLZ (leer = aktueller Standort)"
+        value="${esc(start)}" autocomplete="off" />
+      <input id="rp-ziel" class="standort-input" type="text"
+        placeholder="Zieladresse (z. B. Hamburg Hauptbahnhof)"
+        value="${esc(ziel)}" autocomplete="off"
+        onkeydown="if(event.key==='Enter')routenplanerBerechnen()" />
+    </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem">
+      <button class="btn btn-primary" style="flex:1" onclick="routenplanerBerechnen()" ${state.routeLaden?'disabled':''}>
+        ${state.routeLaden ? '⏳ Berechne…' : '🗺️ Route berechnen'}
+      </button>
+      ${ergebnis && !ergebnis.laden ? `<button class="btn btn-outline" onclick="routenplanerZielSpeichern()">💾 Ziel speichern</button>` : ''}
+      ${ergebnis ? `<button class="btn btn-outline" onclick="routeZurücksetzen();render()">✕ Schließen</button>` : ''}
+    </div>
+    <div id="rp-fehler" style="display:none;margin-top:.6rem;padding:.5rem .75rem;background:#FEE2E2;color:#DC2626;border-radius:.5rem;font-size:.82rem;font-weight:600"></div>
+  </div>
+
+  <div id="rp-karte" style="height:400px;border-radius:20px;margin-bottom:1rem;border:1px solid var(--g200);box-shadow:var(--s2);z-index:1"></div>
+
+  ${ergebnis ? `<div style="margin-bottom:1rem">${renderMultiRoute({ name: start })}</div>` : ''}
+
+  ${ziele.length ? `
+  <div class="block-title" style="margin-top:1rem">💾 Gespeicherte Ziele (${ziele.length})</div>
+  <div class="rp-ziele-grid">
+    ${ziele.map(z => `
+    <div class="rp-ziel-karte">
+      <div class="rp-ziel-name">📍 ${esc(z.name)}</div>
+      <div class="rp-ziel-aktionen">
+        <button class="btn btn-primary btn-sm" onclick="routenplanerZielAufrufen('${esc(z.id)}')">🗺️ Route hierhin</button>
+        <button class="btn btn-outline btn-sm" onclick="routenplanerZielLoeschen('${esc(z.id)}')">✕ Entfernen</button>
+      </div>
+    </div>`).join('')}
+  </div>` : `
+  <div class="info-box blau" style="margin-top:1rem">
+    <span class="ib-icon">💡</span>
+    <div class="ib-text"><strong>Tipp:</strong> Nach jeder berechneten Route kannst du das Ziel speichern. So sind häufige Adressen (Schule, Arbeit, Oma) mit einem Klick wieder abrufbar.</div>
+  </div>`}`;
+}
+
+// Leaflet-Karte für den Routenplaner — zeigt Start, Ziel und die Route
+function initRoutenplanerKarte() {
+  const mapEl = el('rp-karte');
+  if (!mapEl || typeof L === 'undefined') return;
+
+  if (state.karte) { try { state.karte.remove(); } catch {} state.karte = null; }
+  const s = state.umgebungStandort;
+  const center = s ? [s.lat, s.lng] : [51.16, 10.45];
+  const karte = L.map('rp-karte').setView(center, s ? 12 : 6);
+  state.karte = karte;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>', maxZoom: 19
+  }).addTo(karte);
+  state.routeSchicht = L.layerGroup().addTo(karte);
+
+  const punkte = [];
+  if (s) {
+    const ich = L.divIcon({ html:'<div style="background:#16A34A;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(22,163,74,.6)"></div>', iconSize:[16,16], iconAnchor:[8,8], className:'' });
+    L.marker([s.lat, s.lng], { icon: ich }).addTo(state.routeSchicht).bindPopup('<strong>🟢 Start: ' + esc(s.name || 'Standort') + '</strong>');
+    punkte.push([s.lat, s.lng]);
+  }
+  const m = state.routeMultiModi;
+  if (m && !m.laden && m.ergebnisse) {
+    const aktiv = state.routeAktivProfil || 'auto';
+    const erg = m.ergebnisse[aktiv] || m.ergebnisse.auto || Object.values(m.ergebnisse)[0];
+    if (m.lat != null) {
+      const zielIcon = L.divIcon({ html:'<div style="background:#DC2626;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(220,38,38,.6)"></div>', iconSize:[16,16], iconAnchor:[8,8], className:'' });
+      L.marker([m.lat, m.lng], { icon: zielIcon }).addTo(state.routeSchicht).bindPopup('<strong>🔴 Ziel: ' + esc(m.ziel || '') + '</strong>');
+      punkte.push([m.lat, m.lng]);
+    }
+    if (erg && erg.geoJson) {
+      const layer = L.geoJSON(erg.geoJson, { style: { color: erg.farbe || '#4F46E5', weight: 5, opacity: .85 } }).addTo(state.routeSchicht);
+      try { karte.fitBounds(layer.getBounds(), { padding: [40, 40] }); return; } catch {}
+    }
+  }
+  if (punkte.length > 1) karte.fitBounds(punkte, { padding: [50, 50] });
+}
+
+async function routenplanerBerechnen() {
+  const startEl = el('rp-start');
+  const zielEl  = el('rp-ziel');
+  const fehlerEl = el('rp-fehler');
+  const fehlerZeigen = (txt) => { if (fehlerEl) { fehlerEl.textContent = txt; fehlerEl.style.display = 'block'; } };
+  if (fehlerEl) fehlerEl.style.display = 'none';
+
+  const zielText = zielEl?.value.trim() || '';
+  if (!zielText) { fehlerZeigen('Bitte ein Ziel eingeben.'); return; }
+  state.routeZiel = zielText;
+  state.routenplanerStart = startEl?.value.trim() || '';
+
+  state.routeLaden = true;
+  state.routeMultiModi = { laden: true, ergebnisse: null, ziel: zielText };
+  render();
+
+  try {
+    // Start bestimmen — entweder Eingabe geocodieren oder aktuellen Standort nutzen
+    let startLat, startLng, startName;
+    if (state.routenplanerStart) {
+      const sRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(state.routenplanerStart)}&format=json&limit=1`);
+      const sData = await sRes.json();
+      if (!sData.length) throw new Error('Startadresse nicht gefunden — bitte genauer angeben (z. B. PLZ + Stadt).');
+      startLat = parseFloat(sData[0].lat); startLng = parseFloat(sData[0].lon);
+      startName = state.routenplanerStart;
+    } else if (state.umgebungStandort) {
+      startLat = state.umgebungStandort.lat; startLng = state.umgebungStandort.lng;
+      startName = state.umgebungStandort.name;
+    } else {
+      throw new Error('Kein Startpunkt — bitte oben eine Startadresse eingeben.');
+    }
+    // umgebungStandort temporär setzen, damit routeMultiBerechnen() es nutzen kann
+    state.umgebungStandort = { name: startName, lat: startLat, lng: startLng };
+
+    // Ziel geocodieren
+    const gRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(zielText)}&format=json&limit=1`);
+    const gData = await gRes.json();
+    if (!gData.length) throw new Error('Zieladresse nicht gefunden — bitte genauer angeben.');
+    const zLat = parseFloat(gData[0].lat), zLng = parseFloat(gData[0].lon);
+    state.routeZielKoord = { lat: zLat, lng: zLng };
+
+    await routeMultiBerechnen(zLat, zLng, zielText);
+  } catch (e) {
+    state.routeLaden = false;
+    state.routeMultiModi = null;
+    fehlerZeigen(e.message || 'Route konnte nicht berechnet werden.');
+    render();
+  }
+}
+
+function routenplanerZielSpeichern() {
+  const name = (state.routeZiel || '').trim();
+  const k = state.routeZielKoord;
+  if (!name || !k) { toast('⚠️ Erst eine Route berechnen, dann speichern.'); return; }
+  const liste = zieleLaden();
+  if (liste.some(z => z.name.toLowerCase() === name.toLowerCase())) {
+    toast('💾 Ziel ist bereits gespeichert.');
+    return;
+  }
+  liste.unshift({ id: Date.now().toString(36), name, lat: k.lat, lng: k.lng });
+  zieleSpeichern(liste);
+  toast('💾 Ziel gespeichert');
+  render();
+}
+
+function routenplanerZielLoeschen(id) {
+  zieleSpeichern(zieleLaden().filter(z => z.id !== id));
+  toast('🗑️ Ziel entfernt');
+  render();
+}
+
+function routenplanerZielAufrufen(id) {
+  const z = zieleLaden().find(x => x.id === id);
+  if (!z) return;
+  state.routeZiel = z.name;
+  state.routeZielKoord = { lat: z.lat, lng: z.lng };
+  // Eingabefeld direkt setzen, damit der User die Eingabe sieht
+  const zielEl = el('rp-ziel'); if (zielEl) zielEl.value = z.name;
+  routenplanerBerechnen();
 }
 
 // ===== Gespeicherte Ziele =====
@@ -7236,9 +7485,11 @@ function renderUrlaub() {
   return `
   <div class="section-hero" style="background:linear-gradient(135deg,rgba(14,165,233,.9),rgba(79,70,229,.85)),url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=70') center/cover;border-radius:var(--r-lg);padding:2rem 1.5rem;margin-bottom:1.5rem;color:white">
     <div style="font-size:2rem;margin-bottom:.5rem">✈️</div>
-    <div style="font-size:1.3rem;font-weight:800;margin-bottom:.4rem">Urlaub mit der Familie</div>
-    <div style="font-size:.88rem;opacity:.9">Echte Reiseangebote — sofort buchbar, kein Login nötig</div>
+    <div style="font-size:1.3rem;font-weight:800;margin-bottom:.4rem">Reise-Ideen für die Familie</div>
+    <div style="font-size:.88rem;opacity:.9">Inspiration sammeln — aktuelle Preise direkt beim Anbieter vergleichen</div>
   </div>
+
+  <div class="info-box blau" style="margin-bottom:1.25rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Diese Seite sammelt <strong>Reise-Ideen</strong> — die App verkauft keine Reisen. Jeder Button öffnet die Suche beim jeweiligen Anbieter, wo du <strong>echte, tagesaktuelle Preise</strong> siehst und vergleichen kannst.</div></div>
 
   <div class="card" style="margin-bottom:1.25rem;padding:1rem">
     <div style="font-weight:800;font-size:.95rem;margin-bottom:.6rem">📅 Reisedaten für alle Suchen</div>
@@ -7271,11 +7522,8 @@ function renderUrlaub() {
 
   <div class="info-box gruen" style="margin-bottom:1.25rem"><span class="ib-icon">💡</span><div class="ib-text"><strong>Tipp:</strong> ALG-II-Empfänger und Geringverdiener haben Anspruch auf <strong>Sozialurlaub</strong> — oft komplett kostenlos über AWO, Caritas oder Diakonie. Unten im Filter "💶 Günstig" anschauen!</div></div>
 
-  <div class="block-title" style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem">
-    <span style="background:#003580;color:white;font-weight:800;padding:.2rem .55rem;border-radius:.3rem;font-size:.75rem">Booking.com</span>
-    Top-Familienangebote
-  </div>
-  <div style="font-size:.78rem;color:var(--g500);margin:-0.35rem 0 .75rem">Klick = Live-Suche bei Booking.com mit deinen Daten</div>
+  <div class="block-title" style="margin-top:.5rem">Beliebte Familien-Reiseziele</div>
+  <div style="font-size:.78rem;color:var(--g500);margin:-0.35rem 0 .75rem">Klick öffnet die Familienhotel-Suche bei Booking.com mit deinen Reisedaten</div>
   <div class="urlaub-grid">
     ${bookingTopZiele.map(z => {
       const sl = _urlaubSuchlinks(z.ort);
@@ -7283,22 +7531,21 @@ function renderUrlaub() {
       <div class="urlaub-karte">
         <div class="urlaub-bild" style="background-image:url('${z.bild}')">
           <span class="urlaub-land-badge">${z.land}</span>
-          <span class="urlaub-preis-badge">${z.preis}</span>
         </div>
         <div class="urlaub-info">
           <div class="urlaub-titel">${z.emoji} ${esc(z.ort)}</div>
-          <div class="urlaub-meta">${z.meta}</div>
+          <div class="urlaub-meta">${esc(z.meta.replace(/^[^·]+·\s*/, ''))}</div>
           <div class="urlaub-highlight">Familienhotels in ${esc(z.ort)} — vom ${dat.anreise.split('-').reverse().join('.')} bis ${dat.abreise.split('-').reverse().join('.')}</div>
           <a href="${sl.bookingFamilie}" target="_blank" rel="noopener" class="btn btn-primary urlaub-btn" style="background:#003580">
-            Bei Booking.com ansehen →
+            Preise bei Booking.com ansehen →
           </a>
         </div>
       </div>`;
     }).join('')}
   </div>
 
-  <div class="block-title" style="margin-top:1.75rem">Kuratierte Familien-Angebote</div>
-  <div style="font-size:.78rem;color:var(--g500);margin:-0.35rem 0 .75rem">Filter nach Typ und Land — alle Buttons öffnen Booking.com mit deinen Daten</div>
+  <div class="block-title" style="margin-top:1.75rem">Reise-Ideen nach Typ &amp; Land</div>
+  <div style="font-size:.78rem;color:var(--g500);margin:-0.35rem 0 .75rem">Filter nach Typ und Land — die Buttons öffnen die Suche beim Anbieter</div>
 
   <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
     ${filterOptionen.map(f=>`<button class="tipps-filter-btn ${filter===f.id?'aktiv':''}" onclick="urlaubFilterSetzen('${f.id}')">${f.label}</button>`).join('')}
@@ -7318,11 +7565,10 @@ function renderUrlaub() {
       <div class="urlaub-karte">
         <div class="urlaub-bild" style="background-image:url('${a.bild}')">
           <span class="urlaub-land-badge">${a.land}</span>
-          <span class="urlaub-preis-badge">${a.preis}</span>
         </div>
         <div class="urlaub-info">
           <div class="urlaub-titel">${a.emoji} ${a.ziel}</div>
-          <div class="urlaub-meta">${a.dauer} · ${a.verpflegung} · ${a.preisPro}</div>
+          <div class="urlaub-meta">${a.dauer} · ${a.verpflegung}</div>
           <div class="urlaub-highlight">${a.highlight}</div>
           <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem">
             <a href="${sl.bookingFamilie}" target="_blank" rel="noopener" class="btn btn-primary urlaub-btn" style="background:#003580;flex:1;min-width:140px">Booking.com →</a>
@@ -9075,10 +9321,13 @@ function initEinstellungen() {
 }
 
 function familienfotoAnwenden(url) {
+  const sp = el('splash');
   if (url) {
     document.documentElement.style.setProperty('--familien-foto', `url('${url.replace(/'/g, "\\'")}')`);
+    if (sp) sp.classList.add('hat-foto');
   } else {
     document.documentElement.style.removeProperty('--familien-foto');
+    if (sp) sp.classList.remove('hat-foto');
   }
 }
 
@@ -9089,11 +9338,24 @@ function einstellungTheme(theme) {
   render();
 }
 
+// 15 schöne Familienbilder zur Auswahl für den Startbildschirm
+const FAMILIEN_FOTOS = [
+  '1511895426328-dc8714191300', '1476703993599-0035a21b17a9', '1490730141103-6cac27aaab94',
+  '1542037104857-ffbb0b9155fb', '1484665754804-74b091211472', '1518398046578-8cca57782e17',
+  '1602030638412-bb8dcc0bc8b0', '1607746882042-944635dfe10e', '1485546246426-74dc88dec4d9',
+  '1493663284031-b7e3aefcae8e', '1518791841217-8f162f1e1131', '1559734840-f9509ee5677f',
+  '1469571486292-0ba58a3f068b', '1438962136829-452260720431', '1490474418585-ba9bad8fd0ea'
+].map(id => ({
+  vorschau: `https://images.unsplash.com/photo-${id}?w=200&h=200&fit=crop&q=60`,
+  voll:     `https://images.unsplash.com/photo-${id}?w=900&h=1400&fit=crop&q=75`
+}));
+
 function familienfotoSetzen(url) {
   const einst = einstellungenLaden();
   einst.familienfoto = url;
   einstellungenSpeichern(einst);
   familienfotoAnwenden(url);
+  toast(url ? '🖼️ Startbild gesetzt' : '🖼️ Startbild entfernt');
   render();
 }
 function familienfotoUpload(input) {
@@ -9132,29 +9394,52 @@ function einstellungToggle(key) {
 
 // ===== Vorlese-Stimme (Sprachausgabe) =====
 // Wählt anhand der Einstellung eine weibliche oder männliche Stimme.
-const _STIMME_WEIBLICH = ['katja','hedda','anna','marlene','petra','seraphina','klara','female','frau','google'];
-const _STIMME_MAENNLICH = ['stefan','conrad','klaus','markus','hans','bernd','male','mann'];
+// Die Listen sind nach Qualität sortiert — vorne stehen die natürlichsten
+// (Microsoft "Online (Natural)", Apple "Premium/Enhanced", Google).
+const _STIMME_WEIBLICH = ['katja','hedda','marlene','anna','petra','seraphina','klara','female','frau','google','vicki'];
+const _STIMME_MAENNLICH = ['conrad','stefan','markus','killian','yannick','klaus','hans','bernd','male','mann'];
+// Marker für besonders natürlich klingende Stimm-Engines (mehr Punkte beim Ranking)
+const _STIMME_PREMIUM_MARKER = ['natural','online','premium','enhanced','neural','google','natürlich','wavenet'];
+
 // Alle deutschen Stimmen, die das Gerät/Browser anbietet
 function deutscheStimmen() {
   if (!window.speechSynthesis) return [];
   return (window.speechSynthesis.getVoices() || [])
     .filter(v => (v.lang || '').toLowerCase().startsWith('de'));
 }
+
+// Bewertet eine Stimme nach „filmreif-natürlich". Höher = besser.
+function _stimmeQualitaet(voice) {
+  const n = (voice.name || '').toLowerCase();
+  let score = 0;
+  for (const m of _STIMME_PREMIUM_MARKER) if (n.includes(m)) score += 10;
+  if ((voice.lang || '').toLowerCase() === 'de-de') score += 3;
+  if (voice.localService === false) score += 2; // Cloud-Stimmen meist natürlicher
+  return score;
+}
+
+// Wählt die natürlichste Stimme aus einer Liste nach Namens-Treffern + Qualitäts-Score
+function _stimmeBeste(pool, namensListe) {
+  const treffer = pool.filter(v => namensListe.some(n => (v.name || '').toLowerCase().includes(n)));
+  const kandidaten = treffer.length ? treffer : pool;
+  if (!kandidaten.length) return null;
+  return kandidaten.slice().sort((a, b) => _stimmeQualitaet(b) - _stimmeQualitaet(a))[0];
+}
+
 function stimmeFuer(lang) {
   const wahl = einstellungenLaden().stimme || 'auto';
   if (wahl === 'auto' || !window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices() || [];
   if (!voices.length) return null;
-  // Konkret per Name gewählte Stimme
+  // Abwärtskompatibel: konkrete Stimme per Name gewählt
   const direkt = voices.find(v => v.name === wahl);
   if (direkt) return direkt;
-  // Abwärtskompatibel: 'w' = weiblich, 'm' = männlich
+  // 'w' = weiblich, 'm' = männlich — beste verfügbare wählen
   if (wahl === 'w' || wahl === 'm') {
     const sprache = String(lang || 'de').slice(0, 2).toLowerCase();
     const passend = voices.filter(v => (v.lang || '').toLowerCase().startsWith(sprache));
     const pool = passend.length ? passend : voices;
-    const liste = wahl === 'm' ? _STIMME_MAENNLICH : _STIMME_WEIBLICH;
-    return pool.find(v => liste.some(n => (v.name || '').toLowerCase().includes(n))) || null;
+    return _stimmeBeste(pool, wahl === 'm' ? _STIMME_MAENNLICH : _STIMME_WEIBLICH);
   }
   return null;
 }
@@ -9176,9 +9461,12 @@ function stimmeWaehlenIdx(i) {
   stimmeWaehlen(v ? v.name : 'auto');
 }
 function stimmeTesten() {
+  const probe = 'Hallo! So klingt die Vorlese-Stimme der Familien-App. Ich helfe euch gern weiter.';
+  if (typeof kiTextVorlesen === 'function') { kiTextVorlesen(probe); return; }
+  // Fallback, falls AI-TTS-Funktion (noch) nicht geladen
   if (!window.speechSynthesis) { toast('⚠️ Sprachausgabe wird nicht unterstützt'); return; }
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance('Hallo! So klingt die Vorlese-Stimme der FamilienApp.');
+  const u = new SpeechSynthesisUtterance(probe);
   u.lang = 'de-DE';
   stimmeAnwenden(u);
   speechSynthesis.speak(u);
@@ -9259,6 +9547,30 @@ function renderEinstellungen() {
     </div>
   </div>
 
+  <!-- Startbild (Familienfoto) -->
+  <div class="einst-gruppe">
+    <div class="einst-gruppe-titel">🖼️ Startbild</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.7rem">Wähle ein Bild für den Startbildschirm der App. Du kannst eines der 15 Bilder nehmen oder ein eigenes Foto hochladen.</div>
+    <div class="foto-galerie">
+      <button class="foto-option foto-option-leer ${!einst.familienfoto?'aktiv':''}" onclick="familienfotoSetzen('')" title="Ohne Bild">
+        <span>Kein Bild</span>
+      </button>
+      ${FAMILIEN_FOTOS.map(f => `
+      <button class="foto-option ${einst.familienfoto===f.voll?'aktiv':''}"
+        style="background-image:url('${f.vorschau}')"
+        onclick="familienfotoSetzen('${f.voll}')"
+        title="Dieses Bild wählen">
+        ${einst.familienfoto===f.voll?'<span class="foto-check">✓</span>':''}
+      </button>`).join('')}
+    </div>
+    <label class="btn btn-outline btn-sm" style="margin-top:.75rem;display:inline-flex;cursor:pointer">
+      📷 Eigenes Foto hochladen
+      <input type="file" accept="image/*" onchange="familienfotoUpload(this)" style="display:none">
+    </label>
+    ${einst.familienfoto && einst.familienfoto.startsWith('data:') ? '<div style="font-size:.76rem;color:var(--gruen);margin-top:.5rem;font-weight:600">✓ Eigenes Foto aktiv</div>' : ''}
+    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Das Bild erscheint beim Start der App hinter dem Logo. Eigene Fotos werden nur auf deinem Gerät gespeichert (max. 2 MB).</div></div>
+  </div>
+
   <!-- Dashboard-Karten -->
   <div class="einst-gruppe">
     <div class="einst-gruppe-titel">🏠 Dashboard-Karten</div>
@@ -9334,20 +9646,25 @@ function renderEinstellungen() {
   <!-- Vorlese-Stimme -->
   <div class="einst-gruppe">
     <div class="einst-gruppe-titel">🔊 Vorlese-Stimme</div>
-    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Welche Stimme soll Texte vorlesen — z. B. Übersetzungen, Assistenten-Antworten oder die Navigations-Ansagen? Tippe eine Stimme an, um sie sofort zu hören.</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Welche Stimme soll Texte vorlesen — Assistenten-Antworten, Übersetzungen, Vorlese-Funktionen? Tippe auf „Anhören", um sie zu testen.</div>
     ${(() => {
-      const stimmen = (typeof deutscheStimmen === 'function') ? deutscheStimmen() : [];
-      const aktuell = einst.stimme || 'auto';
-      if (!stimmen.length && window.speechSynthesis) {
-        setTimeout(() => { if (state.sektion === 'einstellungen' && deutscheStimmen().length) render(); }, 700);
+      let aktuell = einst.stimme || 'w';
+      // Abwärtskompatibilität: alte Werte ('auto' / einzelne Stimm-Namen aus v60) → auf w/m normalisieren
+      if (aktuell !== 'w' && aktuell !== 'm') {
+        const nm = String(aktuell).toLowerCase();
+        aktuell = (typeof _STIMME_MAENNLICH !== 'undefined' && _STIMME_MAENNLICH.some(n => nm.includes(n))) ? 'm' : 'w';
       }
-      const buttons = `<button class="stimm-opt${aktuell==='auto'?' aktiv':''}" onclick="stimmeWaehlen('auto')">🎲 Automatisch</button>`
-        + stimmen.map((v, i) => `<button class="stimm-opt${aktuell===v.name?' aktiv':''}" onclick="stimmeWaehlenIdx(${i})">🗣️ ${esc(v.name)}</button>`).join('');
-      return `<div class="stimm-wahl">${buttons}</div>`
-        + (stimmen.length ? '' : '<div style="font-size:.78rem;color:var(--g500);margin-top:.5rem">Stimmen werden geladen — falls leer, Einstellungen kurz erneut öffnen.</div>');
+      const optionen = [
+        { wert:'w', label:'👩 Weiblich · natürlich' },
+        { wert:'m', label:'👨 Männlich' }
+      ];
+      const buttons = optionen.map(o =>
+        `<button class="stimm-opt${aktuell===o.wert?' aktiv':''}" onclick="stimmeWaehlen('${o.wert}')">${o.label}</button>`
+      ).join('');
+      return `<div class="stimm-wahl">${buttons}</div>`;
     })()}
     <button class="btn btn-outline btn-sm" style="margin-top:.7rem" onclick="stimmeTesten()">▶ Aktuelle Stimme anhören</button>
-    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Welche Stimmen verfügbar sind, hängt von Gerät und Browser ab. Für besonders natürlich klingende Stimmen lassen sich am Handy in den System-Einstellungen zusätzliche Sprachausgabe-Stimmen installieren.</div></div>
+    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Die <strong>weibliche</strong> Stimme ist eine natürlich klingende Online-Stimme — sie braucht Internet. Ohne Verbindung (oder bei „männlich") nutzt die App die Stimme deines Geräts. Tipp: Für die natürlichste männliche Stimme in den Geräte-Einstellungen eine „Premium"- oder „Natürlich"-Sprachausgabe installieren.</div></div>
   </div>
 
   <!-- Live-Wohnungs-API (Cloudflare Worker) -->
@@ -11698,7 +12015,16 @@ const BASTELIDEEN = [
   { titel:'Webrahmen Untersetzer', alter:'ab 7 J.', kat:'klassiker', dauer:'45 Min.', material:'Webrahmen 10 × 10 cm (oder Karton mit Einschnitten), Garnreste, Webnadel', schritte:['Garnreste sortieren — bunte Mischung','Längsfäden auf Webrahmen spannen','Mit Webnadel querfaden einweben','Abwechselnd oben/unten — Webmuster','Bei Farbwechsel: alten Faden verknoten, neuen anknüpfen','Bis Webrahmen voll ist','Aus Rahmen lösen — Untersetzer fertig'] },
   { titel:'Bunte Glasflaschen', alter:'ab 6 J.', kat:'recycling', dauer:'30 Min.', material:'Leere Glasflaschen (Wein, Öl), Acrylfarben, Pinsel', schritte:['Glasflaschen mit Wasser + Spüli reinigen','Etiketten abziehen, trocknen','Mit Acrylfarbe schichtweise anmalen','Auch Innenseite möglich: Farbe rein, drehen','Trocknen lassen','Variante: mit Schnur oder Bast umwickeln','Als Vase, Dekoration oder Kerzenhalter','Mit Eltern: Tonflasche → Lampenfuß'] },
   { titel:'Pferderennen-Würfelspiel', alter:'ab 5 J.', kat:'klassiker', dauer:'30 Min. + spielen', material:'Großes Karton, Würfel, kleine Pferdchen (Lego/Spielzeug)', schritte:['Karton flach hinlegen','Mit Lineal 6 Bahnen quer einzeichnen','Pro Bahn 12 Felder (Quadrate) malen','Bahnen mit Zahlen 2-12 beschriften (Würfel-Summen)','Startfeld und Ziel definieren','Pferdchen auf Startfelder stellen','Würfeln: Summe = Bahn-Nr bewegt sich 1 Feld','Welches Pferd kommt zuerst ins Ziel?'] },
-  { titel:'Lavalampe selbst', alter:'ab 5 J.', kat:'klassiker', dauer:'10 Min.', material:'Klare Plastikflasche, Pflanzenöl, Wasser, Brause-Tablette, Lebensmittelfarbe', schritte:['Plastikflasche zu 2/3 mit Pflanzenöl füllen','Restliche 1/3 mit Wasser auffüllen','5-10 Tropfen Lebensmittelfarbe rein','Brause-Tablette in 2-3 Stücke teilen','Stücke nach und nach reinwerfen','Blubber-Effekt entsteht — wie Lavalampe','Mit Taschenlampe von unten = noch toller','Wissenschafts-Hintergrund: Öl + Wasser mischen nicht'] }
+  { titel:'Lavalampe selbst', alter:'ab 5 J.', kat:'klassiker', dauer:'10 Min.', material:'Klare Plastikflasche, Pflanzenöl, Wasser, Brause-Tablette, Lebensmittelfarbe', schritte:['Plastikflasche zu 2/3 mit Pflanzenöl füllen','Restliche 1/3 mit Wasser auffüllen','5-10 Tropfen Lebensmittelfarbe rein','Brause-Tablette in 2-3 Stücke teilen','Stücke nach und nach reinwerfen','Blubber-Effekt entsteht — wie Lavalampe','Mit Taschenlampe von unten = noch toller','Wissenschafts-Hintergrund: Öl + Wasser mischen nicht'], bild:'https://images.unsplash.com/photo-1516981442399-a91139e20ff8?w=400&q=70' },
+  // ====== v63 — weitere Bastelideen mit Bildern ======
+  { titel:'Schleim selber machen', alter:'ab 5 J.', kat:'klassiker', dauer:'15 Min.', material:'100ml Bastelkleber (weiß), 1 EL Natron, 2 EL Kontaktlinsen-Lösung, Lebensmittelfarbe, Schüssel', schritte:['Bastelkleber in Schüssel geben','Lebensmittelfarbe dazu, gut umrühren','1 EL Natron einrühren','Kontaktlinsen-Lösung langsam dazugeben und rühren','Sobald sich Masse vom Schüsselrand löst — kneten','5 Minuten kräftig durchkneten','In luftdichter Dose hält 1-2 Wochen','Tipp: mit Glitzer = Galaxy-Schleim'], bild:'https://images.unsplash.com/photo-1582719188393-bb71ca45dbb9?w=400&q=70' },
+  { titel:'Bunte Kerzen', alter:'ab 7 J.', kat:'klassiker', dauer:'45 Min.', material:'Wachsreste, alte Gläser, Kerzendocht, Bratspieß, Topf für Wasserbad, Wachsfarbe', schritte:['Wachsreste in Konservendose schmelzen (Wasserbad!)','Docht am Bratspieß auf Glas auflegen, mittig','Wachsfarbe oder bunte Wachsmalstifte dazugeben','Vorsichtig Wachs ins Glas gießen (~3 cm hoch)','15 Min erkalten lassen — wird fest','Nächste Farbe schmelzen, vorsichtig drübergießen','Schichten in verschiedenen Farben aufbauen','Wichtig: Erwachsener beim Schmelzen dabei!'], bild:'https://images.unsplash.com/photo-1599577180589-0a9b15c81d34?w=400&q=70' },
+  { titel:'Federtasche aus Filz', alter:'ab 8 J.', kat:'klassiker', dauer:'1 h', material:'Filz 30x20 cm, Schere, Nähnadel, Wolle/Faden, Knopf oder Reißverschluss', schritte:['Filz auf 20x15 cm zuschneiden','Längs zur Hälfte falten','Mit Heftstich beide Seiten zusammen nähen','Oben offen lassen','Knopf in der Mitte oben annähen','Gegenüber: Schlitzloch für den Knopf schneiden','Variante: Reißverschluss einnähen statt Knopf','Mit Filz-Resten verzieren: Sterne, Namen'], bild:'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=400&q=70' },
+  { titel:'Bilderrahmen aus Eisstielen', alter:'ab 5 J.', kat:'recycling', dauer:'25 Min.', material:'8-10 Eisstiele (gewaschen), Bastelkleber, Acrylfarbe, Pinsel, Foto', schritte:['Eisstiele sammeln (Sommer-Eis essen) oder im Bastelladen kaufen','Bunte Acrylfarbe drauf, trocknen lassen','4 Stiele zu einem Quadrat anordnen — Klebepunkte an Ecken','Trocknen lassen (10 Min)','Zwischen 2 verklebten Stielen Foto positionieren','Mit weiteren 4 Stielen "Rückwand" bauen','Mit Schnur Schlaufe oben zum Aufhängen','Tipp: Mit Glitzer, Knöpfen verzieren'], bild:'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&q=70' },
+  { titel:'DIY-Vogeltränke aus Ton', alter:'ab 6 J.', kat:'natur', dauer:'40 Min.', material:'Lufttrocknende Modelliermasse, Schüssel als Form, Acrylfarbe, Klarlack', schritte:['Tonmasse zu großer Kugel formen','Auf umgedrehter Schüssel platte Form drüber drücken','3 cm dicker Rand stehen lassen — Schale','Glatte Oberfläche herstellen, kleine Vertiefung in Mitte','24-48 Std trocknen lassen','Mit Acrylfarbe bemalen (innen blau wie Wasser)','Mit Klarlack wasserfest machen','Im Garten aufstellen, mit Wasser füllen — Vögel kommen!'], bild:'https://images.unsplash.com/photo-1444930694458-01babe71870e?w=400&q=70' },
+  { titel:'Kristalle züchten', alter:'ab 7 J.', kat:'klassiker', dauer:'10 Min. + 1 Woche', material:'Kandiszucker oder Salz, heißes Wasser, Faden, Bleistift, Glas', schritte:['Wasser in Topf erhitzen (heiß, nicht kochend!)','So viel Zucker einrühren bis nichts mehr aufgelöst wird','Erwachsener gießt heiße Lösung ins Glas','Faden an Bleistift binden, Bleistift auf Glas legen','Faden hängt im Wasser, berührt nicht den Boden','An ruhigem, warmen Ort 1 Woche stehen lassen','Kristalle wachsen langsam am Faden','Mit Lebensmittelfarbe: bunte Kristalle!'], bild:'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&q=70' },
+  { titel:'Riesen-Seifenblasen', alter:'ab 4 J.', kat:'klassiker', dauer:'15 Min. + spielen', material:'500ml Wasser, 100ml Spülmittel, 1 EL Zucker, 50ml Pflanzenöl, 2 lange Stäbe, Wollfaden', schritte:['Wasser in Eimer geben','Spülmittel vorsichtig einrühren — nicht schäumen','Zucker und Öl dazu — macht Seifenblasen stabiler','Beide Stäbe mit Wollfaden zu großer Schlaufe verbinden','Faden in Seifenmischung tauchen','Vorsichtig hochheben, Stäbe öffnen','Riesige Blasen wabern durch die Luft!','Tipp: an windstillem Tag funktioniert am besten'], bild:'https://images.unsplash.com/photo-1502997938-15ec33ff8a39?w=400&q=70' },
+  { titel:'Geheimes Tagebuch', alter:'ab 7 J.', kat:'papier', dauer:'1 h', material:'Heft DIN A5, dicker Karton, Schere, Bastelkleber, dekorative Materialien, Schloss-Verschluss', schritte:['Karton 2x in Größe des Hefts schneiden — Deckel','Auf Heft kleben (Vorderseite + Rückseite)','Trocknen lassen unter Buch (Pressen)','Mit Buntpapier, Stoff oder Acrylfarbe gestalten','Aufkleber, Glitzer, Foto-Schnipsel verzieren','Schloss vorne anbringen (Loch durch Karton)','Mini-Schlüsselbund daran befestigen','Geheimnisse drinnen aufbewahren'], bild:'https://images.unsplash.com/photo-1517842645767-c639042777db?w=400&q=70' }
 ];
 
 const BASTELN_KATS = [
@@ -11749,6 +12075,339 @@ function renderBasteln() {
         ${Array.isArray(b.schritte) && b.schritte.length ? '<div style="font-size:.78rem;font-weight:700;margin-top:.55rem;color:#0F172A">📋 Anleitung Schritt für Schritt:</div>' : ''}
         ${schritteHtml}
         <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(b.titel + ' Kinder basteln Anleitung')}" target="_blank" rel="noopener" class="basteln-video-btn">▶ Video-Anleitung auf YouTube</a>
+      </div>
+    </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ===== SPIELIDEEN (drinnen/draußen, mit Bildern + YouTube-Videos) =====
+const SPIELIDEEN = [
+  // Drinnen — Bewegung
+  { titel:'Schatzsuche im Haus', kat:'denken', ort:'drinnen', alter:'ab 4 J.', spieler:'1-6', dauer:'30 Min.', material:'Papier, Stift, kleiner Schatz (Schoki, Spielzeug)', anleitung:['Schatz im Haus verstecken','5-7 Hinweise schreiben („nächster Tipp liegt wo du dich morgens wäschst")','Hinweise so verteilen, dass sie aufeinander aufbauen','Kinder den ersten Tipp geben','Sie folgen Spur für Spur','Am Ende: Schatz!','Bonus: für ältere Kinder Rätsel statt Hinweise'], bild:'https://images.unsplash.com/photo-1611256268040-2c75f00cefce?w=400&q=70' },
+  { titel:'Bodenkissen-Lava', kat:'bewegung', ort:'drinnen', alter:'ab 3 J.', spieler:'1-5', dauer:'15 Min.', material:'Kissen, Decken, Stühle', anleitung:['Boden wird zur „Lava" erklärt','Kissen und Decken als „Inseln" verteilen','Kinder dürfen nur auf den Inseln gehen','Wer Boden berührt, ist „verbrannt" — kurze Pause','Variante mit Aufgabe: jemand muss sich zur anderen Seite retten','Bewegungs- und Geschicklichkeitsspiel','Funktioniert auch mit nur 1 Kind allein'] },
+  { titel:'Schatten-Theater', kat:'kreativ', ort:'drinnen', alter:'ab 5 J.', spieler:'1+', dauer:'30 Min.', material:'Bettlaken, Taschenlampe, Karton-Figuren, Stäbchen', anleitung:['Bettlaken zwischen Möbeln aufhängen','Taschenlampe von hinten anstrahlen','Figuren aus Karton schneiden, an Stäbchen kleben','Geschichte erfinden — z. B. Märchen, Tiergeschichte','Figuren hinter Laken bewegen → Schatten erscheinen vorne','Eltern als Zuschauer','Variante: Stimmen-Verstellung'] },
+  { titel:'Memory mit Familien-Fotos', kat:'denken', ort:'drinnen', alter:'ab 4 J.', spieler:'2-4', dauer:'20 Min.', material:'Drucker, Fotos doppelt ausdrucken (10-15 Paare)', anleitung:['Familienfotos doppelt drucken (gleiche Größe)','Auf Kartonstücke kleben','Verdeckt auf Tisch ausbreiten','Reihum 2 Karten aufdecken','Bei Paar: behalten, nochmal','Wer mehr Paare hat, gewinnt','Tipp: Mit Großeltern und Cousins'] },
+  { titel:'Indoor-Bowling', kat:'bewegung', ort:'drinnen', alter:'ab 3 J.', spieler:'1-6', dauer:'30 Min.', material:'10 leere Flaschen, weicher Ball, Punkteliste', anleitung:['10 Flaschen wie Bowling aufstellen (Dreieck)','Linie 3-5 Meter entfernt markieren','Mit weichem Ball rollen','Punkte zählen (1 Punkt = 1 Flasche)','3 Runden pro Spieler','Wer am Ende meiste Punkte hat = Gewinner','Variante: Flaschen bekleben/beschriften = Würfe für Bonus-Punkte'], bild:'https://images.unsplash.com/photo-1530870110042-98b2cb110834?w=400&q=70' },
+  { titel:'Pantomime-Raten', kat:'kreativ', ort:'drinnen', alter:'ab 5 J.', spieler:'3+', dauer:'30 Min.', material:'Zettel mit Begriffen, Stift', anleitung:['Begriffe vorab schreiben (Tiere, Berufe, Filme)','In Schale falten und ziehen','Spieler darf nicht reden — nur Gesten','Andere raten','Wer als erster richtig rät, bekommt Punkt','Spieler darf gar nichts ausplaudern','Sehr lustig für Familien-Abende'] },
+  { titel:'Yoga für Kinder', kat:'bewegung', ort:'drinnen', alter:'ab 4 J.', spieler:'1+', dauer:'15-30 Min.', material:'Yogamatte oder Teppich', anleitung:['„Tier-Yoga" mit Kindern probieren','Hund = Vierfüßlerstand strecken','Katze = Buckel-Beweglichkeit','Schlange = Bauchlage, Hände stützen, Oberkörper anheben','Schmetterling = sitzen, Sohlen zusammen, mit Knien wackeln','Krokodil = liegen, Beine wechselseitig anheben','5 Atemzüge pro Position','Mit Musik dazu noch besser','YouTube: „Cosmic Kids Yoga" — geführte Sessions'], bild:'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=400&q=70' },
+  { titel:'Versteckspiel mit Stofftier', kat:'denken', ort:'drinnen', alter:'ab 3 J.', spieler:'2+', dauer:'15 Min.', material:'Stofftier', anleitung:['Erwachsener versteckt Stofftier','Kinder dürfen nur „warm/kalt" zur Antwort hören','Suchen, fragen, näher kommen','Wenn nah dran = „heiß"','Wenn weit weg = „eiskalt"','Variante für Ältere: Hinweise statt Temperatur-Wörter','Wechseln der Rollen — auch Kinder verstecken'] },
+  { titel:'Kissen-Festung bauen', kat:'kreativ', ort:'drinnen', alter:'ab 3 J.', spieler:'1+', dauer:'30 Min. + spielen', material:'Sofakissen, Decken, Stühle, Kuscheltiere', anleitung:['Stühle als Stützpfeiler aufstellen','Decken darüber spannen — Dach','Kissen für die Wände','Innen mit weiteren Kissen und Decken gemütlich','Eingang frei lassen, evtl. mit Tuch als Tür','Kuscheltiere einladen','In der Höhle Buch vorlesen, picknicken','Tipp: Lichterkette innen anbringen — magisch!'], bild:'https://images.unsplash.com/photo-1500585035595-cf48981ee7da?w=400&q=70' },
+  // Draußen
+  { titel:'Verstecken im Garten', kat:'bewegung', ort:'draussen', alter:'ab 4 J.', spieler:'3+', dauer:'30 Min.', material:'Garten oder Park, evtl. Stoppuhr', anleitung:['Ein Kind ist „Sucher" — zählt mit geschlossenen Augen bis 30','Andere verstecken sich in Sichtweite','Sucher öffnet Augen, ruft „Ich komme!"','Geht systematisch Garten/Park ab','Wer zuerst gefunden wird, ist nächster Sucher','Wer am längsten versteckt war, bekommt extra Lob','Wichtig: Grenzen vorher klar absprechen!'] },
+  { titel:'Schnitzeljagd Natur', kat:'denken', ort:'draussen', alter:'ab 5 J.', spieler:'2-8', dauer:'1-2 h', material:'Liste mit 20 Suchaufträgen, Stift, Beutel', anleitung:['Liste mit Aufgaben vorbereiten: „Finde 3 verschiedene Blätter", „Etwas Rotes", „Einen Stein größer als Faust"','Kinder bekommen Liste und Beutel','Im Wald oder Park alles suchen','Wenn alles gefunden: zurück zu Eltern','Mehrere Kinder/Teams = Wettbewerb','Tipps für ältere: foto-basierte Aufträge mit Smartphone','Variante: Kompass-Punkte als Aufgaben'], bild:'https://images.unsplash.com/photo-1551739440-5dd934d3a94a?w=400&q=70' },
+  { titel:'Sackhüpfen', kat:'bewegung', ort:'draussen', alter:'ab 4 J.', spieler:'2+', dauer:'20 Min.', material:'Jutesack (Kartoffelsack) oder großer Kopfkissenbezug pro Spieler', anleitung:['Strecke von 20 Metern markieren (Start + Ziel)','Jedes Kind steigt in Sack, hält oben mit Händen fest','Auf „Los!" hüpfen — Beine bleiben im Sack','Wer zuerst über Ziel = gewinnt','Funktioniert mit nur 1 Kind — gegen die Uhr','Variante: Slalom-Hindernisse','Spaß für jeden Sommer!'], bild:'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=400&q=70' },
+  { titel:'Wasserbomben-Schlacht', kat:'bewegung', ort:'draussen', alter:'ab 5 J.', spieler:'2+', dauer:'30 Min.', material:'Wasserbomben (Bastelladen), Wasserhahn', anleitung:['Wasserbomben mit Wasser befüllen — vorbereiten 50+','In Eimer pro Team aufteilen','Spielfeld markieren — Garten oder Park','Auf „Los!" werfen — wer trifft, hat Punkt','Lustige Regel: Geweihtes Wasser zurück = Foul','Nass werden ist OK!','Tipp: Heiße Sommertage = beste Stimmung'], bild:'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&q=70' },
+  { titel:'Eis-Forschung', kat:'denken', ort:'draussen', alter:'ab 4 J.', spieler:'1+', dauer:'30 Min.', material:'Kleine Spielzeuge, Wasserschüsseln, Gefrierfach', anleitung:['Spielzeuge in Schüsseln mit Wasser geben','Über Nacht im Gefrierfach','Am nächsten Tag rausnehmen — Eisblöcke','Im Garten in Sonne stellen','Kinder mit kleinen Hämmerchen, Salz, warmem Wasser experimentieren','Wer befreit zuerst sein Spielzeug?','Sicher: keine zerbrechlichen Gegenstände, kein Glas'] },
+  { titel:'Fahrradtour-Parcours', kat:'bewegung', ort:'draussen', alter:'ab 6 J.', spieler:'1+', dauer:'45 Min.', material:'Fahrrad, Helm, Kreide, Tüten oder Hütchen', anleitung:['Auf einer Spielstraße sicherer Parcours aufzeichnen','Slalom-Tüten, Ziel-Linie, Slalom durch Hütchen','Kinder fahren langsam zuerst — Vertrauen aufbauen','Dann Zeitmessung — wer ist schneller?','Mit Eltern: Familien-Rallye','Helme nicht vergessen!','Variante: Geschicklichkeits-Aufgaben dazu (1 Hand)'], bild:'https://images.unsplash.com/photo-1474314881477-04c4aac40a0e?w=400&q=70' },
+  { titel:'Steine sammeln & sortieren', kat:'denken', ort:'draussen', alter:'ab 3 J.', spieler:'1+', dauer:'1 h', material:'Beutel, Sammelort (Strand, Bach, Garten)', anleitung:['Im Park, am Strand oder im Bach Steine sammeln','Mindestens 30-50 Stück','Zuhause auswaschen, trocknen','Sortieren: nach Größe, Farbe, Form','Tipp: jeden Stein wiegen — leichteste/schwerste','Sammlung in transparente Box','Beste Steine bemalen oder als Mandala legen','Ruhiges Naturerlebnis'] },
+  { titel:'Drachen steigen lassen', kat:'kreativ', ort:'draussen', alter:'ab 6 J.', spieler:'1+', dauer:'1-2 h', material:'Drachen (selbst gebaut oder gekauft), Wind, freie Fläche', anleitung:['Drachen aus Bastelladen oder selbst gemacht (Bambusstäbe + Folie + Schnur)','Windigen Tag wählen (mind. 10 km/h Wind)','Freie Fläche ohne Bäume und Strommasten suchen','In den Wind drehen, Drachen anheben','Schnur langsam ausgeben','Wenn der Drachen fliegt — Schnur halten, mit Wind regulieren','Tipp: Bei zu starkem Wind = Pause','Schöne Drachen-Park-Aktivität'], bild:'https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=400&q=70' },
+  { titel:'Garten-Olympiade', kat:'bewegung', ort:'draussen', alter:'ab 5 J.', spieler:'2+', dauer:'1-2 h', material:'Verschiedene Sportgeräte, Stoppuhr, Urkunden', anleitung:['5-7 Stationen aufbauen: Weitsprung, Sackhüpfen, Eier-Lauf, Slalom, Wasser tragen','Pro Station Punkte vergeben','Kinder durchlaufen alle Stationen','Punkte zusammenrechnen','Sieger-Ehrung mit selbstgebastelten Urkunden','Auch alle Teilnehmer bekommen eine Medaille','Spaß steht im Vordergrund!','Familien-Tradition jedes Jahr'], bild:'https://images.unsplash.com/photo-1473773508845-188df298d2d1?w=400&q=70' },
+  { titel:'Lagerfeuer mit Stockbrot', kat:'gemeinschaft', ort:'draussen', alter:'ab 5 J.', spieler:'2+', dauer:'2 h', material:'Holz, Streichhölzer, Hefeteig, lange Stöcke', anleitung:['Stöcke schälen — glatt und sauber','Hefeteig zu langen Würsten formen','Um Stock wickeln, leicht festdrücken','Vorsichtig über Glut halten (nicht in Flammen!)','Drehen, bis goldbraun und gar','Heiß, frisch genießen — mit Marmelade oder Honig','Wichtig: Lagerfeuer nur an erlaubten Stellen!','Gemeinschaftserlebnis pur'] },
+  { titel:'Naturmuseum bauen', kat:'kreativ', ort:'beides', alter:'ab 5 J.', spieler:'1+', dauer:'1 Tag', material:'Schuhkarton, kleine Schalen, Klebstoff, Karten zum Beschriften', anleitung:['Im Park/Wald Schätze sammeln: Blätter, Federn, Steine, Schneckenhäuser','Schuhkarton als „Museum" einrichten','Fächer aus Pappe gestalten — 1 Schatz pro Fach','Mit Karten beschriften — „Fundort", „Datum", „Name"','Verschiedene Bereiche: Pflanzen, Mineralien, Tier-Reste','Familie zur Führung einladen','Kind erklärt jedes Exponat','Wissenschafts-Spielen pur'] },
+  // Gemeinschaft
+  { titel:'Familienquiz selbst machen', kat:'denken', ort:'drinnen', alter:'ab 6 J.', spieler:'4+', dauer:'1 h', material:'Karten, Stifte, evtl. Buzzer (Spielzeug)', anleitung:['Eltern überlegen 30+ Fragen aus Familienleben','Fragen auf Karten schreiben — „Wo war unser letzter Urlaub?", „Wann hat Oma Geburtstag?"','Kategorien: Familie, Allgemein, Lustiges, Spiele','Spielmodus: Erwachsener stellt Fragen, Kinder antworten reihum','Bei richtiger Antwort = 1 Punkt','Bonus-Fragen wertvoller','Endpunkte zählen — Belohnung für alle','Jedes Familienfest neu spielbar!'] },
+  { titel:'Geschichten erzählen im Kreis', kat:'kreativ', ort:'beides', alter:'ab 5 J.', spieler:'3+', dauer:'30 Min.', material:'Sitzkreis, evtl. Kerze oder Lichterkette', anleitung:['Im Kreis sitzen — gemütliche Atmosphäre','Einer beginnt: „Es war einmal ein..."','Nächster fortsetzt mit einem Satz','Reihum fortsetzen','Wendungen und überraschende Charaktere willkommen','Bis Geschichte zu Ende — meist sehr lustig','Variante: Erwachsene starten dramatisch, Kinder lustig','Auch beim Wandern als Geh-Spiel'] },
+  { titel:'Wassergymnastik im Pool', kat:'bewegung', ort:'draussen', alter:'ab 3 J.', spieler:'1+', dauer:'30 Min.', material:'Pool oder Planschbecken, Schwimmgeräte', anleitung:['Wasser-Aufwärm-Übungen: laufen, gehen, springen','Bälle hin- und herwerfen','Mit Armen Wasser-Wellen machen','Tauchen mit kleinen Spielzeugen ins Wasser werfen','Eltern stützen — auch für Wasserscheue gut','Schwimm-Vertrauen aufbauen','Aufsicht durch Eltern immer Pflicht!','Tipp: Im Garten gilt eine Stunde gemeinsam Spaß'] },
+  { titel:'Karaoke-Abend', kat:'kreativ', ort:'drinnen', alter:'ab 5 J.', spieler:'2+', dauer:'1-2 h', material:'YouTube-Karaoke-Videos (Lyrics), Smartphone, Bluetooth-Box', anleitung:['Lieblings-Lieder als Karaoke-Versionen suchen (YouTube hat viele)','Per Bluetooth auf Box wiedergeben','Beim Singen: Liedtexte am Bildschirm','Reihum singen — auch Eltern!','Jury vergibt Punkte (humorvoll)','Familien-Duette sind besonders lustig','Tipp: Lichter dimmen, Mikrofon-Atrappe verteilen','Aufnehmen — Erinnerung fürs Leben'], bild:'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=70' }
+];
+
+const SPIELIDEEN_KATS = [
+  { id:'alle',         label:'Alle' },
+  { id:'bewegung',     label:'🏃 Bewegung' },
+  { id:'kreativ',      label:'🎨 Kreativ' },
+  { id:'denken',       label:'🧠 Denken' },
+  { id:'gemeinschaft', label:'👨‍👩‍👧 Gemeinschaft' }
+];
+const SPIELIDEEN_ORTE = [
+  { id:'alle',     label:'Alle Orte' },
+  { id:'drinnen',  label:'🏠 Drinnen' },
+  { id:'draussen', label:'🌳 Draußen' },
+  { id:'beides',   label:'🌗 Beides' }
+];
+
+function spielideenKatWaehlen(k) { state.spielideenKat = k; render(); }
+function spielideenOrtWaehlen(o) { state.spielideenOrt = o; render(); }
+
+function renderSpielideen() {
+  const kat = state.spielideenKat || 'alle';
+  const ort = state.spielideenOrt || 'alle';
+  const ideen = SPIELIDEEN.filter(s =>
+    (kat === 'alle' || s.kat === kat) &&
+    (ort === 'alle' || s.ort === ort)
+  );
+  return `
+  <div class="umg-hero" style="background:linear-gradient(140deg,#F97316 0%,#EC4899 55%,#7C3AED 100%);box-shadow:0 10px 30px rgba(236,72,153,.28)">
+    <div class="umg-hero-tag">🎲 Spielideen</div>
+    <div class="umg-hero-name">${SPIELIDEEN.length} Spiele für Familien</div>
+    <div class="umg-hero-sub">Drinnen, draußen, bei jedem Wetter — für die ganze Familie</div>
+    <div class="hero-chips">
+      <span class="chip">🏠 ${SPIELIDEEN.filter(s=>s.ort==='drinnen').length} drinnen</span>
+      <span class="chip">🌳 ${SPIELIDEEN.filter(s=>s.ort==='draussen').length} draußen</span>
+    </div>
+  </div>
+
+  <div class="news-kat-tabs">
+    ${SPIELIDEEN_KATS.map(k=>`<button class="news-kat-btn ${kat===k.id?'aktiv':''}" onclick="spielideenKatWaehlen('${k.id}')">${k.label}</button>`).join('')}
+  </div>
+  <div class="news-kat-tabs">
+    ${SPIELIDEEN_ORTE.map(o=>`<button class="news-kat-btn ${ort===o.id?'aktiv':''}" onclick="spielideenOrtWaehlen('${o.id}')">${o.label}</button>`).join('')}
+  </div>
+
+  ${ideen.length === 0 ? '<div class="info-box orange"><span class="ib-icon">😕</span><div class="ib-text"><strong>Keine Spiele in dieser Auswahl.</strong> Filter ändern.</div></div>' : ''}
+
+  <div class="rezept-grid">
+    ${ideen.map(s => {
+      const bildStyle = s.bild ? `background-image:url('${s.bild}')` : 'background:linear-gradient(135deg,#FED7AA 0%,#FBCFE8 100%);display:flex;align-items:center;justify-content:center;font-size:3rem';
+      const bildInhalt = s.bild ? '' : '🎲';
+      const ortLabel = s.ort === 'drinnen' ? '🏠 Drinnen' : s.ort === 'draussen' ? '🌳 Draußen' : '🌗 Drinnen + Draußen';
+      return `
+    <div class="rezept-foto-karte" style="cursor:default">
+      <div class="rezept-foto-bild" style="${bildStyle}">${bildInhalt}
+        <span class="rezept-foto-kosten">${s.alter}</span>
+      </div>
+      <div class="rezept-foto-body">
+        <div class="rezept-foto-name">${esc(s.titel)}</div>
+        <div class="rezept-foto-meta">
+          <span>⏱️ ${esc(s.dauer)}</span>
+          <span>👥 ${esc(s.spieler)}</span>
+          <span>${ortLabel}</span>
+        </div>
+        <div style="font-size:.78rem;color:#0F172A;margin-top:.5rem;line-height:1.5"><strong>Material:</strong> ${esc(s.material)}</div>
+        <div style="font-size:.78rem;font-weight:700;margin-top:.55rem;color:#0F172A">📋 So geht's:</div>
+        <ol class="basteln-schritte">${s.anleitung.map(a => `<li>${esc(a)}</li>`).join('')}</ol>
+        <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(s.titel + ' Spiel Kinder Anleitung')}" target="_blank" rel="noopener" class="basteln-video-btn">▶ Video-Anleitung auf YouTube</a>
+      </div>
+    </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ===== HANDWERKER-MODUS: Reparaturen, DIY-Tutorials =====
+const HANDWERKER_DATEN = [
+  // 🔌 ELEKTRIK
+  { titel:'Steckdose tauschen', kat:'elektrik', schwierigkeit:3, dauer:'20 Min.',
+    werkzeuge:['Schraubendreher (Schlitz + Kreuz)','Spannungsprüfer','Seitenschneider (optional)'],
+    material:['Neue Steckdose (gleiche Bauart)'],
+    sicherheit:'⚠️ STROM ABSCHALTEN am Sicherungskasten! Mit Spannungsprüfer kontrollieren, dass kein Strom da ist. Im Zweifel: Elektriker holen.',
+    schritte:['Sicherung im Sicherungskasten ausschalten — den Raum kennzeichnen','Mit Spannungsprüfer an Steckdose testen: leuchtet NICHT? Dann sicher','Schraube in der Mitte der Steckdosenblende lösen, Blende abnehmen','2 Schrauben des Steckdosen-Einsatzes lösen, Einsatz herausziehen','Drähte abklemmen — merken: braun = Phase, blau = Neutral, grün-gelb = Schutzleiter','Neue Steckdose: braun an L, blau an N, grün-gelb an Erdungs-Klemme (PE)','Steckdose in Dose drücken, mit Spreizkrallen oder Schrauben fixieren','Blende aufsetzen, Schraube anziehen','Sicherung einschalten — Lampe einstecken, testen'],
+    tipp:'Wenn die Kabel unterschiedliche Farben haben (alte Installation): IMMER Elektriker holen!',
+    bild:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=70' },
+  { titel:'Lichtschalter wechseln', kat:'elektrik', schwierigkeit:3, dauer:'15 Min.',
+    werkzeuge:['Schraubendreher','Spannungsprüfer'],
+    material:['Neuer Schalter (gleiche Bauart — Wechsel/Kreuz?)'],
+    sicherheit:'⚠️ Sicherung am Sicherungskasten AUSSCHALTEN. Mit Spannungsprüfer doppelt kontrollieren!',
+    schritte:['Sicherung im Sicherungskasten ausschalten','Mit Spannungsprüfer am Schalter testen — keine Spannung?','Schalter-Rahmen abnehmen (klemmt meist nur)','2 Schrauben des Einsatzes lösen','Einsatz herausziehen, Drähte fotografieren (wichtig!)','Drähte aus Klemmen ziehen — manche brauchen einen Stift im Klemm-Loch','Neue Schalter: Drähte in gleiche Klemmen stecken (laut Foto)','Einsatz in Dose drücken, festschrauben','Rahmen drauf, Sicherung an, testen'],
+    bild:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=70' },
+  { titel:'Deckenlampe anschließen', kat:'elektrik', schwierigkeit:3, dauer:'30 Min.',
+    werkzeuge:['Schraubendreher','Spannungsprüfer','Trittleiter','Helfer/Helferin'],
+    material:['Neue Lampe','Lüsterklemme (oft beiliegend)','Dübel + Schrauben (oft beiliegend)'],
+    sicherheit:'⚠️ Sicherung aus! Spannungsprüfer-Test! Lampe vor dem Befestigen vom Decken-Haken halten — Helfer/in wichtig.',
+    schritte:['Sicherung aus, Spannungsprüfer-Test bestanden','Alte Lampe abnehmen — Drähte aus Lüsterklemme lösen','An der Decke 3 Drähte: braun (L), blau (N), grün-gelb (PE)','Wenn nur 2 Drähte (kein PE): Schutzklasse-II-Lampe nötig','Lüsterklemme der neuen Lampe: Drähte gleichfarbig zusammen','Befestigungs-Schraube/Haken an Decke kontrollieren','Lampe an Haken/Schraube hängen, Klemme oben verstecken','Abdeckung fest schrauben/clipsen','Sicherung an, Schalter probieren'],
+    tipp:'Mehr als 5 kg Lampe? Schwerlast-Dübel verwenden!',
+    bild:'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?w=400&q=70' },
+  { titel:'FI-Schalter testen', kat:'elektrik', schwierigkeit:1, dauer:'2 Min.',
+    werkzeuge:['Finger'],
+    material:[],
+    sicherheit:'Routine-Sicherheitscheck — alle 6 Monate empfohlen!',
+    schritte:['Sicherungskasten öffnen','FI-Schalter finden (meist großer Schalter, Test-Knopf „T")','Vorher: empfindliche Geräte (PC, Server) sicher herunterfahren','Auf den Test-Knopf „T" drücken','FI-Schalter sollte sofort auslösen (Hebel springt nach unten)','Wenn nichts passiert: ⚠️ Elektriker holen!','Hebel wieder nach oben drücken','Notiz im Kalender: nächster Test in 6 Monaten'],
+    tipp:'Der FI-Schalter ist der wichtigste Lebensretter im Haushalt — er trennt bei Stromschlag in Millisekunden.' },
+
+  // 🚰 SANITÄR
+  { titel:'Tropfenden Wasserhahn reparieren', kat:'sanitaer', schwierigkeit:2, dauer:'30 Min.',
+    werkzeuge:['Wasserpumpenzange','Maul-/Steckschlüssel','Inbusschlüssel','Schraubendreher'],
+    material:['Neue Dichtung (Ersatzteil, gleicher Typ)','Bei Kartusche: neue Kartusche'],
+    sicherheit:'Vorher Eckventil unter dem Waschbecken zudrehen — Wasser ab!',
+    schritte:['Eckventil unter Waschbecken zudrehen (Schraube im Uhrzeigersinn)','Hahn aufdrehen — restliches Wasser ablaufen lassen','Bei Einhebelmischer: kleine Schraube hinten/seitlich lösen, Hebel abziehen','Bei Mischhahn: rote/blaue Kappe entfernen, Kreuzschraube lösen, Drehgriff ab','Innenteil mit Wasserpumpenzange herausschrauben','Dichtung am Boden inspizieren — beschädigt? Erneuern','Bei Kartuschen-Hahn: ganze Kartusche tauschen','Alles zusammenbauen, Eckventil aufdrehen, testen'],
+    tipp:'Vorm Kauf der Dichtung: alte mitnehmen oder Foto + Maße — gibt verschiedene Größen!',
+    bild:'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400&q=70' },
+  { titel:'Verstopften Abfluss befreien', kat:'sanitaer', schwierigkeit:1, dauer:'15 Min.',
+    werkzeuge:['Saugglocke (Pümpel)','Eimer','Lappen'],
+    material:['Backpulver + Essig (mild)','Heißes Wasser','Notfall: Rohrreiniger'],
+    schritte:['Stehendes Wasser abschöpfen — Eimer drunter halten','Saugglocke auf Abflussloch setzen','Überlauf am Waschbecken mit Lappen zuhalten (zieht sonst Luft)','Kräftig 10x pumpen — Vakuum + Druck löst Verstopfung','Heißes Wasser nachgießen, prüfen','Wenn immer noch verstopft: Siphon unter Waschbecken aufschrauben (Eimer drunter!)','Siphon ausleeren — meist Haare/Schmutz drin','Wieder zusammenbauen, Wasser fließen lassen'],
+    tipp:'Vorbeugen: alle 4 Wochen 2 EL Natron + 100ml Essig in den Abfluss + 10 Min einwirken — keine Rohrverstopfung mehr!',
+    bild:'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400&q=70' },
+  { titel:'Duschkopf entkalken', kat:'sanitaer', schwierigkeit:1, dauer:'30 Min.',
+    werkzeuge:['Becken/Eimer','Zahnbürste','Tuch'],
+    material:['Essig-Essenz oder Zitronensäure','Wasser'],
+    schritte:['Duschkopf abschrauben (meist mit der Hand)','In Schüssel/Eimer legen','1:1 Essig und Wasser mischen, drüber gießen','30-60 Min einwirken lassen','Mit Zahnbürste die Löcher abbürsten','Mit klarem Wasser abspülen','Düsen einzeln durchgehen — bei Bedarf wiederholen','Wieder aufschrauben, durchlaufen lassen'],
+    tipp:'Bei sehr starkem Kalk: 24 Stunden in Essig liegen lassen.' },
+  { titel:'WC-Spülung Schwimmer einstellen', kat:'sanitaer', schwierigkeit:2, dauer:'15 Min.',
+    werkzeuge:['Schraubendreher (oft nicht nötig)'],
+    material:[],
+    schritte:['Spülkasten-Deckel abnehmen (vorsichtig — schwer und zerbrechlich)','Schwimmer + Mechanik anschauen','Schwimmer-Höhe regelt Wasserstand: höher = mehr Wasser, niedriger = weniger','Bei Schwimmerstange: leicht biegen für niedrigeren Wasserstand','Bei Schwimmkugel: kleine Schraube/Klemme lösen, neu einstellen','Spülen, prüfen: füllt sich der Kasten korrekt?','Bei ständigem Nachlaufen: Dichtung am Ventil prüfen','Deckel wieder drauf — vorsichtig!'],
+    tipp:'Bei Wasserstand 2-3 cm unter Überlauf — perfekt eingestellt. Spart Wasser!' },
+  { titel:'Silikonfuge erneuern', kat:'sanitaer', schwierigkeit:2, dauer:'2 h (+24h trocknen)',
+    werkzeuge:['Cuttermesser','Silikonpistole','Glättwerkzeug oder Finger + Seifenwasser','Tuch'],
+    material:['Sanitär-Silikon (anti-Schimmel)','Klebeband (Malerband)'],
+    schritte:['Alte Silikon-Fuge komplett entfernen — Cutter führt entlang','Reste mit Schaber abtragen, dann mit Spiritus reinigen','Fläche muss komplett sauber + trocken sein!','Malerband links und rechts der Fuge kleben (definiert Linie)','Silikon-Pistole laden, Spitze schräg abschneiden','Gleichmäßig entlang der Fuge spritzen','Mit Finger + Seifenwasser glatt streichen oder Glättwerkzeug','Klebeband SOFORT abziehen (vor Trocknung!)','24 Stunden nicht benutzen!'],
+    tipp:'Anti-Schimmel-Silikon kostet 2€ mehr, hält aber Jahre länger im Feuchtbereich.',
+    bild:'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&q=70' },
+
+  // 🪑 MÖBEL
+  { titel:'Lockerer Stuhl mit Leim reparieren', kat:'moebel', schwierigkeit:2, dauer:'1 h (+24h trocknen)',
+    werkzeuge:['Hammer','Holzkeile (klein)','Schraubzwinge oder Spannband','Tuch'],
+    material:['Holzleim (Express oder normal)','Schleifpapier 240er'],
+    schritte:['Stuhl umdrehen, alle Verbindungen prüfen','Lockere Verbindungen vorsichtig ganz auseinander ziehen','Alte Leim-Reste mit Schleifpapier abschmirgeln','Zapfen + Loch trocken zusammen probieren — passt?','Leim in beide Hölzer einbringen — dünn und gleichmäßig','Sofort zusammenstecken, leichten Druck','Mit Spannband um den ganzen Stuhl fixieren','Überschuss-Leim mit feuchtem Tuch abwischen','24 Stunden trocknen lassen — nicht belasten!'],
+    tipp:'Holzleim ist nach 30 Min handfest, aber erst nach 24h voll belastbar.',
+    bild:'https://images.unsplash.com/photo-1581539250439-c96689b516dd?w=400&q=70' },
+  { titel:'Quietschende Scharniere ölen', kat:'moebel', schwierigkeit:1, dauer:'5 Min.',
+    werkzeuge:['Lappen'],
+    material:['Maschinenöl, WD-40 oder Silikonspray'],
+    schritte:['Tür/Schrank-Klappe öffnen, Scharniere sichtbar','Lappen unter Scharnier zur Tropfen-Auffangung','1-2 Tropfen Öl ins Scharnier (an der Achse)','Tür mehrmals öffnen + schließen — Öl verteilt sich','Überschuss mit Lappen abwischen','Quietschen sollte sofort weg sein','Bei Wiederkehr: Scharnier-Bolzen entfernen, ölen, wieder rein'],
+    tipp:'Olivenöl funktioniert auch im Notfall — aber nur kurzfristig (wird harzig)!' },
+  { titel:'Holzkratzer ausbessern', kat:'moebel', schwierigkeit:1, dauer:'15 Min.',
+    werkzeuge:['Tuch','Föhn (für Wachs)'],
+    material:['Walnuss/Mandel (für leichte Kratzer) ODER Möbel-Reparatur-Wachs in passender Farbe'],
+    schritte:['Bei kleinen Kratzern: Walnuss-Hälfte über den Kratzer reiben','Öl der Nuss füllt den Kratzer, Holz wird dunkler/heller je nach Holzart','Bei tieferen Kratzern: Hartwachs-Stift erwärmen (Föhn)','Wachs in Kratzer schmieren — überfüllen','Mit Plastikkarte glatt abziehen','Mit Tuch polieren','Holzpolitur drüber — fertig'],
+    tipp:'Im Baumarkt gibt es Wachs-Sets in 6-10 Farben — eine wird passen!' },
+  { titel:'IKEA-Möbel zusammenbauen — die Profi-Methode', kat:'moebel', schwierigkeit:1, dauer:'30 Min.-3 h',
+    werkzeuge:['Akkuschrauber','Hammer','Inbusschlüssel (oft beiliegend)','Schraubendreher'],
+    material:['Möbelpackung','Wachs/Seife für schwergängige Dübel'],
+    schritte:['Anleitung KOMPLETT durchblättern, bevor du anfängst','Alle Teile auspacken, nach Liste prüfen','Schrauben/Dübel nach Größe sortieren — Klebezettel beschriften','Auf Decke/Teppich arbeiten — Kratzer-Schutz','Schritt für Schritt — KEINE Schritte überspringen!','Holzdübel mit Hammer leicht einklopfen — nicht zu fest','Schrauben immer erst ALLE leicht ansetzen, dann fest','Endkontrolle: alles fest? Rückwand drauf','Profi-Tipp: an die Wand schrauben (Kipp-Schutz)!'],
+    tipp:'Wenn ein Dübel hakt: Stift Seife oder Kerzenwachs auftragen — flutscht sofort.',
+    bild:'https://images.unsplash.com/photo-1597166553028-2f8c34dec722?w=400&q=70' },
+
+  // 🎨 WAND & BODEN
+  { titel:'Loch in Wand reparieren (Dübel-Loch)', kat:'wand', schwierigkeit:1, dauer:'15 Min. (+24h trocknen)',
+    werkzeuge:['Spachtel','Schleifpapier 120er','Tuch','Bleistift'],
+    material:['Wandspachtel-Masse (fertig im Eimer)','Wandfarbe (gleicher Ton wie die Wand)'],
+    schritte:['Lockere Bröckel um das Loch entfernen','Mit Staubsauger/Tuch Staub aus dem Loch saugen','Spachtelmasse mit dem Spachtel ins Loch drücken — leicht überfüllen','Mit Spachtelklinge glatt abziehen','30 Min antrocknen, dann zweite Schicht für ebene Fläche','Komplett trocknen (4-24h je nach Tiefe)','Mit Schleifpapier glatt schleifen','Mit Wandfarbe übermalen — am besten ganze Wand bis zur nächsten Ecke'],
+    tipp:'Bei mehreren Löchern in einer Reihe: alle gleichzeitig spachteln, einmal nachschleifen, einmal streichen — spart Zeit.',
+    bild:'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=400&q=70' },
+  { titel:'Bild richtig aufhängen', kat:'wand', schwierigkeit:1, dauer:'20 Min.',
+    werkzeuge:['Bohrmaschine + passender Bohrer','Wasserwaage','Bleistift','Hammer','Maßband'],
+    material:['Passender Dübel + Schraube','Bilderhaken'],
+    schritte:['Wand-Material bestimmen — Beton/Ziegel/Gips? Beeinflusst Bohrer + Dübel','Höhe: Mitte des Bildes auf Augenhöhe (160-165 cm)','Mit Maßband Position bestimmen, mit Bleistift markieren','Wasserwaage gerade halten, zweite Markierung auf der gleichen Höhe','Mit kleinem Bohrer Loch vorbohren (testen Wand-Härte)','Mit Dübel-Bohrer durchbohren — auf Putztiefe achten','Dübel mit Hammer einschlagen — bündig mit der Wand','Schraube/Haken eindrehen — 5 mm rausstehen lassen','Bild aufhängen, mit Wasserwaage prüfen'],
+    tipp:'Bei Stahlbeton: Schlagbohrer + Beton-Bohrer + ggf. Hartmetall-Spitze nötig — Hammerbohrer ist schneller.' },
+  { titel:'Wand streichen', kat:'wand', schwierigkeit:2, dauer:'1 Tag pro Raum',
+    werkzeuge:['Farbroller (Mittelflor)','Pinsel (5 cm)','Farbwanne','Teleskopstange','Spachtel'],
+    material:['Wandfarbe (1L pro 10 m²)','Malerband','Abdeckfolie','Wischlappen'],
+    schritte:['Möbel raus oder in die Mitte schieben + abdecken','Steckdosen abschrauben oder mit Malerband abkleben','Boden komplett mit Abdeckfolie schützen','Risse, Löcher vorher spachteln (siehe Loch-Anleitung)','Ecken und Kanten mit Pinsel vorstreichen (5 cm breit)','Roller in Farbe tauchen, an Wanne abstreifen','Wand in V- oder W-Form streichen, dann gleichmäßig verteilen','Bahn-für-Bahn arbeiten, nass-in-nass — nicht stoppen','2. Schicht nach 4 Stunden Trockenzeit','Malerband sofort nach 2. Schicht abziehen (vor Trocknung)'],
+    tipp:'Hochwertige Farbe (10€/L+) deckt meist in 1 Anstrich — billige Farbe kostet doppelt Zeit.',
+    bild:'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=400&q=70' },
+  { titel:'Riss in Wand reparieren', kat:'wand', schwierigkeit:2, dauer:'2 h (+24h)',
+    werkzeuge:['Spachtel','Schleifpapier 120 + 240','Cuttermesser','Pinsel'],
+    material:['Riss-Spachtel (elastisch, im Baumarkt)','Glasfasergewebe (bei breiten Rissen >2mm)','Tiefengrund'],
+    schritte:['Riss mit Cutter „v-förmig" aufschneiden — schafft Platz für Spachtel','Bröckel und Staub entfernen','Tiefengrund mit Pinsel aufstreichen — bindet den Untergrund','Bei Rissen >2mm: Glasfaserband drauf, dann übersp1achteln','Spachtel in mehreren dünnen Schichten — nicht zu dick','Zwischen Schichten trocknen lassen','Endlage glatt abziehen','Trocknen, schleifen, übermalen'],
+    tipp:'Wenn der Riss durch Hausabsetzung ist und wiederkommt — Bauingenieur fragen!' },
+  { titel:'Tapete kleben (Vlies)', kat:'wand', schwierigkeit:2, dauer:'1 Tag',
+    werkzeuge:['Tapezierpinsel ODER Roller','Schere','Cuttermesser','Tapezier-Maschine (Lineal)','Tuch'],
+    material:['Vlies-Tapete','Vlies-Kleister (KEIN Papierkleister)','Wasser'],
+    schritte:['Wand vorbereiten: glatt, sauber, trocken — alte Tapete ab!','Tiefengrund auftragen, trocknen lassen','Vlieskleister anrühren (auf Packung achten)','Kleister direkt auf die WAND streichen, NICHT auf die Tapete','Tapete einmessen, mit 5 cm Überstand abschneiden','Erste Bahn mit Lot/Wasserwaage senkrecht ankleben','Mit Tapezierpinsel von Mitte nach außen glatt streichen — Luftblasen raus','An Decke + Boden bündig mit Lineal abschneiden','Nächste Bahn STOSS-an-STOSS — nicht überlappen!'],
+    tipp:'Vlies-Tapete ist viel einfacher als Papier-Tapete — Anfänger sollten unbedingt Vlies wählen.',
+    bild:'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=400&q=70' },
+
+  // 🚪 TÜR & FENSTER
+  { titel:'Fenster abdichten (Zugluft)', kat:'tuer', schwierigkeit:1, dauer:'20 Min.',
+    werkzeuge:['Schere','Tuch'],
+    material:['Selbstklebendes Dichtungsband (Schaumstoff oder Gummi)','Glasreiniger'],
+    schritte:['Mit Hand fühlen: woher kommt Zugluft?','Fensterrahmen sauber wischen (Glasreiniger), trocknen','Dichtungsband auf Maß zuschneiden','Schutzfolie schrittweise abziehen','Band in den Rahmen drücken (an der Stelle, wo Fenster + Rahmen sich berühren)','An Ecken sauber zuschneiden','Fenster schließen — etwas mehr Widerstand = perfekt','Bei alten Fenstern: Verschluss-Mechanik prüfen (kann nachjustiert werden)'],
+    tipp:'EPDM-Gummiband hält 10+ Jahre, Schaumstoff nur 1-2 Jahre. Lohnt sich, das bessere zu nehmen.' },
+  { titel:'Loser Türgriff fester ziehen', kat:'tuer', schwierigkeit:1, dauer:'5 Min.',
+    werkzeuge:['Inbusschlüssel (meist 3 mm)','Schraubendreher'],
+    material:[],
+    schritte:['Tür offen halten','Unter dem Türgriff (innen) Inbus-Schraube suchen — meist seitlich','Mit Inbusschlüssel fest anziehen — nicht überdrehen!','Andere Seite des Griffs prüfen — auch dort Schraube?','Beide Seiten gleichmäßig anziehen','Griff drücken — sitzt fest? Klappert nicht mehr?','Bei moderner Tür: schwarze Schrauben vorne — Schraubendreher genügt'],
+    tipp:'Wenn Griff trotzdem wackelt: Vierkant-Stab (Achse) ist eventuell ausgeschlagen — komplett tauschen.' },
+  { titel:'Schloss ölen & gängig machen', kat:'tuer', schwierigkeit:1, dauer:'10 Min.',
+    werkzeuge:['Lappen'],
+    material:['Schloss-Spray (Graphit oder spezielles Schloss-Öl — NICHT WD-40!)'],
+    schritte:['Schlüssel ins Schloss, prüfen wo es hakt','Mit Schloss-Spray-Düse in den Schlüssel-Schacht sprühen — kurzer Stoß','Schlüssel mehrmals rein/raus bewegen','Schlüssel mit Lappen abwischen — schwarze Rückstände normal','Schlüssel drehen — fühlt sich besser an?','Bei massiven Problemen: Schließzylinder komplett tauschen'],
+    tipp:'WD-40 ist für Schlösser SCHLECHT — der Film bindet Staub und verschmiert. Nur Graphit oder Schloss-Öl!' },
+
+  // 🌱 GARTEN
+  { titel:'Hecke schneiden', kat:'garten', schwierigkeit:2, dauer:'2 h pro 5 m',
+    werkzeuge:['Heckenschere (manuell oder elektrisch)','Strick + Pflöcke','Plane für Schnittgut','Schutzbrille + Handschuhe'],
+    material:[],
+    schritte:['Wetter prüfen: trocken, bewölkt = ideal','Hecke nicht in Vögel-Brutzeit schneiden (März-September §39 BNatSchG!)','Plane unter Hecke ausbreiten — sammelt Schnittgut','Mit Strick zwischen 2 Pflöcken obere Höhe markieren','Erst oben gerade schneiden — Höhe einhalten','Seiten leicht trapezförmig: oben schmaler als unten (Lichteinfall)','Mit gleichmäßigen Bewegungen — nicht zu viel auf einmal','Schnittgut zusammenraffen, in Säcke','Bei Elektroschere: nicht in Regen + Kabel im Auge behalten'],
+    tipp:'Beste Zeit: Mitte Februar oder Anfang Oktober — außerhalb der Brutzeit, nicht zu warm.',
+    bild:'https://images.unsplash.com/photo-1585150841037-8eba60f8f7d3?w=400&q=70' },
+  { titel:'Hochbeet einfach selber bauen', kat:'garten', schwierigkeit:2, dauer:'1 Tag',
+    werkzeuge:['Akkuschrauber','Säge (oder vorgesägte Bretter)','Hammer','Wasserwaage','Maßband'],
+    material:['Holzbretter (z.B. 200x30x4 cm, Lärche/Eiche)','Schrauben (Edelstahl, 6 cm)','Teichfolie oder Noppenfolie','Tacker','Aststücke + Laub + Erde (Schichten)'],
+    schritte:['Standort wählen — sonnig, 80-100 cm breit, beliebige Länge','Boden mit Wühlmaus-Gitter sichern (optional)','4 Eck-Pfosten in den Boden schlagen','Bretter mit Schrauben um die Pfosten herum befestigen','Mit Wasserwaage Ebenheit prüfen — wichtig!','Innen mit Teichfolie auskleiden, mit Tacker fixieren','Schichtung: ganz unten Aststücke (Drainage)','Dann Laub, dann Mist/Kompost, oben 30 cm Pflanzerde','Pflanzen einsetzen — Salat, Tomaten, Kräuter'],
+    tipp:'Hochbeet zahlt sich aus: Rücken-schonend, weniger Schnecken, früh-erntereif!',
+    bild:'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&q=70' },
+  { titel:'Zimmerpflanze umtopfen', kat:'garten', schwierigkeit:1, dauer:'15 Min.',
+    werkzeuge:['Eimer','Zeitungspapier'],
+    material:['Größerer Topf (2-3 cm mehr Durchmesser)','Frische Pflanzerde','Tonscherben oder Blähton'],
+    schritte:['Pflanze 1 Tag vor Umtopfen leicht gießen — Wurzelballen lässt sich besser lösen','Neuen Topf vorbereiten: Loch unten, Tonscherbe drüber (Drainage)','3-4 cm Erde rein','Pflanze aus altem Topf: Topf seitlich drücken, vorsichtig ziehen','Wurzelballen prüfen: locker, gesund (weiß/hell)?','Bei Wurzel-Filz: außen 1 cm abschneiden — regt Wachstum an','In neuen Topf setzen, Erde drumherum füllen','Andrücken — keine Hohlräume!','Kräftig wässern, 1 Woche kein direktes Sonnenlicht'],
+    tipp:'Beste Zeit: Frühjahr, wenn die Pflanze wieder wächst — nicht im Winter.',
+    bild:'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=400&q=70' }
+];
+
+const HANDWERKER_KATS = [
+  { id:'alle',      label:'Alle',           icon:'🔧' },
+  { id:'elektrik',  label:'Elektrik',       icon:'🔌' },
+  { id:'sanitaer',  label:'Sanitär',        icon:'🚰' },
+  { id:'moebel',    label:'Möbel',          icon:'🪑' },
+  { id:'wand',      label:'Wand & Boden',   icon:'🎨' },
+  { id:'tuer',      label:'Tür & Fenster',  icon:'🚪' },
+  { id:'garten',    label:'Garten',         icon:'🌱' }
+];
+
+function handwerkerKatWaehlen(k) { state.handwerkerKat = k; render(); }
+function handwerkerSchwierigkeit(s) { state.handwerkerSchwer = s; render(); }
+
+function renderHandwerker() {
+  const kat = state.handwerkerKat || 'alle';
+  const schwer = state.handwerkerSchwer || 0;
+  const liste = HANDWERKER_DATEN.filter(h =>
+    (kat === 'alle' || h.kat === kat) &&
+    (!schwer || h.schwierigkeit === schwer)
+  );
+  const schwIcon = (s) => s === 1 ? '😊' : s === 2 ? '⚠️' : '🚫';
+  const schwLabel = (s) => s === 1 ? 'Anfänger' : s === 2 ? 'Fortgeschritten' : 'Profi-Aufgabe';
+  return `
+  <div class="umg-hero" style="background:linear-gradient(140deg,#B45309 0%,#D97706 55%,#F59E0B 100%);box-shadow:0 10px 30px rgba(217,119,6,.28)">
+    <div class="umg-hero-tag">🔧 Handwerker-Modus</div>
+    <div class="umg-hero-name">${HANDWERKER_DATEN.length} Reparaturen &amp; DIY</div>
+    <div class="umg-hero-sub">Echte Schritt-für-Schritt-Anleitungen für Zuhause — vom losen Türgriff bis zur neuen Steckdose</div>
+    <div class="hero-chips">
+      <span class="chip">😊 ${HANDWERKER_DATEN.filter(h=>h.schwierigkeit===1).length} Anfänger</span>
+      <span class="chip">⚠️ ${HANDWERKER_DATEN.filter(h=>h.schwierigkeit===2).length} Fortgeschritten</span>
+      <span class="chip">🚫 ${HANDWERKER_DATEN.filter(h=>h.schwierigkeit===3).length} Profi</span>
+    </div>
+  </div>
+
+  <div class="info-box orange" style="margin-bottom:.9rem">
+    <span class="ib-icon">⚠️</span>
+    <div class="ib-text"><strong>Wichtig:</strong> Bei Strom IMMER die Sicherung ausschalten und mit Spannungsprüfer kontrollieren. Bei Wasser das Eckventil zudrehen. Im Zweifel: Handwerker holen — Sicherheit geht vor.</div>
+  </div>
+
+  <div class="news-kat-tabs">
+    ${HANDWERKER_KATS.map(k=>`<button class="news-kat-btn ${kat===k.id?'aktiv':''}" onclick="handwerkerKatWaehlen('${k.id}')">${k.icon} ${k.label}</button>`).join('')}
+  </div>
+  <div class="news-kat-tabs">
+    <button class="news-kat-btn ${schwer===0?'aktiv':''}" onclick="handwerkerSchwierigkeit(0)">Alle Schwierigkeiten</button>
+    <button class="news-kat-btn ${schwer===1?'aktiv':''}" onclick="handwerkerSchwierigkeit(1)">😊 Anfänger</button>
+    <button class="news-kat-btn ${schwer===2?'aktiv':''}" onclick="handwerkerSchwierigkeit(2)">⚠️ Fortgeschritten</button>
+    <button class="news-kat-btn ${schwer===3?'aktiv':''}" onclick="handwerkerSchwierigkeit(3)">🚫 Profi</button>
+  </div>
+
+  ${liste.length === 0 ? '<div class="info-box blau"><span class="ib-icon">🔍</span><div class="ib-text"><strong>Keine Anleitung in dieser Auswahl.</strong> Filter ändern.</div></div>' : ''}
+
+  <div class="rezept-grid">
+    ${liste.map(h => {
+      const bildStyle = h.bild ? `background-image:url('${h.bild}')` : 'background:linear-gradient(135deg,#FED7AA 0%,#FCD34D 100%);display:flex;align-items:center;justify-content:center;font-size:3rem';
+      const bildInhalt = h.bild ? '' : '🔧';
+      return `
+    <div class="rezept-foto-karte" style="cursor:default">
+      <div class="rezept-foto-bild" style="${bildStyle}">${bildInhalt}
+        <span class="rezept-foto-kosten">${schwIcon(h.schwierigkeit)} ${schwLabel(h.schwierigkeit)}</span>
+      </div>
+      <div class="rezept-foto-body">
+        <div class="rezept-foto-name">${esc(h.titel)}</div>
+        <div class="rezept-foto-meta">
+          <span>⏱️ ${esc(h.dauer)}</span>
+        </div>
+        ${h.sicherheit ? `<div class="hw-sicherheit">${esc(h.sicherheit)}</div>` : ''}
+        <div style="font-size:.78rem;color:#0F172A;margin-top:.55rem;line-height:1.5"><strong>🛠️ Werkzeuge:</strong> ${h.werkzeuge.map(esc).join(', ')}</div>
+        ${h.material.length ? `<div style="font-size:.78rem;color:#0F172A;margin-top:.3rem;line-height:1.5"><strong>🧰 Material:</strong> ${h.material.map(esc).join(', ')}</div>` : ''}
+        <div style="font-size:.78rem;font-weight:700;margin-top:.55rem;color:#0F172A">📋 Schritt für Schritt:</div>
+        <ol class="basteln-schritte">${h.schritte.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+        ${h.tipp ? `<div class="hw-tipp">💡 <strong>Profi-Tipp:</strong> ${esc(h.tipp)}</div>` : ''}
+        <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(h.titel + ' Anleitung Heimwerker')}" target="_blank" rel="noopener" class="basteln-video-btn">▶ Video-Anleitung auf YouTube</a>
       </div>
     </div>`;
     }).join('')}
@@ -13860,16 +14519,77 @@ function kiAntwortSchliessen(id) {
   if (window.speechSynthesis) speechSynthesis.cancel();
 }
 
-function kiVorlesen() {
-  if (!window.speechSynthesis) { toast('⚠️ Vorlesen nicht unterstützt'); return; }
+// ===== Natürliche Vorlese-Stimme =====
+// Nutzt eine natürlich klingende Online-Stimme (Google-TTS) statt der
+// künstlichen Geräte-Stimme. Geräte-Stimme bleibt als Offline-Fallback.
+let _kiAudio = null;
+
+// Laufende Sprachausgabe stoppen (Online-Audio + Geräte-Stimme)
+function kiVorlesenStop() {
+  if (_kiAudio) { _kiAudio._gestoppt = true; try { _kiAudio.pause(); } catch {} _kiAudio = null; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+}
+
+// Fallback: Geräte-Stimme, falls die Online-Stimme nicht lädt (z. B. offline)
+function kiVorlesenGeraetestimme(txt) {
+  if (!window.speechSynthesis) { toast('⚠️ Vorlesen wird nicht unterstützt'); return; }
   speechSynthesis.cancel();
-  if (!_kiVorleseText) return;
-  const u = new SpeechSynthesisUtterance(_kiVorleseText);
-  u.lang = 'de-DE';
-  u.rate = 1.0;
-  u.pitch = 1.0;
+  const u = new SpeechSynthesisUtterance(txt);
+  u.lang = 'de-DE'; u.rate = 1.0; u.pitch = 1.0;
   stimmeAnwenden(u);
   speechSynthesis.speak(u);
+}
+
+// Text an Satzgrenzen in ≤max-Zeichen-Stücke teilen (Online-TTS hat ein Längen-Limit)
+function _ttsStuecke(text, max) {
+  const saetze = String(text).replace(/\s+/g, ' ').trim().match(/[^.!?]+[.!?]*\s*/g) || [String(text)];
+  const out = [];
+  let cur = '';
+  for (const s of saetze) {
+    if (s.length > max) {
+      if (cur.trim()) { out.push(cur.trim()); cur = ''; }
+      for (let i = 0; i < s.length; i += max) out.push(s.slice(i, i + max).trim());
+    } else if ((cur + s).length > max) {
+      if (cur.trim()) out.push(cur.trim());
+      cur = s;
+    } else cur += s;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out.filter(Boolean);
+}
+
+// Text mit natürlicher Stimme vorlesen — Online-TTS, Geräte-Stimme als Fallback
+function kiTextVorlesen(txt) {
+  if (!txt) { toast('⚠️ Kein Text zum Vorlesen'); return; }
+  kiVorlesenStop();
+  // Männlich gewünscht: Online-Stimme bietet keine männliche DE-Stimme → Geräte-Stimme
+  const wahl = (typeof einstellungenLaden === 'function' ? einstellungenLaden().stimme : 'w') || 'w';
+  if (wahl === 'm') { kiVorlesenGeraetestimme(txt); return; }
+
+  const stuecke = _ttsStuecke(txt, 190);
+  if (!stuecke.length) return;
+  const urls = stuecke.map(s =>
+    'https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=' + encodeURIComponent(s));
+  toast('🔊 Stimme wird geladen …');
+
+  let idx = 0;
+  const spielAb = () => {
+    if (idx >= urls.length) { _kiAudio = null; return; }
+    const audio = new Audio(urls[idx]);
+    _kiAudio = audio;
+    audio.onended = () => { if (audio._gestoppt) return; idx++; spielAb(); };
+    audio.onerror = () => {
+      if (audio._gestoppt) return;
+      if (idx === 0) { _kiAudio = null; kiVorlesenGeraetestimme(txt); }  // 1. Stück scheitert → kompletter Fallback
+      else { idx++; spielAb(); }                                         // späteres Stück → überspringen
+    };
+    audio.play().catch(() => { if (!audio._gestoppt) audio.onerror(); });
+  };
+  spielAb();
+}
+
+function kiVorlesen() {
+  kiTextVorlesen(_kiVorleseText);
 }
 
 // ===== KI-WISSENS-DATENBANK =====
