@@ -1,0 +1,46 @@
+{
+  "_info": "Zentrale Marken-Konfiguration für den Instagram-Bot. Jedes Topic in topics.json kann optional ein Feld \"brand\" haben. Fehlt es, wird default_brand genutzt.",
+  "default_brand": "familie",
+  "brands": {
+    "familie": {
+      "id": "familie",
+      "name": "FamilienApp",
+      "character": "stylized 3D animated Pixar family: mother around 32 with chestnut brown hair in a soft bun, warm hazel eyes, mustard yellow knit cardigan; father around 34 with short dark brown hair, neat short beard, soft sky blue shirt; 8-year-old daughter with chestnut pigtails tied with pink ribbons, pink polka dot dress; chubby cheerful baby with peach onesie; a fluffy black Newfoundland dog with a distinctive white chest patch",
+      "scenes": ["wohnzimmer", "kueche", "kinderzimmer", "park", "buero"],
+      "app_reel": {
+        "badge_text": "FamilienApp Tipp",
+        "outro_title": "FamilienApp",
+        "outro_sub_html": "Alles für deine Familie.<br>In einer App.",
+        "outro_cta": "Jetzt kostenlos laden",
+        "caption_cta": "📲 Lade die FamilienApp kostenlos — Link im Profil!"
+      },
+      "situation_reel": {
+        "badge_text": "@familienapp",
+        "outro_title": "@familienapp",
+        "outro_sub_html": "Familienmomente,<br>die jeder kennt 💛",
+        "outro_cta": "Folge für mehr",
+        "caption_cta": "💛 Folge @familienapp für mehr Familienmomente"
+      }
+    },
+    "hund": {
+      "id": "hund",
+      "name": "Hundeleben",
+      "character": "stylized 3D animated Pixar style scene featuring Balu, a single big fluffy black Newfoundland dog with a distinctive bright white chest patch, wearing a simple red collar, big soulful warm brown eyes with bright catchlights, a gentle expressive face with a soft friendly smile and slightly floppy ears; sometimes accompanied by a friendly young German owner in their early 30s only when the scene clearly requires a human; Balu the dog is always the central character",
+      "scenes": ["wohnzimmer", "park", "kueche", "buero"],
+      "app_reel": {
+        "badge_text": "Hunde-Tipp",
+        "outro_title": "@familienapp",
+        "outro_sub_html": "Bald: die Hunde-App.<br>Jetzt schon Tipps holen.",
+        "outro_cta": "Folge für News",
+        "caption_cta": "🐾 Hunde-App in Arbeit — folge @familienapp für News!"
+      },
+      "situation_reel": {
+        "badge_text": "🐾 Hundeleben",
+        "outro_title": "@familienapp",
+        "outro_sub_html": "Hundemomente,<br>die jeder Halter kennt 🐾",
+        "outro_cta": "Folge für mehr",
+        "caption_cta": "🐾 Folge @familienapp für mehr Hunde-Content"
+      }
+    }
+  }
+}
