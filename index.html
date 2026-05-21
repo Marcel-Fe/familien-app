@@ -220,7 +220,7 @@
             nw.addEventListener('statechange', () => {
               if (nw.state === 'activated') {
                 caches.keys().then(keys => Promise.all(
-                  keys.filter(k => !k.includes('familienapp-v65')).map(k => caches.delete(k))
+                  keys.filter(k => !k.includes('familienapp-v66')).map(k => caches.delete(k))
                 )).then(() => location.reload());
               }
             });

@@ -48,7 +48,6 @@ const state = {
   veranstaltungKat: 'alle', veranstaltungOrte: [], veranstaltungLaden: false,
   vertraegeKat: null,
   urlaubTab: 'angebote', urlaubFilter: 'strand',
-  jobsOrt: '', jobsWas: '', jobsErgebnisse: [], jobsLaden: false, jobsGeladen: false,
   routeZiel: '', routeDaten: null, routeLaden: false, umgebungRouteModus: false,
   navi: null,
   einstellungen: null
@@ -98,23 +97,6 @@ function installBannerAusblenden() {
   einst.installBannerWeg = true;
   einstellungenSpeichern(einst);
   render();
-}
-
-// App-Link teilen — per Teilen-Dialog (Handy) oder Zwischenablage (Desktop)
-async function appTeilen() {
-  const url = location.origin + location.pathname;
-  const text = 'FamilienApp — kostenlose Hilfe für die ganze Familie: Zuschüsse, Rezepte, Gesundheit, Kalender und mehr. Einfach öffnen und auf den Startbildschirm legen.';
-  if (navigator.share) {
-    try { await navigator.share({ title: 'FamilienApp', text, url }); }
-    catch (e) { /* vom Nutzer abgebrochen */ }
-  } else {
-    try {
-      await navigator.clipboard.writeText(url);
-      toast('✓ App-Link kopiert — jetzt z. B. per WhatsApp einfügen');
-    } catch (e) {
-      toast('App-Link: ' + url);
-    }
-  }
 }
 
 // Demo-Modus für Screenshots (URL-Parameter ?demo=1)
@@ -258,7 +240,7 @@ const NAV = {
   kinder:    [{s:'basteln', l:'Basteln'},{s:'spielideen', l:'Spielideen'},{s:'hausaufgaben', l:'Hausaufgaben'},{s:'erziehung', l:'Erziehung'}],
   gesund:    [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'},{s:'schwangerschaft', l:'Schwangerschaft'},{s:'erstehilfe', l:'Erste Hilfe'},{s:'medbox', l:'Medikamente'}],
   senioren:  [{s:'senioren', l:'Senioren'}],
-  wissen:    [{s:'wissen', l:'Wissen'},{s:'tipps', l:'Tipps'},{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'jobs', l:'Jobs'},{s:'uebersetzer', l:'Übersetzer'},{s:'erkennen', l:'Tiere & Pflanzen'},{s:'suche', l:'Suche'},{s:'einstellungen', l:'Einstellungen'}]
+  wissen:    [{s:'wissen', l:'Wissen'},{s:'tipps', l:'Tipps'},{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'uebersetzer', l:'Übersetzer'},{s:'erkennen', l:'Tiere & Pflanzen'},{s:'suche', l:'Suche'},{s:'einstellungen', l:'Einstellungen'}]
 };
 
 function sektionZuGruppe(s) {
@@ -2002,11 +1984,17 @@ function appTeilen() {
   const titel = 'FamilienApp — Für die ganze Familie';
   const text = 'Schau mal: FamilienApp — Zuschüsse, Kalender, Rezepte, Gesundheit & viel mehr für die ganze Familie!\n\n' + url;
 
+  // Web Share API nutzen, wenn verfügbar — robust gegen synchrone Fehler abgesichert
   if (navigator.share) {
-    navigator.share({ title: titel, text: text, url: url })
-      .then(() => toast('✓ Geteilt!'))
-      .catch(() => {});
-    return;
+    try {
+      const ergebnis = navigator.share({ title: titel, text: text, url: url });
+      if (ergebnis && typeof ergebnis.then === 'function') {
+        ergebnis.then(() => toast('✓ Geteilt!')).catch(() => {});
+        return;
+      }
+    } catch (e) {
+      // navigator.share nicht nutzbar (z. B. abgelehnt) — auf Modal-Fallback ausweichen
+    }
   }
 
   // Fallback: Modal mit verschiedenen Teilen-Optionen
@@ -2014,6 +2002,9 @@ function appTeilen() {
 }
 
 function appTeilenModal(url, text) {
+  // Bereits offenes Teilen-Modal entfernen (keine doppelten IDs)
+  const altesModal = el('teilen-modal');
+  if (altesModal) altesModal.remove();
   const html = `
   <div class="modal-overlay" id="teilen-modal" onclick="if(event.target===this)teilenModalSchliessen()">
     <div class="modal-box" style="max-width:420px">
@@ -2037,13 +2028,30 @@ function teilenModalSchliessen() {
   if (m) m.remove();
 }
 function appLinkKopieren(url) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(() => {
-      toast('✓ Link kopiert!');
-      teilenModalSchliessen();
-    });
-  } else {
-    toast('⚠️ Kopieren nicht unterstützt');
+  // Moderne Clipboard-API mit abgesichertem Fehler-Fallback
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => { toast('✓ Link kopiert!'); teilenModalSchliessen(); })
+      .catch(() => { appLinkKopierenFallback(url); });
+    return;
+  }
+  appLinkKopierenFallback(url);
+}
+// Fallback ohne Clipboard-API: Text per temporärem Feld kopieren
+function appLinkKopierenFallback(url) {
+  try {
+    const feld = document.createElement('textarea');
+    feld.value = url;
+    feld.style.position = 'fixed';
+    feld.style.opacity = '0';
+    document.body.appendChild(feld);
+    feld.select();
+    const ok = document.execCommand('copy');
+    feld.remove();
+    if (ok) { toast('✓ Link kopiert!'); teilenModalSchliessen(); }
+    else    { toast('Link: ' + url); }
+  } catch (e) {
+    toast('Link: ' + url);
   }
 }
 
@@ -2226,7 +2234,6 @@ function render() {
     case 'familie':    content.innerHTML = renderFamilie(); break;
     case 'extras':     content.innerHTML = renderExtras(); break;
     case 'urlaub':     content.innerHTML = renderUrlaub(); break;
-    case 'jobs':           content.innerHTML = renderJobs(); setTimeout(initJobs, 100); break;
     case 'veranstaltungen': content.innerHTML = renderVeranstaltungen(); setTimeout(initVeranstaltungen, 100); break;
     case 'gesundheit':      content.innerHTML = renderGesundheit(); break;
     case 'checkliste':      content.innerHTML = renderChecklisten(); break;
@@ -7655,184 +7662,6 @@ function renderUrlaub() {
 
 function urlaubFilterSetzen(f) { state.urlaubFilter = f; render(); }
 
-// ===== JOBS =====
-function renderJobs() {
-  const user = getUser() || {};
-  const ortVorausgefuellt = state.jobsOrt || user.ort || '';
-  const wasVorausgefuellt = state.jobsWas || '';
-  const ergebnisse = state.jobsErgebnisse || [];
-  const laden = state.jobsLaden;
-  const geladen = state.jobsGeladen;
-
-  return `
-  <div class="section-hero" style="background:linear-gradient(135deg,rgba(5,150,105,.9),rgba(79,70,229,.85)),url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=70') center/cover;border-radius:var(--r-lg);padding:2rem 1.5rem;margin-bottom:1.5rem;color:white">
-    <div style="font-size:2rem;margin-bottom:.5rem">💼</div>
-    <div style="font-size:1.3rem;font-weight:800;margin-bottom:.4rem">Jobs in Ihrer Nähe</div>
-    <div style="font-size:.88rem;opacity:.9">Live-Suche via Bundesagentur für Arbeit — kostenlos & ohne Anmeldung</div>
-  </div>
-
-  <div class="standort-box" style="margin-bottom:1.25rem">
-    <div style="font-weight:700;margin-bottom:.75rem">🔍 Jobs suchen</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
-      <input id="jobs-was" class="standort-input" type="text" placeholder="Berufsfeld, z.B. Verkäuferin"
-        value="${esc(wasVorausgefuellt)}" onkeydown="if(event.key==='Enter')jobsSuchen()" />
-      <input id="jobs-ort" class="standort-input" type="text" placeholder="Ort oder PLZ"
-        value="${esc(ortVorausgefuellt)}" onkeydown="if(event.key==='Enter')jobsSuchen()" />
-    </div>
-    <div style="display:flex;gap:.5rem">
-      <button class="btn btn-primary" style="flex:1" onclick="jobsSuchen()">🔍 Jobs suchen</button>
-      <button class="gps-btn" onclick="jobsGPS()">📡 GPS</button>
-    </div>
-    <div id="jobs-fehler" style="display:none;margin-top:.6rem;padding:.5rem .75rem;background:#FEE2E2;color:#DC2626;border-radius:.5rem;font-size:.82rem;font-weight:600"></div>
-  </div>
-
-  <div id="jobs-ergebnisse">
-    ${laden ? `<div class="loading-spinner"><div class="spinner"></div><span>Jobs werden geladen...</span></div>` :
-      !geladen ? `
-      <div class="info-box blau"><span class="ib-icon">💡</span><div class="ib-text">
-        <strong>Einfach oben Ort eingeben und suchen!</strong><br>
-        Live-Ergebnisse der Bundesagentur für Arbeit — alle aktuellen Stellen in Ihrer Nähe.
-      </div></div>
-      <div class="block-title" style="margin-top:1.25rem">📋 Direkt zu den Jobbörsen</div>
-      <div class="grid-2">
-        ${[
-          {name:'Bundesagentur für Arbeit', icon:'🏛️', txt:'Größte Jobbörse Deutschlands', link:'https://www.arbeitsagentur.de/jobsuche/', farbe:'#2563EB'},
-          {name:'StepStone', icon:'⭐', txt:'Top-Jobs & Gehaltsinformationen', link:'https://www.stepstone.de', farbe:'#F59E0B'},
-          {name:'Indeed', icon:'🔍', txt:'Millionen Jobs weltweit', link:'https://de.indeed.com', farbe:'#2563EB'},
-          {name:'Xing Jobs', icon:'💼', txt:'Jobs im DACH-Raum', link:'https://www.xing.com/jobs', farbe:'#006567'},
-          {name:'Jobware', icon:'📋', txt:'Fach- und Führungskräfte', link:'https://www.jobware.de', farbe:'#DC2626'},
-          {name:'Minijob-Zentrale', icon:'⏰', txt:'Minijobs & Teilzeit in der Nähe', link:'https://www.minijob-zentrale.de/arbeitnehmer/job-finden', farbe:'#7C3AED'}
-        ].map(p=>`
-        <a href="${p.link}" target="_blank" class="card" style="text-decoration:none;display:flex;align-items:center;gap:.75rem;border-left:4px solid ${p.farbe}">
-          <span style="font-size:1.6rem">${p.icon}</span>
-          <div>
-            <div style="font-weight:700;font-size:.88rem">${p.name}</div>
-            <div style="font-size:.78rem;color:var(--g500)">${p.txt}</div>
-          </div>
-        </a>`).join('')}
-      </div>` :
-      ergebnisse.length === 0 ? `
-      <div class="info-box orange"><span class="ib-icon">🔍</span><div class="ib-text">Keine Stellen gefunden. Anderen Suchbegriff oder größeren Umkreis probieren.</div></div>
-      ${jobsPortalLinks(state.jobsOrt, state.jobsWas)}` :
-      `<div style="font-weight:700;margin-bottom:.75rem;color:var(--g700)">${ergebnisse.length} Stellen gefunden</div>
-      ${ergebnisse.map(j => jobsKarte(j)).join('')}
-      ${jobsPortalLinks(state.jobsOrt, state.jobsWas)}`
-    }
-  </div>`;
-}
-
-function jobsKarte(j) {
-  const titel = j.titel || 'Stelle';
-  const arbeitgeber = j.arbeitgeber || '';
-  const ort = j.arbeitsort?.ort || j.arbeitsort?.plz || '';
-  const beruf = j.beruf || '';
-  const aktuelleVeroeffentlichung = j.aktuelleVeroeffentlichungsdatum || '';
-  const tage = aktuelleVeroeffentlichung ? Math.floor((Date.now() - new Date(aktuelleVeroeffentlichung)) / 86400000) : null;
-  const datum = tage !== null ? (tage === 0 ? 'Heute' : tage === 1 ? 'Gestern' : `vor ${tage} Tagen`) : '';
-  const link = `https://www.arbeitsagentur.de/jobsuche/jobdetail/${j.hashId}`;
-  return `
-  <a href="${link}" target="_blank" class="job-karte">
-    <div class="job-titel">${esc(titel)}</div>
-    ${arbeitgeber ? `<div class="job-arbeitgeber">🏢 ${esc(arbeitgeber)}</div>` : ''}
-    <div class="job-meta">
-      ${ort ? `<span>📍 ${esc(ort)}</span>` : ''}
-      ${beruf ? `<span>🏷️ ${esc(beruf)}</span>` : ''}
-      ${datum ? `<span>🕐 ${datum}</span>` : ''}
-    </div>
-  </a>`;
-}
-
-function jobsPortalLinks(ort, was) {
-  const ortEnc = encodeURIComponent(ort || '');
-  const wasEnc = encodeURIComponent(was || '');
-  return `
-  <div class="block-title" style="margin-top:1.25rem">🔗 Direkt weitersuchen</div>
-  <div style="display:flex;flex-direction:column;gap:.5rem">
-    <a href="https://www.arbeitsagentur.de/jobsuche/suche?was=${wasEnc}&wo=${ortEnc}&umkreis=200&angebotsart=1" target="_blank" class="btn btn-primary" style="text-align:center;text-decoration:none">
-      🏛️ Alle Treffer bei der Bundesagentur →
-    </a>
-    <a href="https://de.indeed.com/Jobs?q=${wasEnc}&l=${ortEnc}&radius=25" target="_blank" class="btn" style="text-align:center;text-decoration:none;background:#2557A7;color:white">
-      🔍 Bei Indeed suchen →
-    </a>
-    <a href="https://www.stepstone.de/jobs/${wasEnc}/in-${ortEnc}.html" target="_blank" class="btn" style="text-align:center;text-decoration:none;background:#F59E0B;color:white">
-      ⭐ Bei StepStone suchen →
-    </a>
-  </div>`;
-}
-
-async function jobsSuchen() {
-  const wasEl = el('jobs-was');
-  const ortEl = el('jobs-ort');
-  if (!ortEl) return;
-  const was = wasEl?.value.trim() || '';
-  const ort = ortEl.value.trim();
-  if (!ort) {
-    const box = el('jobs-fehler');
-    if (box) { box.textContent = 'Bitte Ort oder PLZ eingeben.'; box.style.display = 'block'; }
-    return;
-  }
-  const box = el('jobs-fehler');
-  if (box) box.style.display = 'none';
-
-  state.jobsWas = was;
-  state.jobsOrt = ort;
-  state.jobsLaden = true;
-  state.jobsGeladen = false;
-  state.jobsErgebnisse = [];
-
-  const ergebnisDiv = el('jobs-ergebnisse');
-  if (ergebnisDiv) ergebnisDiv.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><span>Jobs werden geladen...</span></div>';
-
-  try {
-    const params = new URLSearchParams({
-      was, wo: ort, umkreis: '25', size: '20', page: '0', angebotsart: '1'
-    });
-    const res = await fetch(`https://rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc/v4/jobs?${params}`, {
-      headers: { 'X-API-Key': 'jobboerse-jobsuche-ui', 'Content-Type': 'application/json' }
-    });
-    if (!res.ok) throw new Error('API nicht erreichbar');
-    const daten = await res.json();
-    state.jobsErgebnisse = daten.stellenangebote || [];
-    state.jobsLaden = false;
-    state.jobsGeladen = true;
-    render();
-  } catch(e) {
-    state.jobsLaden = false;
-    state.jobsGeladen = true;
-    state.jobsErgebnisse = [];
-    render();
-  }
-}
-
-async function jobsGPS() {
-  if (!navigator.geolocation) return;
-  const btn = document.querySelector('[onclick="jobsGPS()"]');
-  if (btn) btn.textContent = '📡 Ortung...';
-  navigator.geolocation.getCurrentPosition(async pos => {
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&accept-language=de`);
-      const d = await res.json();
-      const name = d.address?.city || d.address?.town || d.address?.village || '';
-      state.jobsOrt = name;
-      const ortEl = el('jobs-ort');
-      if (ortEl) ortEl.value = name;
-      if (btn) btn.textContent = '📡 GPS';
-      jobsSuchen();
-    } catch { if (btn) btn.textContent = '📡 GPS'; }
-  }, () => { if (btn) btn.textContent = '📡 GPS'; });
-}
-
-function initJobs() {
-  const user = getUser() || {};
-  // Auto-Suche wenn Profil-Ort vorhanden und noch nicht gesucht
-  if (!state.jobsGeladen && (user.ort || user.plz)) {
-    state.jobsOrt = user.ort || user.plz || '';
-    const ortEl = el('jobs-ort');
-    if (ortEl) ortEl.value = state.jobsOrt;
-    jobsSuchen();
-  }
-}
-
 // ===== VERANSTALTUNGEN =====
 function veranstaltungKatWaehlen(kat) { state.veranstaltungKat = kat; render(); }
 
@@ -9626,7 +9455,6 @@ function renderEinstellungen() {
         {key:'notifTodo',     label:'✅ To-do-Erinnerungen (mit Uhrzeit)', def:true},
         {key:'notifMed',      label:'💊 Medikamenten-Erinnerungen', def:true},
         {key:'notifAngebote', label:'🏷️ Neue Supermarkt-Angebote', def:false},
-        {key:'notifJobs',     label:'💼 Neue Jobs in der Nähe', def:false},
         {key:'notifAus',      label:'🔕 Alle Benachrichtigungen aus', def:false},
         {key:'muellAutoAus',  label:'🗑️ Müll-Auto-Eintragung bei Standort-Update AUS', def:false}
       ].map(item => {
@@ -10278,8 +10106,7 @@ function globalSuchen(query) {
   const sektionen = [
     { titel: 'Umgebungssuche', sub: 'Läden, Friseure, Restaurants', icon: '📍', sektion: 'umgebung', schluessel: 'umgebung läden friseur supermarkt restaurant' },
     { titel: 'Kalender & Termine', sub: 'Familientermine verwalten', icon: '📅', sektion: 'kalender', schluessel: 'kalender termin termine erinnerung' },
-    { titel: 'Jobs in der Nähe', sub: 'Live-Jobsuche', icon: '💼', sektion: 'jobs', schluessel: 'jobs arbeit job arbeitsamt' },
-    { titel: 'Urlaubsangebote', sub: 'Familienurlaub günstig', icon: '✈️', sektion: 'urlaub', schluessel: 'urlaub reise reisen ferien' },
+    { titel: 'Reise-Ideen', sub: 'Familienurlaub planen', icon: '✈️', sektion: 'urlaub', schluessel: 'urlaub reise reisen ferien' },
     { titel: 'Routenplaner', sub: 'Karte mit Streckenberechnung', icon: '🗺️', sektion: 'umgebung', kat:'route', schluessel: 'route navigation karte routenplaner' },
     { titel: 'Mengen-Umrechner', sub: 'Gewicht, Volumen, Temperatur', icon: '📐', sektion: 'familie', tab:'rezepte', schluessel: 'umrechner umrechnen gramm liter celsius' }
   ];
@@ -10359,8 +10186,7 @@ const ALLE_BEREICHE = [
   { id:'gesundheit',      icon:'🌿', titel:'Gesundheit', sub:'Hausmittel & Tipps', sektion:'gesundheit' },
   { id:'haushalt',        icon:'🏡', titel:'Haushalt',   sub:'Küche, Wäsche, Garten', sektion:'haushalt' },
   { id:'extras',          icon:'💶', titel:'Budget',     sub:'Haushaltsrechner', sektion:'extras' },
-  { id:'urlaub',          icon:'✈️', titel:'Urlaub',     sub:'Familienreisen', sektion:'urlaub' },
-  { id:'jobs',            icon:'💼', titel:'Jobs',       sub:'Live-Jobsuche', sektion:'jobs' },
+  { id:'urlaub',          icon:'✈️', titel:'Reise-Ideen', sub:'Familienreisen', sektion:'urlaub' },
   { id:'veranstaltungen', icon:'🎪', titel:'Events',     sub:'Veranstaltungen', sektion:'veranstaltungen' },
   { id:'news',            icon:'📰', titel:'News',       sub:'Aktuelles', sektion:'news' },
   { id:'basteln',         icon:'🎨', titel:'Basteln',    sub:'Ideen mit Videos', sektion:'basteln' },
@@ -13203,9 +13029,6 @@ function renderLizenzen() {
     <strong>Hinweis:</strong> Die News-Funktion zeigt Schlagzeilen und kurze Beschreibungen aus öffentlichen RSS-Feeds (z.B. Tagesschau, Spiegel, Kicker). Beim Klick auf einen Artikel öffnet sich die Original-Webseite des Anbieters. Die App speichert oder vervielfältigt KEINE Inhalte; sie verlinkt nur. Eine umfassende kommerzielle Wiedergabe ganzer News-Artikel ist NICHT vorgesehen.
   </p>
 
-  <h3>Job-Suche</h3>
-  <p>Daten der <a href="https://jobsuche.api.bund.dev/" target="_blank">Bundesagentur für Arbeit</a> — frei zugängliche öffentliche API.</p>
-
   <h3>Rezepte</h3>
   <p>Eigene Zusammenstellung deutscher Klassiker. Freie Anpassung und kommerzielle Nutzung erlaubt.</p>
 
@@ -14715,8 +14538,7 @@ function kiAntwortFinden(frage) {
   const sektionen = [
     { schluessel:['spielplatz','park','restaurant','umgebung','läden'], titel:'Umgebung', icon:'📍', action:`zuSektion('umgebung')` },
     { schluessel:['kalender','termin'], titel:'Kalender', icon:'📅', action:`zuSektion('kalender')` },
-    { schluessel:['jobs','arbeit','arbeitsstelle'], titel:'Jobs in der Nähe', icon:'💼', action:`zuSektion('jobs')` },
-    { schluessel:['urlaub','reise','ferien'], titel:'Urlaubsangebote', icon:'✈️', action:`zuSektion('urlaub')` },
+    { schluessel:['urlaub','reise','ferien'], titel:'Reise-Ideen', icon:'✈️', action:`zuSektion('urlaub')` },
     { schluessel:['rezept','kochen','essen'], titel:'Rezepte & Kochbuch', icon:'🍽️', action:`zuSektion('familie')` },
     { schluessel:['einkauf','liste','einkaufsliste'], titel:'Einkaufsliste', icon:'🛒', action:`zuSektion('einkaufsliste')` },
     { schluessel:['todo','aufgabe'], titel:'To-Do Liste', icon:'✅', action:`zuSektion('todo')` },
