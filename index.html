@@ -129,6 +129,7 @@
         <button class="menu-eintrag" data-gruppe="gesund" onclick="menuKlick('gesund')"><span class="menu-icon-emoji">🩺</span> <span class="menu-eintrag-label">Gesundheit</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="senioren" onclick="menuKlick('senioren')"><span class="menu-icon-emoji">👵</span> <span class="menu-eintrag-label">Senioren</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="wissen" onclick="menuKlick('wissen')"><span class="menu-icon-emoji">📚</span> <span class="menu-eintrag-label">Wissen &amp; Mehr</span> <span class="menu-pfeil">›</span></button>
+        <button class="menu-eintrag" data-gruppe="einstellungen" onclick="menuKlick('einstellungen')"><span class="menu-icon-emoji">⚙️</span> <span class="menu-eintrag-label">Einstellungen</span> <span class="menu-pfeil">›</span></button>
       </nav>
       <div class="menu-drawer-fuss">
         <p>🏠 FamilienApp · Für die ganze Familie</p>
@@ -220,7 +221,7 @@
             nw.addEventListener('statechange', () => {
               if (nw.state === 'activated') {
                 caches.keys().then(keys => Promise.all(
-                  keys.filter(k => !k.includes('familienapp-v66')).map(k => caches.delete(k))
+                  keys.filter(k => !k.includes('familienapp-v67')).map(k => caches.delete(k))
                 )).then(() => location.reload());
               }
             });

@@ -231,7 +231,7 @@ function zeigeRegistrierung() {
 }
 
 // ===== NAVIGATION =====
-// 7 Hauptkategorien — jede mit ihren Sektionen als Untermenü
+// 9 Hauptkategorien — jede mit ihren Sektionen als Untermenü
 const NAV = {
   start:     [{s:'dashboard', l:'Übersicht'}],
   geld:      [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'},{s:'formular', l:'Formulare'}],
@@ -240,7 +240,8 @@ const NAV = {
   kinder:    [{s:'basteln', l:'Basteln'},{s:'spielideen', l:'Spielideen'},{s:'hausaufgaben', l:'Hausaufgaben'},{s:'erziehung', l:'Erziehung'}],
   gesund:    [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'},{s:'schwangerschaft', l:'Schwangerschaft'},{s:'erstehilfe', l:'Erste Hilfe'},{s:'medbox', l:'Medikamente'}],
   senioren:  [{s:'senioren', l:'Senioren'}],
-  wissen:    [{s:'wissen', l:'Wissen'},{s:'tipps', l:'Tipps'},{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'uebersetzer', l:'Übersetzer'},{s:'erkennen', l:'Tiere & Pflanzen'},{s:'suche', l:'Suche'},{s:'einstellungen', l:'Einstellungen'}]
+  wissen:    [{s:'wissen', l:'Wissen'},{s:'tipps', l:'Tipps'},{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'uebersetzer', l:'Übersetzer'},{s:'erkennen', l:'Tiere & Pflanzen'},{s:'suche', l:'Suche'}],
+  einstellungen: [{s:'einstellungen', l:'Einstellungen'}]
 };
 
 function sektionZuGruppe(s) {
@@ -686,7 +687,22 @@ const _MUELL_STADTE = [
   // Nürnberg
   { plzPrefix:'90', stadt:'Nürnberg', linkUrl:'https://online-service.nuernberg.de/abfallkalender/', rest:{tag:2,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:3,rhythmus:14} },
   // Bremen
-  { plzPrefix:'28', stadt:'Bremen', linkUrl:'https://www.die-bremer-stadtreinigung.de/abfuhrkalender', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:5,rhythmus:14} }
+  { plzPrefix:'28', stadt:'Bremen', linkUrl:'https://www.die-bremer-stadtreinigung.de/abfuhrkalender', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:5,rhythmus:14} },
+  // Köln
+  { plzPrefix:'50', stadt:'Köln', linkUrl:'https://www.awbkoeln.de/abfuhrkalender/', rest:{tag:2,rhythmus:14}, bio:{tag:2,rhythmus:7}, papier:{tag:4,rhythmus:14}, gelb:{tag:5,rhythmus:14} },
+  { plzPrefix:'51', stadt:'Köln', linkUrl:'https://www.awbkoeln.de/abfuhrkalender/', rest:{tag:2,rhythmus:14}, bio:{tag:2,rhythmus:7}, papier:{tag:4,rhythmus:14}, gelb:{tag:5,rhythmus:14} },
+  // Düsseldorf
+  { plzPrefix:'40', stadt:'Düsseldorf', linkUrl:'https://www.awista.de/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  // Stuttgart
+  { plzPrefix:'70', stadt:'Stuttgart', linkUrl:'https://service.stuttgart.de/lhs-services/aws/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:2,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:5,rhythmus:14} },
+  // Bonn
+  { plzPrefix:'53', stadt:'Bonn', linkUrl:'https://www.bonnorange.de/abfuhrkalender', rest:{tag:2,rhythmus:14}, bio:{tag:2,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:5,rhythmus:14} },
+  // Mannheim
+  { plzPrefix:'68', stadt:'Mannheim', linkUrl:'https://www.mannheim.de/de/service-bieten/abfall/abfuhrkalender', rest:{tag:3,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  // Karlsruhe
+  { plzPrefix:'76', stadt:'Karlsruhe', linkUrl:'https://web6.karlsruhe.de/service/abfall/akal/akal.php', rest:{tag:3,rhythmus:14}, bio:{tag:4,rhythmus:7}, papier:{tag:5,rhythmus:28}, gelb:{tag:2,rhythmus:14} },
+  // Münster
+  { plzPrefix:'48', stadt:'Münster', linkUrl:'https://www.stadt-muenster.de/awm/abfuhrkalender', rest:{tag:2,rhythmus:14}, bio:{tag:3,rhythmus:7}, papier:{tag:4,rhythmus:28}, gelb:{tag:5,rhythmus:14} }
 ];
 
 function _muellStadtFinden(plz) {
@@ -1616,10 +1632,13 @@ async function regenradarOeffnen() {
     const res = await fetch('https://api.rainviewer.com/public/weather-maps.json', { signal: AbortSignal.timeout(10000) });
     const d = await res.json();
     const vergangen = d.radar?.past || [];
-    const frames = [...vergangen, ...(d.radar?.nowcast || [])];
+    const nowcast = d.radar?.nowcast || [];
+    // Nur den aktuellen Moment + die Vorhersage zeigen — keine vergangenen Frames
+    const jetztFrame = vergangen.length ? [vergangen[vergangen.length - 1]] : [];
+    const frames = [...jetztFrame, ...nowcast];
     if (!frames.length) { const z = el('radar-zeit-sub'); if (z) z.textContent = 'Aktuell keine Radardaten verfügbar'; return; }
     const layers = frames.map(f => L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5 }).addTo(_radarMap));
-    _radarState = { frames, layers, vergangenAnzahl: vergangen.length, idx: 0, playing: true };
+    _radarState = { frames, layers, vergangenAnzahl: jetztFrame.length, idx: 0, playing: true };
     radarSkalaBauen();
     radarZeige(0);
     _radarTimer = setInterval(() => {
@@ -2159,27 +2178,76 @@ document.addEventListener('click', e => {
 }, true);
 
 // ===== Menü-Drawer (Hauptmenü) =====
+// Icon + Label je Hauptkategorie
+const NAV_META = {
+  start:        { icon:'🏠', label:'Start' },
+  geld:         { icon:'💶', label:'Geld & Anträge' },
+  unterwegs:    { icon:'📍', label:'Unterwegs' },
+  familie:      { icon:'👨‍👩‍👧', label:'Familie & Alltag' },
+  kinder:       { icon:'🧒', label:'Kinder' },
+  gesund:       { icon:'🩺', label:'Gesundheit' },
+  senioren:     { icon:'👵', label:'Senioren' },
+  wissen:       { icon:'📚', label:'Wissen & Mehr' },
+  einstellungen:{ icon:'⚙️', label:'Einstellungen' }
+};
+
+// Menü dynamisch aus NAV bauen — Hauptkategorien mit aufklappbaren Unterpunkten
+function renderMenuDrawer() {
+  const liste = el('menu-drawer-liste');
+  if (!liste) return;
+  const aktiveGruppe = state.navGruppe || sektionZuGruppe(state.sektion);
+  liste.innerHTML = Object.keys(NAV).map(g => {
+    const meta = NAV_META[g] || { icon:'•', label:g };
+    const items = NAV[g];
+    // Einzel-Gruppen (Start, Senioren, Einstellungen) — direkter Link
+    if (items.length === 1) {
+      const aktiv = state.sektion === items[0].s ? ' aktiv' : '';
+      return `<button class="menu-eintrag${aktiv}" onclick="menuUnterKlick('${items[0].s}')">
+        <span class="menu-icon-emoji">${meta.icon}</span>
+        <span class="menu-eintrag-label">${meta.label}</span>
+      </button>`;
+    }
+    // Aufklappbare Gruppe
+    const offen = state.menuOffen === g || (state.menuOffen == null && g === aktiveGruppe);
+    return `<div class="menu-gruppe${offen ? ' offen' : ''}">
+      <button class="menu-eintrag${g === aktiveGruppe ? ' aktiv' : ''}" onclick="menuGruppeToggle('${g}')">
+        <span class="menu-icon-emoji">${meta.icon}</span>
+        <span class="menu-eintrag-label">${meta.label}</span>
+        <span class="menu-pfeil">${offen ? '▾' : '›'}</span>
+      </button>
+      <div class="menu-unterliste">
+        ${items.map(i => `<button class="menu-untereintrag${state.sektion === i.s ? ' aktiv' : ''}" onclick="menuUnterKlick('${i.s}')">${i.l}</button>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function menuOeffnen() {
+  state.menuOffen = undefined; // aktive Gruppe wird automatisch aufgeklappt
+  renderMenuDrawer();
   el('menu-backdrop')?.classList.add('offen');
   el('menu-drawer')?.classList.add('offen');
   document.body.style.overflow = 'hidden';
-  menuAktivMarkieren();
 }
 function menuSchliessen() {
   el('menu-backdrop')?.classList.remove('offen');
   el('menu-drawer')?.classList.remove('offen');
   document.body.style.overflow = '';
 }
-function menuKlick(gruppe) {
-  navGruppeWaehlen(gruppe);
+function menuGruppeToggle(g) {
+  state.menuOffen = (state.menuOffen === g) ? null : g;
+  renderMenuDrawer();
+}
+function menuUnterKlick(s) {
+  zuSektion(s);
   menuSchliessen();
 }
-function menuAktivMarkieren() {
-  const aktiv = state.navGruppe || sektionZuGruppe(state.sektion);
-  document.querySelectorAll('.menu-eintrag').forEach(b => {
-    b.classList.toggle('aktiv', b.dataset.gruppe === aktiv);
-  });
+// Abwärtskompatibel — wird noch von Alt-Code referenziert
+function menuKlick(gruppe) {
+  const items = NAV[gruppe] || [];
+  if (items.length) menuUnterKlick(items[0].s);
 }
+function menuAktivMarkieren() { renderMenuDrawer(); }
 
 function renderNavButtons() {
   document.querySelectorAll('.nav-g-btn').forEach(b => b.classList.toggle('aktiv', b.dataset.gruppe === state.navGruppe));
@@ -2204,11 +2272,28 @@ function renderNavButtons() {
   document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.toggle('aktiv', b.dataset.bn === bnAktiv));
 }
 
-function zuSektion(s) {
+function zuSektion(s, istZurueck) {
+  // Geh-Navigation beenden, wenn die Wanderwege-Sektion verlassen wird
+  if (state.sektion === 'wanderwege' && s !== 'wanderwege' && typeof wanderwegNaviStoppen === 'function') {
+    wanderwegNaviStoppen();
+  }
+  // Verlauf pflegen — für den Zurück-Button
+  if (!istZurueck && state.sektion && state.sektion !== s) {
+    state.navHistory = state.navHistory || [];
+    state.navHistory.push(state.sektion);
+    if (state.navHistory.length > 30) state.navHistory.shift();
+  }
   state.sektion = s;
   state.navGruppe = sektionZuGruppe(s);
   state.antragId = null; state.antragTab = 'schritte';
   render(); window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// Eine Sektion zurück (oder zum Dashboard, wenn kein Verlauf)
+function zurueck() {
+  const verlauf = state.navHistory || [];
+  const ziel = verlauf.pop() || 'dashboard';
+  zuSektion(ziel, true);
 }
 
 // ===== HAUPT-RENDER =====
@@ -2268,6 +2353,11 @@ function render() {
     case 'erstehilfe':     content.innerHTML = renderErsteHilfe(); break;
     case 'einkaufsliste':  content.innerHTML = renderEinkaufslisteSektion(); break;
     default:           content.innerHTML = renderDashboard();
+  }
+  // Zurück-Button in jeder Sektion außer dem Dashboard
+  if (state.sektion !== 'dashboard') {
+    content.insertAdjacentHTML('afterbegin',
+      '<button class="zurueck-btn" onclick="zurueck()" aria-label="Zurück">‹ Zurück</button>');
   }
   if (state.sektion === 'einkaufsliste') renderListeInhalt();
   // IP für Handy-Zugriff anzeigen
@@ -2681,26 +2771,39 @@ function renderUmgebung() {
   const standort = state.umgebungStandort;
 
   const kategorien = [
-    { id:'route',      label:'🗺️ Routenplaner',  farbe:'#4F46E5', radius:0 },
-    { id:'supermarkt', label:'🛒 Supermärkte',   farbe:'#059669', radius:2000 },
-    { id:'restaurant', label:'🍽️ Restaurants',   farbe:'#DC2626', radius:3000 },
-    { id:'cafe',       label:'☕ Cafés',          farbe:'#92400E', radius:3000 },
-    { id:'imbiss',     label:'🍔 Imbiss',         farbe:'#F59E0B', radius:3000 },
-    { id:'baeckerei',  label:'🥖 Bäckereien',    farbe:'#D97706', radius:2000 },
-    { id:'tankstelle', label:'⛽ Tankstellen',    farbe:'#D97706', radius:5000 },
-    { id:'parken',     label:'🅿️ Parkplätze',     farbe:'#1D4ED8', radius:1500 },
-    { id:'friseur',    label:'✂️ Friseure',       farbe:'#7C3AED', radius:3000 },
-    { id:'kleidung',   label:'👕 Bekleidung',     farbe:'#EC4899', radius:3000 },
-    { id:'apotheke',   label:'💊 Apotheken',      farbe:'#DC2626', radius:3000 },
-    { id:'arzt',       label:'🏥 Ärzte',          farbe:'#2563EB', radius:3000 },
-    { id:'spielplatz', label:'🎠 Spielplätze',    farbe:'#059669', radius:2000 },
-    { id:'park',       label:'🌳 Parks & Natur',  farbe:'#16A34A', radius:4000 },
-    { id:'museum',     label:'🏛️ Museen & Zoos',  farbe:'#9333EA', radius:10000 },
-    { id:'freibad',    label:'🏊 Schwimmbäder',   farbe:'#0EA5E9', radius:8000 },
-    { id:'minigolf',   label:'⛳ Minigolf',        farbe:'#EA580C', radius:10000 },
-    { id:'bowling',    label:'🎳 Bowling',         farbe:'#7C3AED', radius:15000 },
-    { id:'klettern',   label:'🧗 Klettern',        farbe:'#B45309', radius:15000 },
-    { id:'kino',       label:'🎬 Kino',            farbe:'#BE185D', radius:15000 }
+    { id:'route',       label:'🗺️ Routenplaner',  farbe:'#4F46E5', radius:0 },
+    { id:'supermarkt',  label:'🛒 Supermärkte',    farbe:'#059669', radius:2000 },
+    { id:'baeckerei',   label:'🥖 Bäckereien',     farbe:'#D97706', radius:2000 },
+    { id:'fleischer',   label:'🥩 Fleischer',      farbe:'#B91C1C', radius:3000 },
+    { id:'getraenke',   label:'🧃 Getränkemärkte', farbe:'#0891B2', radius:4000 },
+    { id:'drogerie',    label:'🧴 Drogerien',      farbe:'#DB2777', radius:3000 },
+    { id:'kleidung',    label:'👕 Bekleidung',     farbe:'#EC4899', radius:3000 },
+    { id:'baumarkt',    label:'🔨 Baumärkte',      farbe:'#C2410C', radius:8000 },
+    { id:'restaurant',  label:'🍽️ Restaurants',    farbe:'#DC2626', radius:3000 },
+    { id:'cafe',        label:'☕ Cafés',          farbe:'#92400E', radius:3000 },
+    { id:'imbiss',      label:'🍔 Imbiss',         farbe:'#F59E0B', radius:3000 },
+    { id:'apotheke',    label:'💊 Apotheken',      farbe:'#DC2626', radius:3000 },
+    { id:'arzt',        label:'🏥 Ärzte',          farbe:'#2563EB', radius:3000 },
+    { id:'krankenhaus', label:'🏨 Krankenhäuser',  farbe:'#1D4ED8', radius:15000 },
+    { id:'friseur',     label:'✂️ Friseure',       farbe:'#7C3AED', radius:3000 },
+    { id:'bank',        label:'🏦 Bank & Automat', farbe:'#15803D', radius:3000 },
+    { id:'post',        label:'📮 Post',           farbe:'#CA8A04', radius:3000 },
+    { id:'bibliothek',  label:'📚 Büchereien',     farbe:'#7C3AED', radius:8000 },
+    { id:'kindergarten',label:'🧸 Kitas',          farbe:'#F59E0B', radius:3000 },
+    { id:'schule',      label:'🏫 Schulen',        farbe:'#0EA5E9', radius:5000 },
+    { id:'spielplatz',  label:'🎠 Spielplätze',    farbe:'#059669', radius:2000 },
+    { id:'park',        label:'🌳 Parks & Natur',  farbe:'#16A34A', radius:4000 },
+    { id:'museum',      label:'🏛️ Museen & Zoos',  farbe:'#9333EA', radius:10000 },
+    { id:'freibad',     label:'🏊 Schwimmbäder',   farbe:'#0EA5E9', radius:8000 },
+    { id:'fitness',     label:'💪 Fitness & Sport',farbe:'#DC2626', radius:8000 },
+    { id:'stadion',     label:'🏟️ Stadien',        farbe:'#16A34A', radius:25000 },
+    { id:'minigolf',    label:'⛳ Minigolf',        farbe:'#EA580C', radius:10000 },
+    { id:'bowling',     label:'🎳 Bowling',        farbe:'#7C3AED', radius:15000 },
+    { id:'klettern',    label:'🧗 Klettern',       farbe:'#B45309', radius:15000 },
+    { id:'kino',        label:'🎬 Kino',           farbe:'#BE185D', radius:15000 },
+    { id:'tankstelle',  label:'⛽ Tankstellen',    farbe:'#D97706', radius:5000 },
+    { id:'parken',      label:'🅿️ Parkplätze',     farbe:'#1D4ED8', radius:1500 },
+    { id:'oepnv',       label:'🚏 Bus & Bahn',     farbe:'#475569', radius:2000 }
   ];
 
   const aktiveKat = kategorien.find(k => k.id === state.umgebungKat);
@@ -2970,7 +3073,20 @@ const OVERPASS_KAT = {
   minigolf:    { query: 'node["leisure"="miniature_golf"](around:{r},{lat},{lng});', r:10000, farbe:'#EA580C', bg:'#FFEDD5', icon:'⛳' },
   bowling:     { query: 'node["leisure"="bowling_alley"](around:{r},{lat},{lng});', r:15000, farbe:'#7C3AED', bg:'#EDE9FE', icon:'🎳' },
   klettern:    { query: 'node["leisure"~"climbing|climbing_wall"](around:{r},{lat},{lng});node["sport"~"climbing"](around:{r},{lat},{lng});', r:15000, farbe:'#B45309', bg:'#FEF3C7', icon:'🧗' },
-  kino:        { query: 'node["amenity"="cinema"](around:{r},{lat},{lng});', r:15000, farbe:'#BE185D', bg:'#FCE7F3', icon:'🎬' }
+  kino:        { query: 'node["amenity"="cinema"](around:{r},{lat},{lng});', r:15000, farbe:'#BE185D', bg:'#FCE7F3', icon:'🎬' },
+  fleischer:   { query: 'node["shop"~"butcher|deli"](around:{r},{lat},{lng});', r:3000, farbe:'#B91C1C', bg:'#FEE2E2', icon:'🥩' },
+  getraenke:   { query: 'node["shop"="beverages"](around:{r},{lat},{lng});', r:4000, farbe:'#0891B2', bg:'#CFFAFE', icon:'🧃' },
+  drogerie:    { query: 'node["shop"~"chemist|cosmetics|perfumery"](around:{r},{lat},{lng});', r:3000, farbe:'#DB2777', bg:'#FCE7F3', icon:'🧴' },
+  baumarkt:    { query: 'nwr["shop"~"doityourself|hardware|garden_centre|trade"](around:{r},{lat},{lng});', r:8000, farbe:'#C2410C', bg:'#FFEDD5', icon:'🔨' },
+  krankenhaus: { query: 'nwr["amenity"="hospital"](around:{r},{lat},{lng});', r:15000, farbe:'#1D4ED8', bg:'#DBEAFE', icon:'🏨' },
+  bank:        { query: 'node["amenity"~"bank|atm"](around:{r},{lat},{lng});', r:3000, farbe:'#15803D', bg:'#DCFCE7', icon:'🏦' },
+  post:        { query: 'node["amenity"~"post_office|post_box"](around:{r},{lat},{lng});', r:3000, farbe:'#CA8A04', bg:'#FEF9C3', icon:'📮' },
+  bibliothek:  { query: 'nwr["amenity"="library"](around:{r},{lat},{lng});', r:8000, farbe:'#7C3AED', bg:'#EDE9FE', icon:'📚' },
+  kindergarten:{ query: 'nwr["amenity"="kindergarten"](around:{r},{lat},{lng});', r:3000, farbe:'#F59E0B', bg:'#FEF3C7', icon:'🧸' },
+  schule:      { query: 'nwr["amenity"="school"](around:{r},{lat},{lng});', r:5000, farbe:'#0EA5E9', bg:'#E0F2FE', icon:'🏫' },
+  fitness:     { query: 'nwr["leisure"~"fitness_centre|sports_centre|pitch"](around:{r},{lat},{lng});', r:8000, farbe:'#DC2626', bg:'#FEE2E2', icon:'💪' },
+  stadion:     { query: 'nwr["leisure"="stadium"](around:{r},{lat},{lng});nwr["building"="stadium"](around:{r},{lat},{lng});', r:25000, farbe:'#16A34A', bg:'#DCFCE7', icon:'🏟️' },
+  oepnv:       { query: 'node["highway"="bus_stop"](around:{r},{lat},{lng});node["railway"~"station|tram_stop"](around:{r},{lat},{lng});', r:2000, farbe:'#475569', bg:'#F1F5F9', icon:'🚏' }
 };
 
 // Park-spezifische Detailzeilen aus OSM-Tags aufbereiten
@@ -3730,7 +3846,7 @@ function renderWanderwege() {
       <div class="ww-karte-titel">${esc(w.typ || '🚶 Weg')}</div>
       <div class="ww-karte-name">${esc(w.name)}</div>
       <div class="ww-karte-aktionen">
-        <button class="btn btn-primary btn-sm" onclick="wanderwegAufKarte(${w.lat},${w.lng},'${esc((w.name||'').replace(/'/g,''))}')">🗺️ Auf Karte zeigen</button>
+        <button class="btn btn-primary btn-sm" onclick="wanderwegGehen('${esc(w.id)}','${esc((w.name||'').replace(/'/g,''))}')">🥾 Weg gehen</button>
         <button class="btn btn-outline btn-sm" onclick="wanderwegLoeschen('${esc(w.id)}')">✕ Entfernen</button>
       </div>
     </div>`).join('')}
@@ -3746,7 +3862,7 @@ function renderWanderwege() {
       <div class="ww-karte-titel">${esc(w.typ)} · ${w.distKm.toFixed(1)} km</div>
       <div class="ww-karte-name">${esc(w.name)}</div>
       <div class="ww-karte-aktionen">
-        <button class="btn btn-primary btn-sm" onclick="wanderwegAufKarte(${w.lat},${w.lng},'${esc((w.name||'').replace(/'/g,''))}')">🗺️ Auf Karte</button>
+        <button class="btn btn-primary btn-sm" onclick="wanderwegGehen('${esc(w.id)}','${esc((w.name||'').replace(/'/g,''))}')">🥾 Weg gehen</button>
         <button class="btn btn-outline btn-sm" onclick="wanderwegSpeichernIdx(${i})">💾 Speichern</button>
       </div>
     </div>`).join('')}
@@ -3792,7 +3908,7 @@ function initWanderwegeKarte() {
   }
 }
 
-// Einen Weg auf der Wanderwege-Karte anzeigen
+// Einen Weg auf der Wanderwege-Karte anzeigen (nur Punkt)
 function wanderwegAufKarte(lat, lng, name) {
   const mapEl = el('ww-karte');
   if (!mapEl) { toast('⚠️ Karte nicht verfügbar'); return; }
@@ -3802,6 +3918,96 @@ function wanderwegAufKarte(lat, lng, name) {
     state.wwKarte.flyTo([lat, lng], 15, { duration: .8 });
     L.popup().setLatLng([lat, lng]).setContent(`<strong>${esc(name || 'Weg')}</strong>`).openOn(state.wwKarte);
   }
+}
+
+// GPS-Watch-ID für die Geh-Navigation
+let _wwGpsWatch = null;
+
+// Einen Weg "gehbar" öffnen: kompletten Verlauf laden, als Linie zeichnen + GPS-Navigation
+async function wanderwegGehen(id, name) {
+  const mapEl = el('ww-karte');
+  if (!mapEl) { toast('⚠️ Karte nicht verfügbar'); return; }
+  if (!state.wwKarte) initWanderwegeKarte();
+  if (!state.wwKarte) { toast('⚠️ Karte ist noch nicht bereit'); return; }
+  mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  toast('🗺️ Wegverlauf wird geladen …');
+
+  const [typ, osmId] = String(id).split('/');
+  const sel = typ === 'relation' ? `relation(${osmId})` : `way(${osmId})`;
+  const query = `[out:json][timeout:25];${sel};out geom;`;
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(query),
+      signal: AbortSignal.timeout(25000)
+    });
+    if (!res.ok) throw new Error('Overpass ' + res.status);
+    const d = await res.json();
+    // Wegverlauf als Liniensegmente extrahieren
+    const segmente = [];
+    (d.elements || []).forEach(e => {
+      if (e.type === 'way' && Array.isArray(e.geometry)) {
+        segmente.push(e.geometry.map(g => [g.lat, g.lon]));
+      } else if (e.type === 'relation' && Array.isArray(e.members)) {
+        e.members.forEach(m => {
+          if (Array.isArray(m.geometry)) segmente.push(m.geometry.map(g => [g.lat, g.lon]));
+        });
+      }
+    });
+    const valide = segmente.filter(s => s.length > 1);
+    if (!valide.length) { toast('⚠️ Wegverlauf nicht verfügbar — zeige nur den Startpunkt'); return; }
+
+    // Alte Weg-Linie entfernen, neue zeichnen
+    if (state.wwWegLinie) { try { state.wwKarte.removeLayer(state.wwWegLinie); } catch {} }
+    state.wwWegLinie = L.layerGroup(
+      valide.map(seg => L.polyline(seg, { color: '#059669', weight: 6, opacity: .9 }))
+    ).addTo(state.wwKarte);
+    state.wwKarte.fitBounds(valide.flat(), { padding: [45, 45] });
+
+    // Geh-Navigation starten — Live-Standort
+    wanderwegNaviStarten();
+    toast('🥾 Folge der grünen Linie — dein Standort wird live angezeigt');
+  } catch (e) {
+    toast('⚠️ Wegverlauf konnte nicht geladen werden');
+  }
+}
+
+// Live-GPS-Position auf der Wanderwege-Karte verfolgen
+function wanderwegNaviStarten() {
+  if (!navigator.geolocation || !state.wwKarte) { return; }
+  wanderwegNaviStoppen();
+  _wwGpsWatch = navigator.geolocation.watchPosition(
+    pos => {
+      if (!state.wwKarte) return;
+      const ll = [pos.coords.latitude, pos.coords.longitude];
+      if (state.wwGpsMarker) {
+        state.wwGpsMarker.setLatLng(ll);
+      } else {
+        const ich = L.divIcon({
+          html: '<div style="background:#2563EB;width:18px;height:18px;border-radius:50%;border:4px solid white;box-shadow:0 0 0 5px rgba(37,99,235,.35)"></div>',
+          iconSize: [18, 18], iconAnchor: [9, 9], className: ''
+        });
+        state.wwGpsMarker = L.marker(ll, { icon: ich, zIndexOffset: 1000 }).addTo(state.wwKarte);
+        state.wwGpsMarker.bindPopup('<strong>📍 Hier bist du</strong>');
+        state.wwKarte.panTo(ll);
+      }
+    },
+    () => { toast('⚠️ Standort nicht verfügbar — bitte GPS/Ortung erlauben'); },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+  );
+}
+
+// Geh-Navigation beenden — GPS-Watch stoppen, Live-Marker entfernen
+function wanderwegNaviStoppen() {
+  if (_wwGpsWatch != null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(_wwGpsWatch);
+  }
+  _wwGpsWatch = null;
+  if (state.wwGpsMarker && state.wwKarte) {
+    try { state.wwKarte.removeLayer(state.wwGpsMarker); } catch {}
+  }
+  state.wwGpsMarker = null;
 }
 
 // ===== Routenplaner (eigene Sektion) =====
@@ -3905,6 +4111,46 @@ function initRoutenplanerKarte() {
   if (punkte.length > 1) karte.fitBounds(punkte, { padding: [50, 50] });
 }
 
+// Robuste Adress-Suche — versucht Nominatim mit mehreren Varianten,
+// danach Photon als Fallback (toleranter bei ungenauen Eingaben).
+async function geocodeRobust(eingabe) {
+  const q = (eingabe || '').trim();
+  if (!q) return null;
+
+  const nominatim = async (suche) => {
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/search?q='
+        + encodeURIComponent(suche) + '&format=json&limit=5&accept-language=de',
+        { signal: AbortSignal.timeout(12000) });
+      if (!res.ok) return null;
+      const d = await res.json();
+      if (!d.length) return null;
+      // Treffer mit höchster importance bevorzugen
+      const best = d.sort((a, b) => (b.importance || 0) - (a.importance || 0))[0];
+      return { lat: parseFloat(best.lat), lng: parseFloat(best.lon), name: best.display_name || suche };
+    } catch { return null; }
+  };
+  const photon = async (suche) => {
+    try {
+      const res = await fetch('https://photon.komoot.io/api/?lang=de&limit=5&q='
+        + encodeURIComponent(suche), { signal: AbortSignal.timeout(12000) });
+      if (!res.ok) return null;
+      const d = await res.json();
+      const f = (d.features || [])[0];
+      if (!f || !f.geometry) return null;
+      const [lng, lat] = f.geometry.coordinates;
+      const p = f.properties || {};
+      const name = [p.name, p.street, p.city || p.town || p.village, p.country].filter(Boolean).join(', ');
+      return { lat, lng, name: name || suche };
+    } catch { return null; }
+  };
+
+  // 1) Eingabe direkt  2) mit ", Deutschland"  3) Photon-Fallback
+  return (await nominatim(q))
+      || (!/deutschland|germany/i.test(q) ? await nominatim(q + ', Deutschland') : null)
+      || (await photon(q));
+}
+
 async function routenplanerBerechnen() {
   const startEl = el('rp-start');
   const zielEl  = el('rp-ziel');
@@ -3925,10 +4171,9 @@ async function routenplanerBerechnen() {
     // Start bestimmen — entweder Eingabe geocodieren oder aktuellen Standort nutzen
     let startLat, startLng, startName;
     if (state.routenplanerStart) {
-      const sRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(state.routenplanerStart)}&format=json&limit=1`);
-      const sData = await sRes.json();
-      if (!sData.length) throw new Error('Startadresse nicht gefunden — bitte genauer angeben (z. B. PLZ + Stadt).');
-      startLat = parseFloat(sData[0].lat); startLng = parseFloat(sData[0].lon);
+      const sTreffer = await geocodeRobust(state.routenplanerStart);
+      if (!sTreffer) throw new Error('Startadresse nicht gefunden. Tipp: PLZ + Stadt angeben, z. B. „10115 Berlin".');
+      startLat = sTreffer.lat; startLng = sTreffer.lng;
       startName = state.routenplanerStart;
     } else if (state.umgebungStandort) {
       startLat = state.umgebungStandort.lat; startLng = state.umgebungStandort.lng;
@@ -3939,11 +4184,10 @@ async function routenplanerBerechnen() {
     // umgebungStandort temporär setzen, damit routeMultiBerechnen() es nutzen kann
     state.umgebungStandort = { name: startName, lat: startLat, lng: startLng };
 
-    // Ziel geocodieren
-    const gRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(zielText)}&format=json&limit=1`);
-    const gData = await gRes.json();
-    if (!gData.length) throw new Error('Zieladresse nicht gefunden — bitte genauer angeben.');
-    const zLat = parseFloat(gData[0].lat), zLng = parseFloat(gData[0].lon);
+    // Ziel geocodieren — robust über mehrere Anbieter
+    const zTreffer = await geocodeRobust(zielText);
+    if (!zTreffer) throw new Error('Ziel nicht gefunden. Tipp: genauer angeben — z. B. „Straße + Stadt" oder „PLZ + Stadt".');
+    const zLat = zTreffer.lat, zLng = zTreffer.lng;
     state.routeZielKoord = { lat: zLat, lng: zLng };
 
     await routeMultiBerechnen(zLat, zLng, zielText);
@@ -5838,6 +6082,38 @@ function getAlleTerminTypen() {
 
 function kalenderPersonFilter(id) { state.kalenderPersonFilter = id; render(); }
 
+// Übersicht: nächste Abfuhr je Mülltonne als farbige Karten
+function muellUebersicht() {
+  if (typeof getTermine !== 'function') return '';
+  const heute = new Date(); heute.setHours(0, 0, 0, 0);
+  const muell = getTermine().filter(t =>
+    t.typ && t.typ.startsWith('muell_') && new Date(t.datum + 'T00:00:00') >= heute);
+  if (!muell.length) return '';
+
+  const karten = MUELL_ARTEN.map(art => {
+    const naechster = muell
+      .filter(t => t.typ === art.id)
+      .sort((a, b) => a.datum.localeCompare(b.datum))[0];
+    if (!naechster) return '';
+    const d = new Date(naechster.datum + 'T00:00:00');
+    const tageBis = Math.round((d - heute) / 86400000);
+    const wann = tageBis === 0 ? 'Heute!' : tageBis === 1 ? 'Morgen' : `in ${tageBis} Tagen`;
+    const datumStr = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+    const dringend = tageBis <= 1;
+    return `<div class="muell-karte" style="border-left-color:${art.farbe}">
+      <span class="muell-karte-icon">${art.icon}</span>
+      <div class="muell-karte-text">
+        <div class="muell-karte-art">${esc(art.label)}</div>
+        <div class="muell-karte-datum">${datumStr}</div>
+      </div>
+      <span class="muell-karte-wann${dringend ? ' dringend' : ''}">${wann}</span>
+    </div>`;
+  }).filter(Boolean).join('');
+  if (!karten) return '';
+  return `<div class="block-title" style="margin-top:1rem">🗑️ Nächste Müllabfuhr</div>
+    <div class="muell-karten">${karten}</div>`;
+}
+
 function renderKalender() {
   muellAutoSicherstellen();
   const mitglieder = getFamilienMitglieder();
@@ -5876,7 +6152,8 @@ function renderKalender() {
   </div>` : ''}
 
   ${state.muellAssistent ? renderMuellAssistent() : ''}
-  <div style="font-size:.75rem;color:var(--g700);margin-bottom:.5rem">→ Teilen mit Partner, Großeltern oder anderen Geräten. ICS-Datei funktioniert mit Google, Apple, Outlook.</div>
+  ${muellUebersicht()}
+  <div style="font-size:.75rem;color:var(--g700);margin:.6rem 0 .5rem">→ Teilen mit Partner, Großeltern oder anderen Geräten. ICS-Datei funktioniert mit Google, Apple, Outlook.</div>
 
   <div class="block-title" style="margin-top:1rem">Familienmitglieder · Filter</div>
   <div class="kal-personen">
@@ -9474,25 +9751,9 @@ function renderEinstellungen() {
   <!-- Vorlese-Stimme -->
   <div class="einst-gruppe">
     <div class="einst-gruppe-titel">🔊 Vorlese-Stimme</div>
-    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Welche Stimme soll Texte vorlesen — Assistenten-Antworten, Übersetzungen, Vorlese-Funktionen? Tippe auf „Anhören", um sie zu testen.</div>
-    ${(() => {
-      let aktuell = einst.stimme || 'w';
-      // Abwärtskompatibilität: alte Werte ('auto' / einzelne Stimm-Namen aus v60) → auf w/m normalisieren
-      if (aktuell !== 'w' && aktuell !== 'm') {
-        const nm = String(aktuell).toLowerCase();
-        aktuell = (typeof _STIMME_MAENNLICH !== 'undefined' && _STIMME_MAENNLICH.some(n => nm.includes(n))) ? 'm' : 'w';
-      }
-      const optionen = [
-        { wert:'w', label:'👩 Weiblich · natürlich' },
-        { wert:'m', label:'👨 Männlich' }
-      ];
-      const buttons = optionen.map(o =>
-        `<button class="stimm-opt${aktuell===o.wert?' aktiv':''}" onclick="stimmeWaehlen('${o.wert}')">${o.label}</button>`
-      ).join('');
-      return `<div class="stimm-wahl">${buttons}</div>`;
-    })()}
-    <button class="btn btn-outline btn-sm" style="margin-top:.7rem" onclick="stimmeTesten()">▶ Aktuelle Stimme anhören</button>
-    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Die <strong>weibliche</strong> Stimme ist eine natürlich klingende Online-Stimme — sie braucht Internet. Ohne Verbindung (oder bei „männlich") nutzt die App die Stimme deines Geräts. Tipp: Für die natürlichste männliche Stimme in den Geräte-Einstellungen eine „Premium"- oder „Natürlich"-Sprachausgabe installieren.</div></div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Die App liest Texte mit einer natürlich klingenden Stimme vor — Assistenten-Antworten, Übersetzungen und Vorlese-Funktionen.</div>
+    <button class="btn btn-outline btn-sm" onclick="stimmeTesten()">▶ Stimme anhören</button>
+    <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Die Stimme ist eine natürlich klingende Online-Stimme und braucht Internet. Ohne Verbindung nutzt die App automatisch die Stimme deines Geräts.</div></div>
   </div>
 
   <!-- Live-Wohnungs-API (Cloudflare Worker) -->
@@ -14385,9 +14646,6 @@ function _ttsStuecke(text, max) {
 function kiTextVorlesen(txt) {
   if (!txt) { toast('⚠️ Kein Text zum Vorlesen'); return; }
   kiVorlesenStop();
-  // Männlich gewünscht: Online-Stimme bietet keine männliche DE-Stimme → Geräte-Stimme
-  const wahl = (typeof einstellungenLaden === 'function' ? einstellungenLaden().stimme : 'w') || 'w';
-  if (wahl === 'm') { kiVorlesenGeraetestimme(txt); return; }
 
   const stuecke = _ttsStuecke(txt, 190);
   if (!stuecke.length) return;

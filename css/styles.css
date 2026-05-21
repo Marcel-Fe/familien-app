@@ -5131,6 +5131,95 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
 .menu-eintrag:hover .menu-pfeil,
 .menu-eintrag.aktiv .menu-pfeil { color: var(--akzent-1); }
 
+/* Aufklappbare Menü-Gruppen */
+.menu-gruppe { display: flex; flex-direction: column; gap: .25rem; }
+.menu-unterliste {
+  display: none;
+  flex-direction: column;
+  gap: .2rem;
+  padding: .15rem 0 .3rem 2.7rem;
+}
+.menu-gruppe.offen .menu-unterliste { display: flex; }
+.menu-untereintrag {
+  background: transparent;
+  border: none;
+  border-left: 2px solid var(--g200);
+  padding: .6rem .85rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: .92rem;
+  color: var(--g700, #334155);
+  text-align: left;
+  border-radius: 0 8px 8px 0;
+  transition: all .13s;
+}
+.menu-untereintrag:hover {
+  background: #F5F3FF;
+  color: var(--akzent-1);
+  border-left-color: var(--akzent-1);
+}
+.menu-untereintrag.aktiv {
+  background: linear-gradient(135deg, #EEF2FF 0%, #FAF5FF 100%);
+  color: var(--akzent-1);
+  border-left-color: var(--akzent-1);
+  font-weight: 800;
+}
+
+/* Müll-Übersicht — nächste Abfuhr je Tonne */
+.muell-karten {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: .55rem;
+  margin: .55rem 0 .9rem;
+}
+.muell-karte {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  background: var(--weiss, #fff);
+  border: 1px solid var(--g200);
+  border-left: 5px solid var(--g300);
+  border-radius: 12px;
+  padding: .7rem .85rem;
+  box-shadow: var(--s1);
+}
+.muell-karte-icon { font-size: 1.6rem; flex-shrink: 0; }
+.muell-karte-text { flex: 1; min-width: 0; }
+.muell-karte-art { font-weight: 700; font-size: .85rem; color: var(--g900, #0F172A); }
+.muell-karte-datum { font-size: .76rem; color: var(--g500); }
+.muell-karte-wann {
+  font-size: .78rem; font-weight: 700;
+  color: var(--g700, #334155);
+  white-space: nowrap;
+  background: var(--g100);
+  border-radius: 99px;
+  padding: .22rem .6rem;
+}
+.muell-karte-wann.dringend { background: #FEE2E2; color: #DC2626; }
+
+/* Zurück-Button in jeder Sektion */
+.zurueck-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  background: var(--weiss, #fff);
+  border: 1.5px solid var(--g200);
+  border-radius: 99px;
+  padding: .4rem .9rem .4rem .7rem;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--g700, #334155);
+  cursor: pointer;
+  margin-bottom: .9rem;
+  box-shadow: var(--s1);
+  transition: transform .13s, box-shadow .13s, color .13s;
+}
+.zurueck-btn:hover {
+  transform: translateX(-2px);
+  color: var(--akzent-1, #4F46E5);
+  box-shadow: var(--s2);
+}
+
 .menu-drawer-fuss {
   border-top: 1px solid var(--g200);
   padding: .85rem 1.25rem;
