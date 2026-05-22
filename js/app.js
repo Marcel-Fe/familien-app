@@ -235,7 +235,7 @@ function zeigeRegistrierung() {
 const NAV = {
   start:     [{s:'dashboard', l:'Übersicht'}],
   geld:      [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'},{s:'formular', l:'Formulare'}],
-  unterwegs: [{s:'umgebung', l:'Umgebung'},{s:'routenplaner', l:'Routenplaner'},{s:'wanderwege', l:'Wanderwege'},{s:'urlaub', l:'Reise-Ideen'}],
+  unterwegs: [{s:'umgebung', l:'Umgebung'},{s:'routenplaner', l:'Routenplaner'},{s:'wanderwege', l:'Wanderwege'},{s:'regenradar', l:'Regenradar'},{s:'urlaub', l:'Reise-Ideen'}],
   familie:   [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'einkaufsliste', l:'Einkaufsliste'},{s:'kochbuch', l:'Kochbuch'},{s:'haushalt', l:'Haushalt'},{s:'handwerker', l:'Handwerker'},{s:'kontakte', l:'Kontakte'},{s:'album', l:'Album'},{s:'beratung', l:'Beratung'}],
   kinder:    [{s:'basteln', l:'Basteln'},{s:'spielideen', l:'Spielideen'},{s:'hausaufgaben', l:'Hausaufgaben'},{s:'erziehung', l:'Erziehung'}],
   gesund:    [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'},{s:'schwangerschaft', l:'Schwangerschaft'},{s:'erstehilfe', l:'Erste Hilfe'},{s:'medbox', l:'Medikamente'}],
@@ -1590,6 +1590,27 @@ function _wetterHtmlBauen(data, ort) {
   </div>`;
 }
 
+// Regenradar als eigene Navigations-Sektion — Landing-Seite, öffnet das Radar-Overlay
+function renderRegenradar() {
+  const u = getUser() || {};
+  const ort = state.umgebungStandort?.name || u.ort || '';
+  const hatStandort = (state.umgebungStandort?.lat ?? u.lat) != null;
+  return `
+  <div class="section-title">🌧️ Regenradar</div>
+  <p class="section-sub">Live-Regenwolken auf der Karte plus 12-Stunden-Vorhersage — sieh genau, wann und wo es regnet.</p>
+
+  <button class="btn btn-primary" style="width:100%;font-size:1rem;padding:.9rem" onclick="regenradarOeffnen()">
+    🌧️ Regenradar öffnen${hatStandort && ort ? ' · ' + esc(ort) : ''}
+  </button>
+
+  ${!hatStandort ? `<div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">📍</span><div class="ib-text"><strong>Kein Standort:</strong> Trage deinen Ort im Profil oder unter „Umgebung" ein — dann zeigt das Radar deine Region.</div></div>` : ''}
+
+  <div class="info-box blau" style="margin-top:1rem">
+    <span class="ib-icon">💡</span>
+    <div class="ib-text"><strong>So funktioniert's:</strong> Die Karte zeigt die aktuellen Regenwolken und ihre Bewegung der nächsten ~30 Minuten als Animation. Die Leiste darunter zeigt für die nächsten 12 Stunden die Regenmenge und -wahrscheinlichkeit — Stunde für Stunde.</div>
+  </div>`;
+}
+
 // ===== REGENRADAR (Leaflet-Karte + RainViewer, kostenlos, kein API-Key) =====
 let _radarMap = null, _radarTimer = null, _radarState = null;
 
@@ -1631,7 +1652,9 @@ async function regenradarOeffnen() {
   document.body.appendChild(o);
   await new Promise(r => setTimeout(r, 80));
   try {
-    _radarMap = L.map('radar-map').setView([lat, lng], 8);
+    // Zoom 7: RainViewer-Radar liefert nur bis Zoom 7 echte Kacheln, darüber den
+    // Platzhalter "Zoom Level Not Supported".
+    _radarMap = L.map('radar-map').setView([lat, lng], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 11, attribution: '© OpenStreetMap' }).addTo(_radarMap);
     L.circleMarker([lat, lng], { radius: 7, color: '#fff', weight: 2, fillColor: '#4F46E5', fillOpacity: 1 }).addTo(_radarMap);
     _radarMap.invalidateSize();
@@ -1645,7 +1668,9 @@ async function regenradarOeffnen() {
     const jetztFrame = vergangen.length ? [vergangen[vergangen.length - 1]] : [];
     const frames = [...jetztFrame, ...nowcast];
     if (!frames.length) { const z = el('radar-zeit-sub'); if (z) z.textContent = 'Aktuell keine Radardaten verfügbar'; return; }
-    const layers = frames.map(f => L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5 }).addTo(_radarMap));
+    // maxNativeZoom: 7 — beim Reinzoomen werden die Zoom-7-Kacheln hochskaliert,
+    // statt nicht unterstützte Kacheln (Platzhalter) anzufragen.
+    const layers = frames.map(f => L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5, maxNativeZoom: 7, maxZoom: 11 }).addTo(_radarMap));
     _radarState = { frames, layers, vergangenAnzahl: jetztFrame.length, idx: 0, playing: true };
     radarSkalaBauen();
     radarZeige(0);
@@ -2403,6 +2428,7 @@ function render() {
     case 'wissen':         content.innerHTML = renderWissen(); break;
     case 'wanderwege':     content.innerHTML = renderWanderwege(); setTimeout(initWanderwegeKarte, 120); break;
     case 'routenplaner':   content.innerHTML = renderRoutenplaner(); setTimeout(initRoutenplanerKarte, 120); break;
+    case 'regenradar':     content.innerHTML = renderRegenradar(); setTimeout(regenradarOeffnen, 150); break;
     case 'uebersetzer':    content.innerHTML = renderUebersetzer(); break;
     case 'medbox':         content.innerHTML = renderMedbox(); break;
     case 'erkennen':       content.innerHTML = renderErkennen(); break;
@@ -10493,6 +10519,7 @@ function globalSuchen(query) {
     { titel: 'Kalender & Termine', sub: 'Familientermine verwalten', icon: '📅', sektion: 'kalender', schluessel: 'kalender termin termine erinnerung' },
     { titel: 'Reise-Ideen', sub: 'Familienurlaub planen', icon: '✈️', sektion: 'urlaub', schluessel: 'urlaub reise reisen ferien' },
     { titel: 'Routenplaner', sub: 'Karte mit Streckenberechnung', icon: '🗺️', sektion: 'umgebung', kat:'route', schluessel: 'route navigation karte routenplaner' },
+    { titel: 'Regenradar', sub: 'Regenwolken & 12-Stunden-Vorhersage', icon: '🌧️', sektion: 'regenradar', schluessel: 'regenradar regen wetter radar regenwolken vorhersage niederschlag' },
     { titel: 'Mengen-Umrechner', sub: 'Gewicht, Volumen, Temperatur', icon: '📐', sektion: 'familie', tab:'rezepte', schluessel: 'umrechner umrechnen gramm liter celsius' }
   ];
   sektionen.forEach(s => {
@@ -14919,6 +14946,7 @@ function kiAntwortFinden(frage) {
 
   const sektionen = [
     { schluessel:['spielplatz','park','restaurant','umgebung','läden'], titel:'Umgebung', icon:'📍', action:`zuSektion('umgebung')` },
+    { schluessel:['regenradar','regen','wetter','radar','regenwolken','niederschlag'], titel:'Regenradar', icon:'🌧️', action:`zuSektion('regenradar')` },
     { schluessel:['kalender','termin'], titel:'Kalender', icon:'📅', action:`zuSektion('kalender')` },
     { schluessel:['urlaub','reise','ferien'], titel:'Reise-Ideen', icon:'✈️', action:`zuSektion('urlaub')` },
     { schluessel:['rezept','kochen','essen'], titel:'Rezepte & Kochbuch', icon:'🍽️', action:`zuSektion('familie')` },
