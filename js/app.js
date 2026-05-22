@@ -110,6 +110,8 @@ function splashSchliessen() {
   if (!s) return;
   s.classList.add('splash-out');
   setTimeout(() => { s.style.display = 'none'; }, 700);
+  // Tagesüberblick einblenden, sobald der Splash weg ist
+  setTimeout(() => { try { tagesinfoPopupZeigen(); } catch {} }, 1100);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -467,6 +469,93 @@ function erinnerungenPruefen() {
   }
 
   localStorage.setItem('notif_gesendet', ds);
+}
+
+// ===== TAGESÜBERBLICK-POPUP (beim App-Start, einmal pro Tag) =====
+function tagesinfoPopupZeigen() {
+  if (!isLoggedIn()) return;
+  if (document.getElementById('tagesinfo-overlay')) return;
+  const heute = new Date();
+  const ds = `${heute.getFullYear()}-${String(heute.getMonth()+1).padStart(2,'0')}-${String(heute.getDate()).padStart(2,'0')}`;
+  if (localStorage.getItem('familienapp_tagesinfo') === ds) return;   // heute schon gezeigt
+
+  const u = getUser() || {};
+  const morgen = new Date(heute); morgen.setDate(morgen.getDate()+1);
+  const dsm = `${morgen.getFullYear()}-${String(morgen.getMonth()+1).padStart(2,'0')}-${String(morgen.getDate()).padStart(2,'0')}`;
+  const termine = (typeof getTermine === 'function') ? getTermine() : [];
+  const morgenMuell  = termine.filter(t => t.datum === dsm && t.typ && String(t.typ).startsWith('muell_'));
+  const heuteTermine = termine.filter(t => t.datum === ds);
+  const todos = (typeof todoLaden === 'function') ? todoLaden() : [];
+  const wichtigeTodos = todos.filter(t => !t.erledigt && t.prio === 'hoch');
+
+  let wetterTipp = '';
+  if (typeof _wetterCache !== 'undefined' && _wetterCache && typeof wetterTipps === 'function')
+    wetterTipp = (wetterTipps(_wetterCache) || [])[0] || '';
+
+  const karten = [];
+  karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('dashboard')">
+    <span class="tagesinfo-emoji">🌤️</span>
+    <span class="tagesinfo-text"><strong>Wetter heute</strong><br><span id="tagesinfo-wetter-tip">${wetterTipp ? esc(wetterTipp) : 'Wetter wird geladen…'}</span></span></button>`);
+  if (morgenMuell.length)
+    karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('kalender')">
+      <span class="tagesinfo-emoji">🗑️</span>
+      <span class="tagesinfo-text"><strong>Morgen ist Müllabfuhr</strong><br>${esc(morgenMuell.map(t=>t.titel).join(', '))} — heute Abend rausstellen</span></button>`);
+  if (heuteTermine.length)
+    karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('kalender')">
+      <span class="tagesinfo-emoji">📅</span>
+      <span class="tagesinfo-text"><strong>Heute: ${esc(heuteTermine[0].titel)}</strong><br>${heuteTermine[0].uhrzeit ? esc(heuteTermine[0].uhrzeit)+' Uhr' : 'Heute'}${heuteTermine.length>1?' · +'+(heuteTermine.length-1)+' weitere':''}</span></button>`);
+  if (wichtigeTodos.length)
+    karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('todo')">
+      <span class="tagesinfo-emoji">✅</span>
+      <span class="tagesinfo-text"><strong>${wichtigeTodos.length} wichtige Aufgabe${wichtigeTodos.length>1?'n':''} offen</strong><br>${esc(wichtigeTodos.slice(0,2).map(t=>t.text).join(' · '))}</span></button>`);
+  if (karten.length === 1)   // außer Wetter nichts los — freundlicher Hinweis
+    karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('kalender')">
+      <span class="tagesinfo-emoji">🌿</span>
+      <span class="tagesinfo-text"><strong>Keine Termine für heute</strong><br>Ein ruhiger Tag — genieß ihn mit der Familie!</span></button>`);
+
+  const stunde = heute.getHours();
+  const gruss = stunde < 11 ? 'Guten Morgen' : stunde < 18 ? 'Hallo' : 'Guten Abend';
+  const o = document.createElement('div');
+  o.id = 'tagesinfo-overlay';
+  o.className = 'tagesinfo-overlay';
+  o.innerHTML = `
+    <div class="tagesinfo-box">
+      <div class="tagesinfo-kopf">
+        <div class="tagesinfo-titel">👋 ${gruss}${u.vorname ? ', ' + esc(u.vorname) : ''}!</div>
+        <div class="tagesinfo-datum">${esc(heute.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' }))}</div>
+      </div>
+      <div class="tagesinfo-liste">${karten.join('')}</div>
+      <button class="btn btn-primary" style="width:100%" onclick="tagesinfoSchliessen()">Alles klar 👍</button>
+    </div>`;
+  o.addEventListener('click', e => { if (e.target === o) tagesinfoSchliessen(); });
+  document.body.appendChild(o);
+  localStorage.setItem('familienapp_tagesinfo', ds);
+
+  if (!wetterTipp) tagesinfoWetterNachladen();   // Wetter-Tipp nachladen, falls kein Cache da war
+}
+
+function tagesinfoSchliessen() {
+  const o = document.getElementById('tagesinfo-overlay');
+  if (o) o.remove();
+}
+
+// Wetter-Tipp für das Tagesinfo-Popup nachladen (wenn beim Öffnen kein Cache da war)
+async function tagesinfoWetterNachladen() {
+  const u = getUser() || {};
+  const lat = state.umgebungStandort?.lat || u.lat;
+  const lng = state.umgebungStandort?.lng || u.lng;
+  const ziel = () => document.getElementById('tagesinfo-wetter-tip');
+  if (!lat || !lng) { const z = ziel(); if (z) z.textContent = 'Standort im Profil eintragen für Wetter-Tipps'; return; }
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=14`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    _wetterCache = data; _wetterZeit = Date.now(); _wetterKoord = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+    const z = ziel(); if (z) z.textContent = (wetterTipps(data) || [])[0] || 'Schönen Tag!';
+  } catch {
+    const z = ziel(); if (z) z.textContent = 'Wetter gerade nicht verfügbar';
+  }
 }
 
 // Zeitbasierte To-Do-Erinnerungen: läuft regelmäßig, solange die App offen ist,
@@ -1671,51 +1760,124 @@ async function regenradarOeffnen() {
     // maxNativeZoom: 7 — beim Reinzoomen werden die Zoom-7-Kacheln hochskaliert,
     // statt nicht unterstützte Kacheln (Platzhalter) anzufragen.
     const layers = frames.map(f => L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5, maxNativeZoom: 7, maxZoom: 11 }).addTo(_radarMap));
-    _radarState = { frames, layers, vergangenAnzahl: jetztFrame.length, idx: 0, playing: true };
+    _radarState = { frames, layers, vergangenAnzahl: jetztFrame.length, idx: 0, playing: true, prognose: [] };
     radarSkalaBauen();
     radarZeige(0);
+    radarPrognoseLaden(lat, lng);   // 6-Stunden-Vorhersage als animiertes Raster nachladen
     _radarTimer = setInterval(() => {
       if (!_radarState || !_radarState.playing) return;
-      radarZeige((_radarState.idx + 1) % _radarState.frames.length);
+      const total = _radarState.frames.length + (_radarState.prognose ? _radarState.prognose.length : 0);
+      radarZeige((_radarState.idx + 1) % total);
     }, 750);
   } catch (e) {
     const z = el('radar-zeit-sub'); if (z) z.textContent = 'Regenradar gerade nicht erreichbar';
   }
 }
 
-// Stunden-Skala unter der Karte aufbauen
+// Stunden-Skala unter der Karte aufbauen — Live-Radar + 6-Stunden-Prognose
 function radarSkalaBauen() {
   const skala = el('radar-skala');
   if (!skala || !_radarState) return;
   const { frames, vergangenAnzahl } = _radarState;
+  const prognose = _radarState.prognose || [];
+  const alle = [
+    ...frames.map((f, i) => ({ ms: f.time * 1000, zukunft: i >= vergangenAnzahl })),
+    ...prognose.map(p => ({ ms: p.time.getTime(), zukunft: true }))
+  ];
   let segs = '', labels = '', letzteStunde = -1;
-  frames.forEach((f, i) => {
-    const zukunft = i >= vergangenAnzahl;
-    segs += `<button class="radar-seg${zukunft ? ' zukunft' : ''}" onclick="radarGeheZu(${i})"></button>`;
-    const std = new Date(f.time * 1000).getHours();
+  alle.forEach((f, i) => {
+    segs += `<button class="radar-seg${f.zukunft ? ' zukunft' : ''}" onclick="radarGeheZu(${i})"></button>`;
+    const std = new Date(f.ms).getHours();
     labels += `<div class="radar-stunde">${std !== letzteStunde ? std + '<small>Uhr</small>' : ''}</div>`;
     letzteStunde = std;
   });
   skala.innerHTML = `<div class="radar-seg-reihe">${segs}</div><div class="radar-stunden-reihe">${labels}</div>`;
 }
 
-// Einen einzelnen Radar-Zeitpunkt anzeigen
+// Einen einzelnen Radar-Zeitpunkt anzeigen — Live-Kachel oder Prognose-Raster
 function radarZeige(i) {
   if (!_radarState) return;
   const { frames, layers } = _radarState;
+  const prognose = _radarState.prognose || [];
+  const gesamt = frames.length + prognose.length;
+  if (i >= gesamt) i = 0;
   _radarState.idx = i;
-  layers.forEach((l, j) => l.setOpacity(j === i ? 0.62 : 0));
-  const dt = new Date(frames[i].time * 1000);
+  const istPrognose = i >= frames.length;
+  // Live-Radar-Kacheln
+  layers.forEach((l, j) => l.setOpacity((!istPrognose && j === i) ? 0.62 : 0));
+  // Prognose-Raster ein-/ausblenden
+  prognose.forEach((p, j) => {
+    const aktiv = istPrognose && (frames.length + j) === i;
+    if (aktiv) { if (!_radarMap.hasLayer(p.gruppe)) p.gruppe.addTo(_radarMap); }
+    else if (_radarMap.hasLayer(p.gruppe)) _radarMap.removeLayer(p.gruppe);
+  });
+  // Zeitanzeige
+  const dt = istPrognose ? prognose[i - frames.length].time : new Date(frames[i].time * 1000);
   const z = el('radar-zeit');
   if (z) z.textContent = dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
   const sub = el('radar-zeit-sub');
   if (sub) {
-    const diffMin = Math.round((frames[i].time * 1000 - Date.now()) / 60000);
-    sub.textContent = diffMin <= -2 ? `vor ${Math.abs(diffMin)} Minuten`
-      : diffMin >= 2 ? `Vorhersage · in ${diffMin} Minuten`
-      : '● Jetzt';
+    const diffMin = Math.round((dt.getTime() - Date.now()) / 60000);
+    if (istPrognose) {
+      const std = Math.max(1, Math.round(diffMin / 60));
+      sub.textContent = `🔮 Vorhersage · in ${std} Std.`;
+    } else {
+      sub.textContent = diffMin <= -2 ? `vor ${Math.abs(diffMin)} Minuten`
+        : diffMin >= 2 ? `Vorhersage · in ${diffMin} Minuten`
+        : '● Jetzt';
+    }
   }
   document.querySelectorAll('#radar-skala .radar-seg').forEach((s, j) => s.classList.toggle('aktiv', j === i));
+}
+
+// Niederschlag-Farbe nach Intensität (mm/h) — null = kein Regen
+function _radarRegenFarbe(mm) {
+  if (mm < 0.2) return null;
+  if (mm < 1)   return '#60A5FA';   // leicht (blau)
+  if (mm < 3)   return '#22C55E';   // mäßig (grün)
+  if (mm < 7)   return '#F59E0B';   // kräftig (orange)
+  return '#EF4444';                 // stark (rot)
+}
+
+// 6-Stunden-Niederschlagsvorhersage als animiertes Raster auf die Karte legen.
+// Open-Meteo liefert kein Radar-Bild für die Zukunft — daher bauen wir aus einem
+// Punktraster eine spielbare Vorschau (wie die "Future Radar"-Animation großer
+// Wetter-Apps, die ebenfalls auf Modelldaten beruht). Reiht sich an die Live-Frames.
+async function radarPrognoseLaden(lat, lng) {
+  try {
+    const N = 7, schritt = 0.18;
+    const lats = [], lngs = [], h2 = N >> 1;
+    for (let i = -h2; i <= h2; i++)
+      for (let j = -h2; j <= h2; j++) { lats.push(lat + i*schritt); lngs.push(lng + j*schritt); }
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lats.map(x=>x.toFixed(3)).join(',')
+      + '&longitude=' + lngs.map(x=>x.toFixed(3)).join(',')
+      + '&hourly=precipitation&forecast_days=2&timezone=auto';
+    const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!res.ok) throw new Error('Open-Meteo ' + res.status);
+    const daten = await res.json();
+    const punkte = Array.isArray(daten) ? daten : [daten];
+    if (!_radarState || !_radarMap) return;
+    const zeiten = punkte[0]?.hourly?.time || [];
+    const jetzt = Date.now();
+    let start = zeiten.findIndex(t => new Date(t).getTime() >= jetzt);
+    if (start < 1) start = 1;
+    const halb = schritt / 2;
+    const prognose = [];
+    for (let h = 0; h < 6; h++) {
+      const stdIdx = start + h;
+      const gruppe = L.layerGroup();
+      punkte.forEach((p, k) => {
+        const mm = p?.hourly?.precipitation?.[stdIdx] ?? 0;
+        const farbe = _radarRegenFarbe(mm);
+        if (!farbe) return;
+        L.rectangle([[lats[k]-halb, lngs[k]-halb], [lats[k]+halb, lngs[k]+halb]],
+          { stroke:false, fillColor:farbe, fillOpacity:.45 }).addTo(gruppe);
+      });
+      prognose.push({ time: new Date(zeiten[stdIdx] || (jetzt + (h+1)*3600000)), gruppe });
+    }
+    _radarState.prognose = prognose;
+    radarSkalaBauen();
+  } catch (e) { /* Prognose optional — Live-Radar bleibt nutzbar */ }
 }
 
 function radarGeheZu(i) {

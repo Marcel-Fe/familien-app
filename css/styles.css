@@ -4666,6 +4666,51 @@ input::placeholder, textarea::placeholder {
   padding: .6rem 1rem;
   cursor: pointer;
 }
+
+/* ===== Tagesüberblick-Popup ===== */
+.tagesinfo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5500;
+  background: rgba(15,23,42,.68);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.1rem;
+  animation: tagesinfoFade .2s ease;
+}
+@keyframes tagesinfoFade { from { opacity: 0; } to { opacity: 1; } }
+.tagesinfo-box {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 1.25rem;
+  box-shadow: 0 22px 60px rgba(0,0,0,.45);
+}
+.tagesinfo-kopf { margin-bottom: 1rem; }
+.tagesinfo-titel { font-size: 1.3rem; font-weight: 900; color: var(--g900); }
+.tagesinfo-datum { font-size: .82rem; font-weight: 700; color: var(--g500); margin-top: .15rem; }
+.tagesinfo-liste { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1.1rem; }
+.tagesinfo-karte {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  text-align: left;
+  width: 100%;
+  border: 1px solid var(--g200);
+  border-radius: 14px;
+  background: var(--g50);
+  padding: .8rem .85rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.tagesinfo-karte:active { background: var(--g100); }
+.tagesinfo-emoji { font-size: 1.5rem; flex-shrink: 0; }
+.tagesinfo-text { font-size: .86rem; color: var(--g700); line-height: 1.45; }
+.tagesinfo-text strong { color: var(--g900); }
 .wetter-refresh {
   position: absolute;
   top: .65rem; right: .65rem;
