@@ -1621,6 +1621,12 @@ async function regenradarOeffnen() {
         </div>
         <div class="radar-skala" id="radar-skala"></div>
       </div>
+      <div class="radar-vorhersage">
+        <div class="radar-vorhersage-titel">🌧️ Regen-Vorhersage · nächste 12 Stunden</div>
+        <div class="radar-vorhersage-leiste" id="radar-vorhersage-leiste">
+          <div class="radar-vorhersage-info">Vorhersage wird geladen…</div>
+        </div>
+      </div>
     </div>`;
   document.body.appendChild(o);
   await new Promise(r => setTimeout(r, 80));
@@ -1629,6 +1635,8 @@ async function regenradarOeffnen() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 11, attribution: '© OpenStreetMap' }).addTo(_radarMap);
     L.circleMarker([lat, lng], { radius: 7, color: '#fff', weight: 2, fillColor: '#4F46E5', fillOpacity: 1 }).addTo(_radarMap);
     _radarMap.invalidateSize();
+    // 12-Stunden-Vorhersage parallel laden (Open-Meteo) — blockiert die Live-Karte nicht
+    radarVorhersageLaden(lat, lng);
     const res = await fetch('https://api.rainviewer.com/public/weather-maps.json', { signal: AbortSignal.timeout(10000) });
     const d = await res.json();
     const vergangen = d.radar?.past || [];
@@ -1704,6 +1712,50 @@ function regenradarSchliessen() {
   _radarState = null;
   const o = document.getElementById('radar-overlay');
   if (o) o.remove();
+}
+
+// 12-Stunden-Niederschlagsvorhersage von Open-Meteo (kostenlos, kein API-Key)
+// als Balkenleiste unter der Radar-Karte anzeigen.
+async function radarVorhersageLaden(lat, lng) {
+  const leiste = el('radar-vorhersage-leiste');
+  if (!leiste) return;
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lng
+      + '&hourly=precipitation,precipitation_probability&forecast_days=2&timezone=auto';
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error('Open-Meteo ' + res.status);
+    const d = await res.json();
+    const zeiten = d.hourly?.time || [];
+    const mmReihe = d.hourly?.precipitation || [];
+    const wkReihe = d.hourly?.precipitation_probability || [];
+    if (!zeiten.length) throw new Error('keine Daten');
+
+    // Ab der aktuellen Stunde 12 Stunden in die Zukunft zeigen
+    const jetzt = Date.now();
+    let startIdx = zeiten.findIndex(t => new Date(t).getTime() >= jetzt - 3600000);
+    if (startIdx < 0) startIdx = 0;
+    const slots = [];
+    for (let i = startIdx; i < startIdx + 12 && i < zeiten.length; i++) {
+      slots.push({ zeit: new Date(zeiten[i]), mm: mmReihe[i] ?? 0, wk: wkReihe[i] ?? 0 });
+    }
+    if (!slots.length) throw new Error('keine Daten');
+
+    const maxMm = Math.max(0.5, ...slots.map(s => s.mm));
+    leiste.innerHTML = slots.map(s => {
+      const hoehe = Math.max(4, Math.round((s.mm / maxMm) * 100));
+      const farbe = s.mm >= 2.5 ? '#DC2626' : s.mm >= 0.5 ? '#059669' : s.mm > 0 ? '#3B82F6' : '#CBD5E1';
+      const icon  = s.mm >= 2.5 ? '🌧️' : s.mm >= 0.5 ? '🌦️' : s.mm > 0 ? '💧' : '☀️';
+      return `<div class="radar-v-slot">
+        <div class="radar-v-wk">${Math.round(s.wk)}%</div>
+        <div class="radar-v-balken-wrap"><div class="radar-v-balken" style="height:${hoehe}%;background:${farbe}"></div></div>
+        <div class="radar-v-icon">${icon}</div>
+        <div class="radar-v-mm">${s.mm > 0 ? s.mm.toFixed(1) : '–'}</div>
+        <div class="radar-v-zeit">${s.zeit.getHours()}<small>Uhr</small></div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    leiste.innerHTML = '<div class="radar-vorhersage-info">Vorhersage gerade nicht erreichbar</div>';
+  }
 }
 
 function motivNeu() {
@@ -3969,22 +4021,55 @@ async function wanderwegGehen(id, name) {
     ).addTo(state.wwKarte);
     state.wwKarte.fitBounds(valide.flat(), { padding: [45, 45] });
 
+    // Wegverlauf für die Navigation merken: flache Punktliste + kumulative Länge,
+    // damit der GPS-Callback Distanz zum Weg und groben Fortschritt berechnen kann.
+    const flach = valide.flat();
+    const kum = [0];
+    for (let i = 1; i < flach.length; i++) {
+      kum[i] = kum[i - 1] + haversine(flach[i-1][0], flach[i-1][1], flach[i][0], flach[i][1]);
+    }
+    state.wwWegPunkte = flach;
+    state.wwWegKum = kum;
+    state.wwWegGesamtM = kum[kum.length - 1] || 0;
+
     // Geh-Navigation starten — Live-Standort
-    wanderwegNaviStarten();
+    wanderwegNaviStarten(name);
     toast('🥾 Folge der grünen Linie — dein Standort wird live angezeigt');
   } catch (e) {
     toast('⚠️ Wegverlauf konnte nicht geladen werden');
   }
 }
 
-// Live-GPS-Position auf der Wanderwege-Karte verfolgen
-function wanderwegNaviStarten() {
+// Fixiertes Navi-Banner am unteren Rand — überlebt render(), da direkt am body
+function wanderwegNaviBanner() {
+  let b = document.getElementById('ww-navi-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'ww-navi-banner';
+    b.className = 'ww-navi-banner';
+    document.body.appendChild(b);
+  }
+  return b;
+}
+
+// Live-GPS-Position auf der Wanderwege-Karte verfolgen + Navi-Status anzeigen
+function wanderwegNaviStarten(wegName) {
   if (!navigator.geolocation || !state.wwKarte) { return; }
   wanderwegNaviStoppen();
+  const banner = wanderwegNaviBanner();
+  banner.innerHTML = `
+    <div class="ww-navi-info">
+      <div class="ww-navi-titel">🥾 ${esc(wegName || 'Weg')}</div>
+      <div class="ww-navi-status" id="ww-navi-status">📡 Standort wird gesucht…</div>
+    </div>
+    <button class="ww-navi-stop" onclick="wanderwegNaviStoppen()">✕ Beenden</button>`;
+  banner.style.display = 'flex';
+
   _wwGpsWatch = navigator.geolocation.watchPosition(
     pos => {
       if (!state.wwKarte) return;
-      const ll = [pos.coords.latitude, pos.coords.longitude];
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
+      const ll = [lat, lng];
       if (state.wwGpsMarker) {
         state.wwGpsMarker.setLatLng(ll);
       } else {
@@ -3996,13 +4081,39 @@ function wanderwegNaviStarten() {
         state.wwGpsMarker.bindPopup('<strong>📍 Hier bist du</strong>');
         state.wwKarte.panTo(ll);
       }
+      // Distanz zum nächsten Wegpunkt + groben Fortschritt berechnen
+      const st = el('ww-navi-status');
+      if (!st) return;
+      const punkte = state.wwWegPunkte;
+      if (!punkte || !punkte.length) { st.textContent = '📍 Standort wird verfolgt'; return; }
+      let minDist = Infinity, minIdx = 0;
+      for (let i = 0; i < punkte.length; i++) {
+        const dM = haversine(lat, lng, punkte[i][0], punkte[i][1]);
+        if (dM < minDist) { minDist = dM; minIdx = i; }
+      }
+      const distTxt = minDist < 1000 ? Math.round(minDist) + ' m' : (minDist / 1000).toFixed(1) + ' km';
+      const proz = state.wwWegGesamtM > 0 ? Math.round((state.wwWegKum[minIdx] / state.wwWegGesamtM) * 100) : 0;
+      st.classList.remove('ww-navi-ok', 'ww-navi-warn');
+      if (minDist <= 25) {
+        st.textContent = `✅ Auf dem Weg · ca. ${proz}% geschafft`;
+        st.classList.add('ww-navi-ok');
+      } else if (minDist <= 75) {
+        st.textContent = `↗️ ${distTxt} bis zum Weg · ca. ${proz}%`;
+      } else {
+        st.textContent = `⚠️ ${distTxt} vom Weg entfernt — zurück zur grünen Linie`;
+        st.classList.add('ww-navi-warn');
+      }
     },
-    () => { toast('⚠️ Standort nicht verfügbar — bitte GPS/Ortung erlauben'); },
+    () => {
+      const st = el('ww-navi-status');
+      if (st) { st.textContent = '⚠️ Standort nicht verfügbar — GPS/Ortung erlauben'; st.classList.add('ww-navi-warn'); }
+      toast('⚠️ Standort nicht verfügbar — bitte GPS/Ortung erlauben');
+    },
     { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
   );
 }
 
-// Geh-Navigation beenden — GPS-Watch stoppen, Live-Marker entfernen
+// Geh-Navigation beenden — GPS-Watch stoppen, Live-Marker + Banner entfernen
 function wanderwegNaviStoppen() {
   if (_wwGpsWatch != null && navigator.geolocation) {
     navigator.geolocation.clearWatch(_wwGpsWatch);
@@ -4012,6 +4123,8 @@ function wanderwegNaviStoppen() {
     try { state.wwKarte.removeLayer(state.wwGpsMarker); } catch {}
   }
   state.wwGpsMarker = null;
+  const b = document.getElementById('ww-navi-banner');
+  if (b) b.remove();
 }
 
 // ===== Routenplaner (eigene Sektion) =====
@@ -4196,10 +4309,13 @@ async function routenplanerBerechnen() {
 
     await routeMultiBerechnen(zLat, zLng, zielText);
   } catch (e) {
+    // Bei Fehler: alte Route verwerfen, neu rendern, DANN Fehler auf das frische
+    // Element setzen — sonst überschreibt render() die Meldung sofort wieder.
     state.routeLaden = false;
     state.routeMultiModi = null;
-    fehlerZeigen(e.message || 'Route konnte nicht berechnet werden.');
     render();
+    const fe = el('rp-fehler');
+    if (fe) { fe.textContent = e.message || 'Route konnte nicht berechnet werden.'; fe.style.display = 'block'; }
   }
 }
 
@@ -4359,10 +4475,14 @@ async function routeBerechnen() {
 
     render();
   } catch(e) {
+    // Bei Fehler: alte Route verwerfen — sonst bleibt fälschlich die vorige
+    // Strecke auf Karte und in der Ergebnis-Box stehen ("immer die gleiche Route").
     state.routeLaden = false;
+    state.routeDaten = null;
+    if (state.routeSchicht) { try { state.routeSchicht.clearLayers(); } catch {} }
+    render();
     const fe = el('route-fehler');
     if (fe) { fe.textContent = e.message || 'Route konnte nicht berechnet werden. Adresse prüfen.'; fe.style.display = 'block'; }
-    if (btn) btn.textContent = '🗺️ Route berechnen';
   }
 }
 

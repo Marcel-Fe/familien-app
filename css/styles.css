@@ -4586,6 +4586,102 @@ input::placeholder, textarea::placeholder {
   line-height: 1.1;
 }
 .radar-stunde small { font-size: .8em; font-weight: 600; opacity: .65; display: block; }
+.radar-vorhersage {
+  padding: .7rem 1rem 1rem;
+  border-top: 1px solid #E2E8F0;
+  background: #F8FAFC;
+}
+.radar-vorhersage-titel {
+  font-size: .82rem;
+  font-weight: 800;
+  color: #1E3A8A;
+  margin-bottom: .55rem;
+}
+.radar-vorhersage-leiste {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+}
+.radar-vorhersage-info {
+  font-size: .8rem;
+  font-weight: 700;
+  color: #64748B;
+  padding: .6rem 0;
+}
+.radar-v-slot {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .12rem;
+}
+.radar-v-wk { font-size: .6rem; font-weight: 800; color: #2563EB; }
+.radar-v-balken-wrap {
+  width: 100%;
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: #E2E8F0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.radar-v-balken {
+  width: 70%;
+  border-radius: 4px 4px 0 0;
+  transition: height .2s;
+}
+.radar-v-icon { font-size: .8rem; line-height: 1; }
+.radar-v-mm { font-size: .58rem; font-weight: 700; color: #475569; }
+.radar-v-zeit {
+  font-size: .62rem;
+  font-weight: 800;
+  color: #64748B;
+  text-align: center;
+  line-height: 1;
+}
+.radar-v-zeit small { font-size: .82em; font-weight: 600; opacity: .6; display: block; }
+.ww-navi-banner {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .7rem 1rem;
+  padding-bottom: calc(.7rem + env(safe-area-inset-bottom, 0px));
+  background: #065F46;
+  color: #fff;
+  box-shadow: 0 -6px 20px rgba(0,0,0,.3);
+}
+.ww-navi-info { flex: 1; min-width: 0; }
+.ww-navi-titel {
+  font-size: .8rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: .85;
+}
+.ww-navi-status {
+  font-size: .92rem;
+  font-weight: 800;
+  margin-top: .15rem;
+}
+.ww-navi-status.ww-navi-ok { color: #6EE7B7; }
+.ww-navi-status.ww-navi-warn { color: #FCA5A5; }
+.ww-navi-stop {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 99px;
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 800;
+  padding: .6rem 1rem;
+  cursor: pointer;
+}
 .wetter-refresh {
   position: absolute;
   top: .65rem; right: .65rem;
