@@ -1,0 +1,7 @@
+.env
+node_modules/
+output/
+cache/
+chrome-headless-shell/
+post-state.json
+*.log
