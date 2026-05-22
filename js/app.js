@@ -2340,23 +2340,16 @@ function renderNavButtons() {
       sub.innerHTML = items.map(i=>`<button class="nav-btn${state.sektion===i.s?' aktiv':''}" onclick="zuSektion('${i.s}')">${i.l}</button>`).join('');
     }
   }
-  // Bottom-Nav aktiv markieren — passendster Hauptbereich finden
-  const bnMap = {
-    dashboard:'dashboard',
-    kalender:'kalender',
-    todo:'kalender', checkliste:'kalender', essensplan:'kalender',
-    familie:'familie', kochbuch:'familie', basteln:'familie', ausmalen:'familie', hausaufgaben:'familie',
-    gesundheit:'gesundheit', symptome:'gesundheit', schwangerschaft:'gesundheit',
-    suche:'suche'
-  };
-  const bnAktiv = bnMap[state.sektion] || '';
-  document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.toggle('aktiv', b.dataset.bn === bnAktiv));
 }
 
 function zuSektion(s, istZurueck) {
   // Geh-Navigation beenden, wenn die Wanderwege-Sektion verlassen wird
   if (state.sektion === 'wanderwege' && s !== 'wanderwege' && typeof wanderwegNaviStoppen === 'function') {
     wanderwegNaviStoppen();
+  }
+  // Regenradar-Overlay schließen, wenn die Regenradar-Sektion verlassen wird
+  if (state.sektion === 'regenradar' && s !== 'regenradar' && typeof regenradarSchliessen === 'function') {
+    regenradarSchliessen();
   }
   // Verlauf pflegen — für den Zurück-Button
   if (!istZurueck && state.sektion && state.sektion !== s) {

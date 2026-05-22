@@ -7,7 +7,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>FamilienApp — Für die ganze Familie</title>
   <meta name="description" content="App für die ganze Familie: Zuschüsse, Anträge, Wohnungssuche, Umgebung, Rezepte, Gesundheit, Kalender und Spar-Tipps." />
 
@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/styles.css?v=70" />
+  <link rel="stylesheet" href="css/styles.css?v=71" />
 </head>
 <body>
 
@@ -170,30 +170,11 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation für moderne Mobile-UX -->
-  <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Hauptnavigation Mobile">
-    <button class="bottom-nav-btn" onclick="zuSektion('dashboard')" data-bn="dashboard">
-      <span class="bottom-nav-icon">🏠</span><span class="bottom-nav-label">Start</span>
-    </button>
-    <button class="bottom-nav-btn" onclick="zuSektion('kalender')" data-bn="kalender">
-      <span class="bottom-nav-icon">📅</span><span class="bottom-nav-label">Kalender</span>
-    </button>
-    <button class="bottom-nav-btn" onclick="zuSektion('familie')" data-bn="familie">
-      <span class="bottom-nav-icon">👨‍👩‍👧</span><span class="bottom-nav-label">Familie</span>
-    </button>
-    <button class="bottom-nav-btn" onclick="zuSektion('gesundheit')" data-bn="gesundheit">
-      <span class="bottom-nav-icon">🌿</span><span class="bottom-nav-label">Gesund</span>
-    </button>
-    <button class="bottom-nav-btn" onclick="zuSektion('suche')" data-bn="suche">
-      <span class="bottom-nav-icon">🔍</span><span class="bottom-nav-label">Suche</span>
-    </button>
-  </nav>
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="js/data.js?v=70"></script>
-  <script src="js/app.js?v=70"></script>
+  <script src="js/data.js?v=71"></script>
+  <script src="js/app.js?v=71"></script>
   <script>
     // Scroll-to-Top Button-Sichtbarkeit
     window.addEventListener('scroll', () => {
@@ -221,7 +202,7 @@
             nw.addEventListener('statechange', () => {
               if (nw.state === 'activated') {
                 caches.keys().then(keys => Promise.all(
-                  keys.filter(k => !k.includes('familienapp-v70')).map(k => caches.delete(k))
+                  keys.filter(k => !k.includes('familienapp-v71')).map(k => caches.delete(k))
                 )).then(() => location.reload());
               }
             });

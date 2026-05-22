@@ -19,13 +19,18 @@
   --s4: 0 20px 40px rgba(0,0,0,.15);
 }
 
-html { font-size: 16px; scroll-behavior: smooth; }
+html { font-size: 16px; scroll-behavior: smooth; overflow-x: hidden; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   background: var(--g100);
   color: var(--g900);
   line-height: 1.6;
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  /* Safe-Areas (Notch / abgerundete Ecken) — App passt sich dem Display an */
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 .versteckt { display: none !important; }
 
@@ -214,6 +219,8 @@ body {
   color: var(--weiss);
   position: sticky; top: 0; z-index: 100;
   box-shadow: 0 2px 20px rgba(0,0,0,.3);
+  /* Safe-Area oben: Header rutscht unter die Statusleiste (Uhr/Notch) */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 .header-top {
   display: flex; align-items: center; justify-content: space-between;
@@ -1738,38 +1745,6 @@ body {
   width: 28px; height: 28px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; flex-shrink: 0;
-}
-
-/* ===== Bottom-Navigation (mobile-first wie native App) ===== */
-.bottom-nav {
-  display: flex;
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: white;
-  border-top: 1px solid var(--g200);
-  z-index: 50;
-  padding: .35rem .25rem calc(.35rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -4px 20px rgba(0,0,0,.08);
-}
-.bottom-nav-btn {
-  flex: 1; background: none; border: none; cursor: pointer;
-  padding: .35rem .25rem;
-  display: flex; flex-direction: column; align-items: center; gap: .15rem;
-  color: var(--g500); transition: color .15s;
-  font-family: inherit;
-}
-.bottom-nav-btn.aktiv { color: var(--p1); }
-.bottom-nav-icon { font-size: 1.4rem; line-height: 1; transition: transform .2s; }
-.bottom-nav-label { font-size: .65rem; font-weight: 700; letter-spacing: .02em; }
-.bottom-nav-btn.aktiv .bottom-nav-icon { transform: scale(1.15); }
-.bottom-nav-btn:hover { color: var(--p1); }
-
-body { padding-bottom: 75px !important; }
-.footer { padding-bottom: 30px !important; margin-bottom: 50px; }
-
-@media (min-width: 1024px) {
-  .bottom-nav { display: none; }
-  body { padding-bottom: 0 !important; }
-  .footer { padding-bottom: 0 !important; margin-bottom: 0; }
 }
 
 /* Karten mit moderneren Schatten + Hover */
@@ -4644,16 +4619,16 @@ input::placeholder, textarea::placeholder {
 .radar-v-zeit small { font-size: .82em; font-weight: 600; opacity: .6; display: block; }
 .ww-navi-banner {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 0; right: 0; top: 0;
   z-index: 4000;
   display: flex;
   align-items: center;
   gap: .7rem;
   padding: .7rem 1rem;
-  padding-bottom: calc(.7rem + env(safe-area-inset-bottom, 0px));
+  padding-top: calc(.7rem + env(safe-area-inset-top, 0px));
   background: #065F46;
   color: #fff;
-  box-shadow: 0 -6px 20px rgba(0,0,0,.3);
+  box-shadow: 0 6px 20px rgba(0,0,0,.3);
 }
 .ww-navi-info { flex: 1; min-width: 0; }
 .ww-navi-titel {
