@@ -471,14 +471,15 @@ function erinnerungenPruefen() {
   localStorage.setItem('notif_gesendet', ds);
 }
 
-// ===== TAGESÜBERBLICK-POPUP (beim App-Start, einmal pro Tag) =====
+// ===== TAGESÜBERBLICK-POPUP (beim App-Start) =====
+// Zeigt bei jedem Öffnen die wichtigen Tages-Infos — abschaltbar in den Einstellungen.
 function tagesinfoPopupZeigen() {
   if (!isLoggedIn()) return;
+  if (einstellungenLaden().tagesinfoPopup === false) return;   // in Einstellungen deaktiviert
   if (document.getElementById('tagesinfo-overlay')) return;
+
   const heute = new Date();
   const ds = `${heute.getFullYear()}-${String(heute.getMonth()+1).padStart(2,'0')}-${String(heute.getDate()).padStart(2,'0')}`;
-  if (localStorage.getItem('familienapp_tagesinfo') === ds) return;   // heute schon gezeigt
-
   const u = getUser() || {};
   const morgen = new Date(heute); morgen.setDate(morgen.getDate()+1);
   const dsm = `${morgen.getFullYear()}-${String(morgen.getMonth()+1).padStart(2,'0')}-${String(morgen.getDate()).padStart(2,'0')}`;
@@ -492,26 +493,33 @@ function tagesinfoPopupZeigen() {
   if (typeof _wetterCache !== 'undefined' && _wetterCache && typeof wetterTipps === 'function')
     wetterTipp = (wetterTipps(_wetterCache) || [])[0] || '';
 
+  const karte = (emoji, bg, titel, sub, sektion) => `
+    <button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('${sektion}')">
+      <span class="tagesinfo-icon" style="background:${bg}">${emoji}</span>
+      <span class="tagesinfo-text"><strong>${titel}</strong><span>${sub}</span></span>
+      <span class="tagesinfo-pfeil">›</span>
+    </button>`;
+
   const karten = [];
-  karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('dashboard')">
-    <span class="tagesinfo-emoji">🌤️</span>
-    <span class="tagesinfo-text"><strong>Wetter heute</strong><br><span id="tagesinfo-wetter-tip">${wetterTipp ? esc(wetterTipp) : 'Wetter wird geladen…'}</span></span></button>`);
+  karten.push(`
+    <button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('regenradar')">
+      <span class="tagesinfo-icon" style="background:#DBEAFE">🌤️</span>
+      <span class="tagesinfo-text"><strong>Wetter heute</strong><span id="tagesinfo-wetter-tip">${wetterTipp ? esc(wetterTipp) : 'Wetter wird geladen…'}</span></span>
+      <span class="tagesinfo-pfeil">›</span>
+    </button>`);
   if (morgenMuell.length)
-    karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('kalender')">
-      <span class="tagesinfo-emoji">🗑️</span>
-      <span class="tagesinfo-text"><strong>Morgen ist Müllabfuhr</strong><br>${esc(morgenMuell.map(t=>t.titel).join(', '))} — heute Abend rausstellen</span></button>`);
+    karten.push(karte('🗑️', '#DCFCE7', 'Morgen ist Müllabfuhr',
+      esc(morgenMuell.map(t=>t.titel).join(', ')) + ' — heute Abend rausstellen', 'kalender'));
   if (heuteTermine.length)
-    karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('kalender')">
-      <span class="tagesinfo-emoji">📅</span>
-      <span class="tagesinfo-text"><strong>Heute: ${esc(heuteTermine[0].titel)}</strong><br>${heuteTermine[0].uhrzeit ? esc(heuteTermine[0].uhrzeit)+' Uhr' : 'Heute'}${heuteTermine.length>1?' · +'+(heuteTermine.length-1)+' weitere':''}</span></button>`);
+    karten.push(karte('📅', '#E0E7FF', 'Heute: ' + esc(heuteTermine[0].titel),
+      (heuteTermine[0].uhrzeit ? esc(heuteTermine[0].uhrzeit)+' Uhr' : 'Heute')
+      + (heuteTermine.length>1 ? ' · +'+(heuteTermine.length-1)+' weitere' : ''), 'kalender'));
   if (wichtigeTodos.length)
-    karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('todo')">
-      <span class="tagesinfo-emoji">✅</span>
-      <span class="tagesinfo-text"><strong>${wichtigeTodos.length} wichtige Aufgabe${wichtigeTodos.length>1?'n':''} offen</strong><br>${esc(wichtigeTodos.slice(0,2).map(t=>t.text).join(' · '))}</span></button>`);
-  if (karten.length === 1)   // außer Wetter nichts los — freundlicher Hinweis
-    karten.push(`<button class="tagesinfo-karte" onclick="tagesinfoSchliessen();zuSektion('kalender')">
-      <span class="tagesinfo-emoji">🌿</span>
-      <span class="tagesinfo-text"><strong>Keine Termine für heute</strong><br>Ein ruhiger Tag — genieß ihn mit der Familie!</span></button>`);
+    karten.push(karte('✅', '#FEF3C7', wichtigeTodos.length+' wichtige Aufgabe'+(wichtigeTodos.length>1?'n':'')+' offen',
+      esc(wichtigeTodos.slice(0,2).map(t=>t.text).join(' · ')), 'todo'));
+  if (karten.length === 1)
+    karten.push(karte('🌿', '#CCFBF1', 'Keine Termine für heute',
+      'Ein ruhiger Tag — genieß ihn mit der Familie!', 'kalender'));
 
   const stunde = heute.getHours();
   const gruss = stunde < 11 ? 'Guten Morgen' : stunde < 18 ? 'Hallo' : 'Guten Abend';
@@ -520,16 +528,16 @@ function tagesinfoPopupZeigen() {
   o.className = 'tagesinfo-overlay';
   o.innerHTML = `
     <div class="tagesinfo-box">
-      <div class="tagesinfo-kopf">
-        <div class="tagesinfo-titel">👋 ${gruss}${u.vorname ? ', ' + esc(u.vorname) : ''}!</div>
+      <div class="tagesinfo-header">
+        <button class="tagesinfo-x" onclick="tagesinfoSchliessen()" aria-label="Schließen">✕</button>
+        <div class="tagesinfo-gruss">👋 ${gruss}${u.vorname ? ', ' + esc(u.vorname) : ''}!</div>
         <div class="tagesinfo-datum">${esc(heute.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' }))}</div>
       </div>
       <div class="tagesinfo-liste">${karten.join('')}</div>
-      <button class="btn btn-primary" style="width:100%" onclick="tagesinfoSchliessen()">Alles klar 👍</button>
+      <button class="btn btn-primary tagesinfo-ok" onclick="tagesinfoSchliessen()">Alles klar 👍</button>
     </div>`;
   o.addEventListener('click', e => { if (e.target === o) tagesinfoSchliessen(); });
   document.body.appendChild(o);
-  localStorage.setItem('familienapp_tagesinfo', ds);
 
   if (!wetterTipp) tagesinfoWetterNachladen();   // Wetter-Tipp nachladen, falls kein Cache da war
 }
@@ -556,6 +564,49 @@ async function tagesinfoWetterNachladen() {
   } catch {
     const z = ziel(); if (z) z.textContent = 'Wetter gerade nicht verfügbar';
   }
+}
+
+// ===== REGENWARNUNG — prüft alle 10 Minuten, ob Regen aufzieht =====
+let _regenWacheStatus = null;   // null | 'trocken' | 'regen-kommt' | 'regnet'
+
+async function regenWacheTick() {
+  const einst = einstellungenLaden();
+  if (einst.regenwarnung === false || einst.notifAus === true) return;
+  const u = getUser() || {};
+  const lat = state.umgebungStandort?.lat || u.lat;
+  const lng = state.umgebungStandort?.lng || u.lng;
+  if (lat == null || lng == null) return;
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}`
+      + `&current=precipitation&minutely_15=precipitation&forecast_days=1&timezone=auto`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return;
+    const d = await res.json();
+    const jetztRegen = d.current?.precipitation ?? 0;
+    const zeiten = d.minutely_15?.time || [];
+    const werte  = d.minutely_15?.precipitation || [];
+    const jetzt = Date.now();
+    let baldWann = null;
+    for (let i = 0; i < zeiten.length; i++) {
+      const tm = new Date(zeiten[i]).getTime();
+      if (tm <= jetzt) continue;
+      if (tm > jetzt + 3600000) break;            // nur die nächste Stunde prüfen
+      if ((werte[i] ?? 0) >= 0.3) { baldWann = tm; break; }
+    }
+    const trockenJetzt = jetztRegen < 0.1;
+    const status = !trockenJetzt ? 'regnet' : (baldWann ? 'regen-kommt' : 'trocken');
+    // Nur beim Übergang trocken -> Regen zieht auf warnen — verhindert Spam
+    if (status === 'regen-kommt' && _regenWacheStatus !== 'regen-kommt' && _regenWacheStatus !== 'regnet') {
+      const min = Math.max(5, Math.round((baldWann - jetzt) / 60000));
+      toast(`🌧️ In ca. ${min} Min fängt es an zu regnen — Schirm bereithalten!`);
+      if (typeof notificationZeigen === 'function')
+        notificationZeigen('🌧️ Regen zieht auf', {
+          body: `In etwa ${min} Minuten fängt es an zu regnen.`,
+          tag: 'regenwarnung', zuSektion: 'regenradar'
+        });
+    }
+    _regenWacheStatus = status;
+  } catch (e) { /* still scheitern — nächster Tick versucht es erneut */ }
 }
 
 // Zeitbasierte To-Do-Erinnerungen: läuft regelmäßig, solange die App offen ist,
@@ -9878,9 +9929,12 @@ function schriftSetzen(groesse) {
   render();
 }
 
-function einstellungToggle(key) {
+function einstellungToggle(key, def) {
   const einst = einstellungenLaden();
-  einst[key] = !einst[key];
+  // Standardwert berücksichtigen — sonst macht der erste Klick auf einen
+  // vorausgewählten Schalter (undefined -> true) nichts Sichtbares.
+  const aktuell = einst[key] !== undefined ? !!einst[key] : !!def;
+  einst[key] = !aktuell;
   einstellungenSpeichern(einst);
   render();
 }
@@ -10092,7 +10146,7 @@ function renderEinstellungen() {
         return `
         <div class="einst-toggle-row">
           <span class="einst-toggle-label">${item.label}</span>
-          <button class="einst-toggle-btn ${an?'an':''}" onclick="einstellungToggle('${item.key}')">
+          <button class="einst-toggle-btn ${an?'an':''}" onclick="einstellungToggle('${item.key}', ${!!item.def})">
             <div class="einst-toggle-knopf"></div>
           </button>
         </div>`;
@@ -10119,6 +10173,8 @@ function renderEinstellungen() {
         {key:'notifTodo',     label:'✅ To-do-Erinnerungen (mit Uhrzeit)', def:true},
         {key:'notifMed',      label:'💊 Medikamenten-Erinnerungen', def:true},
         {key:'notifAngebote', label:'🏷️ Neue Supermarkt-Angebote', def:false},
+        {key:'tagesinfoPopup',label:'👋 Tagesüberblick beim App-Start', def:true},
+        {key:'regenwarnung',  label:'🌧️ Regenwarnung (prüft alle 10 Min)', def:true},
         {key:'notifAus',      label:'🔕 Alle Benachrichtigungen aus', def:false},
         {key:'muellAutoAus',  label:'🗑️ Müll-Auto-Eintragung bei Standort-Update AUS', def:false}
       ].map(item => {
@@ -10126,7 +10182,7 @@ function renderEinstellungen() {
         return `
         <div class="einst-toggle-row">
           <span class="einst-toggle-label">${item.label}</span>
-          <button class="einst-toggle-btn ${an?'an':''}" onclick="einstellungToggle('${item.key}')">
+          <button class="einst-toggle-btn ${an?'an':''}" onclick="einstellungToggle('${item.key}', ${!!item.def})">
             <div class="einst-toggle-knopf"></div>
           </button>
         </div>`;
@@ -15228,9 +15284,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => erinnerungenTick(), 3500);
   // Zeitbasierte To-Do-Erinnerungen regelmäßig prüfen, solange die App offen ist
   setInterval(() => erinnerungenTick(), 60000);
-  // Beim Zurückkehren zur App: verpasste Erinnerungen sofort nachholen
+  // Regenwarnung: kurz nach Start + danach alle 10 Minuten prüfen, ob Regen aufzieht
+  setTimeout(() => regenWacheTick(), 9000);
+  setInterval(() => regenWacheTick(), 600000);
+  // Beim Zurückkehren zur App: verpasste Erinnerungen + Regen-Check sofort nachholen
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { erinnerungenTick(); erinnerungenPruefen(); }
+    if (!document.hidden) { erinnerungenTick(); erinnerungenPruefen(); regenWacheTick(); }
   });
   // Klick auf eine Benachrichtigung (vom Service Worker): zur passenden Sektion springen
   if (navigator.serviceWorker) {
