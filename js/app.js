@@ -1997,9 +1997,13 @@ function dashboardPinnwandVorschau() {
   </div>`;
 }
 
+// Permanente App-Adresse (GitHub Pages) — immer erreichbar, unabhängig vom
+// kurzlebigen Cloudflare-Tunnel. Wird beim Teilen IMMER verwendet.
+const APP_PERMANENT_URL = 'https://marcel-fe.github.io/familien-app/';
+
 // ===== App teilen (Web Share API mit Fallback) =====
 function appTeilen() {
-  const url = location.origin + location.pathname;
+  const url = APP_PERMANENT_URL;
   const titel = 'FamilienApp — Für die ganze Familie';
   const text = 'Schau mal: FamilienApp — Zuschüsse, Kalender, Rezepte, Gesundheit & viel mehr für die ganze Familie!\n\n' + url;
 
