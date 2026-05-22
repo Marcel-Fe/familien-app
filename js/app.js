@@ -2857,6 +2857,7 @@ function renderUmgebung() {
     { id:'restaurant',  label:'🍽️ Restaurants',    farbe:'#DC2626', radius:3000 },
     { id:'cafe',        label:'☕ Cafés',          farbe:'#92400E', radius:3000 },
     { id:'imbiss',      label:'🍔 Imbiss',         farbe:'#F59E0B', radius:3000 },
+    { id:'catering',    label:'🎉 Catering',       farbe:'#7C3AED', radius:15000 },
     { id:'apotheke',    label:'💊 Apotheken',      farbe:'#DC2626', radius:3000 },
     { id:'arzt',        label:'🏥 Ärzte',          farbe:'#2563EB', radius:3000 },
     { id:'krankenhaus', label:'🏨 Krankenhäuser',  farbe:'#1D4ED8', radius:15000 },
@@ -3134,6 +3135,7 @@ const OVERPASS_KAT = {
   restaurant: { query: 'node["amenity"="restaurant"](around:{r},{lat},{lng});', r:3000, farbe:'#DC2626', bg:'#FEE2E2', icon:'🍽️' },
   cafe:       { query: 'node["amenity"~"cafe|ice_cream"](around:{r},{lat},{lng});', r:3000, farbe:'#92400E', bg:'#FEF3C7', icon:'☕' },
   imbiss:     { query: 'node["amenity"="fast_food"](around:{r},{lat},{lng});', r:3000, farbe:'#F59E0B', bg:'#FEF3C7', icon:'🍔' },
+  catering:   { query: 'nwr["craft"="caterer"](around:{r},{lat},{lng});nwr["shop"="catering"](around:{r},{lat},{lng});nwr["cuisine"="catering"](around:{r},{lat},{lng});', r:15000, farbe:'#7C3AED', bg:'#EDE9FE', icon:'🎉' },
   baeckerei:  { query: 'node["shop"~"bakery|pastry|confectionery"](around:{r},{lat},{lng});', r:2000, farbe:'#D97706', bg:'#FEF3C7', icon:'🥖' },
   tankstelle:  { query: 'node["amenity"="fuel"](around:{r},{lat},{lng});', r:5000, farbe:'#D97706', bg:'#FEF3C7', icon:'⛽' },
   parken:      { query: 'nwr["amenity"="parking"]["access"!~"private|no"](around:{r},{lat},{lng});', r:1500, farbe:'#1D4ED8', bg:'#DBEAFE', icon:'🅿️' },
@@ -3785,6 +3787,43 @@ function _wegHaversine(lat1, lng1, lat2, lng2) {
     + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(a));
 }
+// Kompass-Peilung von Punkt a nach b in Grad (0 = Nord, 90 = Ost)
+function _bearing(a, b) {
+  const phi1 = a[0]*Math.PI/180, phi2 = b[0]*Math.PI/180;
+  const dLambda = (b[1]-a[1])*Math.PI/180;
+  const y = Math.sin(dLambda) * Math.cos(phi2);
+  const x = Math.cos(phi1)*Math.sin(phi2) - Math.sin(phi1)*Math.cos(phi2)*Math.cos(dLambda);
+  return (Math.atan2(y, x) * 180/Math.PI + 360) % 360;
+}
+
+// Abbiegepunkte eines Weges aus der Geometrie ableiten: vergleicht die
+// Geh-Richtung ~22 m vor und nach jedem Punkt — ab 40° Änderung = Kurve.
+// So entstehen aus der reinen Linie echte "links/rechts abbiegen"-Hinweise.
+function _wegTurnsBerechnen(punkte, kum) {
+  const turns = [];
+  const N = punkte.length;
+  if (N < 3) return turns;
+  const W = 22;
+  for (let i = 1; i < N - 1; i++) {
+    if (kum[i] - kum[i-1] > 200 || kum[i+1] - kum[i] > 200) continue; // Segment-Sprung überspringen
+    let j = i; while (j > 0 && kum[i] - kum[j] < W) j--;
+    let k = i; while (k < N - 1 && kum[k] - kum[i] < W) k++;
+    if (j === i || k === i) continue;
+    const bIn  = _bearing(punkte[j], punkte[i]);
+    const bOut = _bearing(punkte[i], punkte[k]);
+    const d = ((bOut - bIn + 540) % 360) - 180;
+    if (Math.abs(d) < 40) continue;
+    const last = turns[turns.length - 1];
+    if (last && kum[i] - last.kum < 30) {  // nahe Kurven zusammenfassen
+      if (Math.abs(d) > Math.abs(last.delta))
+        Object.assign(last, { idx:i, kum:kum[i], delta:d, dir: d>0?'rechts':'links', scharf: Math.abs(d)>=105 });
+      continue;
+    }
+    turns.push({ idx:i, kum:kum[i], delta:d, dir: d>0?'rechts':'links', scharf: Math.abs(d)>=105 });
+  }
+  return turns;
+}
+
 function gespeicherteWanderwege() {
   try { return JSON.parse(localStorage.getItem('familienapp_wanderwege') || '[]'); }
   catch { return []; }
@@ -4050,6 +4089,8 @@ async function wanderwegGehen(id, name) {
     state.wwWegPunkte = flach;
     state.wwWegKum = kum;
     state.wwWegGesamtM = kum[kum.length - 1] || 0;
+    state.wwWegTurns = _wegTurnsBerechnen(flach, kum);   // Abbiegepunkte für Turn-by-Turn
+    state.wwWegRichtung = null;                          // Geh-Richtung: erster GPS-Fix legt sie fest
 
     // Geh-Navigation starten — Live-Standort
     wanderwegNaviStarten(name);
@@ -4071,15 +4112,16 @@ function wanderwegNaviBanner() {
   return b;
 }
 
-// Live-GPS-Position auf der Wanderwege-Karte verfolgen + Navi-Status anzeigen
+// Live-GPS-Navigation auf der Wanderwege-Karte: Turn-by-Turn-Hinweise.
+// Alle Berechnungen sind lokal (GPS + Weg-Geometrie) — funktioniert offline.
 function wanderwegNaviStarten(wegName) {
   if (!navigator.geolocation || !state.wwKarte) { return; }
   wanderwegNaviStoppen();
   const banner = wanderwegNaviBanner();
   banner.innerHTML = `
     <div class="ww-navi-info">
-      <div class="ww-navi-titel">🥾 ${esc(wegName || 'Weg')}</div>
       <div class="ww-navi-status" id="ww-navi-status">📡 Standort wird gesucht…</div>
+      <div class="ww-navi-detail" id="ww-navi-detail">🥾 ${esc(wegName || 'Weg')}</div>
     </div>
     <button class="ww-navi-stop" onclick="wanderwegNaviStoppen()">✕ Beenden</button>`;
   banner.style.display = 'flex';
@@ -4100,28 +4142,67 @@ function wanderwegNaviStarten(wegName) {
         state.wwGpsMarker.bindPopup('<strong>📍 Hier bist du</strong>');
         state.wwKarte.panTo(ll);
       }
-      // Distanz zum nächsten Wegpunkt + groben Fortschritt berechnen
-      const st = el('ww-navi-status');
+      const st = el('ww-navi-status'), det = el('ww-navi-detail');
       if (!st) return;
-      const punkte = state.wwWegPunkte;
+      const punkte = state.wwWegPunkte, kum = state.wwWegKum, gesamt = state.wwWegGesamtM || 0;
       if (!punkte || !punkte.length) { st.textContent = '📍 Standort wird verfolgt'; return; }
+
+      // Nächstgelegenen Wegpunkt finden
       let minDist = Infinity, minIdx = 0;
       for (let i = 0; i < punkte.length; i++) {
         const dM = haversine(lat, lng, punkte[i][0], punkte[i][1]);
         if (dM < minDist) { minDist = dM; minIdx = i; }
       }
-      const distTxt = minDist < 1000 ? Math.round(minDist) + ' m' : (minDist / 1000).toFixed(1) + ' km';
-      const proz = state.wwWegGesamtM > 0 ? Math.round((state.wwWegKum[minIdx] / state.wwWegGesamtM) * 100) : 0;
-      st.classList.remove('ww-navi-ok', 'ww-navi-warn');
-      if (minDist <= 25) {
-        st.textContent = `✅ Auf dem Weg · ca. ${proz}% geschafft`;
-        st.classList.add('ww-navi-ok');
-      } else if (minDist <= 75) {
-        st.textContent = `↗️ ${distTxt} bis zum Weg · ca. ${proz}%`;
-      } else {
-        st.textContent = `⚠️ ${distTxt} vom Weg entfernt — zurück zur grünen Linie`;
-        st.classList.add('ww-navi-warn');
+      // Geh-Richtung beim ersten Fix festlegen — zum weiter entfernten Wegende
+      if (state.wwWegRichtung == null) {
+        const dStart = haversine(lat, lng, punkte[0][0], punkte[0][1]);
+        const dEnd   = haversine(lat, lng, punkte[punkte.length-1][0], punkte[punkte.length-1][1]);
+        state.wwWegRichtung = dStart <= dEnd ? 1 : -1;
       }
+      const ri = state.wwWegRichtung;
+      const userKum = kum[minIdx];
+      const fmt = m => m < 1000 ? Math.max(0, Math.round(m/10)*10) + ' m'
+                                : (m/1000).toFixed(1).replace('.', ',') + ' km';
+      st.classList.remove('ww-navi-ok', 'ww-navi-warn');
+
+      // Nicht auf dem Weg → erst zurück zur Linie führen
+      if (minDist > 75) {
+        st.textContent = `⚠️ ${fmt(minDist)} vom Weg entfernt`;
+        st.classList.add('ww-navi-warn');
+        if (det) det.textContent = 'Zurück zur grünen Linie gehen';
+        return;
+      }
+      if (minDist > 25) {
+        st.textContent = `↗️ Noch ${fmt(minDist)} bis zum Weg`;
+        if (det) det.textContent = 'Geh Richtung grüne Linie';
+        return;
+      }
+
+      // Auf dem Weg → Turn-by-Turn
+      const restZiel = ri === 1 ? Math.max(0, gesamt - userKum) : userKum;
+      const turns = state.wwWegTurns || [];
+      let next = null;
+      if (ri === 1) { for (const t of turns) if (t.kum > userKum + 8) { next = t; break; } }
+      else { for (let x = turns.length-1; x >= 0; x--) if (turns[x].kum < userKum - 8) { next = turns[x]; break; } }
+
+      if (restZiel <= 20) {
+        st.textContent = '🏁 Ziel erreicht — schöne Wanderung!';
+        st.classList.add('ww-navi-ok');
+      } else if (next) {
+        const distT = Math.abs(next.kum - userKum);
+        let dir = next.dir;
+        if (ri === -1) dir = dir === 'rechts' ? 'links' : 'rechts';
+        const pfeil = dir === 'rechts' ? '➡️' : '⬅️';
+        const wort = next.scharf ? 'scharf ' + dir : dir;
+        if (distT <= 15) { st.textContent = `${pfeil} Jetzt ${wort} abbiegen`; st.classList.add('ww-navi-ok'); }
+        else if (distT <= 400) { st.textContent = `${pfeil} Noch ${fmt(distT)}, dann ${wort}`; }
+        else { st.textContent = '✅ Geradeaus dem Weg folgen'; st.classList.add('ww-navi-ok'); }
+      } else {
+        st.textContent = '✅ Geradeaus dem Weg folgen';
+        st.classList.add('ww-navi-ok');
+      }
+      const proz = gesamt > 0 ? Math.min(100, Math.max(0, Math.round((gesamt - restZiel) / gesamt * 100))) : 0;
+      if (det) det.textContent = `🏁 Noch ${fmt(restZiel)} bis zum Ziel · ${proz}% geschafft`;
     },
     () => {
       const st = el('ww-navi-status');
@@ -7145,6 +7226,7 @@ function renderUmrechner() {
 function renderCatering() {
   return `
   <div class="info-box lila"><span class="ib-icon">🎉</span><div class="ib-text"><strong>Catering für Ihre Familienfeier!</strong>Geburtstag, Einschulung, Kommunion — von günstig bis professionell. Frühzeitig buchen spart 20–30%!</div></div>
+  <button class="btn btn-primary" style="width:100%;margin-bottom:1rem" onclick="state.umgebungKat='catering';zuSektion('umgebung')">📍 Catering-Firmen in deiner Nähe auf der Karte zeigen</button>
   <div class="block-title">🔗 Catering-Portale & Anbieter</div>
   <div class="grid-2">${CATERING_PORTALE.map(p=>`
     <div class="portal-card" style="border-left:4px solid #7C3AED">

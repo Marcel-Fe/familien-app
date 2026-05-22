@@ -4640,12 +4640,21 @@ input::placeholder, textarea::placeholder {
   opacity: .85;
 }
 .ww-navi-status {
-  font-size: .92rem;
+  font-size: 1.02rem;
   font-weight: 800;
-  margin-top: .15rem;
+  line-height: 1.25;
 }
 .ww-navi-status.ww-navi-ok { color: #6EE7B7; }
 .ww-navi-status.ww-navi-warn { color: #FCA5A5; }
+.ww-navi-detail {
+  font-size: .74rem;
+  font-weight: 700;
+  opacity: .82;
+  margin-top: .15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .ww-navi-stop {
   flex-shrink: 0;
   border: none;
