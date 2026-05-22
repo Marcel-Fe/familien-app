@@ -25,21 +25,21 @@
     "hund": {
       "id": "hund",
       "name": "Hundeleben",
-      "character": "stylized 3D animated Pixar style scene featuring Balu, a single big fluffy black Newfoundland dog with a distinctive bright white chest patch, wearing a simple red collar, big soulful warm brown eyes with bright catchlights, a gentle expressive face with a soft friendly smile and slightly floppy ears; sometimes accompanied by a friendly young German owner in their early 30s only when the scene clearly requires a human; Balu the dog is always the central character",
+      "character": "stylized 3D animated Pixar style scene featuring Balu, a single big fluffy all-black Newfoundland dog wearing a clearly visible bright red collar, big soulful warm brown eyes with bright catchlights, a gentle expressive face with a soft friendly smile and slightly floppy ears; sometimes accompanied by a friendly young German owner in their early 30s only when the scene clearly requires a human; Balu the dog is always the central character",
       "scenes": ["wohnzimmer", "park", "kueche", "buero"],
       "app_reel": {
         "badge_text": "Hunde-Tipp",
-        "outro_title": "@familienapp",
-        "outro_sub_html": "Bald: die Hunde-App.<br>Jetzt schon Tipps holen.",
-        "outro_cta": "Folge für News",
-        "caption_cta": "🐾 Hunde-App in Arbeit — folge @familienapp für News!"
+        "outro_title": "@alltagshelden.offiziell",
+        "outro_sub_html": "Tipps für ein<br>glückliches Hundeleben 🐾",
+        "outro_cta": "Folge für mehr",
+        "caption_cta": "🐾 Folge @alltagshelden.offiziell für mehr Hunde-Tipps"
       },
       "situation_reel": {
         "badge_text": "🐾 Hundeleben",
-        "outro_title": "@familienapp",
+        "outro_title": "@alltagshelden.offiziell",
         "outro_sub_html": "Hundemomente,<br>die jeder Halter kennt 🐾",
         "outro_cta": "Folge für mehr",
-        "caption_cta": "🐾 Folge @familienapp für mehr Hunde-Content"
+        "caption_cta": "🐾 Folge @alltagshelden.offiziell für mehr Hunde-Content"
       }
     }
   }
