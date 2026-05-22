@@ -14750,22 +14750,9 @@ function kiAntwortSchliessen(id) {
 // ===== Natürliche Vorlese-Stimme =====
 // Nutzt eine natürlich klingende Online-Stimme (Google-TTS) statt der
 // künstlichen Geräte-Stimme. Geräte-Stimme bleibt als Offline-Fallback.
-let _kiAudio = null;
-
-// Laufende Sprachausgabe stoppen (Online-Audio + Geräte-Stimme)
+// Laufende Sprachausgabe stoppen
 function kiVorlesenStop() {
-  if (_kiAudio) { _kiAudio._gestoppt = true; try { _kiAudio.pause(); } catch {} _kiAudio = null; }
-  if (window.speechSynthesis) speechSynthesis.cancel();
-}
-
-// Fallback: Geräte-Stimme, falls die Online-Stimme nicht lädt (z. B. offline)
-function kiVorlesenGeraetestimme(txt) {
-  if (!window.speechSynthesis) { toast('⚠️ Vorlesen wird nicht unterstützt'); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(txt);
-  u.lang = 'de-DE'; u.rate = 1.0; u.pitch = 1.0;
-  stimmeAnwenden(u);
-  speechSynthesis.speak(u);
+  if (window.speechSynthesis) { try { speechSynthesis.cancel(); } catch {} }
 }
 
 // Text an Satzgrenzen in ≤max-Zeichen-Stücke teilen (Online-TTS hat ein Längen-Limit)
@@ -14786,31 +14773,24 @@ function _ttsStuecke(text, max) {
   return out.filter(Boolean);
 }
 
-// Text mit natürlicher Stimme vorlesen — Online-TTS, Geräte-Stimme als Fallback
+// Antwort des Familien-Assistenten vorlesen — Web Speech API (Geräte-Stimme).
+// WICHTIG: muss direkt im Klick-Handler laufen, sonst blockieren Handy-Browser
+// (besonders iOS Safari) die Sprachausgabe still. Deshalb keine asynchrone Vorstufe.
 function kiTextVorlesen(txt) {
   if (!txt) { toast('⚠️ Kein Text zum Vorlesen'); return; }
+  if (!window.speechSynthesis) { toast('⚠️ Vorlesen wird auf diesem Gerät nicht unterstützt'); return; }
   kiVorlesenStop();
-
-  const stuecke = _ttsStuecke(txt, 190);
+  // In Sätze teilen und einzeln einreihen — umgeht den Browser-Bug, der lange
+  // Texte nach einigen Sekunden abbricht.
+  const stuecke = _ttsStuecke(txt, 200);
   if (!stuecke.length) return;
-  const urls = stuecke.map(s =>
-    'https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=' + encodeURIComponent(s));
-  toast('🔊 Stimme wird geladen …');
-
-  let idx = 0;
-  const spielAb = () => {
-    if (idx >= urls.length) { _kiAudio = null; return; }
-    const audio = new Audio(urls[idx]);
-    _kiAudio = audio;
-    audio.onended = () => { if (audio._gestoppt) return; idx++; spielAb(); };
-    audio.onerror = () => {
-      if (audio._gestoppt) return;
-      if (idx === 0) { _kiAudio = null; kiVorlesenGeraetestimme(txt); }  // 1. Stück scheitert → kompletter Fallback
-      else { idx++; spielAb(); }                                         // späteres Stück → überspringen
-    };
-    audio.play().catch(() => { if (!audio._gestoppt) audio.onerror(); });
-  };
-  spielAb();
+  stuecke.forEach(s => {
+    const u = new SpeechSynthesisUtterance(s);
+    u.lang = 'de-DE'; u.rate = 1.0; u.pitch = 1.0;
+    stimmeAnwenden(u);
+    speechSynthesis.speak(u);
+  });
+  toast('🔊 Wird vorgelesen …');
 }
 
 function kiVorlesen() {
