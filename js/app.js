@@ -2732,7 +2732,43 @@ function dashboardHeroChips(max) {
   return `<div class="hero-chips">${chips.join('')}</div>`;
 }
 
+// Dispatcher: wählt eine von 5 Dashboard-Ansichten (Layout-Presets).
+// Die fünf Funktionen liefern dasselbe Daten-Set, aber in verschiedenen Looks.
 function renderDashboard() {
+  const ansicht = (einstellungenLaden().dashboardAnsicht) || 'd1';
+  switch (ansicht) {
+    case 'd2': return renderDashboardD2();
+    case 'd3': return renderDashboardD3();
+    case 'd4': return renderDashboardD4();
+    case 'd5': return renderDashboardD5();
+    case 'd1':
+    default:   return renderDashboardD1();
+  }
+}
+
+// Gemeinsamer Kontext, den jede Variante braucht — einmal berechnet.
+function dashboardKontext() {
+  const user = getUser() || {};
+  const kinder = user.kinder || [];
+  const bl = state.bundesland || (user.bundesland ? BUNDESLAENDER.find(b=>b.id===user.bundesland) : null);
+  let max = kinder.length * 255;
+  kinder.forEach(k => {
+    const a = parseInt(k.alter)||0;
+    if (a < 6) max += 230; else if (a < 12) max += 301; else max += 395;
+  });
+  max += 370 + kinder.length * 292;
+  if (kinder.length === 0) max = 0;
+  const standort = state.umgebungStandort || (user.lat ? { lat:user.lat, lng:user.lng, name:user.ort } : null);
+  const einst = einstellungenLaden();
+  const lieblinge = (einst.lieblinge || []).map(id => ALLE_BEREICHE.find(b => b.id === id)).filter(Boolean);
+  const z = (key, def=true) => einst[key] !== undefined ? einst[key] : def;
+  const istInstalliert = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const installBannerWeg = einst.installBannerWeg;
+  return { user, kinder, bl, max, standort, einst, lieblinge, z, istInstalliert, installBannerWeg };
+}
+
+// Ansicht 1 — „Frisch & Lebendig" (Default, Original-Layout v76)
+function renderDashboardD1() {
   const user = getUser() || {};
   const kinder = user.kinder || [];
   const bl = state.bundesland || (user.bundesland ? BUNDESLAENDER.find(b=>b.id===user.bundesland) : null);
@@ -3063,6 +3099,410 @@ function renderDashboard() {
     <div class="recht-footer-text">
       Alle Daten lokal · Kein Server · DSGVO-konform · ${new Date().getFullYear()}
     </div>
+  </div>`;
+}
+
+// ===== GEMEINSAME BLÖCKE FÜR D2–D5 =====
+// D1 hält sein Original-Markup; die übrigen Ansichten teilen sich diese Helfer,
+// damit Funktionen wie Termine, Lieblinge, Notfall in jeder Variante gleich
+// laufen — nur Hero und Schnellzugriff dürfen pro Variante anders aussehen.
+
+function dashboardInstallBanner(ctx) {
+  if (ctx.istInstalliert || ctx.installBannerWeg) return '';
+  return `
+  <div class="install-banner-top">
+    <div class="install-banner-icon">📱</div>
+    <div class="install-banner-text">
+      <div class="install-banner-titel">Als App auf Handy installieren</div>
+      <div class="install-banner-sub">Wie eine richtige App — ohne App Store</div>
+    </div>
+    <button class="install-banner-btn" onclick="dashboardInstallStarten()">Installieren</button>
+    <button class="install-banner-zu" onclick="installBannerAusblenden()" title="Ausblenden">✕</button>
+  </div>`;
+}
+
+function dashboardMotivBlock(einst) {
+  if (einst.zitateAus || !motivationsZitat()) return '';
+  return `
+  <div class="motiv-karte">
+    <div class="motiv-glanz"></div>
+    <div class="motiv-anfuehrung-links">„</div>
+    <div class="motiv-inhalt">
+      <div class="motiv-label">✨ Motivation für heute</div>
+      <div class="motiv-text" id="motiv-text">${esc(motivationsZitat())}</div>
+    </div>
+    <div class="motiv-anfuehrung-rechts">"</div>
+    <button class="motiv-refresh" onclick="motivNeu()" title="Neuer Spruch">🔄</button>
+  </div>`;
+}
+
+function dashboardTermineBlock(z) {
+  if (!z('zeigHeuteTermine', true)) return '';
+  const heute = new Date();
+  const heute0 = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  const in14 = new Date(heute0); in14.setDate(in14.getDate()+14);
+  const benutzer = getUser() || {};
+  const bl = benutzer.bundesland || (state.bundesland?.id) || 'by';
+  const manuell = (typeof getTermine === 'function' ? getTermine() : []).map(t => ({...t, _quelle:'manuell'}));
+  const ftJahr = feiertageDeutsch(heute.getFullYear(), bl).filter(f => f.datum >= heute0 && f.datum <= in14);
+  const ftFormatted = ftJahr.map(f => ({
+    titel: f.name, typ:'feiertag', feiertag:true,
+    datum: `${f.datum.getFullYear()}-${String(f.datum.getMonth()+1).padStart(2,'0')}-${String(f.datum.getDate()).padStart(2,'0')}`,
+    _quelle:'feiertag'
+  }));
+  const alle = [...manuell, ...ftFormatted].filter(t => {
+    const td = new Date(t.datum + 'T00:00:00');
+    return td >= heute0 && td <= in14;
+  }).sort((a,b) => a.datum.localeCompare(b.datum)).slice(0,5);
+  if (alle.length === 0) return '';
+  const mitglieder = (typeof getFamilienMitglieder === 'function' ? getFamilienMitglieder() : []);
+  return `
+  <div class="dash-erinnerungen">
+    <div class="dash-erinnerungen-titel">
+      <span>📅 Kommende Termine</span>
+      <button class="btn btn-outline btn-sm" onclick="zuSektion('kalender')">Alle ansehen</button>
+    </div>
+    <div class="dash-erinnerungen-liste">
+      ${alle.map(t => {
+        const td = new Date(t.datum + 'T00:00:00');
+        const tageDiff = Math.round((td - heute0)/86400000);
+        const wann = tageDiff === 0 ? 'Heute' : tageDiff === 1 ? 'Morgen' : tageDiff < 7 ? `In ${tageDiff} Tagen` : td.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'short'});
+        const tt = (typeof TERMIN_TYPEN_ERWEITERT !== 'undefined') ? (getAlleTerminTypen()[t.typ] || TERMIN_TYPEN_ERWEITERT.sonstiges) : { icon:'📅', farbe:'#64748B', label:'' };
+        const person = t.person ? mitglieder.find(m => m.id === t.person) : null;
+        const istBald = tageDiff <= 1;
+        return `
+        <div class="dash-erinnerung ${istBald?'bald':''}" onclick="zuSektion('kalender')">
+          <div class="dash-erinnerung-icon" style="background:${tt.farbe}20;color:${tt.farbe}">${tt.icon||'📅'}</div>
+          <div class="dash-erinnerung-info">
+            <div class="dash-erinnerung-titel-text">${esc(t.titel)}</div>
+            <div class="dash-erinnerung-meta">
+              <strong>${wann}</strong>${t.uhrzeit?' · '+t.uhrzeit:''}${person?` · ${esc(person.name)}`:''}${t.feiertag?' · Feiertag':''}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function dashboardLieblingeBlock(lieblinge) {
+  if (lieblinge.length > 0) {
+    return `
+    <div class="block-title">⭐ Ihre Lieblings-Bereiche</div>
+    <div class="lieblinge-grid">
+      ${lieblinge.map(b => `
+      <button class="lieblinge-karte" onclick="zuSektion('${b.sektion}')">
+        <div class="lieblinge-icon">${b.icon}</div>
+        <div class="lieblinge-titel">${b.titel}</div>
+      </button>`).join('')}
+    </div>`;
+  }
+  return `
+  <div class="lieblinge-hinweis">
+    <span style="font-size:1.5rem">⭐</span>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:.88rem">Lieblings-Bereiche festlegen</div>
+      <div style="font-size:.75rem;color:var(--g500)">Bis zu 6 Schnell-Zugänge in Einstellungen wählen</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="zuSektion('einstellungen')">Auswählen</button>
+  </div>`;
+}
+
+function dashboardNaeheBlock(ctx) {
+  if (!ctx.standort || !ctx.z('zeigNaehe', true)) return '';
+  return `
+  <div class="block-title">📍 In Ihrer Nähe</div>
+  <div class="card" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;background:linear-gradient(135deg,#EDE9FE,#F5F3FF)">
+    <span style="font-size:2rem">🗺️</span>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:.95rem">${esc(ctx.standort.name || ctx.user.ort)}</div>
+      <div style="font-size:.82rem;color:#6B7280;margin-top:.2rem">Supermärkte, Tankstellen, Friseure und Bekleidungsläden in Ihrer Nähe</div>
+    </div>
+    <button class="btn btn-primary" onclick="zuSektion('umgebung')">Jetzt öffnen →</button>
+  </div>`;
+}
+
+function dashboardTopLeistungenBlock(z) {
+  if (!z('zeigLeistungen', true)) return '';
+  return `
+  <div class="block-title">⭐ Ihre wichtigsten Leistungen</div>
+  <div class="grid-2">
+    ${BUNDESWEITE_LEISTUNGEN.slice(0,4).map(l => `
+      <div class="leistung-card">
+        <div class="leistung-card-header">
+          <span class="leistung-emoji">${l.emoji}</span>
+          <div class="leistung-info"><h3>${esc(l.name)}</h3><div class="leistung-behoerde">📌 ${esc(l.behoerde)}</div></div>
+          <span class="betrag-badge">${esc(l.betrag)}</span>
+        </div>
+        <div class="leistung-card-body"><p class="leistung-desc">${esc(l.beschreibung)}</p></div>
+        <div class="leistung-card-footer">
+          <a href="${l.link}" target="_blank" class="btn btn-outline btn-sm">ℹ️ Info</a>
+          <button class="btn btn-primary btn-sm" onclick="formularOeffnen('${l.id}')">📝 Ausfüllhilfe</button>
+        </div>
+      </div>`).join('')}
+  </div>
+  <div style="text-align:center;margin-top:1rem">
+    <button class="btn btn-primary btn-lg" onclick="zuSektion('leistungen')">Alle Leistungen ansehen →</button>
+  </div>`;
+}
+
+function dashboardNotfallBlock(z) {
+  if (!z('zeigNotfall', true)) return '';
+  return `
+  <div class="block-title">📞 Sofortige Hilfe</div>
+  <div class="grid-2">
+    <div class="card" style="border-left:4px solid #4F46E5">
+      <div style="font-size:1.5rem;margin-bottom:.4rem">📞</div>
+      <div style="font-weight:700">Familientelefon</div>
+      <div style="font-size:1.5rem;font-weight:800;color:#4F46E5;margin:.2rem 0">0800 111 0 550</div>
+      <div style="font-size:.8rem;color:#6B7280">Kostenlos · 24/7 · Anonym</div>
+    </div>
+    <div class="card" style="border-left:4px solid #059669">
+      <div style="font-size:1.5rem;margin-bottom:.4rem">🏛️</div>
+      <div style="font-weight:700">Bürgertelefon</div>
+      <div style="font-size:1.5rem;font-weight:800;color:#059669;margin:.2rem 0">115</div>
+      <div style="font-size:.8rem;color:#6B7280">Behörden & Formulare · Mo–Fr 8–18 Uhr</div>
+    </div>
+  </div>`;
+}
+
+function dashboardFooterBlock() {
+  return `
+  <div class="recht-footer">
+    <div class="recht-footer-titel">FamilienApp · ${istPremium()?'Premium':'Kostenlose Version'}</div>
+    <div class="recht-footer-links">
+      <a href="#" onclick="event.preventDefault();state.rechtSektion='impressum';zuSektion('rechtliches')">Impressum</a>
+      <a href="#" onclick="event.preventDefault();state.rechtSektion='datenschutz';zuSektion('rechtliches')">Datenschutz</a>
+      <a href="#" onclick="event.preventDefault();state.rechtSektion='agb';zuSektion('rechtliches')">AGB</a>
+      <a href="#" onclick="event.preventDefault();state.rechtSektion='haftung';zuSektion('rechtliches')">Haftung</a>
+      <a href="#" onclick="event.preventDefault();state.rechtSektion='lizenzen';zuSektion('rechtliches')">Lizenzen</a>
+      <a href="#" onclick="event.preventDefault();zuSektion('lizenz')">Premium</a>
+    </div>
+    <div class="recht-footer-text">
+      Alle Daten lokal · Kein Server · DSGVO-konform · ${new Date().getFullYear()}
+    </div>
+  </div>`;
+}
+
+// Schnellzugriff-Daten — alle Varianten teilen dieselbe Liste, nur das Markup unterscheidet sich.
+const DASHBOARD_SCHNELL = [
+  { icon:'💰', kurz:'Zuschüsse', farbe:'#4F46E5', farbe2:'#6366F1', s:'leistungen' },
+  { icon:'📋', kurz:'Formulare', farbe:'#059669', farbe2:'#10B981', s:'formular' },
+  { icon:'📍', kurz:'Umgebung',  farbe:'#2563EB', farbe2:'#3B82F6', s:'umgebung' },
+  { icon:'💡', kurz:'Sparen',    farbe:'#DB2777', farbe2:'#EC4899', s:'sparen' },
+  { icon:'📞', kurz:'Beratung',  farbe:'#7C3AED', farbe2:'#8B5CF6', s:'beratung' },
+  { icon:'🗓️', kurz:'Kalender', farbe:'#0EA5E9', farbe2:'#38BDF8', s:'kalender' },
+  { icon:'👨‍👩‍👧', kurz:'Familie', farbe:'#0D9488', farbe2:'#14B8A6', s:'familie' },
+  { icon:'💶', kurz:'Budget',    farbe:'#B45309', farbe2:'#D97706', s:'extras' },
+  { icon:'🔍', kurz:'Suche',     farbe:'#475569', farbe2:'#64748B', s:'suche' }
+];
+
+function dashboardSchnellClick(s) {
+  return `${s==='extras'?`state.extrasTab='budget';`:''}zuSektion('${s}')`;
+}
+
+// Gemeinsame Mitte: Motivation + Daten-Blöcke + Termine + Lieblinge (vor Schnellzugriff)
+function dashboardSharedMitte(ctx) {
+  return [
+    dashboardMotivBlock(ctx.einst),
+    ctx.z('zeigWetter', true) ? dashboardWetter() : '',
+    ctx.z('zeigHeuteBox', true) ? dashboardHeuteUebersicht() : '',
+    ctx.z('zeigFreizeit', true) ? dashboardFreizeitInNaehe() : '',
+    kiSuchBox('dashboard'),
+    ctx.z('zeigTagesTipp', true) ? dashboardTagesTipp() : '',
+    ctx.z('zeigWissen', true) ? dashboardWissen() : '',
+    ctx.z('zeigAusflugTipp', true) ? dashboardAusflugTipp() : '',
+    ctx.z('zeigNewsHeadlines', true) ? dashboardNewsHeadlines() : '',
+    ctx.z('zeigPinnwand', true) ? dashboardPinnwandVorschau() : '',
+    dashboardTermineBlock(ctx.z),
+    dashboardLieblingeBlock(ctx.lieblinge)
+  ].join('');
+}
+
+// Gemeinsamer Unterteil: Nähe + Top-Leistungen + Install-Card + Notfall + Footer (nach Schnellzugriff)
+function dashboardSharedUnten(ctx) {
+  return [
+    dashboardNaeheBlock(ctx),
+    dashboardTopLeistungenBlock(ctx.z),
+    ctx.z('zeigInstallCard', true) ? `
+    <div class="install-card" id="install-card">
+      <div class="install-qr-section">
+        <div class="install-qr-titel">📱 App auf Handy: QR-Code scannen</div>
+        <div class="install-qr-sub">Mit Handy-Kamera scannen → öffnet App im Browser</div>
+        <img class="install-qr-bild" id="install-qr-bild" alt="QR-Code zur App"
+          src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href.split('?')[0] : '')}&size=240x240&margin=10&color=4F46E5"
+          onerror="this.src='https://chart.googleapis.com/chart?cht=qr&chs=240x240&chl='+encodeURIComponent(window.location.href.split('?')[0])" />
+        <div class="install-qr-url-text">Oder URL eingeben:<br><code id="install-qr-url"></code></div>
+      </div>
+    </div>` : '',
+    dashboardNotfallBlock(ctx.z),
+    dashboardFooterBlock()
+  ].join('');
+}
+
+// Ansicht 2 — „Ruhig & Edel" (helle Creme-Karten, dezente Listen)
+function renderDashboardD2() {
+  const ctx = dashboardKontext();
+  const { user, bl, kinder, max, einst, z } = ctx;
+  return `
+  <div class="ansicht-d2">
+  ${dashboardInstallBanner(ctx)}
+
+  <div class="d2-hero">
+    <div class="d2-tag">${tageszeit().toUpperCase()} · ${new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' }).toUpperCase()}</div>
+    <div class="d2-gruss">${user.vorname ? `Hallo ${esc(user.vorname)}` : 'Willkommen'}</div>
+    <div class="d2-ort">
+      ${bl ? esc(bl.name) : ''}${kinder.length > 0 ? ` · ${kinder.length} ${kinder.length===1?'Kind':'Kinder'}` : ''}
+    </div>
+  </div>
+
+  ${max > 0 && z('zeigBetrag', true) ? `
+  <div class="d2-sek-titel">Dein Überblick</div>
+  <div class="d2-leist-karte">
+    <div class="d2-leist-label">Mögliche Leistungen im Monat</div>
+    <div class="d2-leist-zahl">bis ${max.toLocaleString('de-DE')} €</div>
+  </div>` : ''}
+
+  ${dashboardSharedMitte(ctx)}
+
+  ${z('zeigSchnellzugriff', true) ? `
+  <div class="d2-sek-titel">Schnell zu …</div>
+  <div class="d2-liste-karte">
+    ${DASHBOARD_SCHNELL.map(k => `
+      <button class="d2-zeile-btn" onclick="${dashboardSchnellClick(k.s)}">
+        <div class="d2-zeile-ic" style="background:${k.farbe}1A;color:${k.farbe}">${k.icon}</div>
+        <div class="d2-zeile-tx"><b>${k.kurz}</b></div>
+        <span class="d2-zeile-pf">›</span>
+      </button>`).join('')}
+  </div>` : ''}
+
+  ${dashboardSharedUnten(ctx)}
+  </div>`;
+}
+
+// Ansicht 3 — „Kompakt & Praktisch" (Stats-Streifen + 3×3 Kachel-Grid)
+function renderDashboardD3() {
+  const ctx = dashboardKontext();
+  const { user, bl, kinder, max, einst, z } = ctx;
+  const termin = naechsterTermin();
+  return `
+  <div class="ansicht-d3">
+  ${dashboardInstallBanner(ctx)}
+
+  <div class="d3-top">
+    <div class="d3-av">${user.vorname ? esc(user.vorname[0].toUpperCase()) : '?'}</div>
+    <div>
+      <div class="d3-gruss">${user.vorname ? `Hallo ${esc(user.vorname)}!` : 'Willkommen!'}</div>
+      <div class="d3-sub">${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})}${bl?` · ${esc(bl.name)}`:''}</div>
+    </div>
+  </div>
+
+  <div class="d3-streifen">
+    <div class="d3-stat"><div class="z">${kinder.length}</div><div class="l">${kinder.length===1?'Kind':'Kinder'}</div></div>
+    ${max > 0 ? `<div class="d3-stat"><div class="z">${max.toLocaleString('de-DE')}€</div><div class="l">Leistungen</div></div>` : ''}
+    <div class="d3-stat"><div class="z">${termin?'1+':'–'}</div><div class="l">Termine</div></div>
+    <div class="d3-stat"><div class="z">${(einst.lieblinge||[]).length}</div><div class="l">Favoriten</div></div>
+  </div>
+
+  ${max > 0 && z('zeigBetrag', true) ? `
+  <div class="d3-breit leist">
+    <div class="d3-breit-ic">💰</div>
+    <div><div class="d3-breit-label">Mögliche Leistungen / Monat</div><div class="d3-breit-zahl">bis ${max.toLocaleString('de-DE')} €</div></div>
+  </div>` : ''}
+
+  ${dashboardSharedMitte(ctx)}
+
+  ${z('zeigSchnellzugriff', true) ? `
+  <div class="d3-h">Alle Bereiche</div>
+  <div class="d3-grid">
+    ${DASHBOARD_SCHNELL.map(k => `
+      <button class="d3-kachel" onclick="${dashboardSchnellClick(k.s)}">
+        <div class="d3-kachel-ic" style="color:${k.farbe}">${k.icon}</div>
+        <div class="d3-kachel-l">${k.kurz}</div>
+      </button>`).join('')}
+  </div>` : ''}
+
+  ${dashboardSharedUnten(ctx)}
+  </div>`;
+}
+
+// Ansicht 4 — „Dark Modern" (dunkler Hintergrund, Glasmorphism, Glow)
+function renderDashboardD4() {
+  const ctx = dashboardKontext();
+  const { user, bl, kinder, max, z } = ctx;
+  const glows = ['#A5B4FC','#7DD3FC','#F0ABFC','#86EFAC','#FCD34D','#FCA5A5','#67E8F9','#FDBA74','#94A3B8'];
+  return `
+  <div class="ansicht-d4">
+  ${dashboardInstallBanner(ctx)}
+
+  <div class="d4-hero">
+    <div class="d4-tag">${tagesEmoji()} ${tageszeit().toUpperCase()} · ${new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' })}</div>
+    <div class="d4-gruss">${user.vorname ? `Hallo ${esc(user.vorname)}` : 'Willkommen'}</div>
+    <div class="d4-ort">
+      ${bl ? `📍 ${esc(bl.name)}` : ''}${kinder.length > 0 ? ` · 👶 ${kinder.length} ${kinder.length===1?'Kind':'Kinder'}` : ''}
+    </div>
+    ${dashboardHeroChips(max)}
+  </div>
+
+  ${max > 0 && z('zeigBetrag', true) ? `
+  <div class="d4-glas d4-leist">
+    <div class="d4-leist-label">MÖGLICHE LEISTUNGEN / MONAT</div>
+    <div class="d4-leist-zahl">bis ${max.toLocaleString('de-DE')} €</div>
+    <div class="d4-leist-sub">Kindergeld + Wohngeld + Unterhaltsvorschuss</div>
+  </div>` : ''}
+
+  ${dashboardSharedMitte(ctx)}
+
+  ${z('zeigSchnellzugriff', true) ? `
+  <div class="d4-titel">SCHNELLZUGRIFF</div>
+  <div class="d4-grid">
+    ${DASHBOARD_SCHNELL.map((k, i) => `
+      <button class="d4-akt" style="--glow:${glows[i%glows.length]}" onclick="${dashboardSchnellClick(k.s)}">
+        <span class="d4-akt-ic">${k.icon}</span>
+        <span class="d4-akt-l">${k.kurz}</span>
+      </button>`).join('')}
+  </div>` : ''}
+
+  ${dashboardSharedUnten(ctx)}
+  </div>`;
+}
+
+// Ansicht 5 — „Senioren-Großdruck" (extragroße Schrift, hohe Kontraste)
+function renderDashboardD5() {
+  const ctx = dashboardKontext();
+  const { user, bl, kinder, max, z } = ctx;
+  const aktFarben = ['#FACC15','#86EFAC','#FCA5A5','#A5B4FC','#FDBA74','#67E8F9','#F9A8D4','#FDE68A','#D8B4FE'];
+  return `
+  <div class="ansicht-d5">
+  ${dashboardInstallBanner(ctx)}
+
+  <div class="d5-hero">
+    <div class="d5-tag">${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})} · ${tageszeit()}</div>
+    <div class="d5-gruss">${user.vorname ? `Hallo ${esc(user.vorname)}!` : 'Willkommen!'}</div>
+    <div class="d5-ort">
+      ${bl ? `📍 ${esc(bl.name)}` : ''}${kinder.length > 0 ? ` · ${kinder.length} ${kinder.length===1?'Kind':'Kinder'}` : ''}
+    </div>
+  </div>
+
+  ${max > 0 && z('zeigBetrag', true) ? `
+  <div class="d5-karte">
+    <div class="d5-karte-label">Mögliche Leistungen im Monat</div>
+    <div class="d5-karte-zahl">bis ${max.toLocaleString('de-DE')} €</div>
+  </div>` : ''}
+
+  ${dashboardSharedMitte(ctx)}
+
+  ${z('zeigSchnellzugriff', true) ? `
+  <div class="d5-titel">Alle Bereiche</div>
+  <div class="d5-akt-liste">
+    ${DASHBOARD_SCHNELL.map((k, i) => `
+      <button class="d5-akt" style="background:${aktFarben[i%aktFarben.length]}" onclick="${dashboardSchnellClick(k.s)}">
+        <span class="d5-akt-ic">${k.icon}</span>
+        <span class="d5-akt-l">${k.kurz}</span>
+      </button>`).join('')}
+  </div>` : ''}
+
+  ${dashboardSharedUnten(ctx)}
   </div>`;
 }
 
@@ -9943,6 +10383,15 @@ function einstellungTheme(theme) {
   render();
 }
 
+// Dashboard-Ansicht (Layout-Preset) — getrennt vom Farb-Theme, kombinierbar.
+function einstellungDashboardAnsicht(ansicht) {
+  const einst = einstellungenLaden();
+  einst.dashboardAnsicht = ansicht;
+  einstellungenSpeichern(einst);
+  toast('🎨 Dashboard-Ansicht geändert');
+  render();
+}
+
 // 15 schöne Familienbilder zur Auswahl für den Startbildschirm
 const FAMILIEN_FOTOS = [
   '1511895426328-dc8714191300', '1476703993599-0035a21b17a9', '1490730141103-6cac27aaab94',
@@ -10140,6 +10589,33 @@ function renderEinstellungen() {
       }).join('')}
     </div>
     ${(einst.lieblinge||[]).length>0 ? `<div style="font-size:.75rem;color:var(--gruen);margin-top:.5rem;font-weight:700">✓ ${(einst.lieblinge||[]).length} von ${MAX_LIEBLINGE} Bereichen gewählt</div>` : ''}
+  </div>
+
+  <div class="einst-gruppe">
+    <div class="einst-gruppe-titel">🎨 Dashboard-Ansicht</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">Wähle den Look deines Dashboards. Funktionen bleiben gleich, nur der Aufbau ändert sich. Lässt sich beliebig mit dem Farbthema unten kombinieren.</div>
+    <div class="ansicht-grid">
+      ${[
+        { id:'d1', name:'Frisch & Lebendig', sub:'Bunter Verlauf, große Begrüßung', preview:'linear-gradient(140deg,#F97316,#DB2777 55%,#7C3AED)' },
+        { id:'d2', name:'Ruhig & Edel',      sub:'Hell, dezente Listen',           preview:'linear-gradient(135deg,#FBFAF8,#EDEAE3)', dark:false, text:'#292524' },
+        { id:'d3', name:'Kompakt & Praktisch',sub:'Stats-Streifen, 3×3-Grid',       preview:'linear-gradient(135deg,#1E293B,#475569)' },
+        { id:'d4', name:'Dark Modern',       sub:'Dunkel, Glasmorphism, Glow',     preview:'radial-gradient(circle at 30% 0%,#6366F1,transparent 60%),radial-gradient(circle at 80% 80%,#EC4899,transparent 65%),#0F172A' },
+        { id:'d5', name:'Senioren-Großdruck',sub:'Große Schrift, hohe Kontraste',  preview:'linear-gradient(135deg,#1E40AF,#FACC15)' }
+      ].map(a => {
+        const aktiv = (einst.dashboardAnsicht || 'd1') === a.id;
+        return `
+        <button class="ansicht-karte ${aktiv?'aktiv':''}" onclick="einstellungDashboardAnsicht('${a.id}')">
+          <div class="ansicht-preview" style="background:${a.preview}">
+            <span class="ansicht-preview-zahl">${a.id.slice(1)}</span>
+          </div>
+          <div class="ansicht-text">
+            <div class="ansicht-name">${a.name}</div>
+            <div class="ansicht-sub">${a.sub}</div>
+          </div>
+          ${aktiv ? '<div class="ansicht-check">✓</div>' : ''}
+        </button>`;
+      }).join('')}
+    </div>
   </div>
 
   <div class="einst-gruppe">

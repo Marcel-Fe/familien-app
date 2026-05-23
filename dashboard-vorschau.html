@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard-Vorschläge — FamilienApp</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background:#0F172A; color:#E2E8F0; padding:1.5rem 1rem 3rem;
+    -webkit-text-size-adjust:100%;
+  }
+  .kopf { max-width:520px; margin:0 auto 1.25rem; text-align:center; }
+  .kopf h1 { font-size:1.35rem; color:#fff; }
+  .kopf p { font-size:.9rem; color:#94A3B8; margin-top:.35rem; }
+  .wahl {
+    display:flex; gap:.5rem; max-width:520px; margin:0 auto 1.25rem;
+  }
+  .wahl button {
+    flex:1; padding:.7rem .4rem; border:none; border-radius:12px;
+    background:#1E293B; color:#CBD5E1; font-size:.82rem; font-weight:700;
+    cursor:pointer; line-height:1.3; transition:.15s;
+  }
+  .wahl button.aktiv { background:#6366F1; color:#fff; }
+  .buehne { max-width:380px; margin:0 auto; }
+  .phone {
+    background:#fff; border-radius:34px; overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,.55); color:#1E293B;
+    border:9px solid #000;
+  }
+  .design { display:none; }
+  .design.aktiv { display:block; }
+  .scroll { height:660px; overflow-y:auto; }
+  .scroll::-webkit-scrollbar { width:0; }
+  .hinweis {
+    max-width:520px; margin:1.25rem auto 0; text-align:center;
+    font-size:.85rem; color:#94A3B8; line-height:1.6;
+  }
+  .hinweis strong { color:#E2E8F0; }
+
+  /* ===== gemeinsame Bausteine ===== */
+  .pad { padding:1rem; }
+  .chips { display:flex; gap:.45rem; flex-wrap:wrap; }
+  .chip {
+    display:flex; align-items:center; gap:.3rem;
+    background:#fff; border-radius:99px; padding:.4rem .7rem;
+    font-size:.74rem; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.08);
+  }
+
+  /* ===== Design 1: Frisch & Lebendig ===== */
+  .d1-hero {
+    background:linear-gradient(140deg,#F97316,#DB2777 55%,#7C3AED);
+    color:#fff; padding:1.4rem 1.1rem 1.6rem; position:relative;
+  }
+  .d1-hero .tag { font-size:.78rem; opacity:.9; font-weight:600; }
+  .d1-hero .gruss { font-size:1.7rem; font-weight:800; margin:.25rem 0 .1rem; }
+  .d1-hero .ort { font-size:.82rem; opacity:.92; }
+  .d1-chips { margin-top:.9rem; }
+  .d1-chips .chip { background:rgba(255,255,255,.18); color:#fff; box-shadow:none; }
+  .d1-body { background:#F1F5F9; padding:1rem; display:flex; flex-direction:column; gap:.8rem; }
+  .d1-karte {
+    background:#fff; border-radius:18px; padding:1rem;
+    box-shadow:0 6px 18px rgba(2,6,23,.07);
+  }
+  .d1-leist {
+    background:linear-gradient(135deg,#4F46E5,#7C3AED); color:#fff;
+  }
+  .d1-leist .label { font-size:.74rem; opacity:.9; font-weight:600; }
+  .d1-leist .zahl { font-size:1.5rem; font-weight:800; margin-top:.15rem; }
+  .d1-wetter { display:flex; align-items:center; gap:.8rem; }
+  .d1-wetter .emoji { font-size:2.4rem; }
+  .d1-grid { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+  .d1-akt {
+    border-radius:16px; padding:.85rem; color:#fff; font-weight:700;
+    font-size:.86rem; display:flex; flex-direction:column; gap:.35rem;
+  }
+  .d1-akt .ic { font-size:1.5rem; }
+  .titelzeile { font-size:.7rem; font-weight:800; letter-spacing:.06em;
+    text-transform:uppercase; color:#94A3B8; margin:.2rem 0 -.1rem; }
+
+  /* ===== Design 2: Ruhig & Edel ===== */
+  .d2-body { background:#FBFAF8; }
+  .d2-hero { padding:1.6rem 1.3rem 1.2rem; }
+  .d2-hero .tag { font-size:.76rem; color:#A8A29E; font-weight:600; letter-spacing:.03em; }
+  .d2-hero .gruss { font-size:1.55rem; font-weight:700; color:#292524; margin-top:.3rem; }
+  .d2-hero .ort { font-size:.84rem; color:#78716C; margin-top:.2rem; }
+  .d2-sek { padding:0 1.3rem; }
+  .d2-sek-titel {
+    font-size:.82rem; font-weight:700; color:#A8A29E;
+    margin:1.4rem 0 .7rem; display:flex; align-items:center; gap:.5rem;
+  }
+  .d2-sek-titel::after { content:""; flex:1; height:1px; background:#EAE7E1; }
+  .d2-karte {
+    background:#fff; border:1px solid #EDEAE3; border-radius:16px;
+    padding:1.1rem; margin-bottom:.7rem;
+  }
+  .d2-leist .label { font-size:.76rem; color:#78716C; }
+  .d2-leist .zahl { font-size:1.45rem; font-weight:700; color:#15803D; margin-top:.2rem; }
+  .d2-wetter { display:flex; align-items:center; gap:.9rem; }
+  .d2-wetter .emoji { font-size:2.2rem; }
+  .d2-wetter .t { font-size:1.4rem; font-weight:700; }
+  .d2-liste { display:flex; flex-direction:column; }
+  .d2-zeile {
+    display:flex; align-items:center; gap:.85rem; padding:.85rem 0;
+    border-bottom:1px solid #F0EDE6;
+  }
+  .d2-zeile:last-child { border-bottom:none; }
+  .d2-zeile .ic {
+    width:42px; height:42px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:1.25rem;
+  }
+  .d2-zeile .tx b { display:block; font-size:.92rem; color:#292524; }
+  .d2-zeile .tx span { font-size:.78rem; color:#A8A29E; }
+  .d2-zeile .pf { margin-left:auto; color:#D6D3D1; font-size:1.1rem; }
+  .pad-b { padding-bottom:1.6rem; }
+
+  /* ===== Design 3: Kompakt & Praktisch ===== */
+  .d3-body { background:#EEF2F6; }
+  .d3-top {
+    background:#1E293B; color:#fff; padding:.95rem 1rem;
+    display:flex; align-items:center; gap:.7rem;
+  }
+  .d3-top .av {
+    width:40px; height:40px; border-radius:50%; background:#6366F1;
+    display:flex; align-items:center; justify-content:center; font-weight:800;
+  }
+  .d3-top .gruss { font-size:1rem; font-weight:800; }
+  .d3-top .sub { font-size:.73rem; color:#94A3B8; }
+  .d3-streifen {
+    display:flex; gap:.5rem; padding:.7rem 1rem; background:#fff;
+    border-bottom:1px solid #E2E8F0; overflow-x:auto;
+  }
+  .d3-stat { text-align:center; flex:1; min-width:74px; }
+  .d3-stat .z { font-size:1.05rem; font-weight:800; color:#4F46E5; }
+  .d3-stat .l { font-size:.66rem; color:#64748B; font-weight:600; }
+  .d3-pad { padding:.85rem 1rem; }
+  .d3-h { font-size:.78rem; font-weight:800; color:#475569; margin:.55rem 0 .55rem;
+    text-transform:uppercase; letter-spacing:.05em; }
+  .d3-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.5rem; }
+  .d3-kachel {
+    background:#fff; border-radius:13px; padding:.7rem .35rem; text-align:center;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .d3-kachel .ic { font-size:1.5rem; }
+  .d3-kachel .l { font-size:.68rem; font-weight:700; margin-top:.25rem; color:#334155; line-height:1.2; }
+  .d3-breit {
+    background:#fff; border-radius:13px; padding:.8rem; margin-top:.5rem;
+    display:flex; align-items:center; gap:.7rem;
+  }
+  .d3-breit.leist { background:linear-gradient(135deg,#4F46E5,#7C3AED); color:#fff; }
+  .d3-breit .ic { font-size:1.6rem; }
+  .d3-breit .label { font-size:.7rem; opacity:.85; }
+  .d3-breit .zahl { font-size:1.15rem; font-weight:800; }
+  .d3-breit .mini { font-size:.78rem; color:#64748B; }
+
+  /* ===== Design 4: Dark Modern ===== */
+  .d4-body { background:#0B1224; color:#E2E8F0; }
+  .d4-hero {
+    background:radial-gradient(circle at 30% 0%, rgba(99,102,241,.45), transparent 60%),
+               radial-gradient(circle at 80% 80%, rgba(236,72,153,.32), transparent 65%),
+               #0F172A;
+    padding:1.6rem 1.2rem 1.4rem; position:relative;
+  }
+  .d4-hero .tag { font-size:.74rem; color:#94A3B8; font-weight:600; letter-spacing:.04em; text-transform:uppercase; }
+  .d4-hero .gruss { font-size:1.7rem; font-weight:800; color:#fff; margin:.3rem 0 .15rem;
+    background:linear-gradient(90deg,#A5B4FC,#F0ABFC);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .d4-hero .ort { font-size:.82rem; color:#94A3B8; }
+  .d4-chips { display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.9rem; }
+  .d4-chip {
+    background:rgba(99,102,241,.15); border:1px solid rgba(165,180,252,.3);
+    color:#C7D2FE; border-radius:99px; padding:.32rem .72rem;
+    font-size:.74rem; font-weight:600; backdrop-filter:blur(8px);
+  }
+  .d4-pad { padding:1rem; display:flex; flex-direction:column; gap:.75rem; }
+  .d4-glas {
+    background:linear-gradient(145deg, rgba(30,41,59,.85), rgba(15,23,42,.7));
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:18px; padding:1.05rem;
+    box-shadow:0 8px 28px rgba(2,6,23,.5), inset 0 1px 0 rgba(255,255,255,.05);
+    backdrop-filter:blur(10px);
+  }
+  .d4-leist { position:relative; overflow:hidden; }
+  .d4-leist::before {
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 80% 0%, rgba(168,85,247,.35), transparent 60%);
+    pointer-events:none;
+  }
+  .d4-leist .label { font-size:.74rem; color:#94A3B8; font-weight:600; }
+  .d4-leist .zahl { font-size:1.6rem; font-weight:800; color:#fff; margin-top:.15rem;
+    text-shadow:0 0 24px rgba(168,85,247,.45); }
+  .d4-wetter { display:flex; align-items:center; gap:.85rem; }
+  .d4-wetter .emoji { font-size:2.3rem; filter:drop-shadow(0 0 8px rgba(56,189,248,.4)); }
+  .d4-wetter b { color:#fff; font-size:1.02rem; }
+  .d4-wetter span { color:#94A3B8; font-size:.78rem; }
+  .d4-grid { display:grid; grid-template-columns:1fr 1fr; gap:.55rem; }
+  .d4-akt {
+    background:linear-gradient(145deg, rgba(30,41,59,.85), rgba(15,23,42,.7));
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:14px; padding:.85rem; color:#E2E8F0;
+    font-weight:700; font-size:.85rem; display:flex; flex-direction:column; gap:.35rem;
+    position:relative; overflow:hidden;
+  }
+  .d4-akt .ic { font-size:1.4rem; filter:drop-shadow(0 0 6px var(--glow,#A5B4FC)); }
+  .d4-akt::after {
+    content:""; position:absolute; top:0; left:0; right:0; height:2px;
+    background:var(--glow,#A5B4FC); opacity:.6;
+  }
+  .d4-titel { font-size:.7rem; font-weight:800; letter-spacing:.08em;
+    text-transform:uppercase; color:#64748B; margin:.4rem 0 .1rem; }
+
+  /* ===== Design 5: Senioren-Großdruck ===== */
+  .d5-body { background:#FFFFFF; color:#0F172A; font-size:1.1rem; }
+  .d5-hero {
+    background:#1E40AF; color:#fff;
+    padding:1.6rem 1.3rem; border-bottom:4px solid #FACC15;
+  }
+  .d5-hero .tag { font-size:1.05rem; font-weight:700; }
+  .d5-hero .gruss { font-size:2rem; font-weight:900; margin:.4rem 0 .3rem; }
+  .d5-hero .ort { font-size:1.1rem; font-weight:600; opacity:.95; }
+  .d5-pad { padding:1.1rem; display:flex; flex-direction:column; gap:1rem; }
+  .d5-karte {
+    background:#fff; border:3px solid #1E40AF; border-radius:14px;
+    padding:1.2rem; box-shadow:0 4px 0 #1E3A8A;
+  }
+  .d5-karte .label { font-size:1.05rem; font-weight:700; color:#1E40AF; }
+  .d5-karte .zahl { font-size:2rem; font-weight:900; color:#0F172A; margin-top:.3rem; }
+  .d5-wetter { display:flex; align-items:center; gap:1rem; }
+  .d5-wetter .emoji { font-size:3.2rem; }
+  .d5-wetter b { font-size:1.6rem; color:#0F172A; }
+  .d5-wetter span { font-size:1.05rem; color:#334155; display:block; margin-top:.25rem; }
+  .d5-akt {
+    display:flex; align-items:center; gap:1rem;
+    background:#FACC15; color:#0F172A; border:3px solid #0F172A;
+    border-radius:14px; padding:1.1rem 1.2rem;
+    font-size:1.3rem; font-weight:800;
+    box-shadow:0 4px 0 #0F172A;
+  }
+  .d5-akt .ic { font-size:2rem; }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <h1>🎨 Dashboard — 5 Design-Vorschläge</h1>
+  <p>Tippe oben auf einen Vorschlag. Sag mir danach einfach die Nummer, die dir am besten gefällt — Mischungen sind auch möglich.</p>
+</div>
+
+<div class="wahl">
+  <button class="aktiv" onclick="zeig(1,this)">1 · Frisch</button>
+  <button onclick="zeig(2,this)">2 · Edel</button>
+  <button onclick="zeig(3,this)">3 · Kompakt</button>
+  <button onclick="zeig(4,this)">4 · Dark</button>
+  <button onclick="zeig(5,this)">5 · Großdruck</button>
+</div>
+
+<div class="buehne">
+  <div class="phone">
+
+    <!-- ===================== DESIGN 1 ===================== -->
+    <div class="design aktiv" id="d1">
+      <div class="scroll">
+        <div class="d1-hero">
+          <div class="tag">🌙 Guten Abend · Montag, 18. Mai</div>
+          <div class="gruss">Hallo Marcel!</div>
+          <div class="ort">📍 Niedersachsen · 👶 2 Kinder</div>
+          <div class="chips d1-chips">
+            <span class="chip">🌦️ 14°</span>
+            <span class="chip">📅 Termin morgen</span>
+            <span class="chip">💰 bis 1.480 €</span>
+          </div>
+        </div>
+        <div class="d1-body">
+          <div class="d1-karte d1-leist">
+            <div class="label">Mögliche Leistungen im Monat</div>
+            <div class="zahl">bis 1.480 €</div>
+            <div style="font-size:.74rem;opacity:.85;margin-top:.2rem">Kindergeld + Wohngeld + Unterhaltsvorschuss</div>
+          </div>
+          <div class="d1-karte d1-wetter">
+            <div class="emoji">🌦️</div>
+            <div>
+              <div style="font-weight:800;font-size:1.05rem">14° · Leichter Regen</div>
+              <div style="font-size:.8rem;color:#64748B">🧥 Regenjacke einpacken — am Nachmittag trockener</div>
+            </div>
+          </div>
+          <div>
+            <div class="titelzeile">Schnellzugriff</div>
+            <div class="d1-grid" style="margin-top:.5rem">
+              <div class="d1-akt" style="background:linear-gradient(135deg,#4F46E5,#6366F1)"><span class="ic">💰</span>Zuschüsse</div>
+              <div class="d1-akt" style="background:linear-gradient(135deg,#2563EB,#3B82F6)"><span class="ic">📍</span>Umgebung</div>
+              <div class="d1-akt" style="background:linear-gradient(135deg,#DB2777,#EC4899)"><span class="ic">💡</span>Sparen</div>
+              <div class="d1-akt" style="background:linear-gradient(135deg,#059669,#10B981)"><span class="ic">📅</span>Kalender</div>
+            </div>
+          </div>
+          <div class="d1-karte" style="background:linear-gradient(135deg,#312E81,#6D28D9);color:#fff">
+            <div style="font-size:.74rem;opacity:.85;font-weight:600">✨ Motivation für heute</div>
+            <div style="font-size:.98rem;font-weight:600;margin-top:.3rem;line-height:1.5">„Kleine Schritte jeden Tag bringen dich weiter als ein großer Sprung."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== DESIGN 2 ===================== -->
+    <div class="design" id="d2">
+      <div class="scroll d2-body">
+        <div class="d2-hero">
+          <div class="tag">GUTEN ABEND · MONTAG, 18. MAI</div>
+          <div class="gruss">Hallo Marcel</div>
+          <div class="ort">Niedersachsen · 2 Kinder</div>
+        </div>
+
+        <div class="d2-sek">
+          <div class="d2-sek-titel">Dein Überblick</div>
+          <div class="d2-karte d2-leist">
+            <div class="label">Mögliche Leistungen im Monat</div>
+            <div class="zahl">bis 1.480 €</div>
+          </div>
+          <div class="d2-karte d2-wetter">
+            <div class="emoji">🌦️</div>
+            <div>
+              <div class="t">14°</div>
+              <div style="font-size:.8rem;color:#78716C">Leichter Regen · Regenjacke einpacken</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d2-sek">
+          <div class="d2-sek-titel">Schnell zu …</div>
+          <div class="d2-karte" style="padding:.4rem 1.1rem">
+            <div class="d2-liste">
+              <div class="d2-zeile"><div class="ic" style="background:#EDE9FE">💰</div><div class="tx"><b>Zuschüsse &amp; Anträge</b><span>Wohngeld, Kita, Unterhalt</span></div><div class="pf">›</div></div>
+              <div class="d2-zeile"><div class="ic" style="background:#DBEAFE">📍</div><div class="tx"><b>Umgebung</b><span>Läden, Ärzte, Ausflugsziele</span></div><div class="pf">›</div></div>
+              <div class="d2-zeile"><div class="ic" style="background:#FCE7F3">💡</div><div class="tx"><b>Sparen im Alltag</b><span>Angebote &amp; 80+ Tipps</span></div><div class="pf">›</div></div>
+              <div class="d2-zeile"><div class="ic" style="background:#D1FAE5">📅</div><div class="tx"><b>Kalender</b><span>Termin morgen: U-Untersuchung</span></div><div class="pf">›</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d2-sek pad-b">
+          <div class="d2-sek-titel">Gedanke des Tages</div>
+          <div class="d2-karte" style="text-align:center">
+            <div style="font-size:.95rem;font-style:italic;color:#44403C;line-height:1.6">„Kleine Schritte jeden Tag bringen dich weiter als ein großer Sprung."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== DESIGN 3 ===================== -->
+    <div class="design" id="d3">
+      <div class="scroll d3-body">
+        <div class="d3-top">
+          <div class="av">M</div>
+          <div>
+            <div class="gruss">Hallo Marcel!</div>
+            <div class="sub">Montag, 18. Mai · Niedersachsen</div>
+          </div>
+        </div>
+        <div class="d3-streifen">
+          <div class="d3-stat"><div class="z">14°</div><div class="l">Wetter</div></div>
+          <div class="d3-stat"><div class="z">2</div><div class="l">Kinder</div></div>
+          <div class="d3-stat"><div class="z">1.480€</div><div class="l">Leistungen</div></div>
+          <div class="d3-stat"><div class="z">1</div><div class="l">Termin</div></div>
+        </div>
+        <div class="d3-pad">
+          <div class="d3-breit leist">
+            <div class="ic">💰</div>
+            <div><div class="label">Mögliche Leistungen / Monat</div><div class="zahl">bis 1.480 €</div></div>
+          </div>
+
+          <div class="d3-h">Alle Bereiche</div>
+          <div class="d3-grid">
+            <div class="d3-kachel"><div class="ic">💰</div><div class="l">Zuschüsse</div></div>
+            <div class="d3-kachel"><div class="ic">📋</div><div class="l">Formulare</div></div>
+            <div class="d3-kachel"><div class="ic">📍</div><div class="l">Umgebung</div></div>
+            <div class="d3-kachel"><div class="ic">🏘️</div><div class="l">Wohnung</div></div>
+            <div class="d3-kachel"><div class="ic">💡</div><div class="l">Sparen</div></div>
+            <div class="d3-kachel"><div class="ic">📅</div><div class="l">Kalender</div></div>
+            <div class="d3-kachel"><div class="ic">🚑</div><div class="l">Erste Hilfe</div></div>
+            <div class="d3-kachel"><div class="ic">🩺</div><div class="l">Gesundheit</div></div>
+            <div class="d3-kachel"><div class="ic">🔍</div><div class="l">Suche</div></div>
+          </div>
+
+          <div class="d3-h">Heute wichtig</div>
+          <div class="d3-breit">
+            <div class="ic">📅</div>
+            <div><div style="font-weight:800;font-size:.9rem">U-Untersuchung</div><div class="mini">Morgen, 10:30 Uhr · Kinderarzt</div></div>
+          </div>
+          <div class="d3-breit">
+            <div class="ic">🌦️</div>
+            <div><div style="font-weight:800;font-size:.9rem">14° · Leichter Regen</div><div class="mini">Regenjacke einpacken</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== DESIGN 4: Dark Modern ===================== -->
+    <div class="design" id="d4">
+      <div class="scroll d4-body">
+        <div class="d4-hero">
+          <div class="tag">🌙 Guten Abend · Montag, 18. Mai</div>
+          <div class="gruss">Hallo Marcel</div>
+          <div class="ort">📍 Niedersachsen · 👶 2 Kinder</div>
+          <div class="d4-chips">
+            <span class="d4-chip">🌦️ 14°</span>
+            <span class="d4-chip">📅 Termin morgen</span>
+            <span class="d4-chip">💰 1.480 €</span>
+          </div>
+        </div>
+        <div class="d4-pad">
+          <div class="d4-glas d4-leist">
+            <div class="label">MÖGLICHE LEISTUNGEN / MONAT</div>
+            <div class="zahl">bis 1.480 €</div>
+            <div style="font-size:.74rem;color:#94A3B8;margin-top:.2rem;position:relative">Kindergeld + Wohngeld + Unterhaltsvorschuss</div>
+          </div>
+          <div class="d4-glas d4-wetter">
+            <div class="emoji">🌦️</div>
+            <div>
+              <b>14° · Leichter Regen</b>
+              <span>🧥 Regenjacke einpacken</span>
+            </div>
+          </div>
+          <div class="d4-titel">Schnellzugriff</div>
+          <div class="d4-grid">
+            <div class="d4-akt" style="--glow:#A5B4FC"><span class="ic">💰</span>Zuschüsse</div>
+            <div class="d4-akt" style="--glow:#7DD3FC"><span class="ic">📍</span>Umgebung</div>
+            <div class="d4-akt" style="--glow:#F0ABFC"><span class="ic">💡</span>Sparen</div>
+            <div class="d4-akt" style="--glow:#86EFAC"><span class="ic">📅</span>Kalender</div>
+          </div>
+          <div class="d4-glas" style="background:linear-gradient(145deg,rgba(124,58,237,.35),rgba(15,23,42,.7))">
+            <div style="font-size:.72rem;color:#C4B5FD;font-weight:700;letter-spacing:.06em">✨ MOTIVATION</div>
+            <div style="font-size:.98rem;color:#fff;margin-top:.4rem;line-height:1.5;font-style:italic">„Kleine Schritte jeden Tag bringen dich weiter als ein großer Sprung."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== DESIGN 5: Senioren-Großdruck ===================== -->
+    <div class="design" id="d5">
+      <div class="scroll d5-body">
+        <div class="d5-hero">
+          <div class="tag">Montag, 18. Mai · Guten Abend</div>
+          <div class="gruss">Hallo Marcel!</div>
+          <div class="ort">📍 Niedersachsen · 2 Kinder</div>
+        </div>
+        <div class="d5-pad">
+          <div class="d5-karte">
+            <div class="label">Mögliche Leistungen im Monat</div>
+            <div class="zahl">bis 1.480 €</div>
+          </div>
+          <div class="d5-karte d5-wetter">
+            <div class="emoji">🌦️</div>
+            <div>
+              <b>14° heute</b>
+              <span>Leichter Regen — Regenjacke einpacken</span>
+            </div>
+          </div>
+          <div class="d5-akt"><span class="ic">💰</span>Zuschüsse &amp; Anträge</div>
+          <div class="d5-akt" style="background:#86EFAC"><span class="ic">📍</span>Umgebung</div>
+          <div class="d5-akt" style="background:#FCA5A5"><span class="ic">📞</span>Beratung anrufen</div>
+          <div class="d5-akt" style="background:#A5B4FC;color:#0F172A"><span class="ic">📅</span>Termin morgen 10:30</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="hinweis">
+  <strong>Vorschlag 1 — Frisch &amp; Lebendig:</strong> Farbiger Verlauf, große Begrüßung, Info-Chips. Modern und einladend.<br>
+  <strong>Vorschlag 2 — Ruhig &amp; Edel:</strong> Hell, viel Ruhe, klare Abschnitte, dezente Listen. Übersichtlich und elegant.<br>
+  <strong>Vorschlag 3 — Kompakt &amp; Praktisch:</strong> Alles auf einen Blick, große Kacheln, wenig Scrollen. Schnell zu bedienen.<br>
+  <strong>Vorschlag 4 — Dark Modern:</strong> Dunkler Hintergrund, Glasmorphism-Karten mit weichem Glow. Edel und modern.<br>
+  <strong>Vorschlag 5 — Senioren-Großdruck:</strong> Extragroße Schrift, hohe Kontraste, einfache Schalt-Karten. Barrierefrei.
+</div>
+
+<script>
+  function zeig(n, btn) {
+    document.querySelectorAll('.design').forEach(d => d.classList.remove('aktiv'));
+    document.getElementById('d' + n).classList.add('aktiv');
+    document.querySelectorAll('.wahl button').forEach(b => b.classList.remove('aktiv'));
+    btn.classList.add('aktiv');
+  }
+</script>
+</body>
+</html>

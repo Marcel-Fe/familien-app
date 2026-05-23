@@ -6026,3 +6026,279 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   border-color: var(--akzent-1);
   color: #fff;
 }
+
+/* =====================================================
+   DASHBOARD-ANSICHTEN — Auswahl-Karten + 4 Layout-Presets
+   (Design 1 nutzt die bereits vorhandenen .dash-*-Klassen)
+   ===================================================== */
+
+/* ===== Settings: Auswahl-Karten ===== */
+.ansicht-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: .65rem;
+}
+.ansicht-karte {
+  display: flex; align-items: center; gap: .75rem;
+  background: #fff; border: 2px solid var(--g200);
+  border-radius: 14px; padding: .7rem .85rem;
+  cursor: pointer; text-align: left; position: relative;
+  transition: all .18s; font-family: inherit;
+}
+.ansicht-karte:hover { border-color: var(--p1); transform: translateY(-1px); box-shadow: var(--s2); }
+.ansicht-karte.aktiv { border-color: var(--p1); background: var(--lila-hell, #EDE9FE); }
+.ansicht-preview {
+  width: 56px; height: 56px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+}
+.ansicht-preview-zahl {
+  font-size: 1.4rem; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+.ansicht-text { flex: 1; min-width: 0; }
+.ansicht-name { font-weight: 700; font-size: .9rem; color: var(--g900); }
+.ansicht-sub  { font-size: .74rem; color: var(--g500); margin-top: .15rem; line-height: 1.3; }
+.ansicht-check {
+  position: absolute; top: .5rem; right: .55rem;
+  background: var(--p1); color: #fff; width: 22px; height: 22px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 800;
+}
+
+/* ===== Ansicht 2: Ruhig & Edel ===== */
+.ansicht-d2 { background: #FBFAF8; margin: -1rem; padding: 1rem; border-radius: 0; }
+.ansicht-d2 .d2-hero {
+  padding: 1.4rem .25rem 1rem;
+}
+.ansicht-d2 .d2-tag {
+  font-size: .72rem; color: #A8A29E; font-weight: 700; letter-spacing: .04em;
+}
+.ansicht-d2 .d2-gruss {
+  font-size: 1.7rem; font-weight: 700; color: #292524; margin-top: .35rem;
+}
+.ansicht-d2 .d2-ort { font-size: .85rem; color: #78716C; margin-top: .25rem; }
+.ansicht-d2 .d2-sek-titel {
+  font-size: .8rem; font-weight: 700; color: #A8A29E;
+  margin: 1.3rem 0 .6rem; display: flex; align-items: center; gap: .5rem;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.ansicht-d2 .d2-sek-titel::after { content: ""; flex: 1; height: 1px; background: #EAE7E1; }
+.ansicht-d2 .d2-leist-karte {
+  background: #fff; border: 1px solid #EDEAE3; border-radius: 16px;
+  padding: 1.1rem; margin-bottom: 1rem;
+}
+.ansicht-d2 .d2-leist-label { font-size: .78rem; color: #78716C; }
+.ansicht-d2 .d2-leist-zahl  { font-size: 1.5rem; font-weight: 700; color: #15803D; margin-top: .2rem; }
+.ansicht-d2 .d2-liste-karte {
+  background: #fff; border: 1px solid #EDEAE3; border-radius: 16px;
+  padding: .15rem .25rem; margin-bottom: 1rem;
+  display: flex; flex-direction: column;
+}
+.ansicht-d2 .d2-zeile-btn {
+  display: flex; align-items: center; gap: .9rem;
+  padding: .85rem .9rem; background: transparent; border: none;
+  border-bottom: 1px solid #F0EDE6; cursor: pointer;
+  text-align: left; font-family: inherit; transition: background .15s;
+}
+.ansicht-d2 .d2-zeile-btn:last-child { border-bottom: none; }
+.ansicht-d2 .d2-zeile-btn:hover { background: #FBFAF8; }
+.ansicht-d2 .d2-zeile-ic {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+}
+.ansicht-d2 .d2-zeile-tx { flex: 1; }
+.ansicht-d2 .d2-zeile-tx b { font-size: .95rem; color: #292524; font-weight: 700; }
+.ansicht-d2 .d2-zeile-pf { color: #D6D3D1; font-size: 1.2rem; }
+
+/* ===== Ansicht 3: Kompakt & Praktisch ===== */
+.ansicht-d3 { background: #EEF2F6; margin: -1rem; padding: 0; border-radius: 0; }
+.ansicht-d3 .d3-top {
+  background: #1E293B; color: #fff; padding: 1rem 1.1rem;
+  display: flex; align-items: center; gap: .8rem;
+}
+.ansicht-d3 .d3-av {
+  width: 42px; height: 42px; border-radius: 50%; background: var(--p1, #6366F1);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1.05rem;
+}
+.ansicht-d3 .d3-gruss { font-size: 1.05rem; font-weight: 800; }
+.ansicht-d3 .d3-sub   { font-size: .76rem; color: #94A3B8; margin-top: .1rem; }
+.ansicht-d3 .d3-streifen {
+  display: flex; gap: .5rem; padding: .75rem 1rem;
+  background: #fff; border-bottom: 1px solid #E2E8F0;
+  overflow-x: auto;
+}
+.ansicht-d3 .d3-stat { text-align: center; flex: 1; min-width: 74px; }
+.ansicht-d3 .d3-stat .z { font-size: 1.1rem; font-weight: 800; color: var(--p1, #4F46E5); }
+.ansicht-d3 .d3-stat .l { font-size: .68rem; color: #64748B; font-weight: 700; margin-top: .1rem; }
+.ansicht-d3 .d3-breit {
+  background: #fff; border-radius: 13px; padding: .85rem 1rem;
+  margin: .85rem 1rem 0; display: flex; align-items: center; gap: .8rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.ansicht-d3 .d3-breit.leist {
+  background: linear-gradient(135deg, var(--p1, #4F46E5), var(--p2, #7C3AED));
+  color: #fff;
+}
+.ansicht-d3 .d3-breit-ic { font-size: 1.6rem; }
+.ansicht-d3 .d3-breit-label { font-size: .72rem; opacity: .85; }
+.ansicht-d3 .d3-breit-zahl  { font-size: 1.15rem; font-weight: 800; }
+.ansicht-d3 .d3-h {
+  font-size: .78rem; font-weight: 800; color: #475569;
+  margin: 1rem 1rem .55rem; text-transform: uppercase; letter-spacing: .05em;
+}
+.ansicht-d3 .d3-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .5rem;
+  padding: 0 1rem 1rem;
+}
+.ansicht-d3 .d3-kachel {
+  background: #fff; border: none; border-radius: 13px;
+  padding: .8rem .4rem; text-align: center;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06); transition: all .15s;
+}
+.ansicht-d3 .d3-kachel:hover { transform: translateY(-2px); box-shadow: var(--s2); }
+.ansicht-d3 .d3-kachel-ic { font-size: 1.6rem; }
+.ansicht-d3 .d3-kachel-l  { font-size: .7rem; font-weight: 700; margin-top: .25rem; color: #334155; line-height: 1.2; }
+/* Shared blocks erst nach Padding ausrichten */
+.ansicht-d3 > *:not(.d3-top):not(.d3-streifen):not(.d3-breit):not(.d3-h):not(.d3-grid) {
+  padding-left: 1rem; padding-right: 1rem;
+}
+
+/* ===== Ansicht 4: Dark Modern ===== */
+.ansicht-d4 {
+  background: #0B1224; color: #E2E8F0;
+  margin: -1rem; padding: 1rem; border-radius: 0;
+  min-height: calc(100vh - 64px);
+}
+.ansicht-d4 .d4-hero {
+  background:
+    radial-gradient(circle at 30% 0%, rgba(99,102,241,.45), transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(236,72,153,.32), transparent 65%),
+    #0F172A;
+  padding: 1.6rem 1.2rem 1.4rem; border-radius: 18px;
+  margin-bottom: 1rem; border: 1px solid rgba(148,163,184,.18);
+}
+.ansicht-d4 .d4-tag {
+  font-size: .72rem; color: #94A3B8; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.ansicht-d4 .d4-gruss {
+  font-size: 1.8rem; font-weight: 800; margin: .3rem 0 .2rem;
+  background: linear-gradient(90deg, #A5B4FC, #F0ABFC);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.ansicht-d4 .d4-ort { font-size: .85rem; color: #94A3B8; }
+.ansicht-d4 .d4-hero .hero-chips { margin-top: .9rem; }
+.ansicht-d4 .d4-hero .hero-chips .chip {
+  background: rgba(99,102,241,.15);
+  border: 1px solid rgba(165,180,252,.3);
+  color: #C7D2FE; font-weight: 600;
+}
+.ansicht-d4 .d4-glas {
+  background: linear-gradient(145deg, rgba(30,41,59,.85), rgba(15,23,42,.7));
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 18px; padding: 1.05rem;
+  box-shadow: 0 8px 28px rgba(2,6,23,.5), inset 0 1px 0 rgba(255,255,255,.05);
+  margin-bottom: 1rem;
+}
+.ansicht-d4 .d4-leist { position: relative; overflow: hidden; }
+.ansicht-d4 .d4-leist::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 80% 0%, rgba(168,85,247,.35), transparent 60%);
+  pointer-events: none;
+}
+.ansicht-d4 .d4-leist-label { font-size: .72rem; color: #94A3B8; font-weight: 700; letter-spacing: .05em; }
+.ansicht-d4 .d4-leist-zahl {
+  font-size: 1.7rem; font-weight: 800; color: #fff; margin-top: .15rem;
+  text-shadow: 0 0 24px rgba(168,85,247,.45);
+}
+.ansicht-d4 .d4-leist-sub { font-size: .76rem; color: #94A3B8; margin-top: .2rem; position: relative; }
+.ansicht-d4 .d4-titel {
+  font-size: .72rem; font-weight: 800; letter-spacing: .08em;
+  color: #64748B; margin: 1rem 0 .55rem; text-transform: uppercase;
+}
+.ansicht-d4 .d4-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: .6rem;
+  margin-bottom: 1.5rem;
+}
+.ansicht-d4 .d4-akt {
+  background: linear-gradient(145deg, rgba(30,41,59,.85), rgba(15,23,42,.7));
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 14px; padding: .9rem;
+  color: #E2E8F0; font-weight: 700; font-size: .88rem;
+  display: flex; flex-direction: column; gap: .35rem;
+  cursor: pointer; text-align: left; font-family: inherit;
+  position: relative; overflow: hidden; transition: transform .15s;
+}
+.ansicht-d4 .d4-akt:hover { transform: translateY(-2px); }
+.ansicht-d4 .d4-akt-ic { font-size: 1.4rem; filter: drop-shadow(0 0 6px var(--glow, #A5B4FC)); }
+.ansicht-d4 .d4-akt::after {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--glow, #A5B4FC); opacity: .6;
+}
+/* Dezente Anpassung von hellen Karten innerhalb Dark Modern */
+.ansicht-d4 .card,
+.ansicht-d4 .dash-erinnerungen,
+.ansicht-d4 .lieblinge-karte,
+.ansicht-d4 .leistung-card,
+.ansicht-d4 .motiv-karte {
+  background: rgba(30,41,59,.6) !important;
+  border-color: rgba(148,163,184,.18) !important;
+  color: #E2E8F0;
+}
+.ansicht-d4 .block-title { color: #94A3B8; }
+.ansicht-d4 .block-title::after { background: rgba(148,163,184,.25); }
+
+/* ===== Ansicht 5: Senioren-Großdruck ===== */
+.ansicht-d5 {
+  background: #FFFFFF;
+  margin: -1rem; padding: 0; border-radius: 0;
+  font-size: 1.1rem;
+}
+.ansicht-d5 .d5-hero {
+  background: #1E40AF; color: #fff;
+  padding: 1.6rem 1.3rem; border-bottom: 5px solid #FACC15;
+}
+.ansicht-d5 .d5-tag    { font-size: 1.05rem; font-weight: 700; }
+.ansicht-d5 .d5-gruss  { font-size: 2rem; font-weight: 900; margin: .35rem 0 .3rem; }
+.ansicht-d5 .d5-ort    { font-size: 1.1rem; font-weight: 600; opacity: .95; }
+.ansicht-d5 > *:not(.d5-hero) {
+  padding-left: 1rem; padding-right: 1rem;
+}
+.ansicht-d5 .d5-karte {
+  background: #fff; border: 3px solid #1E40AF; border-radius: 14px;
+  padding: 1.2rem; box-shadow: 0 4px 0 #1E3A8A;
+  margin-top: 1rem; margin-bottom: 1rem;
+}
+.ansicht-d5 .d5-karte-label { font-size: 1.05rem; font-weight: 700; color: #1E40AF; }
+.ansicht-d5 .d5-karte-zahl  { font-size: 2rem; font-weight: 900; color: #0F172A; margin-top: .3rem; }
+.ansicht-d5 .d5-titel {
+  font-size: 1.15rem; font-weight: 800; color: #0F172A;
+  margin: 1.3rem 0 .7rem;
+}
+.ansicht-d5 .d5-akt-liste {
+  display: flex; flex-direction: column; gap: .75rem;
+  margin-bottom: 1.5rem;
+}
+.ansicht-d5 .d5-akt {
+  display: flex; align-items: center; gap: 1rem;
+  border: 3px solid #0F172A; border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+  font-size: 1.25rem; font-weight: 800; color: #0F172A;
+  box-shadow: 0 4px 0 #0F172A; cursor: pointer;
+  text-align: left; font-family: inherit;
+  transition: transform .12s, box-shadow .12s;
+}
+.ansicht-d5 .d5-akt:active {
+  transform: translateY(2px); box-shadow: 0 2px 0 #0F172A;
+}
+.ansicht-d5 .d5-akt-ic { font-size: 2rem; flex-shrink: 0; }
+/* Größere Schrift für alle eingebetteten Inhalte */
+.ansicht-d5 .block-title { font-size: 1.1rem; font-weight: 800; color: #0F172A; }
+.ansicht-d5 .btn { font-size: 1rem; padding: .65rem 1.1rem; }
+.ansicht-d5 .btn-sm { font-size: .92rem; padding: .5rem .9rem; }
+.ansicht-d5 .card { border: 2px solid #0F172A; }
