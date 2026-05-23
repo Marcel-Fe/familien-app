@@ -4742,6 +4742,49 @@ input::placeholder, textarea::placeholder {
   padding: 1rem;
   font-size: 1.02rem;
 }
+
+/* ===== Lieblingsbereiche im Profil ===== */
+.favoriten-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .45rem;
+}
+.favorit-karte {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .35rem;
+  padding: .6rem .8rem;
+  background: #fff;
+  border: 1px solid var(--g200);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: transform .12s, box-shadow .12s;
+}
+.favorit-karte:active { transform: scale(.97); }
+.favorit-karte:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+.favorit-label { font-size: .85rem; font-weight: 700; color: var(--g900); }
+.favorit-pfeil { font-size: 1.1rem; color: #CBD5E1; font-weight: 800; }
+.favoriten-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-top: .6rem;
+}
+.favorit-pick {
+  padding: .35rem .6rem;
+  background: #fff;
+  border: 1px solid var(--g200);
+  border-radius: 99px;
+  font-size: .76rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--g700);
+}
+.favorit-pick.an { background: #FEF3C7; border-color: #FBBF24; color: #92400E; }
 .wetter-refresh {
   position: absolute;
   top: .65rem; right: .65rem;

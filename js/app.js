@@ -321,17 +321,17 @@ async function initDashFreizeit() {
       .filter(o => o.tags?.name)
       .map(o => {
         const dist = _haversineMeter(lat, lng, o.lat, o.lon);
-        let typ = '📍', kat = 'Ort';
-        if (o.tags.leisure === 'playground')      { typ='🎠'; kat='Spielplatz'; }
-        else if (o.tags.leisure === 'park')       { typ='🌳'; kat='Park'; }
-        else if (o.tags.leisure?.includes('swimming')) { typ='🏊'; kat='Schwimmbad'; }
-        else if (o.tags.leisure?.includes('sports'))   { typ='⚽'; kat='Sportzentrum'; }
-        else if (o.tags.tourism === 'museum')     { typ='🏛️'; kat='Museum'; }
-        else if (o.tags.tourism === 'zoo')        { typ='🦁'; kat='Zoo'; }
-        else if (o.tags.tourism === 'aquarium')   { typ='🐠'; kat='Aquarium'; }
-        else if (o.tags.tourism === 'attraction') { typ='✨'; kat='Sehenswürdigkeit'; }
-        else if (o.tags.amenity === 'cinema')     { typ='🎬'; kat='Kino'; }
-        return { name: o.tags.name, dist, typ, kat, lat: o.lat, lng: o.lon };
+        let typ = '📍', kat = 'Ort', umgKat = 'museum';
+        if (o.tags.leisure === 'playground')      { typ='🎠'; kat='Spielplatz';      umgKat='spielplatz'; }
+        else if (o.tags.leisure === 'park')       { typ='🌳'; kat='Park';            umgKat='park'; }
+        else if (o.tags.leisure?.includes('swimming')) { typ='🏊'; kat='Schwimmbad'; umgKat='freibad'; }
+        else if (o.tags.leisure?.includes('sports'))   { typ='⚽'; kat='Sportzentrum'; umgKat='fitness'; }
+        else if (o.tags.tourism === 'museum')     { typ='🏛️'; kat='Museum';          umgKat='museum'; }
+        else if (o.tags.tourism === 'zoo')        { typ='🦁'; kat='Zoo';             umgKat='museum'; }
+        else if (o.tags.tourism === 'aquarium')   { typ='🐠'; kat='Aquarium';        umgKat='museum'; }
+        else if (o.tags.tourism === 'attraction') { typ='✨'; kat='Sehenswürdigkeit'; umgKat='museum'; }
+        else if (o.tags.amenity === 'cinema')     { typ='🎬'; kat='Kino';            umgKat='kino'; }
+        return { name: o.tags.name, dist, typ, kat, umgKat, lat: o.lat, lng: o.lon };
       })
       .sort((a,b) => a.dist - b.dist)
       .slice(0, 5);
@@ -355,8 +355,9 @@ function _freizeitHtmlBauen(orte) {
     <div class="freizeit-liste">
       ${orte.map(o => {
         const distStr = o.dist < 1000 ? Math.round(o.dist) + ' m' : (o.dist/1000).toFixed(1) + ' km';
+        const nameAttr = String(o.name).replace(/'/g, '\\\'').replace(/"/g,'&quot;');
         return `
-        <button class="freizeit-eintrag" onclick="zuSektion('umgebung');state.umgebungStandort=state.umgebungStandort||{};setTimeout(()=>{if(state.karte)state.karte.flyTo([${o.lat},${o.lng}],15)},800)">
+        <button class="freizeit-eintrag" onclick="dashFreizeitOeffnen(${o.lat},${o.lng},'${nameAttr}','${o.umgKat}','${o.typ}')">
           <span class="freizeit-emoji">${o.typ}</span>
           <span class="freizeit-text">
             <span class="freizeit-name">${esc(o.name)}</span>
@@ -370,6 +371,20 @@ function _freizeitHtmlBauen(orte) {
       <button class="btn btn-outline btn-sm" onclick="zuSektion('umgebung')">📍 Karte öffnen</button>
       <button class="btn btn-outline btn-sm" onclick="zuSektion('veranstaltungen')">🎪 Veranstaltungen</button>
     </div>`;
+}
+
+// Dashboard-Freizeit-Klick: Umgebung mit passender Kategorie öffnen, hinfliegen und Popup zeigen
+function dashFreizeitOeffnen(lat, lng, name, kat, emoji) {
+  state.umgebungKat = kat || 'museum';
+  zuSektion('umgebung');
+  setTimeout(() => {
+    if (!state.karte || typeof L === 'undefined') return;
+    state.karte.flyTo([lat, lng], 15, { duration: .6 });
+    L.popup({ offset:[0,-8] })
+      .setLatLng([lat, lng])
+      .setContent(`<strong>${(emoji||'📍') + ' ' + esc(name||'Ort')}</strong><br><span style="font-size:.75rem;color:#64748B">Direkt vom Dashboard geöffnet</span>`)
+      .openOn(state.karte);
+  }, 900);
 }
 
 // ===== BENACHRICHTIGUNGEN =====
@@ -5007,12 +5022,55 @@ function kinderAnzahlAendern(delta) {
 function kinderAlterAendern(idx, val) { state.regDaten.kinder[idx].alter = parseInt(val)||0; }
 
 // ===== PROFIL-MODAL =====
+// ===== LIEBLINGSBEREICHE (Schnellzugriff im Profil) =====
+function favoritenLaden() {
+  try {
+    const arr = JSON.parse(localStorage.getItem('familienapp_favoriten') || 'null');
+    if (Array.isArray(arr) && arr.length) return arr;
+  } catch {}
+  return ['leistungen','kalender','kochbuch','umgebung','gesundheit','todo'];   // sinnvolle Startauswahl
+}
+function favoritenSpeichern(arr) { try { localStorage.setItem('familienapp_favoriten', JSON.stringify(arr.slice(0, 12))); } catch {} }
+function favoritToggle(sektion) {
+  const liste = favoritenLaden();
+  const i = liste.indexOf(sektion);
+  if (i >= 0) liste.splice(i, 1); else liste.push(sektion);
+  favoritenSpeichern(liste);
+  // nur den Favoriten-Block im Modal neu rendern
+  const block = document.getElementById('pm-favoriten-block');
+  if (block) block.innerHTML = _favoritenModalHtml();
+}
+function _alleSektionenMitLabel() {
+  // alle Sektionen aus dem NAV-Objekt mit ihren Labels
+  const ausgeschlossen = ['suche','einstellungen'];
+  return Object.values(NAV).flat().filter(s => !ausgeschlossen.includes(s.s));
+}
+function _favoritenModalHtml() {
+  const fav = favoritenLaden();
+  const alle = _alleSektionenMitLabel();
+  const aktive = alle.filter(s => fav.includes(s.s));
+  return `
+    <div style="font-weight:800;font-size:.95rem;margin-bottom:.5rem">🌟 Meine Lieblingsbereiche</div>
+    ${aktive.length ? `<div class="favoriten-grid">${aktive.map(s => `
+      <button class="favorit-karte" onclick="profilSchliessen();zuSektion('${s.s}')">
+        <span class="favorit-label">${esc(s.l)}</span><span class="favorit-pfeil">›</span>
+      </button>`).join('')}</div>` : '<div style="font-size:.82rem;color:var(--g500);margin-bottom:.5rem">Noch keine Favoriten — unten antippen, um welche hinzuzufügen.</div>'}
+    <details style="margin-top:.65rem">
+      <summary style="cursor:pointer;font-size:.82rem;color:var(--blau);font-weight:700">⚙️ Favoriten verwalten</summary>
+      <div class="favoriten-picker">${alle.map(s => {
+        const an = fav.includes(s.s);
+        return `<button class="favorit-pick${an?' an':''}" onclick="favoritToggle('${s.s}')">${an?'⭐':'☆'} ${esc(s.l)}</button>`;
+      }).join('')}</div>
+    </details>`;
+}
+
 function profilOeffnen() {
   const user = getUser() || {};
   const html = `
   <div class="modal-overlay" id="profil-modal" onclick="if(event.target===this)profilSchliessen()">
     <div class="modal-box">
       <div class="modal-titel">✏️ Mein Profil</div>
+      <div id="pm-favoriten-block" style="background:var(--g50);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:1rem">${_favoritenModalHtml()}</div>
       <div class="reg-feld"><label class="reg-label">Vorname</label>
         <input class="reg-input" id="pm-vorname" value="${esc(user.vorname||'')}" placeholder="Vorname" /></div>
       <div class="reg-feld"><label class="reg-label">PLZ / Ort</label>
@@ -7718,7 +7776,7 @@ function renderGutscheine() {
       farbe:'#059669', bg:'#D1FAE5',
       was:'Bis zu 15 € pro Schulausflug vollständig erstattet. Ferienfreizeiten bis 1 Tag komplett übernommen.',
       wie:'Bildungs- und Teilhabepaket beim Jobcenter oder Sozialamt beantragen — auch wenn Sie arbeiten!',
-      link:'https://www.bmas.de/DE/Soziales/Bildungspaket/bildungspaket.html', linkText:'BuT beantragen'
+      link:'https://www.bmas.de/DE/Soziales/Bildungspaket/bildungspaket.html', linkText:'Info-Seite Bundesministerium', inApp:'but'
     },
     {
       emoji:'🎟️', name:'mydealz – kostenlose Events',
@@ -7760,7 +7818,7 @@ function renderGutscheine() {
       farbe:'#16A34A', bg:'#DCFCE7',
       was:'BuT zahlt bis zu 15 € im Monat für Vereinsmitgliedschaften, Sportausrüstung und Musikunterricht.',
       wie:'Beim Jobcenter/Sozialamt Antrag stellen. Gilt auch für Tanzschule, Musikverein, Schwimmkurs etc.',
-      link:'https://www.arbeitsagentur.de/familie-und-kinder/bildung-und-teilhabe', linkText:'BuT-Antrag stellen'
+      link:'https://www.arbeitsagentur.de/familie-und-kinder/bildung-und-teilhabe', linkText:'Arbeitsagentur-Info', inApp:'but'
     },
     {
       emoji:'🎁', name:'Wunscherfüller & Spendenaktionen',
@@ -7786,7 +7844,10 @@ function renderGutscheine() {
       <div style="background:var(--g50);border-radius:var(--r-sm);padding:.5rem .75rem;font-size:.78rem;color:var(--g700);border-left:3px solid ${a.farbe};margin-bottom:.6rem">
         <strong>So geht's:</strong> ${esc(a.wie)}
       </div>
-      <a href="${a.link}" target="_blank" class="btn btn-sm" style="background:${a.farbe};color:white;text-decoration:none;display:inline-block">${esc(a.linkText)} →</a>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+        ${a.inApp ? `<button class="btn btn-sm" style="background:#4F46E5;color:white;border:none;cursor:pointer" onclick="formularOeffnen('${esc(a.inApp)}')">📝 Ausfüllhilfe in der App →</button>` : ''}
+        <a href="${a.link}" target="_blank" class="btn btn-sm" style="background:${a.farbe};color:white;text-decoration:none;display:inline-block">${esc(a.linkText)} →</a>
+      </div>
     </div>`).join('')}
   </div>`;
 }
@@ -10130,7 +10191,6 @@ function renderEinstellungen() {
         {key:'zeigLeistungen',   label:'⭐ Top-Leistungen-Cards',         def:true},
         {key:'zeigInstallCard',  label:'📱 App installieren',             def:true},
         {key:'zeigNotfall',      label:'📞 Notfall-Nummern',              def:true},
-        {key:'zitateAus',        label:'💬 Motivationssprüche AUSblenden', def:false, invertieren:true},
         {key:'zeigWetter',       label:'🌤️ Wetter heute',                  def:true},
         {key:'zeigHeuteBox',     label:'⏰ Heute zu tun (Termine, Müll, To-dos)', def:true},
         {key:'zeigFreizeit',     label:'🎠 Freizeit in der Nähe',         def:true},
@@ -12355,6 +12415,15 @@ function renderSchwangerschaftBehoerden() {
   </div>`;
 }
 
+// Geburtshilfe-Erkennung: Klinik-Name oder OSM-Tags lassen auf Kreißsaal schließen
+function _hatKreisaal(o) {
+  const n = (o.tags?.name || '').toLowerCase();
+  if (/geburt|frauenklinik|kreiß|kreis(s)?aal|frauenheilkunde|obstetric|maternity|gyn(ä|ae)/i.test(n)) return true;
+  const sp = (o.tags?.['healthcare:speciality'] || o.tags?.['medical_speciality'] || '').toLowerCase();
+  if (/obstetric|gynaecology|gynecology|midwifery/.test(sp)) return true;
+  return false;
+}
+
 async function kliniken_laden() {
   const u = getUser();
   const standort = state.umgebungStandort || (u?.lat ? {lat:u.lat, lng:u.lng, name:u.ort} : null);
@@ -12364,42 +12433,99 @@ async function kliniken_laden() {
   liste.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><span>Geburtskliniken in der Nähe werden gesucht...</span></div>';
   try {
     const query = `[out:json][timeout:25];(
-      node["amenity"="hospital"](around:200000,${standort.lat},${standort.lng});
-      way["amenity"="hospital"](around:200000,${standort.lat},${standort.lng});
-      node["healthcare"="hospital"](around:200000,${standort.lat},${standort.lng});
-      node["amenity"="clinic"](around:200000,${standort.lat},${standort.lng});
-    );out center 25;`;
+      nwr["amenity"="hospital"](around:200000,${standort.lat},${standort.lng});
+      nwr["healthcare"="hospital"](around:200000,${standort.lat},${standort.lng});
+      nwr["amenity"="clinic"](around:200000,${standort.lat},${standort.lng});
+    );out center 80;`;
     const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
     const daten = await res.json();
-    const orte = (daten.elements||[])
-      .map(o => ({
-        name: o.tags?.name || 'Klinik',
-        lat: o.lat || o.center?.lat,
-        lng: o.lon || o.center?.lon,
-        adresse: o.tags?.['addr:street'] ? `${o.tags['addr:street']} ${o.tags['addr:housenumber']||''}` : '',
-        tel: o.tags?.phone || '',
-        web: o.tags?.website || ''
-      }))
-      .filter(o => o.lat && o.lng && o.name && o.name !== 'Klinik')
+    const alle = (daten.elements||[]).map(o => ({
+      name: o.tags?.name || '',
+      lat: o.lat || o.center?.lat,
+      lng: o.lon || o.center?.lon,
+      adresse: o.tags?.['addr:street'] ? `${o.tags['addr:street']} ${o.tags['addr:housenumber']||''}` : '',
+      tel: o.tags?.phone || o.tags?.['contact:phone'] || '',
+      web: o.tags?.website || o.tags?.['contact:website'] || '',
+      _hasKreis: _hatKreisaal(o)
+    })).filter(o => o.lat && o.lng && o.name);
+    // Nur Geburtskliniken — Name/Tags müssen auf Kreißsaal hindeuten
+    const orte = alle.filter(o => o._hasKreis)
       .map(o => ({ ...o, distanz: Math.round(haversine(standort.lat, standort.lng, o.lat, o.lng)) }))
-      .sort((a,b) => a.distanz - b.distanz)
-      .slice(0, 15);
-    if (!orte.length) { liste.innerHTML = '<div class="info-box orange"><span class="ib-icon">!</span><div class="ib-text">Keine Kliniken im 30km-Radius gefunden.</div></div>'; return; }
+      .sort((a,b) => a.distanz - b.distanz).slice(0, 15);
+    if (!orte.length) {
+      liste.innerHTML = `<div class="info-box orange"><span class="ib-icon">!</span><div class="ib-text">Keine Geburtsklinik im 200-km-Umkreis in OpenStreetMap gefunden — bitte Hebamme/Frauenarzt nach der nächsten Klinik mit Kreißsaal fragen.<br><a href="https://www.google.com/maps/search/Geburtsklinik+Kreissaal+${encodeURIComponent(standort.name||'')}" target="_blank" class="btn btn-primary btn-sm" style="margin-top:.5rem">🔎 Auf Google Maps suchen</a></div></div>`;
+      return;
+    }
     liste.innerHTML = orte.map(o => {
-      const dist = o.distanz < 1000 ? `${o.distanz}m` : `${(o.distanz/1000).toFixed(1)}km`;
+      const dist = o.distanz < 1000 ? `${o.distanz} m` : `${(o.distanz/1000).toFixed(1)} km`;
       return `
       <div class="card" style="border-left:4px solid #DC2626;margin-bottom:.6rem">
-        <div style="font-weight:800;font-size:.92rem">${esc(o.name)}</div>
+        <div style="font-weight:800;font-size:.92rem">🏥 ${esc(o.name)}</div>
+        <div style="font-size:.74rem;color:#059669;font-weight:700;margin-top:.15rem">✓ Geburtshilfe / Kreißsaal</div>
         <div style="font-size:.78rem;color:var(--g500);margin:.2rem 0">📍 ${dist} entfernt${o.adresse?' · '+esc(o.adresse):''}</div>
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem">
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lng}" target="_blank" class="btn btn-primary btn-sm">Route</a>
-          ${o.tel ? `<a href="tel:${o.tel}" class="btn btn-outline btn-sm">${esc(o.tel)}</a>` : ''}
-          ${o.web ? `<a href="${o.web}" target="_blank" class="btn btn-outline btn-sm">Website</a>` : ''}
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lng}" target="_blank" class="btn btn-primary btn-sm">🗺️ Route</a>
+          ${o.tel ? `<a href="tel:${o.tel}" class="btn btn-outline btn-sm">📞 ${esc(o.tel)}</a>` : ''}
+          ${o.web ? `<a href="${esc(o.web)}" target="_blank" class="btn btn-outline btn-sm">🌐 Website</a>` : ''}
         </div>
       </div>`;
     }).join('');
   } catch(e) {
     liste.innerHTML = '<div class="info-box orange"><span class="ib-icon">!</span><div class="ib-text">Kliniken konnten nicht geladen werden. Bitte erneut versuchen.</div></div>';
+  }
+}
+
+// Hebammen im Umkreis aus OpenStreetMap (healthcare=midwife)
+async function hebammen_laden() {
+  const u = getUser();
+  const standort = state.umgebungStandort || (u?.lat ? {lat:u.lat, lng:u.lng, name:u.ort} : null);
+  if (!standort) return;
+  const liste = el('ssw-hebammen-liste');
+  if (!liste) return;
+  liste.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><span>Hebammen in der Nähe werden gesucht...</span></div>';
+  try {
+    const query = `[out:json][timeout:25];(
+      nwr["healthcare"="midwife"](around:50000,${standort.lat},${standort.lng});
+      nwr["healthcare:speciality"~"midwife|midwifery"](around:50000,${standort.lat},${standort.lng});
+      nwr["office"="midwife"](around:50000,${standort.lat},${standort.lng});
+    );out center 40;`;
+    const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+    const daten = await res.json();
+    const orte = (daten.elements||[]).map(o => ({
+      name: o.tags?.name || 'Hebamme',
+      lat: o.lat || o.center?.lat,
+      lng: o.lon || o.center?.lon,
+      adresse: o.tags?.['addr:street'] ? `${o.tags['addr:street']} ${o.tags['addr:housenumber']||''}` : '',
+      tel: o.tags?.phone || o.tags?.['contact:phone'] || '',
+      web: o.tags?.website || o.tags?.['contact:website'] || ''
+    })).filter(o => o.lat && o.lng)
+      .map(o => ({ ...o, distanz: Math.round(haversine(standort.lat, standort.lng, o.lat, o.lng)) }))
+      .sort((a,b) => a.distanz - b.distanz).slice(0, 15);
+    if (!orte.length) {
+      const stadt = encodeURIComponent(standort.name||'');
+      liste.innerHTML = `<div class="info-box orange"><span class="ib-icon">!</span><div class="ib-text"><strong>Keine Hebammen-Einträge in OpenStreetMap im 50-km-Umkreis.</strong> Hebammen sind in OSM oft nicht gepflegt — über die offiziellen Verzeichnisse findest du sie zuverlässiger:<br>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem">
+          <a href="https://www.hebammenverband.de/familien/hebammensuche/" target="_blank" class="btn btn-primary btn-sm">🔎 Hebammenverband-Suche</a>
+          <a href="https://www.ammely.de/hebammensuche" target="_blank" class="btn btn-outline btn-sm">Ammely.de</a>
+          <a href="https://www.google.com/maps/search/Hebamme+${stadt}" target="_blank" class="btn btn-outline btn-sm">Google Maps</a>
+        </div></div></div>`;
+      return;
+    }
+    liste.innerHTML = orte.map(o => {
+      const dist = o.distanz < 1000 ? `${o.distanz} m` : `${(o.distanz/1000).toFixed(1)} km`;
+      return `
+      <div class="card" style="border-left:4px solid #EC4899;margin-bottom:.6rem">
+        <div style="font-weight:800;font-size:.92rem">👶 ${esc(o.name)}</div>
+        <div style="font-size:.78rem;color:var(--g500);margin:.2rem 0">📍 ${dist} entfernt${o.adresse?' · '+esc(o.adresse):''}</div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${o.lat},${o.lng}" target="_blank" class="btn btn-primary btn-sm">🗺️ Route</a>
+          ${o.tel ? `<a href="tel:${o.tel}" class="btn btn-outline btn-sm">📞 ${esc(o.tel)}</a>` : ''}
+          ${o.web ? `<a href="${esc(o.web)}" target="_blank" class="btn btn-outline btn-sm">🌐 Website</a>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    liste.innerHTML = '<div class="info-box orange"><span class="ib-icon">!</span><div class="ib-text">Hebammen konnten nicht geladen werden. Bitte erneut versuchen.</div></div>';
   }
 }
 
@@ -12409,12 +12535,17 @@ function renderSchwangerschaftKliniken() {
   if (!standort) {
     return `<div class="info-box orange"><span class="ib-icon">!</span><div class="ib-text"><strong>Standort fehlt.</strong> Unter <em>Orte → Umgebung</em> Ihren Wohnort eingeben.</div></div>`;
   }
-  setTimeout(kliniken_laden, 100);
+  setTimeout(() => { kliniken_laden(); hebammen_laden(); }, 100);
   return `
   <div class="info-box gruen">
     <span class="ib-icon">i</span>
     <div class="ib-text"><strong>Tipp:</strong> 32. SSW: Klinik anmelden! Vorab-Tour buchen. Für Notfall: Adresse im Handy speichern.</div>
   </div>
+  <div class="block-title" style="margin-top:1rem">👶 Hebammen in der Nähe</div>
+  <p class="section-sub" style="margin-top:-.4rem">Vorsorge, Geburtsvorbereitung, Wochenbett — Krankenkasse zahlt komplett.</p>
+  <div id="ssw-hebammen-liste"></div>
+  <div class="block-title" style="margin-top:1.5rem">🏥 Geburtskliniken (mit Kreißsaal)</div>
+  <p class="section-sub" style="margin-top:-.4rem">Nur Kliniken mit Geburtshilfe — gefiltert nach Name und Spezialisierung.</p>
   <div id="ssw-kliniken-liste"></div>`;
 }
 
@@ -13224,7 +13355,14 @@ function renderHausaufgaben() {
       { titel:'Bewegung zwischen Lernen', txt:'Nach 30 Min lernen 5 Min Bewegung (Treppensteigen, Springen). Aktiviert Durchblutung des Gehirns.' },
       { titel:'Gemeinsam vs. allein', txt:'Faktenwissen: allein lernen. Verständnisstoff (Mathe-Beweis, Texte): in der Gruppe erklären — beidseitig wirksam.' },
       { titel:'Wasser trinken', txt:'2 % Wassermangel = 20 % weniger Konzentration. Glas Wasser auf den Tisch, alle 30 Min trinken.' },
-      { titel:'Belohnungssystem', txt:'Nach jedem Lernblock kleine Belohnung (Lieblings-Musik, Snack). Gehirn lernt: Lernen = Positiv.' }
+      { titel:'Belohnungssystem', txt:'Nach jedem Lernblock kleine Belohnung (Lieblings-Musik, Snack). Gehirn lernt: Lernen = Positiv.' },
+      { titel:'Spaced Repetition', txt:'Stoff in wachsenden Abständen wiederholen: Tag 1, 3, 7, 14, 30. Genau dann lernen, wenn du es fast vergessen würdest — der stärkste Lerneffekt überhaupt.' },
+      { titel:'Lückentext-Methode', txt:'Wichtige Begriffe aus dem Text streichen und versuchen, sie aus dem Gedächtnis zu ergänzen. Aktivierung statt passives Lesen — doppelte Behaltensquote.' },
+      { titel:'Lerngruppe ≠ Quatschrunde', txt:'Klare Regel: jeder erklärt 10 Minuten ein Thema. Niemand schweigt. Wer erklärt, lernt am meisten — der zuhört, fragt nach.' },
+      { titel:'Konzentration trainieren', txt:'Smartphone in Schubblade, Webseiten blockieren (Browser-Erweiterung „LeechBlock"). Schon nach 1 Woche merkst du die Konzentration kommt zurück.' },
+      { titel:'Energiekurve nutzen', txt:'Schweres in der besten Stunde (meist 9–11 Uhr), Auswendiges am Nachmittag. Eigene Energiekurve 1 Woche lang notieren — dann gezielt einteilen.' },
+      { titel:'Eigene Zusammenfassung', txt:'Nach jedem Kapitel 5 Sätze in eigenen Worten. Wer es nicht in 5 Sätzen kann, hat es nicht verstanden — und merkt es sofort.' },
+      { titel:'Test-statt-Lese-Effekt', txt:'Sich SELBST abfragen ist 2× wirkungsvoller als nochmal zu lesen. Lieber 5 Min Karteikarten als 15 Min Buch durchblättern.' }
     ],
     mathe: [
       { titel:'Jeden Tag 15 Min', txt:'Mathe braucht tägliche Wiederholung. Lieber 15 Min pro Tag als 2 Std am Wochenende.' },
@@ -13299,6 +13437,51 @@ function renderHausaufgaben() {
         <div style="font-size:.82rem;color:var(--g700);line-height:1.5">${esc(t.txt)}</div>
       </div>`).join('')}
     </div>`).join('')}
+
+    <div class="block-title" style="margin-top:1.5rem">📚 Geprüfte Hilfsportale für alle Fächer</div>
+    <p class="section-sub" style="margin-top:-.4rem">Kostenlose Lernportale für Grundschule bis Abitur — handverlesen, alle Links funktionieren.</p>
+    <div class="grid-2">
+      ${[
+        { e:'🦊', n:'Anton App', k:'Klasse 1–10 · alle Fächer', g:true, t:'Komplett kostenlose Lern-App vom Bundesministerium gefördert. Mathe, Deutsch, Sachkunde, Englisch, Bio. Web + Smartphone.', u:'https://anton.app', f:'#16A34A' },
+        { e:'📐', n:'Serlo', k:'Mathe + mehr · gemeinnützig', g:true, t:'Komplette Mathe-Lernplattform Klasse 5–13 — Aufgaben, Lösungen, Erklärungen. Werbefrei, gemeinnützig, von Lehrern erstellt.', u:'https://de.serlo.org', f:'#2563EB' },
+        { e:'🎓', n:'Khan Academy Deutsch', k:'Mathe, Wissen · weltweit', g:true, t:'Tausende Videos und Übungen. Mathe-Bereich auf Deutsch. Adaptiver Lernpfad, alle Klassen.', u:'https://de.khanacademy.org', f:'#0EA5E9' },
+        { e:'🎬', n:'Studyflix', k:'Klasse 5–13 · 7000+ Videos', g:true, t:'Erklärvideos zu allen Schulfächern. Mathe, Physik, Chemie, Bio, Deutsch, Englisch, Geschichte, Politik. Komplett gratis.', u:'https://studyflix.de', f:'#7C3AED' },
+        { e:'🧮', n:'Mathepower', k:'Mathe · Klasse 1–13', g:true, t:'Mathe-Aufgaben Schritt für Schritt lösen lassen. Brüche, Gleichungen, Geometrie — gibt Rechenweg dazu.', u:'https://www.mathepower.com', f:'#4F46E5' },
+        { e:'⚛️', n:'LEIFIphysik', k:'Physik · alle Klassen', g:true, t:'Riesige Physik-Sammlung — Aufgaben, Lösungen, Animationen, Experimente. Vom Joachim-Herz-Stiftung.', u:'https://www.leifiphysik.de', f:'#DC2626' },
+        { e:'🧪', n:'PhET Simulationen', k:'Physik, Chemie, Mathe, Bio', g:true, t:'Interaktive Simulationen der University of Colorado, komplett auf Deutsch. Naturphänomene zum Selbst-Experimentieren.', u:'https://phet.colorado.edu/de/', f:'#059669' },
+        { e:'📖', n:'Duden', k:'Deutsch · Rechtschreibung', g:true, t:'Wörterbuch, Rechtschreibung, Grammatik, Synonyme. Der Standard.', u:'https://www.duden.de', f:'#EA580C' },
+        { e:'🔤', n:'LEO Wörterbuch', k:'Englisch, Französisch, Spanisch …', g:true, t:'Beste Übersetzungen, Forum, Beispielsätze. Auch Latein, Italienisch, Chinesisch, Russisch.', u:'https://dict.leo.org', f:'#1D4ED8' },
+        { e:'🌍', n:'DeepL Übersetzer', k:'18 Sprachen · sehr genau', g:true, t:'Beste KI-Übersetzung für Schule. Texte und ganze Dokumente. 1500 Zeichen pro Übersetzung gratis.', u:'https://www.deepl.com/de/translator', f:'#0078D4' },
+        { e:'🦉', n:'Duolingo', k:'Sprachen lernen · spielerisch', g:true, t:'Englisch, Französisch, Spanisch, Latein und mehr. 5–15 Minuten täglich reichen. Werbefrei in der Gratis-Version.', u:'https://www.duolingo.com', f:'#58CC02' },
+        { e:'🎥', n:'Lehrer Schmidt (YouTube)', k:'Mathe, Physik · Klasse 1–13', g:true, t:'Der bekannteste deutsche Mathe-Lehrer auf YouTube. Über 1500 Videos, von Grundschule bis Abitur.', u:'https://www.youtube.com/@LehrerSchmidt', f:'#FF0000' },
+        { e:'🧠', n:'Mathe by Daniel Jung', k:'Mathe · Klasse 7–13', g:true, t:'Mathe-Erklärvideos, sehr klar und in unter 5 Minuten pro Thema. Ideal für Sek I und Sek II.', u:'https://www.youtube.com/@MathebyDanielJung', f:'#DB2777' },
+        { e:'📺', n:'Musstewissen (ZDF)', k:'Mathe · Deutsch · Geschichte · Chemie · Physik · Biologie', g:true, t:'Schulfächer kompakt erklärt, kostenlos vom ZDF — sechs eigene Kanäle (je Fach einer).', u:'https://www.youtube.com/@musstewissen', f:'#FF6900' },
+        { e:'🇩🇪', n:'Mr. Wissen2go Geschichte', k:'Geschichte · Politik · Sek I/II', g:true, t:'Mirko Drotschmann erklärt Geschichte und Politik schülergerecht. Ideal für Klausur-Vorbereitung.', u:'https://www.youtube.com/@MrWissen2goGeschichte', f:'#92400E' },
+        { e:'🦒', n:'Terra X plus Schule (ZDF)', k:'Bio · Geschichte · Erdkunde', g:true, t:'Sachthemen, didaktisch geprüft, mit Arbeitsblättern. Auch komplette Themenreihen.', u:'https://www.zdf.de/wissen/terra-x-plus-schule', f:'#0EA5E9' },
+        { e:'🦁', n:'Geolino', k:'Klasse 3–7 · Wissen', g:true, t:'Wissensportal für Kinder zu Tieren, Natur, Geschichte, Technik. Spiele, Quiz, Bastelideen.', u:'https://www.geo.de/geolino', f:'#65A30D' },
+        { e:'📘', n:'Klexikon (Kinder-Wikipedia)', k:'Klasse 1–8', g:true, t:'Wikipedia in einfacher Sprache von und für Kinder. Über 4000 Artikel.', u:'https://klexikon.zum.de', f:'#7C3AED' },
+        { e:'🔎', n:'Blinde Kuh (Kinder-Suche)', k:'Grundschule', g:true, t:'Sichere Suchmaschine für Kinder — nur geprüfte Webseiten. Werbefrei.', u:'https://www.blinde-kuh.de', f:'#1F2937' },
+        { e:'🐧', n:'fragFINN', k:'Grundschule · sicher', g:true, t:'Geschützter Surfraum mit über 4000 redaktionell geprüften Kinderseiten. Vom Bundesfamilienministerium.', u:'https://www.fragfinn.de', f:'#0EA5E9' },
+        { e:'📐', n:'GeoGebra', k:'Mathe · alle Stufen', g:true, t:'Geometrie, Algebra, Analysis, Statistik — interaktiv, kostenlos. Web + App.', u:'https://www.geogebra.org/de', f:'#9333EA' },
+        { e:'🧪', n:'Mathebibel', k:'Mathe · Klasse 5–13', g:true, t:'Erklärungen, Aufgaben, Lösungswege. Sehr ausführlich und didaktisch aufbereitet.', u:'https://www.mathebibel.de', f:'#1D4ED8' },
+        { e:'∑', n:'Wolfram Alpha', k:'Mathe · Wissen', g:true, t:'Löst jede Mathe-Aufgabe Schritt für Schritt. Englischsprachig, aber sehr mächtig.', u:'https://www.wolframalpha.com', f:'#DC2626' },
+        { e:'🌐', n:'Sofatutor (30 Tage gratis)', k:'alle Fächer · Klasse 1–13', g:false, t:'Über 12000 Lernvideos mit Übungen. Kostenpflichtig, aber 30 Tage gratis testen.', u:'https://www.sofatutor.com', f:'#06B6D4' },
+        { e:'🦊', n:'Schlaukopf', k:'Klasse 1–13 · alle Fächer', g:true, t:'Tausende Quiz-Aufgaben — werbefrei, komplett kostenlos, Klasse 1 bis Abitur.', u:'https://www.schlaukopf.de', f:'#D97706' },
+        { e:'🎯', n:'Frustfrei Lernen', k:'Mathe, Deutsch, Englisch …', g:true, t:'Tutorials zu allen Schulthemen, einfach erklärt. Auch für Eltern, die helfen wollen.', u:'https://www.frustfrei-lernen.de', f:'#16A34A' },
+        { e:'📺', n:'Planet Schule (ARD/WDR/SWR)', k:'alle Fächer · alle Klassen', g:true, t:'Schulfernsehen on demand. Hunderte Videos zu jedem Schulthema, mit Arbeitsblättern.', u:'https://www.planet-schule.de', f:'#EF4444' },
+        { e:'📊', n:'Statistisches Bundesamt – Klassenzimmer', k:'Daten · Mathe · Politik', g:true, t:'Echte Statistiken zum Üben — Tabellen, Diagramme, Aufgaben für Mathe und Politik.', u:'https://service.destatis.de/DE/zahlenraetsel/index.html', f:'#1E40AF' }
+      ].map(p => `
+        <a href="${p.u}" target="_blank" rel="noopener" class="card" style="text-decoration:none;color:inherit;border-left:4px solid ${p.f};display:block">
+          <div style="display:flex;align-items:flex-start;gap:.55rem;margin-bottom:.3rem">
+            <span style="font-size:1.4rem;flex-shrink:0">${p.e}</span>
+            <div>
+              <div style="font-weight:800;font-size:.92rem">${esc(p.n)}</div>
+              <div style="font-size:.7rem;color:${p.g?'#059669':'#D97706'};font-weight:800;text-transform:uppercase;letter-spacing:.03em">${p.g?'kostenlos':'30 Tage gratis'} · ${esc(p.k)}</div>
+            </div>
+          </div>
+          <div style="font-size:.82rem;color:var(--g700);line-height:1.45;margin-top:.35rem">${esc(p.t)}</div>
+        </a>`).join('')}
+    </div>
 
     <div class="info-box gruen" style="margin-top:1.5rem">
       <span class="ib-icon">⏱️</span>

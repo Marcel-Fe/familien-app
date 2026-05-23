@@ -1084,6 +1084,76 @@ const ANTRAEGE = [
       { feld:'Schulbegleitung', erklaerung:'Eigene Person für Ihr Kind in der Schule (Eingliederungshilfe). Über Sozialamt beantragen.' },
       { feld:'Nachteilsausgleich', erklaerung:'Auch ohne Sonderbedarf: bei LRS, ADHS, Diabetes etc. — mehr Zeit, größerer Druck, Hilfsmittel. Antrag bei Schulleitung.' }
     ]
+  },
+  {
+    id: 'but',
+    name: 'Bildung & Teilhabe (BuT)',
+    emoji: '🎒',
+    beschreibung: 'Zuschüsse für Schulbedarf, Schulausflüge, Klassenfahrten, Mittagessen in Schule/Kita, Lernförderung und Sport/Musik/Kultur (15 €/Monat). Für Familien mit Bürgergeld, Wohngeld, Kinderzuschlag, Asylbewerberleistungen oder geringem Einkommen.',
+    betrag: 'bis zu mehrere Hundert € / Jahr je Kind — Schulbedarfspaket allein 195 €',
+    behoerde: 'Je nach Bundesland: Jobcenter (bei Bürgergeld), Sozialamt, Wohngeldstelle oder Landratsamt',
+    dauer: '2–6 Wochen bis zur Bewilligung',
+    voraussetzungen: [
+      'Kind unter 25 Jahre (in Schule/Ausbildung)',
+      'Familie bezieht Bürgergeld, Sozialhilfe, Asylbewerberleistungen, Kinderzuschlag oder Wohngeld',
+      'ODER niedriges Einkommen, das die Einkommensgrenze nicht überschreitet (Härtefall-Regelung)',
+      'Kein zusätzlicher Antrag nötig bei Bürgergeld-Bezug für Schulbedarfspaket — wird oft automatisch ausgezahlt'
+    ],
+    dokumente: [
+      'Personalausweis Antragsteller',
+      'Geburtsurkunde / Personalausweis Kind',
+      'Bewilligungsbescheid Bürgergeld / Wohngeld / Kinderzuschlag (falls vorhanden)',
+      'Bei niedrigem Einkommen: Einkommensnachweise der letzten 3 Monate, Mietvertrag',
+      'Schulbescheinigung des Kindes',
+      'Je nach Leistung: Quittungen (Schulausflug, Vereinsbeitrag), Bestätigung der Schule (Lernförderung), Anmeldung Mittagessen'
+    ],
+    schritte: [
+      {
+        nr: 1, titel: 'Zuständige Stelle finden',
+        text: 'Bei Bürgergeld-Bezug: Jobcenter. Bei Wohngeld/Kinderzuschlag: oft Sozialamt der Stadt. Bei geringem Einkommen ohne Sozialleistung: Sozialamt oder Landratsamt. Direkt auf der Stadt-Website nach „Bildung und Teilhabe" suchen.',
+        tipp: 'Im Zweifel beim Jobcenter anrufen — die nennen die richtige Stelle für deinen Fall.'
+      },
+      {
+        nr: 2, titel: 'Antragsformular besorgen',
+        text: 'Bei den meisten Städten gibt es Online-Formulare als PDF zum Herunterladen. Beim Bürgergeld-Bezug bekommt man die Anträge oft im Jobcenter direkt. Pro Leistungsart (Schulausflug, Lernförderung, Sport/Kultur, Mittagessen) gibt es meist ein eigenes Formular oder ein Sammelformular.',
+        tipp: 'Direktlink Bundesministerium für Arbeit und Soziales: bmas.de → Soziales → Bildungspaket. Dort sind alle Landes-Stellen verlinkt.'
+      },
+      {
+        nr: 3, titel: 'Bedarf konkret beschreiben',
+        text: 'Im Antrag immer angeben: WAS wird beantragt (Schulausflug XY am Datum, Vereinsbeitrag Sportverein XY, Lernförderung Fach XY), WIE VIEL kostet es, WER bietet es an. Kostenvoranschlag / Bestätigung der Schule oder des Vereins beilegen.',
+        tipp: 'Bei Lernförderung: Bestätigung der Schule, dass die Förderung nötig ist und ohne sie die Versetzung gefährdet wäre — sonst Ablehnung.'
+      },
+      {
+        nr: 4, titel: 'Belege sammeln & einreichen',
+        text: 'Quittungen, Anmeldebestätigungen, Schulbescheinigung, ggf. Mitgliedsantrag im Verein. Alles in Kopie zum Antrag. Vereine und Schulen wissen oft Bescheid und stellen die Bestätigungen aus.',
+        tipp: 'Originale immer behalten. Per Einschreiben verschicken oder beim Amt persönlich abgeben und Eingangsstempel auf der Kopie geben lassen.'
+      },
+      {
+        nr: 5, titel: 'BuT-Karte / Gutschein nutzen',
+        text: 'In vielen Städten wird BuT als Chipkarte oder Gutschein ausgegeben (z.B. „BuT-Card" in Berlin/Hamburg/München). Damit zahlt man direkt bei Vereinen, in der Schul-Mensa oder beim Schulausflug — die Stadt rechnet im Hintergrund ab.',
+        tipp: 'Karte immer bei dir haben — wenn ein Anbieter sie nicht kennt, beim Sozialamt nachfragen, welche Anbieter angeschlossen sind.'
+      },
+      {
+        nr: 6, titel: 'Schulbedarfspaket nicht vergessen',
+        text: '2× im Jahr (1. August + 1. Februar) gibt es ein Schulbedarfspaket (Schulranzen, Hefte, Stifte, Sportzeug) — bei Bürgergeld AUTOMATISCH ausgezahlt, sonst auf Antrag. Aktuell 130 € + 65 € pro Schuljahr.',
+        tipp: 'Falls die Auszahlung nicht kommt: beim Jobcenter / Sozialamt nachhaken. Anspruch verfällt nicht — auch rückwirkend beantragbar.'
+      },
+      {
+        nr: 7, titel: 'Bei Ablehnung: Widerspruch',
+        text: 'Bei Ablehnung 1 Monat Frist für Widerspruch (Datum aus dem Bescheid). Kostet nichts. Begründung: Vorteile der Leistung für das Kind klar darlegen, ggf. Bescheinigung der Schule oder ärztliches Attest beilegen. Erfolgsquote: rund 30 %.',
+        tipp: 'Bei komplizierten Fällen kostenlose Beratung bei Caritas, AWO, Diakonie oder dem Sozialverband VdK / Sozialverband Deutschland (SoVD).'
+      }
+    ],
+    formularhilfe: [
+      { feld:'Persönliche Daten / Bedarfsgemeinschaft', erklaerung:'Vollständige Angaben zu allen Personen im Haushalt — Eltern + Kinder. Bei getrennten Eltern: nur Haushalt des leistungsbeziehenden Elternteils.' },
+      { feld:'Art der Leistung (Ankreuzfeld)', erklaerung:'Schulbedarf, Schulausflug, Klassenfahrt, gemeinsames Mittagessen, Lernförderung, Sport/Kultur/Freizeit. Mehrfachauswahl möglich — alles ankreuzen, was zutrifft.' },
+      { feld:'Schulbedarfspaket', erklaerung:'Kein extra Antrag bei Bürgergeld — wird zu Schulbeginn (August) und Halbjahr (Februar) automatisch ausgezahlt. Bei Wohngeld/Kinderzuschlag separater Antrag nötig.' },
+      { feld:'Schulausflug / Klassenfahrt', erklaerung:'Höhe der Kosten + Datum + Bestätigung der Schule beifügen. Wird in voller Höhe übernommen — auch mehrtägige Fahrten.' },
+      { feld:'Mittagessen Schule/Kita', erklaerung:'Anmeldung beim Caterer / Schule beifügen. Eigenanteil: 1 € pro Mahlzeit. Wird monatlich/quartalsweise direkt mit dem Caterer abgerechnet.' },
+      { feld:'Lernförderung', erklaerung:'WICHTIG: Bestätigung der Schule, dass die Förderung zur Erreichung der Lernziele nötig ist. Ohne diese Bestätigung praktisch immer Ablehnung. Nachhilfe wird stundenweise abgerechnet.' },
+      { feld:'Sport / Musik / Kultur (15 € / Monat)', erklaerung:'Anmeldung im Verein, in der Musikschule, im Sportverein oder bei kulturellen Angeboten. 15 € pro Monat pro Kind — kumuliert für Ausrüstung, Beiträge, Musikunterricht.' },
+      { feld:'Bankverbindung', erklaerung:'IBAN für direkte Erstattung (falls nicht über BuT-Karte/Gutschein abgerechnet wird).' }
+    ]
   }
 ];
 
