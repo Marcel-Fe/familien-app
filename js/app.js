@@ -16049,28 +16049,111 @@ const KI_WISSEN = [
   { keys:['hausaufgaben','lernen','schule helfen'], antwort:'Hausaufgaben-Hilfe ohne Stress:\n\n**Goldene Regel**: Nicht FÜR das Kind, sondern MIT dem Kind. Fragen stellen statt Antworten geben.\n\n**Lern-Techniken**:\n• **Pomodoro**: 25 Min lernen, 5 Min Pause (bei Kindern 20+5)\n• **Fester Lernplatz**: gut beleuchtet, ohne Handy\n• **Frühstück**: Vollkornbrot + Eiweiß = stabile Konzentration\n• **Bewegung in Pausen**: Treppe rauf-runter aktiviert Gehirn\n• **Vor dem Schlaf wiederholen**: festigt Erinnerung\n\n**Kostenlose Lernportale**:\n• Anton-App (Klasse 1–10, alle Fächer)\n• Lehrer Schmidt (YouTube, Grundschule + weiterführend)\n• Daniel Jung (40.000+ Mathe-Videos)\n• MrWissen2go (Geschichte, Politik)\n\nUnter "Kinder → Hausaufgaben" findest du Klassen 1–12 mit YouTube-Empfehlungen.', icon:'📚' }
 ];
 
+// Häufige deutsche Stop-Wörter — dürfen NICHT zum Keyword-Match beitragen,
+// sonst matchen Fragen wie „was sind …" gegen Wissens-Einträge wie „was tun bei fieber".
+const _KI_STOPWOERTER = new Set([
+  'was','wie','wer','wann','wo','warum','wieso','weshalb','welche','welcher','welches',
+  'ist','sind','war','waren','bin','bist','habe','hat','haben','hatten','wird','werde','werden','wurde','wurden',
+  'der','die','das','den','dem','des','ein','eine','einen','einem','einer','eines',
+  'für','und','oder','aber','doch','jedoch','nicht','kein','keine','keinen','keiner','keines',
+  'in','an','am','auf','aus','bei','mit','von','vor','nach','seit','bis','um','zu','zur','zum','über','unter','ohne','gegen',
+  'mein','meine','meiner','meinem','meinen','meines','unser','unsere','dein','deine',
+  'sich','sie','ihn','ihm','ihr','ihnen','ihre','ihres',
+  'geplant','heute','morgen','übermorgen','gestern',
+  'mal','schon','noch','nur','auch','hier','dort','da','also','dann','wenn','dass','weil','damit','sodass',
+  'man','jemand','etwas','viel','wenig','mehr','sehr','ganz','gar','immer','nie',
+  'aktuell','bitte','danke'
+]);
+
+// Datums-Marker im Text (TT.MM, TT.MM.JJJJ, Wochentage, „Wochenende")
+const _KI_DATUM_REGEX = /\b(?:\d{1,2}\.\d{1,2}\.?\d{0,4}|\d{1,2}\.\s*(?:jan|feb|mär|mar|apr|mai|jun|jul|aug|sep|okt|nov|dez)\w*|heute|morgen|übermorgen|wochenende|samstag|sonntag|montag|dienstag|mittwoch|donnerstag|freitag|nächste woche|kommende woche)\b/i;
+
+// Intent-Klassifikation VOR Keyword-Match — fängt klare Fälle ab, bevor
+// das Fuzzy-Matching zuschlägt. Reihenfolge wichtig: spezifisch vor allgemein.
+function _kiIntentBestimmen(q) {
+  // Events / Veranstaltungen — auch wenn nur ein Datum + „los/unternehmen" vorkommt
+  const eventWort = /(veranstaltung|event|konzert|festival|markt|stadtfest|theater|kino|kultur|ausstellung|musical|open\s*air)/i.test(q);
+  const wasLos    = /(was\s+(ist\s+)?los|was\s+geht|was\s+kann\s+man|los\s+ist|sehenswürdig)/i.test(q);
+  const datum     = _KI_DATUM_REGEX.test(q);
+  if (eventWort || (datum && /(machen|unternehmen|los|ausflug)/i.test(q)) || wasLos) {
+    return {
+      sektion: 'veranstaltungen', label: 'Veranstaltungen', icon: '🎪',
+      kurz: 'Aktuelle Veranstaltungen, Stadtfeste und Konzerte in deiner Region.',
+      hinweis: datum ? 'Datum erkannt — Veranstaltungen werden gefiltert angezeigt.' : ''
+    };
+  }
+  // Umgebung / Orte
+  if (/(spielplatz|park|supermarkt|tankstelle|apotheke|drogerie|bäcker|fleischer|friseur|in (?:meiner|der) nähe|umgebung|restaurant|café|cafe|imbiss|bibliothek)/i.test(q)) {
+    return { sektion: 'umgebung', label: 'Umgebung', icon: '📍',
+      kurz: 'Live-Karte mit Orten, Routen und Öffnungszeiten rund um deinen Standort.' };
+  }
+  // Wetter / Regen — \bregn fängt regen|regnet|regnen|regnerisch ab
+  if (/(\bregn|\bregen|niederschlag|gewitter|sturm|schnee|wetter(?!\s*ist\s+egal))/i.test(q)) {
+    return { sektion: 'regenradar', label: 'Regenradar', icon: '🌧️',
+      kurz: '6-Stunden-Vorhersage mit Live-Karte und Regenwarnung.' };
+  }
+  // Kalender / Termin (intern, nicht Veranstaltungen)
+  if (/(kalender|termin|geburtstag|verabredung|hochzeitstag|jahrestag|erinnerung)/i.test(q) && !eventWort) {
+    return { sektion: 'kalender', label: 'Familien-Kalender', icon: '📅',
+      kurz: 'Deine eigenen Termine, Feiertage und Familien-Erinnerungen.' };
+  }
+  // Wohnungssuche
+  if (/(wohnung|miete|mietangebote|umziehen|wg)/i.test(q)) {
+    return { sektion: 'wohnung', label: 'Wohnungssuche', icon: '🏘️',
+      kurz: 'Live-Wohnungsangebote aus mehreren Portalen für deinen Wunschort.' };
+  }
+  // Rezepte / Kochen
+  if (/(rezept|kochen|kochbuch|essen kochen|abendessen|mittagessen|frühstück\s+ideen|backen)/i.test(q)) {
+    return { sektion: 'kochbuch', label: 'Kochbuch & Rezepte', icon: '🍽️',
+      kurz: 'Über 400 Rezepte, eigene Sammlung, Wochenplan.' };
+  }
+  // News
+  if (/(nachrichten|news|schlagzeilen|aktuelles)/i.test(q)) {
+    return { sektion: 'news', label: 'Nachrichten', icon: '📰',
+      kurz: 'Aktuelle Schlagzeilen aus überregionalen und regionalen Quellen.' };
+  }
+  return null;
+}
+
 function kiAntwortFinden(frage) {
   const q = frage.toLowerCase().trim();
   const treffer = [];
   let beste = null;
   let besteScore = 0;
 
-  // 1. KI-Wissen durchsuchen mit Score-System
+  // === 0. Intent-Routing — klare Fälle direkt beantworten, kein Fuzzy-Match ===
+  const intent = _kiIntentBestimmen(q);
+  if (intent) {
+    const einleitung = `${intent.icon} Dafür gibt es in der App den Bereich **${intent.label}** — der zeigt dir genau das.`;
+    const text = `${intent.kurz}${intent.hinweis ? '\n\n_' + intent.hinweis + '_' : ''}\n\nTipp: Tippe unten auf **${intent.label}**, um direkt dorthin zu springen.`;
+    return {
+      einleitung, text,
+      treffer: [{ icon: intent.icon, titel: intent.label, sub: 'In der App öffnen', action: `zuSektion('${intent.sektion}')` }],
+      vorlese: `${einleitung} ${text}`.replace(/\*\*/g, '').replace(/_/g, '').replace(/\n+/g, '. ').replace(/\s+/g, ' ')
+    };
+  }
+
+  // === 1. KI-Wissen durchsuchen mit gehärtetem Score-System ===
   KI_WISSEN.forEach(eintrag => {
     eintrag.keys.forEach(k => {
       const kw = k.toLowerCase();
-      // Volltreffer
+      // Volltreffer (ganze Phrase enthalten)
       if (q.includes(kw)) {
         const score = kw.length / (1 + Math.abs(q.length - kw.length) * 0.01);
         if (score > besteScore) { besteScore = score; beste = eintrag; }
       }
-      // Wortweise
+      // Wortweise — Stop-Wörter ignorieren, Wörter müssen min. 4 Zeichen sein,
+      // damit „was", „wie", „und" usw. nicht falsche Treffer erzeugen.
       else {
-        const qWoerter = q.split(/[\s,.!?]+/).filter(w => w.length > 2);
-        const kwWoerter = kw.split(/\s+/);
-        const matches = qWoerter.filter(qw => kwWoerter.some(kww => kww.includes(qw) || qw.includes(kww))).length;
+        const qWoerter = q.split(/[\s,.!?]+/).filter(w => w.length >= 4 && !_KI_STOPWOERTER.has(w));
+        const kwWoerter = kw.split(/\s+/).filter(w => w.length >= 4 && !_KI_STOPWOERTER.has(w));
+        if (qWoerter.length === 0 || kwWoerter.length === 0) return;
+        // Match nur bei sinnvoller Substring-Überlappung (min. 4 Zeichen)
+        const matches = qWoerter.filter(qw =>
+          kwWoerter.some(kww => kww === qw || (kww.length >= 5 && qw.includes(kww)) || (qw.length >= 5 && kww.includes(qw)))
+        ).length;
         if (matches > 0) {
-          const score = matches * 0.5;
+          const score = matches * 0.8;
           if (score > besteScore) { besteScore = score; beste = eintrag; }
         }
       }
@@ -16078,8 +16161,10 @@ function kiAntwortFinden(frage) {
   });
 
   // 1b. Gesundheits-Datenbank durchsuchen (659 Heilmittel) für ausführliche Gesundheits-Antworten
+  // Negative-Marker: wenn die Frage nach Ort/Datum/Event fragt, ist sie sicher KEIN Gesundheitsthema.
+  const _kiOrtDatum = _KI_DATUM_REGEX.test(q) || /(veranstaltung|event|in (?:meiner|der) nähe|umgebung|wohin|wo (?:gibt|findet|kann))/i.test(q);
   let gesundheitTreffer = null;
-  if (typeof GESUNDHEIT_DATEN !== 'undefined') {
+  if (!_kiOrtDatum && typeof GESUNDHEIT_DATEN !== 'undefined') {
     const gesundheitSynonyme = {
       fieber:['fieber','temperatur','glüht','heiße stirn'],
       bauch:['bauch','bauchweh','bauchschmerz','magen','übelkeit','durchfall','erbrechen','erbricht','brechen','blähung','verstopfung'],
@@ -16161,7 +16246,9 @@ function kiAntwortFinden(frage) {
     if (!treffer.find(t => t.titel && t.titel.includes('Gesundheit'))) {
       treffer.unshift({ icon:'🌿', titel:'Gesundheit & Hausmittel', sub:gesundheitTreffer.label + ' und viele weitere Themen', action:`zuSektion('gesundheit')` });
     }
-  } else if (beste) {
+  } else if (beste && besteScore >= 1.5) {
+    // Nur bei konfidenter Übereinstimmung als „Schnell-Antwort" ausspielen —
+    // sonst lieber ehrlich auf Sektions-Vorschläge verweisen.
     einleitung = 'Hier ist meine Antwort:';
     text = beste.antwort;
   } else if (treffer.length > 0) {
