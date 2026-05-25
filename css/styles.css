@@ -6027,6 +6027,18 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   color: #fff;
 }
 
+/* ===== Kalender-Sync-Badge im Hero ===== */
+.kal-sync-badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  margin-top: .5rem; padding: .3rem .65rem;
+  background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.28);
+  border-radius: 99px; font-size: .76rem; font-weight: 700;
+  color: #fff; cursor: pointer; backdrop-filter: blur(6px);
+  transition: background .15s;
+}
+.kal-sync-badge:hover { background: rgba(255,255,255,.28); }
+.kal-sync-badge #kal-sync-status { font-weight: 700; }
+
 /* =====================================================
    DASHBOARD-ANSICHTEN — Auswahl-Karten + 4 Layout-Presets
    (Design 1 nutzt die bereits vorhandenen .dash-*-Klassen)

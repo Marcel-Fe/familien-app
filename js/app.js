@@ -6846,8 +6846,191 @@ function sucheAktualisieren(val) {
 }
 
 // ===== KALENDER =====
-function getTermine() { try { return JSON.parse(localStorage.getItem('familienapp_termine')||'[]'); } catch { return []; } }
-function saveTermine(t) { localStorage.setItem('familienapp_termine', JSON.stringify(t)); }
+// Roh-Liste inkl. Lösch-Tombstones (`_deleted: true`) — nur für Sync nötig.
+function _getTermineRoh() {
+  try { return JSON.parse(localStorage.getItem('familienapp_termine')||'[]'); } catch { return []; }
+}
+// Standard-Aufrufer sehen keine Tombstones (transparent für UI).
+function getTermine() { return _getTermineRoh().filter(t => !t._deleted); }
+function saveTermine(t) {
+  const jetzt = Date.now();
+  // Jeder Termin bekommt einen updatedAt — Voraussetzung für Konflikt-Auflösung.
+  const norm = (Array.isArray(t) ? t : []).map(x => x && x.updatedAt ? x : { ...x, updatedAt: jetzt });
+  localStorage.setItem('familienapp_termine', JSON.stringify(norm));
+  if (kalenderSyncAktiv()) kalenderSyncPushSpaeter();
+}
+
+// ===== FAMILIEN-SYNC (Cloudflare Worker) =====
+let _kalenderSyncPushTimer = null;
+let _kalenderSyncPullTimer = null;
+let _kalenderSyncStatus = 'aus'; // 'aus' | 'aktiv' | 'sync' | 'fehler'
+
+function kalenderSyncAktiv() {
+  const e = einstellungenLaden();
+  return !!(e.familienCode && e.familienSyncUrl);
+}
+
+function kalenderSyncCodeErzeugen() {
+  // Zeichen ohne I,O,1,0 — verwechslungssicher beim Abtippen
+  const z = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c = '';
+  for (let i = 0; i < 6; i++) c += z[Math.floor(Math.random() * z.length)];
+  return c;
+}
+
+function kalenderSyncCodeNeu() {
+  if (!confirm('Neuen Familien-Code erzeugen? Der alte Code funktioniert dann nicht mehr — Familienmitglieder müssen den neuen Code eintragen.')) return;
+  const e = einstellungenLaden();
+  e.familienCode = kalenderSyncCodeErzeugen();
+  e.familienSyncStand = 0;
+  einstellungenSpeichern(e);
+  toast('🔑 Neuer Code: ' + e.familienCode);
+  render();
+}
+
+function kalenderSyncUrlSpeichern() {
+  const url = (state._syncUrlDraft || el('familien-sync-url')?.value || '').trim();
+  if (!url) { toast('⚠️ Bitte URL eingeben'); return; }
+  try { new URL(url); } catch { toast('⚠️ Ungültige URL'); return; }
+  const e = einstellungenLaden();
+  e.familienSyncUrl = url.replace(/\/+$/, '');
+  einstellungenSpeichern(e);
+  toast('💾 Sync-URL gespeichert');
+  render();
+}
+
+function kalenderSyncCodeSpeichern() {
+  const code = ((state._syncCodeDraft || el('familien-sync-code')?.value || '') + '').toUpperCase().trim();
+  if (!/^[A-Z0-9]{6}$/.test(code)) { toast('⚠️ Code muss 6 Zeichen (A-Z, 2-9) sein'); return; }
+  const e = einstellungenLaden();
+  e.familienCode = code;
+  e.familienSyncStand = 0; // neuer Code → kompletten Pull beim nächsten Sync
+  einstellungenSpeichern(e);
+  toast('🔑 Code übernommen');
+  render();
+}
+
+function kalenderSyncStarten() {
+  if (!kalenderSyncAktiv()) { toast('⚠️ Erst URL + Code eintragen'); return; }
+  _kalenderSyncStatus = 'aktiv';
+  kalenderSyncPullJetzt();
+  kalenderSyncTimerNeu();
+  toast('🔄 Familien-Sync läuft');
+  render();
+}
+
+function kalenderSyncStoppen() {
+  if (_kalenderSyncPullTimer) { clearInterval(_kalenderSyncPullTimer); _kalenderSyncPullTimer = null; }
+  if (_kalenderSyncPushTimer) { clearTimeout(_kalenderSyncPushTimer); _kalenderSyncPushTimer = null; }
+  _kalenderSyncStatus = 'aus';
+  toast('⏸️ Sync pausiert (Termine bleiben lokal)');
+  render();
+}
+
+function kalenderSyncEntfernen() {
+  if (!confirm('Familien-Sync ganz entfernen? Termine auf diesem Gerät bleiben erhalten. Termine in der Cloud bleiben unter dem Code abrufbar, bis du sie im Cloudflare-Dashboard löschst.')) return;
+  kalenderSyncStoppen();
+  const e = einstellungenLaden();
+  delete e.familienCode;
+  delete e.familienSyncUrl;
+  delete e.familienSyncStand;
+  einstellungenSpeichern(e);
+  toast('🗑️ Familien-Sync entfernt');
+  render();
+}
+
+function kalenderSyncTimerNeu() {
+  if (_kalenderSyncPullTimer) clearInterval(_kalenderSyncPullTimer);
+  _kalenderSyncPullTimer = setInterval(() => kalenderSyncPullJetzt(), 60000);
+}
+
+function kalenderSyncPushSpaeter() {
+  if (!kalenderSyncAktiv()) return;
+  if (_kalenderSyncPushTimer) clearTimeout(_kalenderSyncPushTimer);
+  // Debouncing: bei mehreren schnellen Saves nur einmal pushen
+  _kalenderSyncPushTimer = setTimeout(() => kalenderSyncPushJetzt(), 2000);
+}
+
+async function kalenderSyncPushJetzt() {
+  if (!kalenderSyncAktiv()) return;
+  const e = einstellungenLaden();
+  const termine = _getTermineRoh(); // inkl. Tombstones — Worker braucht beide für Merge
+  _kalenderSyncStatus = 'sync';
+  kalenderSyncStatusUiUpdate();
+  try {
+    const res = await fetch(`${e.familienSyncUrl}/sync?code=${encodeURIComponent(e.familienCode)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ termine })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.fehler || 'Server-Fehler');
+    // Server liefert gemergte Liste zurück — lokal übernehmen, um konsistent zu bleiben
+    localStorage.setItem('familienapp_termine', JSON.stringify(data.termine || []));
+    e.familienSyncStand = data.updatedAt || Date.now();
+    einstellungenSpeichern(e);
+    _kalenderSyncStatus = 'aktiv';
+    kalenderSyncStatusUiUpdate();
+  } catch (err) {
+    console.warn('Familien-Sync Push fehlgeschlagen:', err.message);
+    _kalenderSyncStatus = 'fehler';
+    kalenderSyncStatusUiUpdate();
+  }
+}
+
+async function kalenderSyncPullJetzt() {
+  if (!kalenderSyncAktiv()) return;
+  const e = einstellungenLaden();
+  const since = e.familienSyncStand || 0;
+  _kalenderSyncStatus = 'sync';
+  kalenderSyncStatusUiUpdate();
+  try {
+    const res = await fetch(`${e.familienSyncUrl}/sync?code=${encodeURIComponent(e.familienCode)}&since=${since}`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.fehler || 'Server-Fehler');
+    if ((data.termine || []).length > 0) {
+      // Pro ID: höherer updatedAt gewinnt — Tombstones inklusive
+      const lokal = _getTermineRoh();
+      const map = new Map(lokal.map(t => [String(t.id), t]));
+      for (const t of data.termine) {
+        const id = String(t.id);
+        const alt = map.get(id);
+        if (!alt || (Number(t.updatedAt) || 0) > (Number(alt.updatedAt) || 0)) {
+          map.set(id, t);
+        }
+      }
+      localStorage.setItem('familienapp_termine', JSON.stringify(Array.from(map.values())));
+      // UI auffrischen, wenn Kalender oder Dashboard offen — sonst beim nächsten Render automatisch
+      if (state.sektion === 'kalender' || state.sektion === 'dashboard') render();
+    }
+    e.familienSyncStand = data.updatedAt || Date.now();
+    einstellungenSpeichern(e);
+    _kalenderSyncStatus = 'aktiv';
+    kalenderSyncStatusUiUpdate();
+  } catch (err) {
+    console.warn('Familien-Sync Pull fehlgeschlagen:', err.message);
+    _kalenderSyncStatus = 'fehler';
+    kalenderSyncStatusUiUpdate();
+  }
+}
+
+function kalenderSyncStatusUiUpdate() {
+  const node = document.getElementById('kal-sync-status');
+  if (!node) return;
+  const labels = { aus: '', aktiv: '✓ synchron', sync: '🔄 läuft …', fehler: '⚠️ offline' };
+  const farben = { aus: '', aktiv: '#059669', sync: '#0EA5E9', fehler: '#DC2626' };
+  node.textContent = labels[_kalenderSyncStatus] || '';
+  node.style.color = farben[_kalenderSyncStatus] || '';
+}
+
+// Beim App-Start aufrufen — wenn Sync konfiguriert, sofort pullen + Polling starten
+function kalenderSyncInit() {
+  if (!kalenderSyncAktiv()) return;
+  _kalenderSyncStatus = 'aktiv';
+  // Pull verzögert, damit App-Render zuerst durch ist
+  setTimeout(() => kalenderSyncPullJetzt(), 2500);
+  kalenderSyncTimerNeu();
+}
 
 function kalenderTabWaehlen(tab) { state.kalenderTab = tab; render(); }
 function kalenderMonatAendern(delta) {
@@ -6881,7 +7064,17 @@ function terminSpeichern() {
 
 function terminLoeschen(id) {
   if (!confirm('Termin löschen?')) return;
-  saveTermine(getTermine().filter(t => t.id !== id));
+  const all = _getTermineRoh();
+  if (kalenderSyncAktiv()) {
+    // Mit Sync: Tombstone setzen, damit Löschung auch andere Geräte erreicht.
+    const idx = all.findIndex(t => t.id === id);
+    if (idx >= 0) {
+      all[idx] = { ...all[idx], _deleted: true, updatedAt: Date.now() };
+      saveTermine(all);
+    }
+  } else {
+    saveTermine(all.filter(t => t.id !== id));
+  }
   render();
 }
 
@@ -7057,6 +7250,7 @@ function renderKalender() {
   const muellGeschaetzt = (typeof getTermine === 'function') &&
     getTermine().some(t => t.notiz && t.notiz.includes('Automatisch durch Müllkalender'));
 
+  const syncAn = kalenderSyncAktiv();
   return `
   <div class="news-hero">
     <div class="news-hero-bg" style="background-image:url('https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=70')"></div>
@@ -7064,6 +7258,11 @@ function renderKalender() {
     <div class="news-hero-inhalt">
       <div style="font-size:1.4rem;font-weight:800;margin-bottom:.3rem">Familien-Kalender</div>
       <div style="font-size:.85rem;opacity:.9">Alle Termine — pro Person filterbar · ${mitglieder.length} Familienmitglieder</div>
+      ${syncAn ? `
+      <div class="kal-sync-badge" onclick="zuSektion('einstellungen')" title="Familien-Sync verwalten">
+        <span id="kal-sync-status" style="color:#059669">✓ synchron</span>
+        <span style="opacity:.75;font-size:.7rem;margin-left:.4rem">Code ${esc((einstellungenLaden().familienCode || '').toUpperCase())}</span>
+      </div>` : ''}
     </div>
   </div>
 
@@ -10762,6 +10961,57 @@ function renderEinstellungen() {
         ImmoScout & Kleinanzeigen blockieren auch Server-Anfragen — der Worker holt Daten von <strong>Wohnungsbörse, WG-Gesucht und Immobilo</strong>. In großen Städten findet man meistens was, in Dörfern selten.
       </div>
     </div>
+  </div>
+
+  <!-- Familien-Kalender-Sync (Cloudflare Worker) -->
+  <div class="einst-gruppe">
+    <div class="einst-gruppe-titel">👨‍👩‍👧 Familien-Kalender-Sync (optional)</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">
+      Damit Mama, Papa und alle Familienmitglieder denselben Kalender auf ihren Handys sehen. Braucht einen kostenlosen Cloudflare-Worker (10 Min Einmal-Setup, 100 % gratis). <strong>Ohne Sync</strong> bleiben Termine wie bisher rein lokal.
+    </div>
+
+    <div style="font-size:.74rem;font-weight:700;color:var(--g700);margin:.7rem 0 .3rem">1. Worker-URL</div>
+    <input type="text" class="reg-input" id="familien-sync-url"
+      placeholder="https://kalender.dein-name.workers.dev"
+      value="${esc(einst.familienSyncUrl || '')}"
+      oninput="state._syncUrlDraft=this.value" />
+    <button class="btn btn-primary btn-sm" style="margin-top:.4rem" onclick="kalenderSyncUrlSpeichern()">💾 URL speichern</button>
+
+    <div style="font-size:.74rem;font-weight:700;color:var(--g700);margin:.85rem 0 .3rem">2. Familien-Code (6 Zeichen — auf allen Geräten der Familie gleich!)</div>
+    <input type="text" class="reg-input" id="familien-sync-code"
+      placeholder="z.B. H7K2M9"
+      maxlength="6"
+      style="text-transform:uppercase;letter-spacing:.15em;font-weight:700"
+      value="${esc(einst.familienCode || '')}"
+      oninput="state._syncCodeDraft=this.value.toUpperCase()" />
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
+      <button class="btn btn-primary btn-sm" onclick="kalenderSyncCodeSpeichern()">💾 Code übernehmen</button>
+      <button class="btn btn-outline btn-sm" onclick="kalenderSyncCodeNeu()">🎲 Neuen Code erzeugen</button>
+    </div>
+
+    <div style="margin-top:1rem;display:flex;gap:.4rem;flex-wrap:wrap">
+      ${einst.familienCode && einst.familienSyncUrl ? `
+        ${_kalenderSyncStatus !== 'aus' && _kalenderSyncPullTimer
+          ? `<button class="btn btn-outline btn-sm" onclick="kalenderSyncStoppen()">⏸️ Sync pausieren</button>`
+          : `<button class="btn btn-primary btn-sm" onclick="kalenderSyncStarten()">▶️ Sync starten</button>`}
+        <button class="btn btn-outline btn-sm" onclick="kalenderSyncPullJetzt()">🔄 Jetzt abgleichen</button>
+        <button class="btn btn-outline btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="kalenderSyncEntfernen()">🗑️ Sync entfernen</button>
+      ` : ''}
+    </div>
+
+    ${einst.familienCode && einst.familienSyncUrl ? `
+    <div class="info-box gruen" style="margin-top:.75rem"><span class="ib-icon">👨‍👩‍👧</span><div class="ib-text">
+      <strong>Sync aktiv unter Code ${esc(einst.familienCode.toUpperCase())}</strong><br>
+      Diesen Code + die URL an alle Familienmitglieder schicken — die tragen beides in ihrer App ein und sehen ab sofort dieselben Termine.
+    </div></div>` : ''}
+
+    <div class="info-box orange" style="margin-top:.75rem"><span class="ib-icon">⚠️</span><div class="ib-text" style="font-size:.78rem">
+      <strong>Datenschutz:</strong> Mit Sync werden Termine auf Cloudflare gespeichert (DSGVO-konform, EU-Server). <strong>Wer den Code kennt, sieht alle Termine</strong> — also nur in der Familie weitergeben.
+    </div></div>
+
+    <div class="info-box blau" style="margin-top:.5rem"><span class="ib-icon">📘</span><div class="ib-text">
+      <strong>Setup-Anleitung:</strong> Schritt-für-Schritt-Anleitung im Projekt-Ordner als <code>KALENDER-WORKER-SETUP.md</code>. Worker-Code liegt als <code>kalender-worker.js</code> bereit zum Kopieren.
+    </div></div>
   </div>
 
   <!-- Schriftgröße / Senior-Modus -->
@@ -15946,6 +16196,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Regenwarnung: kurz nach Start + danach alle 10 Minuten prüfen, ob Regen aufzieht
   setTimeout(() => regenWacheTick(), 9000);
   setInterval(() => regenWacheTick(), 600000);
+  // Familien-Kalender-Sync: bei konfiguriertem Worker sofort pullen + Polling starten
+  kalenderSyncInit();
   // Beim Zurückkehren zur App: verpasste Erinnerungen + Regen-Check sofort nachholen
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) { erinnerungenTick(); erinnerungenPruefen(); regenWacheTick(); }
