@@ -7414,6 +7414,7 @@ function renderTermineInhalt(mitglieder, filter) {
     : kommend.map(t => {
         const tt = getAlleTerminTypen()[t.typ] || TERMIN_TYPEN.sonstiges;
         const datumText = new Date(t.datum+'T00:00:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'short',year:'2-digit'});
+        const istEigen = t.id && !t.feiertag && !t.ferien && !t._auto;
         return `<div class="termin-item">
           <div class="termin-typ-icon" style="background:${tt.farbe}20;color:${tt.farbe}">${tt.icon}</div>
           <div style="flex:1">
@@ -7421,7 +7422,11 @@ function renderTermineInhalt(mitglieder, filter) {
             <div style="font-size:.78rem;color:var(--g500)">${datumText}${t.uhrzeit?' · '+t.uhrzeit+' Uhr':''}</div>
             ${t.notiz?`<div style="font-size:.75rem;color:var(--g700);margin-top:.1rem;font-style:italic">${esc(t.notiz)}</div>`:''}
           </div>
-          <button class="liste-del" onclick="terminLoeschen(${t.id})" title="Termin löschen">✕</button>
+          ${istEigen ? `
+            <button class="termin-aktion" onclick="terminTeilen(${t.id})" title="Termin teilen (WhatsApp, Mail, …)">📤</button>
+            <button class="termin-aktion" onclick="terminAlsICSDownload(${t.id})" title="Als .ics-Datei für Google/Apple-Kalender">📅</button>
+            <button class="liste-del" onclick="terminLoeschen(${t.id})" title="Termin löschen">✕</button>
+          ` : ''}
         </div>`;
       }).join('')}`;
 }
@@ -15481,11 +15486,48 @@ function kalenderTermineFormatiert(maxTage = 30) {
   return zeilen.join('\n');
 }
 
+// Base-URL der App (ohne Query/Hash) — Ziel für Deep-Links
+function _appBaseUrl() {
+  const u = window.location;
+  return u.origin + u.pathname.replace(/\/+$/, '/');
+}
+
+// JSON → URL-safe Base64 (auch für Umlaute korrekt)
+function _b64Encode(obj) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+}
+function _b64Decode(str) {
+  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); } catch { return null; }
+}
+
+// Minimaler Termin für Deep-Link (ohne IDs/Tombstones)
+function _terminMinimal(t) {
+  const o = { titel: t.titel, datum: t.datum };
+  if (t.uhrzeit) o.uhrzeit = t.uhrzeit;
+  if (t.typ && t.typ !== 'sonstiges') o.typ = t.typ;
+  if (t.notiz) o.notiz = t.notiz;
+  if (t.ort) o.ort = t.ort;
+  if (t.person) o.person = t.person;
+  if (t.wiederholung && t.wiederholung !== 'einmalig') o.wiederholung = t.wiederholung;
+  return o;
+}
+
+// Deep-Link für ganzen Kalender (alle eigenen, nicht-gelöschten Termine)
+function kalenderDeepLink() {
+  const liste = getTermine().map(_terminMinimal);
+  return `${_appBaseUrl()}?importAlle=${_b64Encode(liste)}`;
+}
+
 function kalenderTeilen(modus) {
   const text = kalenderTermineFormatiert(30);
   if (!text) { toast('⚠️ Keine Termine in den nächsten 30 Tagen'); return; }
+  const link = kalenderDeepLink();
+  // Wenn Link zu lang (URL-Limit) → ohne Link, nur Text + .ics-Hinweis
+  const linkZeile = link.length <= 4500
+    ? `\n\n👉 Alle Termine direkt übernehmen:\n${link}`
+    : '\n\n(Zu viele Termine für Direkt-Link — bitte .ics-Datei verwenden)';
   const header = '📅 Familien-Kalender — Termine der nächsten 30 Tage:\n\n';
-  const ganz = header + text + '\n\n— gesendet via FamilienApp';
+  const ganz = header + text + linkZeile + '\n\n— gesendet via FamilienApp';
 
   if (modus === 'whatsapp') {
     window.open('https://wa.me/?text=' + encodeURIComponent(ganz), '_blank');
@@ -15503,6 +15545,128 @@ function kalenderTeilen(modus) {
   } else if (modus === 'native' && navigator.share) {
     navigator.share({ title: 'Familien-Kalender', text: ganz }).catch(() => {});
   }
+}
+
+// Einzelnen Termin teilen — Empfänger klickt Link → Termin landet im Familien-Kalender
+function terminTeilen(id) {
+  const t = _getTermineRoh().find(x => x.id === id && !x._deleted);
+  if (!t) { toast('⚠️ Termin nicht gefunden'); return; }
+  const link = `${_appBaseUrl()}?import=${_b64Encode(_terminMinimal(t))}`;
+  const datumStr = new Date(t.datum + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const text = `📅 ${t.titel}\n${datumStr}${t.uhrzeit ? ' um ' + t.uhrzeit + ' Uhr' : ''}${t.ort ? '\n📍 ' + t.ort : ''}${t.notiz ? '\n\n' + t.notiz : ''}\n\n👉 In Familien-Kalender übernehmen:\n${link}`;
+
+  // Nativer Share-Dialog (WhatsApp, Mail, Messages, …) wenn verfügbar (mobil)
+  if (navigator.share) {
+    navigator.share({ title: t.titel, text }).catch(() => {});
+    return;
+  }
+  // Fallback: Kopieren + Hinweis (Desktop ohne Share API)
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(
+      () => toast('✓ Termin in Zwischenablage — jetzt in WhatsApp/E-Mail einfügen'),
+      () => toast('⚠️ Kopieren nicht möglich')
+    );
+  } else {
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  }
+}
+
+// Einzelnen Termin als .ics-Datei herunterladen (Google/Apple/Outlook-kompatibel)
+function terminAlsICSDownload(id) {
+  const t = _getTermineRoh().find(x => x.id === id && !x._deleted);
+  if (!t) { toast('⚠️ Termin nicht gefunden'); return; }
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = dStr => {
+    const d = new Date(dStr);
+    return d.getUTCFullYear() + pad(d.getUTCMonth()+1) + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + '00Z';
+  };
+  const startISO = t.datum + (t.uhrzeit ? 'T' + t.uhrzeit + ':00' : 'T00:00:00');
+  const start = fmt(startISO);
+  const endDate = new Date(startISO);
+  endDate.setHours(endDate.getHours() + 1);
+  const end = fmt(endDate.toISOString());
+  const summary = (t.titel || 'Termin').replace(/[\r\n,;\\]/g, ' ');
+  const description = (t.notiz || '').replace(/[\r\n]/g, ' ').replace(/[,;\\]/g, ' ');
+  const location = (t.ort || '').replace(/[\r\n,;\\]/g, ' ');
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FamilienApp//Termin//DE',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    'UID:' + (t.id || Date.now()) + '@familienapp',
+    'DTSTAMP:' + fmt(new Date().toISOString()),
+    'DTSTART:' + start, 'DTEND:' + end,
+    'SUMMARY:' + summary,
+    description ? 'DESCRIPTION:' + description : '',
+    location ? 'LOCATION:' + location : '',
+    'END:VEVENT', 'END:VCALENDAR'
+  ].filter(Boolean).join('\r\n');
+  const blob = new Blob([lines], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `termin-${t.datum}-${(t.titel||'termin').replace(/[^a-z0-9-]/gi,'_').slice(0,30)}.ics`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('✓ Termin als .ics heruntergeladen');
+}
+
+// Beim App-Start: prüft, ob ?import=... oder ?importAlle=... in der URL steckt.
+// Wenn ja: zeigt Bestätigungs-Modal und übernimmt die Termine.
+function terminImportPruefen() {
+  const params = new URLSearchParams(window.location.search);
+  const einzel = params.get('import');
+  const alle   = params.get('importAlle');
+  if (!einzel && !alle) return;
+
+  // URL aufräumen — verhindert Doppel-Import bei Reload
+  history.replaceState(null, '', window.location.pathname);
+
+  if (einzel) {
+    const t = _b64Decode(einzel);
+    if (!t || !t.titel || !t.datum) { toast('⚠️ Geteilter Termin nicht lesbar'); return; }
+    setTimeout(() => terminImportBestaetigen([t], 'einzel'), 1200);
+  } else if (alle) {
+    const liste = _b64Decode(alle);
+    if (!Array.isArray(liste) || !liste.length) { toast('⚠️ Geteilter Kalender nicht lesbar'); return; }
+    setTimeout(() => terminImportBestaetigen(liste, 'alle'), 1200);
+  }
+}
+
+function terminImportBestaetigen(termine, modus) {
+  const valide = termine.filter(t => t && t.titel && t.datum);
+  if (!valide.length) { toast('⚠️ Keine gültigen Termine im Link'); return; }
+  const erster = valide[0];
+  const datumStr = d => new Date(d + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short', year: '2-digit' });
+  let frage;
+  if (modus === 'einzel' || valide.length === 1) {
+    frage = `📅 Diesen Termin in deinen Familien-Kalender übernehmen?\n\n${erster.titel}\n${datumStr(erster.datum)}${erster.uhrzeit ? ' um ' + erster.uhrzeit : ''}${erster.notiz ? '\n\n' + erster.notiz : ''}`;
+  } else {
+    const vorschau = valide.slice(0, 5).map(t => `• ${datumStr(t.datum)}: ${t.titel}`).join('\n');
+    const mehr = valide.length > 5 ? `\n… und ${valide.length - 5} weitere` : '';
+    frage = `📅 ${valide.length} Termine in deinen Familien-Kalender übernehmen?\n\n${vorschau}${mehr}\n\nBereits vorhandene Termine (gleicher Titel + Datum) werden übersprungen.`;
+  }
+  if (!confirm(frage)) return;
+
+  const bestand = _getTermineRoh();
+  const vorhanden = new Set(bestand.filter(t => !t._deleted).map(t => `${t.titel}|${t.datum}`));
+  let importiert = 0;
+  for (const t of valide) {
+    const schluessel = `${t.titel}|${t.datum}`;
+    if (vorhanden.has(schluessel)) continue;
+    bestand.push({
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      titel: t.titel, datum: t.datum,
+      uhrzeit: t.uhrzeit || '', typ: t.typ || 'sonstiges',
+      person: t.person || '', wiederholung: t.wiederholung || 'einmalig',
+      ort: t.ort || '', notiz: t.notiz || '', erinnerung: false,
+      updatedAt: Date.now()
+    });
+    vorhanden.add(schluessel);
+    importiert++;
+  }
+  saveTermine(bestand);
+  toast(`✓ ${importiert} von ${valide.length} Termin${valide.length === 1 ? '' : 'en'} übernommen`);
+  zuSektion('kalender');
 }
 
 // ===== KALENDER ICS-EXPORT / -IMPORT (Teilen) =====
@@ -16285,6 +16449,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(() => regenWacheTick(), 600000);
   // Familien-Kalender-Sync: bei konfiguriertem Worker sofort pullen + Polling starten
   kalenderSyncInit();
+  // Quick-Win: geteilten Termin/Kalender aus URL importieren (?import= / ?importAlle=)
+  terminImportPruefen();
   // Beim Zurückkehren zur App: verpasste Erinnerungen + Regen-Check sofort nachholen
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) { erinnerungenTick(); erinnerungenPruefen(); regenWacheTick(); }

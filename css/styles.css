@@ -6027,6 +6027,21 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   color: #fff;
 }
 
+/* ===== Termin-Aktions-Buttons (Teilen, .ics) ===== */
+.termin-aktion {
+  background: transparent; border: 1px solid var(--g200);
+  color: var(--g700); border-radius: 8px;
+  padding: .35rem .5rem; cursor: pointer;
+  font-size: .9rem; line-height: 1;
+  margin-left: .2rem; transition: all .15s;
+}
+.termin-aktion:hover {
+  background: var(--lila-hell, #EDE9FE);
+  border-color: var(--p1);
+  color: var(--p1);
+}
+.termin-aktion:active { transform: scale(.95); }
+
 /* ===== Kalender-Sync-Badge im Hero ===== */
 .kal-sync-badge {
   display: inline-flex; align-items: center; gap: .3rem;
