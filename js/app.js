@@ -37,7 +37,6 @@ const state = {
   essensplanWoche: 0,
   extrasTab: 'steuer', checklisteTyp: 'reise',
   suchQuery: '', terminAddOffen: false,
-  wohnungOrt: '', wohnungPlz: '', wohnungRadius: 10,
   tippsKat: 'alle',
   sparTippsKat: 'alle',
   budgetTab: 'rechner',
@@ -1617,7 +1616,7 @@ function _wetterHtmlBauen(data, ort) {
   const sa = dly.sunrise?.[0] ? new Date(dly.sunrise[0]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
   const su = dly.sunset?.[0]  ? new Date(dly.sunset[0]).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
 
-  // Stündliche Vorschau — nächste 12 Stunden
+  // Stündliche Vorschau — nächste 6 Stunden (Rest scroll-bar)
   const hr = data.hourly || {};
   let stundenHtml = '';
   if (hr.time && hr.time.length) {
@@ -1625,7 +1624,7 @@ function _wetterHtmlBauen(data, ort) {
     let startIdx = hr.time.findIndex(t => new Date(t).getTime() + 3600000 > jetztMs);
     if (startIdx < 0) startIdx = 0;
     const karten = [];
-    for (let i = startIdx; i < Math.min(startIdx + 12, hr.time.length); i++) {
+    for (let i = startIdx; i < Math.min(startIdx + 6, hr.time.length); i++) {
       const dt = new Date(hr.time[i]);
       const istJetzt = karten.length === 0;
       const wi = wetterInfo(hr.weather_code?.[i] ?? 3);
@@ -1633,10 +1632,10 @@ function _wetterHtmlBauen(data, ort) {
       const rp = hr.precipitation_probability?.[i];
       karten.push(`
         <div class="wetter-stunde-karte${istJetzt ? ' wetter-stunde-jetzt' : ''}">
-          <div class="wetter-stunde-zeit">${istJetzt ? 'Jetzt' : dt.getHours() + ' Uhr'}</div>
+          <div class="wetter-stunde-zeit">${istJetzt ? 'Jetzt' : dt.getHours() + 'h'}</div>
           <div class="wetter-stunde-emoji">${wi.emoji}</div>
           <div class="wetter-stunde-temp">${t}°</div>
-          <div class="wetter-stunde-regen">${(rp != null && rp > 0) ? '💧 ' + rp + ' %' : ''}</div>
+          <div class="wetter-stunde-regen">${(rp != null && rp > 0) ? rp + '%' : ''}</div>
         </div>`);
     }
     if (karten.length) {
@@ -1668,46 +1667,28 @@ function _wetterHtmlBauen(data, ort) {
     </div>
     <div class="wetter-zusatz">
       <div class="wetter-info-item">
-        <div class="wetter-info-icon">↑↓</div>
-        <div class="wetter-info-text">
-          <div class="wetter-info-wert">${max}° / ${min}°</div>
-          <div class="wetter-info-label">Max / Min</div>
-        </div>
+        <span class="wetter-info-icon">↑↓</span>
+        <span class="wetter-info-text"><span class="wetter-info-wert">${max}° / ${min}°</span><span class="wetter-info-label">Max/Min</span></span>
       </div>
       <div class="wetter-info-item">
-        <div class="wetter-info-icon">🌡️</div>
-        <div class="wetter-info-text">
-          <div class="wetter-info-wert">${tempGefuehlt}°</div>
-          <div class="wetter-info-label">Gefühlt</div>
-        </div>
+        <span class="wetter-info-icon">🌡️</span>
+        <span class="wetter-info-text"><span class="wetter-info-wert">${tempGefuehlt}°</span><span class="wetter-info-label">gefühlt</span></span>
       </div>
       <div class="wetter-info-item">
-        <div class="wetter-info-icon">💧</div>
-        <div class="wetter-info-text">
-          <div class="wetter-info-wert">${regen} mm</div>
-          <div class="wetter-info-label">Niederschlag</div>
-        </div>
+        <span class="wetter-info-icon">💧</span>
+        <span class="wetter-info-text"><span class="wetter-info-wert">${regen} mm</span><span class="wetter-info-label">Regen</span></span>
       </div>
       <div class="wetter-info-item">
-        <div class="wetter-info-icon">💨</div>
-        <div class="wetter-info-text">
-          <div class="wetter-info-wert">${wind} km/h</div>
-          <div class="wetter-info-label">Wind</div>
-        </div>
+        <span class="wetter-info-icon">💨</span>
+        <span class="wetter-info-text"><span class="wetter-info-wert">${wind} km/h</span><span class="wetter-info-label">Wind</span></span>
       </div>
       ${luft ? `<div class="wetter-info-item">
-        <div class="wetter-info-icon">💦</div>
-        <div class="wetter-info-text">
-          <div class="wetter-info-wert">${luft} %</div>
-          <div class="wetter-info-label">Luftfeuchte</div>
-        </div>
+        <span class="wetter-info-icon">💦</span>
+        <span class="wetter-info-text"><span class="wetter-info-wert">${luft}%</span><span class="wetter-info-label">Feuchte</span></span>
       </div>` : ''}
       ${sa && su ? `<div class="wetter-info-item">
-        <div class="wetter-info-icon">${isDay ? '🌅' : '🌇'}</div>
-        <div class="wetter-info-text">
-          <div class="wetter-info-wert" style="font-size:.78rem">${sa} / ${su}</div>
-          <div class="wetter-info-label">Auf / Unter</div>
-        </div>
+        <span class="wetter-info-icon">${isDay ? '🌅' : '🌇'}</span>
+        <span class="wetter-info-text"><span class="wetter-info-wert">${sa}/${su}</span><span class="wetter-info-label">Auf/Unter</span></span>
       </div>` : ''}
     </div>
 
@@ -1717,9 +1698,9 @@ function _wetterHtmlBauen(data, ort) {
 
     ${dly.weather_code && dly.weather_code.length > 1 ? `
     <div class="wetter-14tage">
-      <div class="wetter-14tage-titel">14-Tage-Vorschau</div>
+      <div class="wetter-14tage-titel">7-Tage-Vorschau</div>
       <div class="wetter-14tage-scroll">
-        ${dly.weather_code.map((wc, i) => {
+        ${dly.weather_code.slice(0, 8).map((wc, i) => {
           if (i === 0) return ''; // heute schon oben
           const datum = new Date(dly.time[i]);
           const tag = datum.toLocaleDateString('de-DE', { weekday:'short' });
@@ -1732,10 +1713,10 @@ function _wetterHtmlBauen(data, ort) {
           return `
           <div class="wetter-tag-karte">
             <div class="wetter-tag-name">${tag}</div>
-            <div class="wetter-tag-datum">${tagZahl}. ${monat}</div>
+            <div class="wetter-tag-datum">${tagZahl}.${monat}</div>
             <div class="wetter-tag-emoji">${winfo.emoji}</div>
             <div class="wetter-tag-temp"><strong>${tmax}°</strong><span>${tmin}°</span></div>
-            ${regen > 0.1 ? `<div class="wetter-tag-regen">💧 ${regen} mm</div>` : '<div class="wetter-tag-regen wetter-tag-trocken">trocken</div>'}
+            ${regen > 0.1 ? `<div class="wetter-tag-regen">💧${regen}mm</div>` : '<div class="wetter-tag-regen wetter-tag-trocken">trocken</div>'}
           </div>`;
         }).join('')}
       </div>
@@ -1745,25 +1726,93 @@ function _wetterHtmlBauen(data, ort) {
   </div>`;
 }
 
-// Regenradar als eigene Navigations-Sektion — Landing-Seite, öffnet das Radar-Overlay
+// Regenradar als eigene Navigations-Sektion — kompakte Landing mit 12h-Vorschau
 function renderRegenradar() {
   const u = getUser() || {};
+  const lat = state.umgebungStandort?.lat ?? u.lat;
+  const lng = state.umgebungStandort?.lng ?? u.lng;
   const ort = state.umgebungStandort?.name || u.ort || '';
-  const hatStandort = (state.umgebungStandort?.lat ?? u.lat) != null;
+  const hatStandort = lat != null && lng != null;
+  if (hatStandort) setTimeout(() => regenLandingVorschauLaden(lat, lng), 80);
   return `
   <div class="section-title">🌧️ Regenradar</div>
-  <p class="section-sub">Live-Regenwolken auf der Karte plus 12-Stunden-Vorhersage — sieh genau, wann und wo es regnet.</p>
+  <p class="section-sub">12-Stunden-Vorschau direkt im Blick — Karte mit einem Tipp.</p>
 
-  <button class="btn btn-primary" style="width:100%;font-size:1rem;padding:.9rem" onclick="regenradarOeffnen()">
-    🌧️ Regenradar öffnen${hatStandort && ort ? ' · ' + esc(ort) : ''}
-  </button>
+  ${hatStandort ? `
+  <div class="regen-mini-hero" onclick="regenradarOeffnen()">
+    <div class="regen-mini-emoji">🌧️</div>
+    <div class="regen-mini-text">
+      <div class="regen-mini-titel">Live-Regenwolken${ort ? ' · ' + esc(ort) : ''}</div>
+      <div class="regen-mini-sub">Karte + Animation der nächsten 30 Min</div>
+    </div>
+    <button class="regen-mini-cta" onclick="event.stopPropagation();regenradarOeffnen()">Öffnen ›</button>
+  </div>
 
-  ${!hatStandort ? `<div class="info-box orange" style="margin-top:1rem"><span class="ib-icon">📍</span><div class="ib-text"><strong>Kein Standort:</strong> Trage deinen Ort im Profil oder unter „Umgebung" ein — dann zeigt das Radar deine Region.</div></div>` : ''}
+  <div class="regen-vorschau">
+    <div class="regen-vorschau-titel">Nächste 12 Stunden</div>
+    <div class="regen-vorschau-row" id="regen-landing-row">
+      ${Array.from({length: 12}, () => '<div class="regen-bar trocken"></div>').join('')}
+    </div>
+    <div class="regen-vorschau-labels" id="regen-landing-labels">
+      ${Array.from({length: 12}, () => '<span></span>').join('')}
+    </div>
+    <div class="regen-vorschau-leer" id="regen-landing-info" style="padding-top:.4rem;font-size:.62rem">Lade Vorhersage…</div>
+  </div>
+  ` : `
+  <div class="info-box orange" style="margin-top:.5rem"><span class="ib-icon">📍</span><div class="ib-text"><strong>Kein Standort:</strong> Trage deinen Ort im Profil oder unter „Umgebung" ein — dann siehst du hier die 12h-Vorschau.</div></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:.5rem" onclick="regenradarOeffnen()">🌧️ Regenradar trotzdem öffnen</button>
+  `}
 
-  <div class="info-box blau" style="margin-top:1rem">
-    <span class="ib-icon">💡</span>
-    <div class="ib-text"><strong>So funktioniert's:</strong> Die Karte zeigt die aktuellen Regenwolken und ihre Bewegung der nächsten ~30 Minuten als Animation. Die Leiste darunter zeigt für die nächsten 12 Stunden die Regenmenge und -wahrscheinlichkeit — Stunde für Stunde.</div>
-  </div>`;
+  <div class="regen-info-mini">💡 Die Karte im Overlay zeigt Regenwolken live und ihre Bewegung der nächsten 30 Min. Balken oben: Niederschlagsmenge je Stunde (höher = mehr).</div>`;
+}
+
+// 12h-Mini-Vorschau für die Regenradar-Landing — füllt die Balken-Row
+async function regenLandingVorschauLaden(lat, lng) {
+  const row = el('regen-landing-row');
+  const labels = el('regen-landing-labels');
+  const info = el('regen-landing-info');
+  if (!row || !labels) return;
+  try {
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lng
+      + '&hourly=precipitation,precipitation_probability&forecast_days=2&timezone=auto';
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('Open-Meteo ' + res.status);
+    const d = await res.json();
+    const zeiten = d.hourly?.time || [];
+    const mmReihe = d.hourly?.precipitation || [];
+    const wkReihe = d.hourly?.precipitation_probability || [];
+    if (!zeiten.length) throw new Error('keine Daten');
+    const jetzt = Date.now();
+    let startIdx = zeiten.findIndex(t => new Date(t).getTime() >= jetzt - 3600000);
+    if (startIdx < 0) startIdx = 0;
+    const slots = [];
+    for (let i = startIdx; i < startIdx + 12 && i < zeiten.length; i++) {
+      slots.push({ zeit: new Date(zeiten[i]), mm: mmReihe[i] ?? 0, wk: wkReihe[i] ?? 0 });
+    }
+    if (!slots.length) throw new Error('keine Daten');
+    const maxMm = Math.max(0.5, ...slots.map(s => s.mm));
+    row.innerHTML = slots.map(s => {
+      const hoehe = s.mm > 0 ? Math.max(8, Math.round((s.mm / maxMm) * 100)) : 0;
+      const stufe = s.mm >= 2.5 ? 'stark' : s.mm >= 0.5 ? 'maessig' : s.mm > 0 ? 'leicht' : 'trocken';
+      return `<div class="regen-bar ${stufe}" style="${hoehe ? 'height:' + hoehe + '%' : ''}" title="${s.zeit.getHours()} Uhr · ${s.mm.toFixed(1)} mm · ${Math.round(s.wk)}%"></div>`;
+    }).join('');
+    labels.innerHTML = slots.map((s, i) => `<span>${i % 2 === 0 ? s.zeit.getHours() : ''}</span>`).join('');
+    const maxWk = Math.max(0, ...slots.map(s => s.wk));
+    const summeMm = slots.reduce((s, x) => s + x.mm, 0);
+    if (info) {
+      if (summeMm < 0.2) info.textContent = '☀️ Trocken in den nächsten 12 Stunden.';
+      else if (summeMm < 2)  info.textContent = `🌦️ Etwas Regen möglich (${summeMm.toFixed(1)} mm gesamt, max ${maxWk}% Wahrscheinlichkeit).`;
+      else                   info.textContent = `🌧️ Regen erwartet — ${summeMm.toFixed(1)} mm gesamt, bis ${maxWk}% Wahrscheinlichkeit.`;
+      info.style.padding = '.55rem .85rem';
+      info.style.background = '#F1F5F9';
+      info.style.borderRadius = '10px';
+      info.style.marginTop = '.4rem';
+      info.style.fontSize = '.72rem';
+      info.style.color = '#475569';
+    }
+  } catch (e) {
+    if (info) info.textContent = 'Vorhersage gerade nicht erreichbar';
+  }
 }
 
 // ===== REGENRADAR (Leaflet-Karte + RainViewer, kostenlos, kein API-Key) =====
@@ -1809,9 +1858,18 @@ async function regenradarOeffnen() {
   try {
     // Zoom 7: RainViewer-Radar liefert nur bis Zoom 7 echte Kacheln, darüber den
     // Platzhalter "Zoom Level Not Supported".
-    _radarMap = L.map('radar-map').setView([lat, lng], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 11, attribution: '© OpenStreetMap' }).addTo(_radarMap);
-    L.circleMarker([lat, lng], { radius: 7, color: '#fff', weight: 2, fillColor: '#4F46E5', fillOpacity: 1 }).addTo(_radarMap);
+    _radarMap = L.map('radar-map', { zoomControl: true, attributionControl: true }).setView([lat, lng], 7);
+    // Esri World Imagery — kostenlose Satellitenkacheln, kein API-Key. Modern, dunkler Look.
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 11, maxNativeZoom: 9,
+      attribution: 'Imagery © Esri'
+    }).addTo(_radarMap);
+    // Dezente Label-Schicht obendrauf, damit Städte/Straßen lesbar bleiben
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 11, maxNativeZoom: 9, opacity: .85
+    }).addTo(_radarMap);
+    // Pulsierender Standort-Marker
+    L.circleMarker([lat, lng], { radius: 6, color: '#fff', weight: 2, fillColor: '#F87171', fillOpacity: 1, className: 'radar-standort-puls' }).addTo(_radarMap);
     _radarMap.invalidateSize();
     // 12-Stunden-Vorhersage parallel laden (Open-Meteo) — blockiert die Live-Karte nicht
     radarVorhersageLaden(lat, lng);
@@ -1823,9 +1881,15 @@ async function regenradarOeffnen() {
     const jetztFrame = vergangen.length ? [vergangen[vergangen.length - 1]] : [];
     const frames = [...jetztFrame, ...nowcast];
     if (!frames.length) { const z = el('radar-zeit-sub'); if (z) z.textContent = 'Aktuell keine Radardaten verfügbar'; return; }
-    // maxNativeZoom: 7 — beim Reinzoomen werden die Zoom-7-Kacheln hochskaliert,
-    // statt nicht unterstützte Kacheln (Platzhalter) anzufragen.
-    const layers = frames.map(f => L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5, maxNativeZoom: 7, maxZoom: 11 }).addTo(_radarMap));
+    // 512px-Tiles + Color-Scheme 4 (Weather Channel) für weichen, modernen Look —
+    // matched die Farbpalette der Open-Meteo-Prognose, damit Live → Vorhersage
+    // stilistisch nahtlos ineinander übergeht. CSS-Klasse fügt subtilen Blur dazu.
+    // maxNativeZoom: 7 — RainViewer liefert über Zoom 7 keine echten Kacheln mehr.
+    const layers = frames.map(f => L.tileLayer(`${d.host}${f.path}/512/{z}/{x}/{y}/4/1_1.png`, {
+      opacity: 0, zIndex: 5, maxNativeZoom: 7, maxZoom: 11,
+      tileSize: 512, zoomOffset: -1,
+      className: 'radar-tile-aquarell'
+    }).addTo(_radarMap));
     _radarState = { frames, layers, vergangenAnzahl: jetztFrame.length, idx: 0, playing: true, prognose: [] };
     radarSkalaBauen();
     radarZeige(0);
@@ -1834,7 +1898,7 @@ async function regenradarOeffnen() {
       if (!_radarState || !_radarState.playing) return;
       const total = _radarState.frames.length + (_radarState.prognose ? _radarState.prognose.length : 0);
       radarZeige((_radarState.idx + 1) % total);
-    }, 750);
+    }, 4000);
   } catch (e) {
     const z = el('radar-zeit-sub'); if (z) z.textContent = 'Regenradar gerade nicht erreichbar';
   }
@@ -1909,6 +1973,8 @@ function _radarRegenFarbe(mm) {
 // Open-Meteo liefert kein Radar-Bild für die Zukunft — daher bauen wir aus einem
 // Punktraster eine spielbare Vorschau (wie die "Future Radar"-Animation großer
 // Wetter-Apps, die ebenfalls auf Modelldaten beruht). Reiht sich an die Live-Frames.
+// Statt eckiger Rechtecke: weit überlappende Kreise in einer eigenen Leaflet-Pane,
+// die per CSS-Blur zu weichen Wolken verschmolzen wird.
 async function radarPrognoseLaden(lat, lng) {
   try {
     const N = 7, schritt = 0.18;
@@ -1927,7 +1993,17 @@ async function radarPrognoseLaden(lat, lng) {
     const jetzt = Date.now();
     let start = zeiten.findIndex(t => new Date(t).getTime() >= jetzt);
     if (start < 1) start = 1;
-    const halb = schritt / 2;
+    // Eigene Pane für die Prognose-Wolken → CSS-Blur betrifft nur diese Schicht,
+    // nicht den Standort-Marker oder die Karten-Beschriftung.
+    if (!_radarMap.getPane('radar-prognose')) {
+      _radarMap.createPane('radar-prognose');
+      const p = _radarMap.getPane('radar-prognose');
+      p.style.zIndex = 410;
+      p.classList.add('radar-prognose-pane');
+    }
+    // Kreis-Radius deutlich größer als Raster-Schritt → Kreise überlappen sich,
+    // der CSS-Blur verschmilzt sie zu einer durchgehenden Wolken-Form.
+    const radiusM = 16000; // 16 km — überlappt das ~20 km Raster mit Reserve
     const prognose = [];
     for (let h = 0; h < 6; h++) {
       const stdIdx = start + h;
@@ -1936,8 +2012,13 @@ async function radarPrognoseLaden(lat, lng) {
         const mm = p?.hourly?.precipitation?.[stdIdx] ?? 0;
         const farbe = _radarRegenFarbe(mm);
         if (!farbe) return;
-        L.rectangle([[lats[k]-halb, lngs[k]-halb], [lats[k]+halb, lngs[k]+halb]],
-          { stroke:false, fillColor:farbe, fillOpacity:.45 }).addTo(gruppe);
+        L.circle([lats[k], lngs[k]], {
+          radius: radiusM,
+          stroke: false,
+          fillColor: farbe,
+          fillOpacity: .55,
+          pane: 'radar-prognose'
+        }).addTo(gruppe);
       });
       prognose.push({ time: new Date(zeiten[stdIdx] || (jetzt + (h+1)*3600000)), gruppe });
     }
@@ -2614,7 +2695,6 @@ function render() {
     case 'umgebung':   content.innerHTML = renderUmgebung(); setTimeout(initKarte, 100); break;
     case 'leistungen': content.innerHTML = renderLeistungen(); break;
     case 'formular':   content.innerHTML = renderFormularAssistent(); break;
-    case 'wohnung':    content.innerHTML = renderWohnung(); break;
     case 'sparen':     content.innerHTML = renderSparen(); break;
     case 'beratung':   content.innerHTML = renderBeratung(); break;
     case 'kalender':   content.innerHTML = renderKalender(); break;
@@ -5704,398 +5784,6 @@ function renderAntragDetail(a) {
   </div>`;
 }
 
-// ===== WOHNUNG FINDEN =====
-function stadtSlug(name) {
-  return (name||'').toLowerCase()
-    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
-    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-}
-
-function wohnungOrtSpeichern() {
-  const inp = document.getElementById('wohnung-ort-inp');
-  const rad = document.getElementById('wohnung-radius-inp');
-  if (inp) state.wohnungOrt = inp.value.trim();
-  if (rad) state.wohnungRadius = parseInt(rad.value) || 10;
-  render();
-}
-
-function renderWohnung() {
-  const bl = state.bundesland;
-  const user = getUser() || {};
-  // Ort aus Eingabe, Profil oder leer
-  if (!state.wohnungOrt && user.ort) state.wohnungOrt = user.ort;
-  if (!state.wohnungPlz  && user.plz) state.wohnungPlz  = user.plz;
-  const ort = state.wohnungOrt;
-  const slug = stadtSlug(ort);
-  const rad  = state.wohnungRadius || 10;
-
-  // Portal-Konfiguration mit Unsplash-Fotos + Deep-Links
-  const portale = [
-    {
-      name: 'ImmoScout24',
-      badge: '🏆 Größtes Portal',
-      desc: 'Größtes deutsches Immobilienportal mit echten Wohnungsfotos — keine Anmeldung zum Stöbern nötig.',
-      tipp: 'Suchagent anlegen → sofortige E-Mail bei neuen Angeboten',
-      foto: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=75',
-      url: ort ? `https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten.html` : 'https://www.immobilienscout24.de',
-      farbe: '#4F46E5',
-      keinAnmelden: true
-    },
-    {
-      name: 'Kleinanzeigen',
-      badge: '🏷️ Ohne Makler',
-      desc: 'Privatvermieter ohne Maklergebühr — echte Fotos direkt vom Vermieter. Täglich neue Angebote.',
-      tipp: 'Schnell reagieren! Privatvermieter entscheiden oft in Stunden',
-      foto: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=75',
-      url: ort ? `https://www.kleinanzeigen.de/s-wohnung-mieten/${slug}/` : 'https://www.kleinanzeigen.de/s-wohnung-mieten/',
-      farbe: '#D97706',
-      keinAnmelden: true
-    },
-    {
-      name: 'Immowelt',
-      badge: '📸 Viele Fotos',
-      desc: 'Zweitgrößtes Portal — viele Inserate mit ausführlichen Fotoserien, keine Anmeldung nötig.',
-      tipp: 'Oft günstigere Angebote als ImmoScout, weniger Konkurrenz',
-      foto: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=75',
-      url: ort ? `https://www.immowelt.de/suche/${slug}/wohnungen/mieten` : 'https://www.immowelt.de',
-      farbe: '#059669',
-      keinAnmelden: true
-    },
-    {
-      name: 'Wohnungsbörse',
-      badge: '🏛️ Sozialwohnungen',
-      desc: 'Viele Sozialwohnungen und WBS-Angebote — ideal für Alleinerziehende mit Wohnberechtigungsschein.',
-      tipp: 'Filter "WBS akzeptiert" oder "Sozialwohnung" nutzen',
-      foto: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=75',
-      url: ort ? `https://www.wohnungsboerse.net/suche/?city=${encodeURIComponent(ort)}` : 'https://www.wohnungsboerse.net',
-      farbe: '#7C3AED',
-      keinAnmelden: true
-    },
-    {
-      name: 'WG-Gesucht',
-      badge: '🛋️ Auch mit Kind',
-      desc: 'Wohnungen und WG-Zimmer — viele familienfreundliche Angebote. Fotos immer dabei.',
-      tipp: 'Filter "Familienfreundlich" oder "Mit Kind erlaubt" nutzen',
-      foto: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=75',
-      url: ort ? `https://www.wg-gesucht.de/wohnungen-in-${slug}.html` : 'https://www.wg-gesucht.de',
-      farbe: '#2563EB',
-      keinAnmelden: true
-    },
-    {
-      name: 'AWO / Caritas / Diakonie',
-      badge: '❤️ Für Alleinerziehende',
-      desc: 'Soziale Träger haben eigene günstige Wohnprojekte speziell für alleinerziehende Familien.',
-      tipp: 'Direkt vor Ort anfragen — oft ohne Portal-Konkurrenz und schneller',
-      foto: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=75',
-      url: 'https://www.awo.org',
-      farbe: '#DC2626',
-      keinAnmelden: true
-    }
-  ];
-
-  return `
-  <div class="section-title">🏘️ Wohnung finden</div>
-  <p class="section-sub">Echte Wohnungsfotos sofort — ohne Registrierung. Alle Portale auf Ihren Standort zugeschnitten.</p>
-
-  <!-- Standort-Eingabe -->
-  <div class="wohnung-standort-box">
-    <div class="wohnung-standort-title">📍 Ihr Suchgebiet</div>
-    <div class="wohnung-standort-row">
-      <div style="flex:1;min-width:160px">
-        <label class="wohnung-label">Ort / Stadt</label>
-        <input id="wohnung-ort-inp" class="wohnung-inp" type="text" placeholder="z.B. München, Berlin…"
-          value="${esc(ort)}" />
-      </div>
-      <div>
-        <label class="wohnung-label">Suchradius</label>
-        <select id="wohnung-radius-inp" class="wohnung-inp wohnung-radius-sel">
-          ${[5,10,15,25,50,75,100,150,200].map(r=>`<option value="${r}" ${r===rad?'selected':''}>${r} km</option>`).join('')}
-        </select>
-      </div>
-      <div style="display:flex;align-items:flex-end">
-        <button class="btn btn-primary" onclick="wohnungOrtSpeichern()">🔍 Suchen</button>
-      </div>
-    </div>
-    ${ort ? `<div class="wohnung-standort-info">✓ Suche in <strong>${esc(ort)}</strong> · Umkreis ${rad} km · Alle Links direkt vorausgefüllt</div>` : '<div class="wohnung-standort-info" style="color:var(--orange)">Ort eingeben für vorausgefüllte Suche in allen Portalen</div>'}
-  </div>
-
-  <!-- WBS Info -->
-  <div class="wbs-box">
-    <h3>🔑 Wohnberechtigungsschein (WBS)</h3>
-    <p>Als Alleinerziehende haben Sie oft Anspruch auf günstigere Sozialwohnungen.</p>
-    <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-      <button class="btn btn-primary" onclick="formularOeffnen('wohnberechtigungsschein')">📋 WBS beantragen — Schritt für Schritt</button>
-      ${bl?`<a href="${bl.links.wohngeld.url}" target="_blank" class="btn btn-outline">📍 Wohnungsamt ${esc(bl.name)}</a>`:''}
-    </div>
-  </div>
-
-  ${bl?`<div class="block-title">🏛️ Wohnungsbaugesellschaften in ${esc(bl.name)}</div>
-  <div class="grid-2">${bl.links.wohnungsbau.map(w=>`<div class="card" style="border-left:4px solid #7C3AED"><div style="font-weight:700;margin-bottom:.5rem">${esc(w.text)}</div><a href="${w.url}" target="_blank" class="btn btn-primary btn-sm">Zur Website →</a></div>`).join('')}</div>`:''}
-
-  ${ort ? `
-  ${(() => { _wohnungenLiveVersucht = false; setTimeout(() => { if (!_wohnungenLiveVersucht) wohnungenLiveLaden(ort); }, 500); return ''; })()}
-  <!-- LIVE-VERSUCH: aktuelle Wohnungen via RSS-Feeds (klappt oft nicht — Portale blockieren) -->
-  <div class="block-title">🔴 Live-Angebote in ${esc(ort)}</div>
-  <div id="wohnungen-live-container">
-    <div class="info-box blau" style="margin-bottom:.5rem">
-      <span class="ib-icon">🔄</span>
-      <div class="ib-text">Lade Live-Daten…</div>
-    </div>
-  </div>
-
-  <!-- BEISPIEL-WOHNUNGEN MIT BILDERN -->
-  <div class="block-title">🏠 Typische Wohnungen in ${esc(ort)}</div>
-  <div class="info-box orange" style="margin-bottom:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text"><strong>Wichtig zu wissen:</strong> Diese Karten zeigen <strong>typische Wohnungsarten</strong> mit Beispielbildern. Echte Live-Mietangebote gibt es bei deutschen Portalen leider nicht per API für Apps. Aber: Jede Karte öffnet die <strong>vorgefilterte Live-Suche</strong> mit deinen Wunsch-Kriterien (Zimmer, Preis, Größe) direkt im Portal — du sparst dir die ganze Filter-Klickerei.</div></div>
-
-  <div class="wohnung-galerie">
-    ${[
-      { typ:'1-Zi für Studi/Single', groesse:'30 m²', zimmer:'1 Zi', preis:'400–650 €', merkmal:'Kompakt, günstig', bild:'https://images.unsplash.com/photo-1522444195799-478538b28823?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?numberofrooms=1.0-1.5&pricetype=rentpermonth&price=-650.0` },
-      { typ:'2-Zi-Wohnung', groesse:'55 m²', zimmer:'2 Zi', preis:'600–850 €', merkmal:'Hell, Balkon', bild:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?numberofrooms=2.0-2.5&livingspace=50.0-65.0` },
-      { typ:'3-Zi für junge Familie', groesse:'72 m²', zimmer:'3 Zi', preis:'780–1.100 €', merkmal:'Familienfreundlich', bild:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=80', portal:'Kleinanzeigen', portalUrl:`https://www.kleinanzeigen.de/s-wohnung-mieten/${slug}/c203` },
-      { typ:'Helle 3-Zi mit Garten', groesse:'80 m²', zimmer:'3 Zi', preis:'900–1.250 €', merkmal:'Garten/Terrasse', bild:'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=600&q=80', portal:'Immowelt', portalUrl:`https://www.immowelt.de/suche/${slug}/wohnungen/mieten?d=true&prif=900&pria=1250&rmf=3` },
-      { typ:'4-Zi-Familienwohnung', groesse:'95 m²', zimmer:'4 Zi', preis:'1.100–1.600 €', merkmal:'2 Kinderzimmer', bild:'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?numberofrooms=4.0-` },
-      { typ:'Sozialwohnung mit WBS', groesse:'70 m²', zimmer:'3 Zi', preis:'450–700 €', merkmal:'WBS akzeptiert', bild:'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=600&q=80', portal:'Wohnungsbörse', portalUrl:`https://www.wohnungsboerse.net/suche/?city=${encodeURIComponent(ort)}&minPrice=0&maxPrice=700` },
-      { typ:'Möblierte Wohnung', groesse:'45 m²', zimmer:'2 Zi', preis:'700–1.100 €', merkmal:'Sofort einziehen', bild:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80', portal:'WG-Gesucht', portalUrl:`https://www.wg-gesucht.de/wohnungen-in-${slug}.html` },
-      { typ:'Reihenhaus für Familie', groesse:'120 m²', zimmer:'4-5 Zi', preis:'1.400–2.200 €', merkmal:'Eigener Garten', bild:'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/haus-mieten` },
-      { typ:'Dachgeschoss-Wohnung', groesse:'78 m²', zimmer:'3 Zi', preis:'850–1.200 €', merkmal:'Charmant, Aussicht', bild:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80', portal:'Immowelt', portalUrl:`https://www.immowelt.de/suche/${slug}/wohnungen/mieten` },
-      { typ:'Altbau-Charme', groesse:'85 m²', zimmer:'3 Zi', preis:'950–1.400 €', merkmal:'Hohe Decken, Stuck', bild:'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?numberofrooms=3.0-3.5&hasFloors=0&constructionyear=-1949` },
-      { typ:'Neubau-Wohnung', groesse:'90 m²', zimmer:'3 Zi', preis:'1.200–1.800 €', merkmal:'Modern, energieeffizient', bild:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten?constructionyear=2015-` },
-      { typ:'Maisonette', groesse:'110 m²', zimmer:'4 Zi', preis:'1.400–2.000 €', merkmal:'2 Ebenen, Charakter', bild:'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=600&q=80', portal:'Immowelt', portalUrl:`https://www.immowelt.de/suche/${slug}/wohnungen/mieten?wf=90` },
-      { typ:'Einfamilienhaus mieten', groesse:'140 m²', zimmer:'5 Zi', preis:'1.800–2.800 €', merkmal:'Garten + Garage', bild:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/haus-mieten?livingspace=120-` },
-      { typ:'Wohnung kaufen — klein', groesse:'60 m²', zimmer:'2 Zi', preis:'180–280 T€', merkmal:'Eigentum statt Miete', bild:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-kaufen?numberofrooms=2.0-3.0` },
-      { typ:'Haus kaufen — Familie', groesse:'160 m²', zimmer:'5 Zi', preis:'400–650 T€', merkmal:'Investition fürs Leben', bild:'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=600&q=80', portal:'ImmoScout24', portalUrl:`https://www.immobilienscout24.de/Suche/de/${slug}/haus-kaufen?livingspace=120-` },
-      { typ:'Genossenschafts-Wohnung', groesse:'75 m²', zimmer:'3 Zi', preis:'500–800 €', merkmal:'Sicher, langfristig', bild:'https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=600&q=80', portal:'Wohnungsbörse', portalUrl:`https://www.wohnungsboerse.net/suche/?city=${encodeURIComponent(ort)}&suchart=mieten` }
-    ].map(w => `
-    <a href="${w.portalUrl}" target="_blank" class="wohnung-galerie-karte">
-      <div class="wohnung-galerie-bild" style="background-image:url('${w.bild}')">
-        <span class="wohnung-galerie-preis">${esc(w.preis)}</span>
-        <span class="wohnung-galerie-portal">${esc(w.portal)}</span>
-      </div>
-      <div class="wohnung-galerie-body">
-        <div class="wohnung-galerie-titel">${esc(w.typ)}</div>
-        <div class="wohnung-galerie-details">
-          <span class="wg-detail">📐 ${esc(w.groesse)}</span>
-          <span class="wg-detail">🚪 ${esc(w.zimmer)}</span>
-          <span class="wg-detail">✓ ${esc(w.merkmal)}</span>
-        </div>
-        <div class="wohnung-galerie-cta">→ Live-Suche in ${esc(ort)} öffnen</div>
-      </div>
-    </a>`).join('')}
-  </div>
-
-  <!-- Direkte Live-Suchergebnisse: 1-Klick zu Wohnungs-Listen mit Fotos -->
-  <div class="block-title">🔥 Live-Suche bei den großen Portalen</div>
-  <div class="info-box gruen" style="margin-bottom:.75rem"><span class="ib-icon">✓</span><div class="ib-text"><strong>Direkt zu den aktuellen Angeboten</strong> — alle Portale mit Filter auf <strong>${esc(ort)}</strong> bereits vorausgefüllt.</div></div>
-
-  <div class="wohnung-live-grid">
-    ${portale.slice(0,4).map(p => `
-    <a href="${p.url}" target="_blank" class="wohnung-live-karte" style="--lwf:${p.farbe}">
-      <div class="wohnung-live-bild" style="background-image:url('${p.foto}')">
-        <span class="wohnung-live-badge" style="background:${p.farbe}">Live-Suche</span>
-      </div>
-      <div class="wohnung-live-body">
-        <div class="wohnung-live-name">${esc(p.name)}</div>
-        <div class="wohnung-live-meta">${esc(ort)} · Umkreis ${rad} km</div>
-        <span class="wohnung-live-cta" style="background:${p.farbe}">→ Wohnungen ansehen</span>
-      </div>
-    </a>`).join('')}
-  </div>
-
-  <button class="btn btn-primary" style="width:100%;padding:1rem;font-size:1rem;margin-top:.5rem" onclick="alleWohnungsportaleOeffnen('${esc(ort)}', ${rad})">
-    🚀 Alle ${portale.length} Portale gleichzeitig in neuen Tabs öffnen
-  </button>
-  ` : `
-  <div class="info-box orange" style="margin-bottom:1rem"><span class="ib-icon">📍</span><div class="ib-text"><strong>Ort eingeben oben</strong> — sobald du deine Stadt eingegeben hast, siehst du direkt verlinkte Wohnungs-Suchergebnisse aller Portale für deinen Standort.</div></div>
-  `}
-
-  <div class="block-title">🌐 Alle Wohnungsportale im Detail</div>
-  <div class="wohnung-portal-grid">
-    ${portale.map(p=>`
-    <div class="wohnung-portal-karte">
-      <div class="wohnung-portal-bild" style="background-image:url('${p.foto}')">
-        <span class="wohnung-kein-login">✓ Keine Anmeldung</span>
-        <span class="wohnung-badge" style="background:${p.farbe}">${p.badge}</span>
-      </div>
-      <div class="wohnung-portal-body">
-        <div class="wohnung-portal-name">${esc(p.name)}</div>
-        <p class="wohnung-portal-desc">${esc(p.desc)}</p>
-        <div class="wohnung-portal-tipp">💡 ${esc(p.tipp)}</div>
-        <a href="${p.url}" target="_blank" class="btn btn-primary btn-sm" style="width:100%;text-align:center">
-          ${ort ? `In ${esc(ort)} suchen →` : 'Jetzt suchen →'}
-        </a>
-      </div>
-    </div>`).join('')}
-  </div>
-
-  <div class="info-box blau" style="margin-top:1rem"><span class="ib-icon">ℹ️</span><div class="ib-text"><strong>Warum öffnen sich die Wohnungen in einem neuen Tab?</strong> ImmoScout, Kleinanzeigen und andere Portale erlauben aus Sicherheitsgründen kein direktes Einbetten in andere Apps. Wir verlinken aber direkt zu den Suchergebnissen — du sparst dir die ganze Sucherei.</div></div>`;
-}
-
-// Worker-URL-Verwaltung
-function workerUrlSpeichern() {
-  const url = (state._workerUrlDraft || el('worker-url-input')?.value || '').trim().replace(/\/$/, '');
-  if (url && !/^https?:\/\//.test(url)) { toast('⚠️ URL muss mit https:// beginnen'); return; }
-  const einst = einstellungenLaden();
-  if (url) einst.workerUrl = url; else delete einst.workerUrl;
-  einstellungenSpeichern(einst);
-  toast(url ? '✓ Worker-URL gespeichert' : '✓ Worker-URL entfernt');
-  render();
-}
-function workerUrlLoeschen() {
-  const einst = einstellungenLaden();
-  delete einst.workerUrl;
-  einstellungenSpeichern(einst);
-  toast('✓ Worker entfernt');
-  render();
-}
-async function workerUrlTesten() {
-  const einst = einstellungenLaden();
-  const url = einst.workerUrl;
-  if (!url) { toast('⚠️ Erst Worker-URL speichern'); return; }
-  toast('🔄 Teste Verbindung...');
-  try {
-    const res = await fetch(`${url}/?ort=Berlin`, { signal: AbortSignal.timeout(15000) });
-    const data = await res.json();
-    if (data.ok && data.wohnungen?.length > 0) {
-      toast(`✓ Worker läuft! ${data.anzahl} Test-Wohnungen aus ${data.quelle}`);
-    } else if (data.ok === false) {
-      toast(`⚠️ Worker erreichbar, aber: ${data.fehler}`);
-    } else {
-      toast('⚠️ Antwort unklar — prüfe Code im Worker');
-    }
-  } catch (e) {
-    toast('⚠️ Worker nicht erreichbar — URL prüfen');
-  }
-}
-
-// Auto-Trigger beim Aufruf der Wohnungs-Sektion (1× pro Sektion-View)
-let _wohnungenLiveVersucht = false;
-
-async function wohnungenLiveLaden(ort) {
-  const container = el('wohnungen-live-container');
-  if (!container) return;
-  _wohnungenLiveVersucht = true;
-
-  container.innerHTML = `
-    <div class="info-box blau">
-      <span class="ib-icon">🔄</span>
-      <div class="ib-text"><strong>Lade Live-Angebote für ${esc(ort)}…</strong></div>
-    </div>`;
-
-  const einst = einstellungenLaden();
-  let gefunden = [];
-  let quelleName = '';
-
-  // 1. WORKER versuchen (wenn konfiguriert)
-  if (einst.workerUrl) {
-    try {
-      const res = await fetch(`${einst.workerUrl}/?ort=${encodeURIComponent(ort)}`, { signal: AbortSignal.timeout(20000) });
-      const data = await res.json();
-      if (data.ok && data.wohnungen?.length > 0) {
-        gefunden = data.wohnungen.map(w => ({
-          titel: w.titel || 'Wohnungsangebot',
-          link: w.link || '#',
-          beschr: [w.preis, w.groesse, w.zimmer].filter(Boolean).join(' · '),
-          bild: w.bild,
-          quelle: w.quelle || data.quelle
-        }));
-        quelleName = data.quelle;
-      }
-    } catch(e) { /* fallback unten */ }
-  }
-
-  // 2. Fallback: RSS-Feeds über CORS-Proxies — ALLE Quellen kombinieren für mehr Treffer
-  if (gefunden.length === 0) {
-    const ortSlug = stadtSlug(ort);
-    const versuche = [
-      { name:'Wohnungsbörse', url:`https://www.wohnungsboerse.net/rss/${ortSlug}` },
-      { name:'WG-Gesucht',   url:`https://www.wg-gesucht.de/wohnungen-in-${ortSlug}.146.0.1.0.rss` }
-    ];
-    const proxies = [
-      u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-      u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
-    ];
-    const gesehen = new Set();
-    for (const v of versuche) {
-      for (const p of proxies) {
-        try {
-          const res = await fetch(p(v.url), { signal: AbortSignal.timeout(8000) });
-          if (!res.ok) continue;
-          const xml = await res.text();
-          if (xml.length < 300 || !xml.includes('<item')) continue;
-          const doc = new DOMParser().parseFromString(xml, 'text/xml');
-          Array.from(doc.querySelectorAll('item')).slice(0, 15).forEach(item => {
-            const titel = item.querySelector('title')?.textContent?.trim() || '';
-            const link = item.querySelector('link')?.textContent?.trim() || '';
-            let beschr = item.querySelector('description')?.textContent?.trim() || '';
-            beschr = beschr.replace(/<[^>]*>/g, '').replace(/&nbsp;/g,' ').slice(0, 160);
-            const bildMatch = beschr.match(/https?:\/\/[^\s"']+\.(jpg|jpeg|png|webp)/i);
-            if (titel && link && !gesehen.has(link)) {
-              gesehen.add(link);
-              gefunden.push({ titel, link, beschr, bild: bildMatch?.[0], quelle: v.name });
-            }
-          });
-          break; // Quelle erfolgreich geladen — weiter zur nächsten Quelle (nicht abbrechen)
-        } catch {}
-      }
-    }
-    if (gefunden.length > 0) quelleName = [...new Set(gefunden.map(g => g.quelle))].join(' + ');
-  }
-
-  if (gefunden.length > 0) {
-    container.innerHTML = `
-      <div class="info-box gruen" style="margin-bottom:.5rem">
-        <span class="ib-icon">✓</span>
-        <div class="ib-text"><strong>${gefunden.length} Live-Angebote</strong> aus ${esc(quelleName)} ${einst.workerUrl ? '(via deinem Worker)' : ''}</div>
-      </div>
-      <div class="wohnung-galerie">
-        ${gefunden.map(w => `
-        <a href="${esc(w.link)}" target="_blank" class="wohnung-galerie-karte">
-          ${w.bild ? `<div class="wohnung-galerie-bild" style="background-image:url('${esc(w.bild)}')">
-            <span class="wohnung-galerie-portal">${esc(w.quelle || '')}</span>
-            <span class="wohnung-galerie-preis">LIVE</span>
-          </div>` : `<div class="wohnung-galerie-bild" style="background:linear-gradient(135deg,#DBEAFE,#BFDBFE);display:flex;align-items:center;justify-content:center;font-size:2.5rem">🏠
-            <span class="wohnung-galerie-portal">${esc(w.quelle || '')}</span>
-            <span class="wohnung-galerie-preis">LIVE</span>
-          </div>`}
-          <div class="wohnung-galerie-body">
-            <div class="wohnung-galerie-titel">${esc(w.titel)}</div>
-            ${w.beschr ? `<div style="font-size:.78rem;color:var(--g700);line-height:1.45;margin-bottom:.4rem">${esc(w.beschr)}</div>` : ''}
-            <div class="wohnung-galerie-cta">→ Angebot ansehen</div>
-          </div>
-        </a>`).join('')}
-      </div>`;
-  } else {
-    container.innerHTML = `
-      <div class="info-box orange">
-        <span class="ib-icon">🏠</span>
-        <div class="ib-text">
-          <strong>Gerade keine Live-Angebote ladbar.</strong> Die kostenlosen Wohnungs-Quellen sind manchmal nicht erreichbar.
-          <br><br>So siehst du sofort <strong>alle aktuellen Wohnungen</strong> in ${esc(ort)}:
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
-            <button class="btn btn-primary btn-sm" onclick="alleWohnungsportaleOeffnen('${esc(ort)}')">🔎 Alle Wohnungsportale öffnen</button>
-            <button class="btn btn-outline btn-sm" onclick="wohnungenLiveLaden('${esc(ort)}')">🔄 Erneut versuchen</button>
-          </div>
-          ${einst.workerUrl ? '' : '<div style="font-size:.78rem;color:var(--g500);margin-top:.7rem">Tipp: Für viele Live-Angebote dauerhaft direkt in der App lässt sich optional ein kostenloser Server (Cloudflare Worker) einrichten — siehe Einstellungen.</div>'}
-        </div>
-      </div>`;
-  }
-}
-
-function alleWohnungsportaleOeffnen(ort, rad) {
-  if (!ort) { toast('⚠️ Bitte erst einen Ort eingeben'); return; }
-  const slug = stadtSlug(ort);
-  const urls = [
-    `https://www.immobilienscout24.de/Suche/de/${slug}/wohnung-mieten.html`,
-    `https://www.kleinanzeigen.de/s-wohnung-mieten/${slug}/`,
-    `https://www.immowelt.de/suche/${slug}/wohnungen/mieten`,
-    `https://www.wohnungsboerse.net/suche/?city=${encodeURIComponent(ort)}`,
-    `https://www.wg-gesucht.de/wohnungen-in-${slug}.html`
-  ];
-  urls.forEach((u, i) => setTimeout(() => window.open(u, '_blank'), i * 200));
-  toast(`✓ ${urls.length} Portale geöffnet für ${ort}`);
-}
-
 // ===== BERATUNG =====
 function renderBeratung() {
   return `
@@ -6846,191 +6534,38 @@ function sucheAktualisieren(val) {
 }
 
 // ===== KALENDER =====
-// Roh-Liste inkl. Lösch-Tombstones (`_deleted: true`) — nur für Sync nötig.
-function _getTermineRoh() {
+function getTermine() {
   try { return JSON.parse(localStorage.getItem('familienapp_termine')||'[]'); } catch { return []; }
 }
-// Standard-Aufrufer sehen keine Tombstones (transparent für UI).
-function getTermine() { return _getTermineRoh().filter(t => !t._deleted); }
 function saveTermine(t) {
-  const jetzt = Date.now();
-  // Jeder Termin bekommt einen updatedAt — Voraussetzung für Konflikt-Auflösung.
-  const norm = (Array.isArray(t) ? t : []).map(x => x && x.updatedAt ? x : { ...x, updatedAt: jetzt });
-  localStorage.setItem('familienapp_termine', JSON.stringify(norm));
-  if (kalenderSyncAktiv()) kalenderSyncPushSpaeter();
+  localStorage.setItem('familienapp_termine', JSON.stringify(Array.isArray(t) ? t : []));
 }
 
-// ===== FAMILIEN-SYNC (Cloudflare Worker) =====
-let _kalenderSyncPushTimer = null;
-let _kalenderSyncPullTimer = null;
-let _kalenderSyncStatus = 'aus'; // 'aus' | 'aktiv' | 'sync' | 'fehler'
-
-function kalenderSyncAktiv() {
-  const e = einstellungenLaden();
-  return !!(e.familienCode && e.familienSyncUrl);
-}
-
-function kalenderSyncCodeErzeugen() {
-  // Zeichen ohne I,O,1,0 — verwechslungssicher beim Abtippen
-  const z = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let c = '';
-  for (let i = 0; i < 6; i++) c += z[Math.floor(Math.random() * z.length)];
-  return c;
-}
-
-function kalenderSyncCodeNeu() {
-  if (!confirm('Neuen Familien-Code erzeugen? Der alte Code funktioniert dann nicht mehr — Familienmitglieder müssen den neuen Code eintragen.')) return;
-  const e = einstellungenLaden();
-  e.familienCode = kalenderSyncCodeErzeugen();
-  e.familienSyncStand = 0;
-  einstellungenSpeichern(e);
-  toast('🔑 Neuer Code: ' + e.familienCode);
-  render();
-}
-
-function kalenderSyncUrlSpeichern() {
-  const url = (state._syncUrlDraft || el('familien-sync-url')?.value || '').trim();
-  if (!url) { toast('⚠️ Bitte URL eingeben'); return; }
-  try { new URL(url); } catch { toast('⚠️ Ungültige URL'); return; }
-  const e = einstellungenLaden();
-  e.familienSyncUrl = url.replace(/\/+$/, '');
-  einstellungenSpeichern(e);
-  toast('💾 Sync-URL gespeichert');
-  render();
-}
-
-function kalenderSyncCodeSpeichern() {
-  const code = ((state._syncCodeDraft || el('familien-sync-code')?.value || '') + '').toUpperCase().trim();
-  if (!/^[A-Z0-9]{6}$/.test(code)) { toast('⚠️ Code muss 6 Zeichen (A-Z, 2-9) sein'); return; }
-  const e = einstellungenLaden();
-  e.familienCode = code;
-  e.familienSyncStand = 0; // neuer Code → kompletten Pull beim nächsten Sync
-  einstellungenSpeichern(e);
-  toast('🔑 Code übernommen');
-  render();
-}
-
-function kalenderSyncStarten() {
-  if (!kalenderSyncAktiv()) { toast('⚠️ Erst URL + Code eintragen'); return; }
-  _kalenderSyncStatus = 'aktiv';
-  kalenderSyncPullJetzt();
-  kalenderSyncTimerNeu();
-  toast('🔄 Familien-Sync läuft');
-  render();
-}
-
-function kalenderSyncStoppen() {
-  if (_kalenderSyncPullTimer) { clearInterval(_kalenderSyncPullTimer); _kalenderSyncPullTimer = null; }
-  if (_kalenderSyncPushTimer) { clearTimeout(_kalenderSyncPushTimer); _kalenderSyncPushTimer = null; }
-  _kalenderSyncStatus = 'aus';
-  toast('⏸️ Sync pausiert (Termine bleiben lokal)');
-  render();
-}
-
-function kalenderSyncEntfernen() {
-  if (!confirm('Familien-Sync ganz entfernen? Termine auf diesem Gerät bleiben erhalten. Termine in der Cloud bleiben unter dem Code abrufbar, bis du sie im Cloudflare-Dashboard löschst.')) return;
-  kalenderSyncStoppen();
-  const e = einstellungenLaden();
-  delete e.familienCode;
-  delete e.familienSyncUrl;
-  delete e.familienSyncStand;
-  einstellungenSpeichern(e);
-  toast('🗑️ Familien-Sync entfernt');
-  render();
-}
-
-function kalenderSyncTimerNeu() {
-  if (_kalenderSyncPullTimer) clearInterval(_kalenderSyncPullTimer);
-  _kalenderSyncPullTimer = setInterval(() => kalenderSyncPullJetzt(), 60000);
-}
-
-function kalenderSyncPushSpaeter() {
-  if (!kalenderSyncAktiv()) return;
-  if (_kalenderSyncPushTimer) clearTimeout(_kalenderSyncPushTimer);
-  // Debouncing: bei mehreren schnellen Saves nur einmal pushen
-  _kalenderSyncPushTimer = setTimeout(() => kalenderSyncPushJetzt(), 2000);
-}
-
-async function kalenderSyncPushJetzt() {
-  if (!kalenderSyncAktiv()) return;
-  const e = einstellungenLaden();
-  const termine = _getTermineRoh(); // inkl. Tombstones — Worker braucht beide für Merge
-  _kalenderSyncStatus = 'sync';
-  kalenderSyncStatusUiUpdate();
+// Migration v83: alte Familien-Sync-Tombstones + Sync-Einstellungen aufräumen,
+// falls der Worker-Sync (v78) je auf diesem Gerät aktiv war.
+(function _kalenderTombstoneCleanup_v83() {
   try {
-    const res = await fetch(`${e.familienSyncUrl}/sync?code=${encodeURIComponent(e.familienCode)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ termine })
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.fehler || 'Server-Fehler');
-    // Server liefert gemergte Liste zurück — lokal übernehmen, um konsistent zu bleiben
-    localStorage.setItem('familienapp_termine', JSON.stringify(data.termine || []));
-    e.familienSyncStand = data.updatedAt || Date.now();
-    einstellungenSpeichern(e);
-    _kalenderSyncStatus = 'aktiv';
-    kalenderSyncStatusUiUpdate();
-  } catch (err) {
-    console.warn('Familien-Sync Push fehlgeschlagen:', err.message);
-    _kalenderSyncStatus = 'fehler';
-    kalenderSyncStatusUiUpdate();
-  }
-}
-
-async function kalenderSyncPullJetzt() {
-  if (!kalenderSyncAktiv()) return;
-  const e = einstellungenLaden();
-  const since = e.familienSyncStand || 0;
-  _kalenderSyncStatus = 'sync';
-  kalenderSyncStatusUiUpdate();
-  try {
-    const res = await fetch(`${e.familienSyncUrl}/sync?code=${encodeURIComponent(e.familienCode)}&since=${since}`);
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.fehler || 'Server-Fehler');
-    if ((data.termine || []).length > 0) {
-      // Pro ID: höherer updatedAt gewinnt — Tombstones inklusive
-      const lokal = _getTermineRoh();
-      const map = new Map(lokal.map(t => [String(t.id), t]));
-      for (const t of data.termine) {
-        const id = String(t.id);
-        const alt = map.get(id);
-        if (!alt || (Number(t.updatedAt) || 0) > (Number(alt.updatedAt) || 0)) {
-          map.set(id, t);
+    const raw = localStorage.getItem('familienapp_termine');
+    if (raw) {
+      const liste = JSON.parse(raw);
+      if (Array.isArray(liste)) {
+        const ohneTombstones = liste.filter(t => t && !t._deleted);
+        if (ohneTombstones.length !== liste.length) {
+          localStorage.setItem('familienapp_termine', JSON.stringify(ohneTombstones));
         }
       }
-      localStorage.setItem('familienapp_termine', JSON.stringify(Array.from(map.values())));
-      // UI auffrischen, wenn Kalender oder Dashboard offen — sonst beim nächsten Render automatisch
-      if (state.sektion === 'kalender' || state.sektion === 'dashboard') render();
     }
-    e.familienSyncStand = data.updatedAt || Date.now();
-    einstellungenSpeichern(e);
-    _kalenderSyncStatus = 'aktiv';
-    kalenderSyncStatusUiUpdate();
-  } catch (err) {
-    console.warn('Familien-Sync Pull fehlgeschlagen:', err.message);
-    _kalenderSyncStatus = 'fehler';
-    kalenderSyncStatusUiUpdate();
-  }
-}
-
-function kalenderSyncStatusUiUpdate() {
-  const node = document.getElementById('kal-sync-status');
-  if (!node) return;
-  const labels = { aus: '', aktiv: '✓ synchron', sync: '🔄 läuft …', fehler: '⚠️ offline' };
-  const farben = { aus: '', aktiv: '#059669', sync: '#0EA5E9', fehler: '#DC2626' };
-  node.textContent = labels[_kalenderSyncStatus] || '';
-  node.style.color = farben[_kalenderSyncStatus] || '';
-}
-
-// Beim App-Start aufrufen — wenn Sync konfiguriert, sofort pullen + Polling starten
-function kalenderSyncInit() {
-  if (!kalenderSyncAktiv()) return;
-  _kalenderSyncStatus = 'aktiv';
-  // Pull verzögert, damit App-Render zuerst durch ist
-  setTimeout(() => kalenderSyncPullJetzt(), 2500);
-  kalenderSyncTimerNeu();
-}
+    const eRaw = localStorage.getItem('familienapp_einstellungen');
+    if (eRaw) {
+      const e = JSON.parse(eRaw);
+      let changed = false;
+      ['familienCode','familienSyncUrl','familienSyncStand'].forEach(k => {
+        if (k in e) { delete e[k]; changed = true; }
+      });
+      if (changed) localStorage.setItem('familienapp_einstellungen', JSON.stringify(e));
+    }
+  } catch {}
+})();
 
 function kalenderTabWaehlen(tab) { state.kalenderTab = tab; render(); }
 function kalenderMonatAendern(delta) {
@@ -7064,17 +6599,7 @@ function terminSpeichern() {
 
 function terminLoeschen(id) {
   if (!confirm('Termin löschen?')) return;
-  const all = _getTermineRoh();
-  if (kalenderSyncAktiv()) {
-    // Mit Sync: Tombstone setzen, damit Löschung auch andere Geräte erreicht.
-    const idx = all.findIndex(t => t.id === id);
-    if (idx >= 0) {
-      all[idx] = { ...all[idx], _deleted: true, updatedAt: Date.now() };
-      saveTermine(all);
-    }
-  } else {
-    saveTermine(all.filter(t => t.id !== id));
-  }
+  saveTermine(getTermine().filter(t => t.id !== id));
   render();
 }
 
@@ -7250,7 +6775,6 @@ function renderKalender() {
   const muellGeschaetzt = (typeof getTermine === 'function') &&
     getTermine().some(t => t.notiz && t.notiz.includes('Automatisch durch Müllkalender'));
 
-  const syncAn = kalenderSyncAktiv();
   return `
   <div class="news-hero">
     <div class="news-hero-bg" style="background-image:url('https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=70')"></div>
@@ -7258,11 +6782,9 @@ function renderKalender() {
     <div class="news-hero-inhalt">
       <div style="font-size:1.4rem;font-weight:800;margin-bottom:.3rem">Familien-Kalender</div>
       <div style="font-size:.85rem;opacity:.9">Alle Termine — pro Person filterbar · ${mitglieder.length} Familienmitglieder</div>
-      ${syncAn ? `
-      <div class="kal-sync-badge" onclick="zuSektion('einstellungen')" title="Familien-Sync verwalten">
-        <span id="kal-sync-status" style="color:#059669">✓ synchron</span>
-        <span style="opacity:.75;font-size:.7rem;margin-left:.4rem">Code ${esc((einstellungenLaden().familienCode || '').toUpperCase())}</span>
-      </div>` : ''}
+      <button class="btn btn-primary btn-sm" style="margin-top:.6rem" onclick="kalenderTeilen('whatsapp')" title="Alle Termine als Liste über WhatsApp an die Familie senden">
+        📤 An Familie senden
+      </button>
     </div>
   </div>
 
@@ -10939,83 +10461,18 @@ function renderEinstellungen() {
     <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Die Stimme ist eine natürlich klingende Online-Stimme und braucht Internet. Ohne Verbindung nutzt die App automatisch die Stimme deines Geräts.</div></div>
   </div>
 
-  <!-- Live-Wohnungs-API (Cloudflare Worker) -->
+  <!-- Familien-Abstimmung (Quick-Win-Teilen) -->
   <div class="einst-gruppe">
-    <div class="einst-gruppe-titel">🔌 Live-Wohnungs-API (optional)</div>
+    <div class="einst-gruppe-titel">👨‍👩‍👧 Familien-Abstimmung beim Kalender</div>
     <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">
-      Für <strong>echte Live-Mietangebote</strong> in der Wohnungssuche brauchst du einen kostenlosen Cloudflare-Worker (100.000 Anfragen/Tag gratis, keine Kreditkarte). Einmal-Setup in 5 Minuten. Ohne Worker zeigt die App Beispiel-Karten + Live-Such-Links.
+      Termine bleiben lokal auf deinem Gerät — sicher und ohne Cloud. Zum Abstimmen mit Mama, Papa oder Großeltern gibt's <strong>zwei Wege ohne jegliches Setup</strong>:
     </div>
-    <input type="text" class="reg-input" id="worker-url-input"
-      placeholder="https://wohnungen.dein-name.workers.dev"
-      value="${esc(einst.workerUrl || '')}"
-      oninput="state._workerUrlDraft=this.value" />
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
-      <button class="btn btn-primary btn-sm" onclick="workerUrlSpeichern()">💾 Speichern</button>
-      ${einst.workerUrl ? `<button class="btn btn-outline btn-sm" onclick="workerUrlTesten()">🧪 Verbindung testen</button>` : ''}
-      ${einst.workerUrl ? `<button class="btn btn-outline btn-sm" onclick="workerUrlLoeschen()">🗑️ Entfernen</button>` : ''}
-    </div>
-    <div class="info-box gruen" style="margin-top:.75rem">
-      <span class="ib-icon">📘</span>
-      <div class="ib-text">
-        <strong>Setup-Anleitung:</strong> Die komplette Schritt-für-Schritt-Anleitung liegt im Projekt-Ordner als <code>WOHNUNGEN-WORKER-SETUP.md</code>. Worker-Code liegt als <code>wohnungen-worker.js</code> bereit zum Kopieren.
-      </div>
-    </div>
-    <div class="info-box orange" style="margin-top:.5rem">
-      <span class="ib-icon">⚠️</span>
-      <div class="ib-text" style="font-size:.78rem">
-        ImmoScout & Kleinanzeigen blockieren auch Server-Anfragen — der Worker holt Daten von <strong>Wohnungsbörse, WG-Gesucht und Immobilo</strong>. In großen Städten findet man meistens was, in Dörfern selten.
-      </div>
-    </div>
-  </div>
-
-  <!-- Familien-Kalender-Sync (Cloudflare Worker) -->
-  <div class="einst-gruppe">
-    <div class="einst-gruppe-titel">👨‍👩‍👧 Familien-Kalender-Sync (optional)</div>
-    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.65rem">
-      Damit Mama, Papa und alle Familienmitglieder denselben Kalender auf ihren Handys sehen. Braucht einen kostenlosen Cloudflare-Worker (10 Min Einmal-Setup, 100 % gratis). <strong>Ohne Sync</strong> bleiben Termine wie bisher rein lokal.
-    </div>
-
-    <div style="font-size:.74rem;font-weight:700;color:var(--g700);margin:.7rem 0 .3rem">1. Worker-URL</div>
-    <input type="text" class="reg-input" id="familien-sync-url"
-      placeholder="https://kalender.dein-name.workers.dev"
-      value="${esc(einst.familienSyncUrl || '')}"
-      oninput="state._syncUrlDraft=this.value" />
-    <button class="btn btn-primary btn-sm" style="margin-top:.4rem" onclick="kalenderSyncUrlSpeichern()">💾 URL speichern</button>
-
-    <div style="font-size:.74rem;font-weight:700;color:var(--g700);margin:.85rem 0 .3rem">2. Familien-Code (6 Zeichen — auf allen Geräten der Familie gleich!)</div>
-    <input type="text" class="reg-input" id="familien-sync-code"
-      placeholder="z.B. H7K2M9"
-      maxlength="6"
-      style="text-transform:uppercase;letter-spacing:.15em;font-weight:700"
-      value="${esc(einst.familienCode || '')}"
-      oninput="state._syncCodeDraft=this.value.toUpperCase()" />
-    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
-      <button class="btn btn-primary btn-sm" onclick="kalenderSyncCodeSpeichern()">💾 Code übernehmen</button>
-      <button class="btn btn-outline btn-sm" onclick="kalenderSyncCodeNeu()">🎲 Neuen Code erzeugen</button>
-    </div>
-
-    <div style="margin-top:1rem;display:flex;gap:.4rem;flex-wrap:wrap">
-      ${einst.familienCode && einst.familienSyncUrl ? `
-        ${_kalenderSyncStatus !== 'aus' && _kalenderSyncPullTimer
-          ? `<button class="btn btn-outline btn-sm" onclick="kalenderSyncStoppen()">⏸️ Sync pausieren</button>`
-          : `<button class="btn btn-primary btn-sm" onclick="kalenderSyncStarten()">▶️ Sync starten</button>`}
-        <button class="btn btn-outline btn-sm" onclick="kalenderSyncPullJetzt()">🔄 Jetzt abgleichen</button>
-        <button class="btn btn-outline btn-sm" style="color:#DC2626;border-color:#FCA5A5" onclick="kalenderSyncEntfernen()">🗑️ Sync entfernen</button>
-      ` : ''}
-    </div>
-
-    ${einst.familienCode && einst.familienSyncUrl ? `
-    <div class="info-box gruen" style="margin-top:.75rem"><span class="ib-icon">👨‍👩‍👧</span><div class="ib-text">
-      <strong>Sync aktiv unter Code ${esc(einst.familienCode.toUpperCase())}</strong><br>
-      Diesen Code + die URL an alle Familienmitglieder schicken — die tragen beides in ihrer App ein und sehen ab sofort dieselben Termine.
-    </div></div>` : ''}
-
-    <div class="info-box orange" style="margin-top:.75rem"><span class="ib-icon">⚠️</span><div class="ib-text" style="font-size:.78rem">
-      <strong>Datenschutz:</strong> Mit Sync werden Termine auf Cloudflare gespeichert (DSGVO-konform, EU-Server). <strong>Wer den Code kennt, sieht alle Termine</strong> — also nur in der Familie weitergeben.
+    <div class="info-box gruen" style="margin-top:.5rem"><span class="ib-icon">📤</span><div class="ib-text" style="font-size:.82rem">
+      <strong>1) Einzeltermin teilen:</strong> Im Kalender beim Termin auf den 📤-Knopf — öffnet WhatsApp/Mail mit fertigem Text, oder lädt eine <code>.ics</code>-Datei für Google/Apple/Outlook.<br>
+      <strong>2) Ganzen Kalender teilen:</strong> Im Kalender-Hero der Knopf <em>„📤 An Familie senden"</em> — verschickt alle Termine als Liste oder Import-Link. Familie tippt drauf und bekommt die Termine in ihre App importiert.
     </div></div>
-
-    <div class="info-box blau" style="margin-top:.5rem"><span class="ib-icon">📘</span><div class="ib-text">
-      <strong>Setup-Anleitung:</strong> Schritt-für-Schritt-Anleitung im Projekt-Ordner als <code>KALENDER-WORKER-SETUP.md</code>. Worker-Code liegt als <code>kalender-worker.js</code> bereit zum Kopieren.
+    <div class="info-box blau" style="margin-top:.5rem"><span class="ib-icon">ℹ️</span><div class="ib-text" style="font-size:.78rem">
+      <strong>Warum kein Auto-Sync?</strong> Auto-Sync bräuchte einen Cloud-Account (Cloudflare, Google &amp; Co.) — bewusst nicht eingebaut, damit die App ohne Anmeldung läuft und keine Termine in fremden Händen liegen. Per Teilen-Link geht's genauso schnell, nur eben aktiv ausgelöst.
     </div></div>
   </div>
 
@@ -11466,7 +10923,6 @@ const SYNONYM_MAP = {
   'arzt':['doktor','mediziner','arztin'],
   'kind':['kinder','baby','kleinkind','sohn','tochter','jugend'],
   'geld':['euro','kosten','finanzen','sparen','zuschuss','antrag'],
-  'wohnen':['wohnung','miete','mieten','immobilie','haus'],
   'essen':['rezept','kochen','speise','mahlzeit','gericht'],
   'spielen':['spielplatz','park','freizeit'],
   'reise':['urlaub','ferien'],
@@ -15549,7 +15005,7 @@ function kalenderTeilen(modus) {
 
 // Einzelnen Termin teilen — Empfänger klickt Link → Termin landet im Familien-Kalender
 function terminTeilen(id) {
-  const t = _getTermineRoh().find(x => x.id === id && !x._deleted);
+  const t = getTermine().find(x => x.id === id);
   if (!t) { toast('⚠️ Termin nicht gefunden'); return; }
   const link = `${_appBaseUrl()}?import=${_b64Encode(_terminMinimal(t))}`;
   const datumStr = new Date(t.datum + 'T00:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -15573,7 +15029,7 @@ function terminTeilen(id) {
 
 // Einzelnen Termin als .ics-Datei herunterladen (Google/Apple/Outlook-kompatibel)
 function terminAlsICSDownload(id) {
-  const t = _getTermineRoh().find(x => x.id === id && !x._deleted);
+  const t = getTermine().find(x => x.id === id);
   if (!t) { toast('⚠️ Termin nicht gefunden'); return; }
   const pad = n => String(n).padStart(2, '0');
   const fmt = dStr => {
@@ -15647,8 +15103,8 @@ function terminImportBestaetigen(termine, modus) {
   }
   if (!confirm(frage)) return;
 
-  const bestand = _getTermineRoh();
-  const vorhanden = new Set(bestand.filter(t => !t._deleted).map(t => `${t.titel}|${t.datum}`));
+  const bestand = getTermine();
+  const vorhanden = new Set(bestand.map(t => `${t.titel}|${t.datum}`));
   let importiert = 0;
   for (const t of valide) {
     const schluessel = `${t.titel}|${t.datum}`;
@@ -15789,6 +15245,17 @@ function parseICS(text) {
 // Hinweis: Keine externe KI-API. Die App durchsucht ihre eigenen Inhalte und liest
 // passende Antworten vor. Bei keinem Treffer: Button zu ChatGPT.
 function kiSuchBox(id) {
+  const verlauf = kiVerlaufLaden().slice(0, 6);
+  const verlaufHtml = verlauf.length === 0 ? '' : `
+    <div class="ki-verlauf">
+      <div class="ki-verlauf-titel">
+        <span>🕘 Zuletzt gefragt</span>
+        <button class="ki-verlauf-loeschen" onclick="kiVerlaufLoeschen()" title="Verlauf leeren">🗑️</button>
+      </div>
+      <div class="ki-verlauf-chips">
+        ${verlauf.map((e, i) => `<button class="ki-verlauf-chip" onclick="kiVerlaufNutzen('${id}', ${i})" title="${esc(e.frage)}">${esc(e.frage.length > 42 ? e.frage.slice(0, 40) + '…' : e.frage)}</button>`).join('')}
+      </div>
+    </div>`;
   return `
   <div class="ki-such-box" id="ki-box-${id}">
     <div class="ki-such-titel">🤖 Familien-Assistent <span style="font-size:.65rem;font-weight:800;background:var(--akzent-grad);color:white;padding:.15rem .5rem;border-radius:99px;vertical-align:middle;margin-left:.35rem">KI</span></div>
@@ -15800,8 +15267,37 @@ function kiSuchBox(id) {
       <button class="ki-mic-btn" onclick="kiSuchSprechen('${id}')" title="Frage sprechen">🎤</button>
       <button class="btn btn-primary" onclick="kiSuchStarten('${id}')">Antwort</button>
     </div>
+    ${verlaufHtml}
     <div id="ki-antwort-${id}" class="ki-antwort"></div>
   </div>`;
+}
+
+// ===== KI-VERLAUF (lokale History der Assistenten-Fragen) =====
+function kiVerlaufLaden() {
+  try { return JSON.parse(localStorage.getItem('familienapp_ki_verlauf') || '[]'); } catch { return []; }
+}
+function kiVerlaufSpeichern(frage) {
+  if (!frage) return;
+  const verlauf = kiVerlaufLaden();
+  const key = frage.toLowerCase().trim();
+  const ohne = verlauf.filter(e => (e.frage || '').toLowerCase().trim() !== key);
+  ohne.unshift({ frage, ts: Date.now() });
+  if (ohne.length > 30) ohne.length = 30;
+  try { localStorage.setItem('familienapp_ki_verlauf', JSON.stringify(ohne)); } catch {}
+}
+function kiVerlaufLoeschen() {
+  if (!confirm('Verlauf der KI-Fragen löschen? Die App-Daten und Termine bleiben unverändert.')) return;
+  try { localStorage.removeItem('familienapp_ki_verlauf'); } catch {}
+  toast('🗑️ Verlauf gelöscht');
+  render();
+}
+function kiVerlaufNutzen(id, idx) {
+  const verlauf = kiVerlaufLaden();
+  const e = verlauf[idx];
+  if (!e) return;
+  const inp = el('ki-input-' + id);
+  if (inp) inp.value = e.frage;
+  kiSuchStarten(id);
 }
 
 function kiSuchSprechen(id) {
@@ -15957,6 +15453,7 @@ function renderKiTreffer(trefferEl, treffer) {
 async function kiSuchStarten(id) {
   const frage = (el('ki-input-' + id)?.value || '').trim();
   if (!frage) return;
+  kiVerlaufSpeichern(frage);
   const box = el('ki-antwort-' + id);
   if (!box) return;
 
@@ -16261,11 +15758,6 @@ function _kiIntentBestimmen(q) {
     return { sektion: 'kalender', label: 'Familien-Kalender', icon: '📅',
       kurz: 'Deine eigenen Termine, Feiertage und Familien-Erinnerungen.' };
   }
-  // Wohnungssuche
-  if (/(wohnung|miete|mietangebote|umziehen|wg)/i.test(q)) {
-    return { sektion: 'wohnung', label: 'Wohnungssuche', icon: '🏘️',
-      kurz: 'Live-Wohnungsangebote aus mehreren Portalen für deinen Wunschort.' };
-  }
   // Rezepte / Kochen
   if (/(rezept|kochen|kochbuch|essen kochen|abendessen|mittagessen|frühstück\s+ideen|backen)/i.test(q)) {
     return { sektion: 'kochbuch', label: 'Kochbuch & Rezepte', icon: '🍽️',
@@ -16447,8 +15939,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Regenwarnung: kurz nach Start + danach alle 10 Minuten prüfen, ob Regen aufzieht
   setTimeout(() => regenWacheTick(), 9000);
   setInterval(() => regenWacheTick(), 600000);
-  // Familien-Kalender-Sync: bei konfiguriertem Worker sofort pullen + Polling starten
-  kalenderSyncInit();
   // Quick-Win: geteilten Termin/Kalender aus URL importieren (?import= / ?importAlle=)
   terminImportPruefen();
   // Beim Zurückkehren zur App: verpasste Erinnerungen + Regen-Check sofort nachholen
