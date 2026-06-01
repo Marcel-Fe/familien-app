@@ -6514,6 +6514,24 @@ function sucheAktualisieren(val) {
       ergebnisse.push({ icon:'✅', titel:cl.titel, sub:cl.items.length+' Punkte', betrag:'Checkliste', aktion:`state.kalenderTab='checklisten';state.checklisteTyp='${k}';zuSektion('kalender')`, sek:'Kalender' });
   });
 
+  // Große Tipp-Kategorien mitdurchsuchen (Gesundheit-Hausmittel + Haushalt-Tipps).
+  // Klick öffnet die Kategorie mit gesetztem Suchbegriff (nutzt deren eigene Suche).
+  [
+    { kats: getGesundheitKats(), sek: 'Gesundheit', aktion: `state.gesundheitSuche=state.suchQuery;zuSektion('gesundheit')` },
+    { kats: getHaushaltKats(),   sek: 'Haushalt',   aktion: `state.haushaltSuche=state.suchQuery;zuSektion('haushalt')` },
+  ].forEach(quelle => {
+    let n = 0;
+    Object.values(quelle.kats).forEach(kat => {
+      (kat.tipps || []).forEach(t => {
+        if (n >= 6) return;
+        if ((t.titel + t.text + (t.tipp || '')).toLowerCase().includes(q)) {
+          ergebnisse.push({ icon: t.icon || (quelle.sek === 'Gesundheit' ? '🌿' : '🏡'), titel: t.titel, sub: quelle.sek + ' · ' + kat.label, betrag: 'Tipp', aktion: quelle.aktion, sek: quelle.sek });
+          n++;
+        }
+      });
+    });
+  });
+
   container.innerHTML = ergebnisse.length === 0
     ? `<div class="info-box orange"><span class="ib-icon">🔍</span><div class="ib-text"><strong>Keine Ergebnisse für "${esc(val)}"</strong> — Probieren Sie andere Suchbegriffe wie "Wohngeld", "Rezept" oder "Beratung".</div></div>`
     : `<div style="font-size:.85rem;color:var(--g500);margin:.75rem 0"><strong>${ergebnisse.length}</strong> Ergebnisse für "<strong>${esc(val)}</strong>"</div>
