@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>FamilienApp Reel</title>
+<style>
+  :root {
+    --berry: #C8628A;
+    --coral: #FF7B6B;
+    --butter: #F4D27A;
+    --deep: #2A3C50;
+    --shadow: rgba(0,0,0,0.55);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    font-family: "Nunito", -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #000;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .stage {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+  }
+
+  /* ============ Image layers (one per segment) ============ */
+  .img-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0;
+    will-change: opacity;
+  }
+  .img-layer img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+
+  /* Vignette + bottom gradient for subtitle legibility */
+  .vignette {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%);
+    z-index: 5;
+  }
+
+  /* ============ BADGE ============ */
+  .badge {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 22px 46px;
+    background: white;
+    border-radius: 100px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+    display: flex; align-items: center; gap: 16px;
+    z-index: 10;
+  }
+  .badge-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--berry), var(--coral));
+    will-change: transform, opacity;
+  }
+  .badge-text {
+    font-size: 36px; font-weight: 900;
+    color: var(--deep);
+    letter-spacing: -0.01em;
+  }
+
+  /* ============ SPEAKER LABEL ============ */
+  .speaker-label {
+    position: absolute;
+    top: 180px;
+    left: 60px;
+    padding: 14px 28px 14px 22px;
+    background: rgba(20, 28, 40, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 60px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 11;
+    opacity: 0;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    will-change: transform, opacity;
+  }
+  .speaker-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--coral);
+    box-shadow: 0 0 14px currentColor;
+    will-change: background;
+  }
+  .speaker-name {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.005em;
+  }
+
+  /* ============ SUBTITLE ============ */
+  .subtitle {
+    position: absolute;
+    bottom: 130px;
+    left: 60px;
+    right: 60px;
+    padding: 38px 50px;
+    background: rgba(20, 28, 40, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 32px;
+    color: white;
+    font-size: 54px;
+    font-weight: 800;
+    line-height: 1.22;
+    text-align: center;
+    letter-spacing: -0.01em;
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.4),
+      inset 0 0 0 1px rgba(255,255,255,0.08);
+    z-index: 12;
+    opacity: 0;
+    will-change: transform, opacity;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+
+  /* ============ OUTRO ============ */
+  .outro {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.22) 0%, transparent 50%),
+      linear-gradient(135deg, var(--berry) 0%, var(--coral) 60%, #FF9466 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 54px;
+    opacity: 0;
+    z-index: 30;
+    pointer-events: none;
+    will-change: opacity;
+  }
+  .outro-logo-wrap {
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+  .outro-logo {
+    width: 280px; height: 280px;
+    background: white;
+    border-radius: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 160px;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+  }
+  .outro-title {
+    font-size: 138px;
+    font-weight: 900;
+    color: white;
+    text-align: center;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-shadow: 0 6px 0 rgba(0,0,0,0.08);
+  }
+  .outro-sub {
+    font-size: 54px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.97);
+    text-align: center;
+    line-height: 1.2;
+    padding: 0 60px;
+  }
+  .outro-cta {
+    margin-top: 36px;
+    padding: 38px 80px;
+    background: white;
+    color: var(--berry);
+    font-size: 64px;
+    font-weight: 900;
+    border-radius: 100px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+    letter-spacing: -0.01em;
+    will-change: transform;
+  }
+  .sparkle {
+    position: absolute;
+    width: 14px; height: 14px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 24px white, 0 0 48px rgba(255,255,255,0.6);
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- Image layers (filled by JS at startup) -->
+  <div id="layers"></div>
+
+  <!-- Vignette overlay (always visible) -->
+  <div class="vignette"></div>
+
+  <!-- Top badge -->
+  <div class="badge">
+    <div class="badge-dot" id="badge-dot"></div>
+    <div class="badge-text">FamilienApp Tipp</div>
+  </div>
+
+  <!-- Speaker label (visible in dialog mode) -->
+  <div class="speaker-label" id="speaker-label">
+    <div class="speaker-dot" id="speaker-dot"></div>
+    <div class="speaker-name" id="speaker-name">Mama</div>
+  </div>
+
+  <!-- Subtitle -->
+  <div class="subtitle" id="subtitle"></div>
+
+  <!-- Outro -->
+  <div class="outro" id="outro">
+    <div class="outro-logo-wrap" id="outro-logo-wrap">
+      <div class="outro-logo">👨‍👩‍👧‍👦</div>
+    </div>
+    <div class="outro-title">FamilienApp</div>
+    <div class="outro-sub">Alles für deine Familie.<br>In einer App.</div>
+    <div class="outro-cta" id="outro-cta">Jetzt kostenlos laden</div>
+    <div class="sparkle" id="sparkle-1" style="top: 22%; left: 18%"></div>
+    <div class="sparkle" id="sparkle-2" style="top: 28%; right: 22%"></div>
+    <div class="sparkle" id="sparkle-3" style="bottom: 30%; left: 24%"></div>
+    <div class="sparkle" id="sparkle-4" style="bottom: 24%; right: 18%"></div>
+    <div class="sparkle" id="sparkle-5" style="top: 50%; left: 8%"></div>
+    <div class="sparkle" id="sparkle-6" style="top: 60%; right: 10%"></div>
+  </div>
+
+</div>
+
+<script>
+// =============================================================
+// Deterministic frame-based engine: AI images + Ken Burns
+// =============================================================
+
+const easeInOut = t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+const easeOutBack = t => { const c1=1.70158, c3=c1+1; return 1 + c3*Math.pow(t-1,3) + c1*Math.pow(t-1,2); };
+const easeOutQuad = t => 1 - (1-t)*(1-t);
+const easeInQuad = t => t*t;
+const clamp = (x,a,b) => Math.max(a, Math.min(b,x));
+const lerp = (a,b,t) => a + (b-a)*t;
+
+const stage = document.getElementById('stage');
+const layersHost = document.getElementById('layers');
+const subtitle = document.getElementById('subtitle');
+const outro = document.getElementById('outro');
+const outroLogoWrap = document.getElementById('outro-logo-wrap');
+const outroCta = document.getElementById('outro-cta');
+const badgeDot = document.getElementById('badge-dot');
+const speakerLabel = document.getElementById('speaker-label');
+const speakerDot = document.getElementById('speaker-dot');
+const speakerName = document.getElementById('speaker-name');
+
+// segmentLayers[segIdx] = [layer0, layer1] — 2 image layers per segment
+const segmentLayers = [];
+
+// Ken Burns: each segment gets a from→to transform (deterministic random per index)
+function kenBurnsFor(segIdx) {
+  const r = (Math.sin(segIdx * 12.9898 + 78.233) * 43758.5453);
+  const f = r - Math.floor(r);
+  const startScale = 1.0;
+  const endScale = 1.14;
+  const dirs = [
+    { x: -36, y: -18 },
+    { x:  36, y: -18 },
+    { x: -36, y:  18 },
+    { x:  36, y:  18 },
+  ];
+  const dir = dirs[Math.floor(f * 4) % 4];
+  return { startScale, endScale, dx: dir.x, dy: dir.y };
+}
+
+// Audio-rhythm-like pulsation (no real audio analysis, deterministic speech-like rhythm)
+function speechPulse(t) {
+  // Combine 2 sin waves at speech-like rates (~3-5 Hz)
+  const s1 = Math.sin(t * 4.0 * 2 * Math.PI) * 0.5 + 0.5;
+  const s2 = Math.sin(t * 11.0 * 2 * Math.PI) * 0.5 + 0.5;
+  // Pause modulation
+  const pause = Math.sin(t * 0.7 * 2 * Math.PI) * 0.5 + 0.5;
+  return s1 * s2 * (0.3 + 0.7 * pause);
+}
+
+// Hard cut between Pose A and Pose B inside a segment, with a very brief crossfade.
+// This avoids the "double image / ghost" effect of a long crossfade.
+// Pose A is shown for ~first half, then a 0.15s crossfade, then Pose B for second half.
+const INTRA_SWITCH = 0.5;      // switch point within a segment (0..1)
+const INTRA_FADE_S = 0.15;     // crossfade duration in seconds (kept short)
+const INTER_FADE_S = 0.5;      // crossfade between segments
+
+function intraPoseMix(progress, segDur) {
+  // Returns { a, b } opacities for pose A and B within a single segment
+  const fadeRange = INTRA_FADE_S / Math.max(0.001, segDur);
+  const halfFade = fadeRange / 2;
+  if (progress < INTRA_SWITCH - halfFade) return { a: 1, b: 0 };
+  if (progress > INTRA_SWITCH + halfFade) return { a: 0, b: 1 };
+  const k = (progress - (INTRA_SWITCH - halfFade)) / fadeRange;
+  return { a: 1 - k, b: k };
+}
+
+function computeKenBurnsForSegment(segIdx, progress) {
+  const kb = kenBurnsFor(segIdx);
+  const kbEase = easeInOut(progress);
+  return {
+    scale: lerp(kb.startScale, kb.endScale, kbEase),
+    tx: lerp(0, kb.dx, kbEase),
+    ty: lerp(0, kb.dy, kbEase),
+  };
+}
+
+function applyAllSegmentLayers(activeIdx, localT, segDur, isSpeaking) {
+  // First reset everything to 0
+  for (let i = 0; i < segmentLayers.length; i++) {
+    segmentLayers[i][0].el.style.opacity = 0;
+    segmentLayers[i][1].el.style.opacity = 0;
+  }
+
+  const progress = clamp(localT / segDur, 0, 1);
+  const interFadeIn = clamp(localT / INTER_FADE_S, 0, 1);
+
+  // Active segment
+  const seg = segmentLayers[activeIdx];
+  if (seg) {
+    const mix = intraPoseMix(progress, segDur);
+    const kb = computeKenBurnsForSegment(activeIdx, progress);
+
+    // Speech-like pulsation (deterministic, subtle)
+    const pulse = isSpeaking ? speechPulse(localT) : 0;
+    const microScale = 1 + pulse * 0.010;
+    const microY = pulse * -1.8;
+
+    const scale = (kb.scale * microScale).toFixed(4);
+    const tx = kb.tx.toFixed(2);
+    const ty = (kb.ty + microY).toFixed(2);
+    const transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+
+    seg[0].img.style.transform = transform;
+    seg[1].img.style.transform = transform;
+    seg[0].el.style.opacity = (mix.a * interFadeIn).toFixed(3);
+    seg[1].el.style.opacity = (mix.b * interFadeIn).toFixed(3);
+  }
+
+  // Previous segment: fade out during the first INTER_FADE_S of this segment.
+  // Show its last pose (Pose B since it's "after switch" at end of prev segment).
+  if (activeIdx > 0) {
+    const prev = segmentLayers[activeIdx - 1];
+    const fadeOut = 1 - interFadeIn;
+    if (fadeOut > 0) {
+      // Keep prev segment's Pose B (it ended on B)
+      const kbPrev = computeKenBurnsForSegment(activeIdx - 1, 1);
+      const transformPrev = `translate(${kbPrev.tx.toFixed(2)}px, ${kbPrev.ty.toFixed(2)}px) scale(${kbPrev.scale.toFixed(4)})`;
+      prev[1].img.style.transform = transformPrev;
+      prev[1].el.style.opacity = fadeOut.toFixed(3);
+    }
+  }
+}
+
+// Subtitle reveal
+function subtitleProgress(localT, segDur) {
+  if (localT < 0.25) return easeOutBack(localT / 0.25);
+  if (localT > segDur - 0.25) return easeInQuad(1 - (localT - (segDur - 0.25)) / 0.25);
+  return 1;
+}
+
+function applySubtitle(text, localT, segDur) {
+  if (!text) {
+    subtitle.style.opacity = 0;
+    subtitle.textContent = '';
+    return;
+  }
+  if (subtitle.textContent !== text) subtitle.textContent = text;
+  const p = subtitleProgress(localT, segDur);
+  subtitle.style.opacity = p.toFixed(3);
+  const y = lerp(34, 0, p);
+  const s = lerp(0.94, 1, p);
+  subtitle.style.transform = `translateY(${y.toFixed(2)}px) scale(${s.toFixed(3)})`;
+}
+
+function applyBadge(t) {
+  const s = 1 + Math.sin(t * 3.1) * 0.18;
+  const o = 0.7 + Math.sin(t * 3.1) * 0.3;
+  badgeDot.style.transform = `scale(${s.toFixed(3)})`;
+  badgeDot.style.opacity = o.toFixed(2);
+}
+
+// Speaker label: appears with the current speaker, color-tinted, with subtle pulse
+function applySpeakerLabel(seg, localT, segDur) {
+  if (!seg || !seg.label) {
+    speakerLabel.style.opacity = 0;
+    return;
+  }
+  if (speakerName.textContent !== seg.label) speakerName.textContent = seg.label;
+  if (seg.color) speakerDot.style.background = seg.color;
+
+  // Quick fade-in (first 0.25s of segment), stays visible, fade-out last 0.2s
+  let op = 1;
+  if (localT < 0.25) op = easeOutBack(localT / 0.25);
+  else if (localT > segDur - 0.2) op = easeInQuad(1 - (localT - (segDur - 0.2)) / 0.2);
+  speakerLabel.style.opacity = op.toFixed(3);
+
+  // Subtle pulse on the dot
+  const pulse = 1 + Math.sin(localT * 4) * 0.18;
+  speakerDot.style.transform = `scale(${pulse.toFixed(3)})`;
+
+  // Slight slide-in from left
+  const slideX = localT < 0.25 ? lerp(-20, 0, easeOutBack(localT / 0.25)) : 0;
+  speakerLabel.style.transform = `translateX(${slideX.toFixed(1)}px)`;
+}
+
+function applyOutro(active, outroLocalT) {
+  if (!active) {
+    outro.style.opacity = 0;
+    return;
+  }
+  const fade = easeOutQuad(clamp(outroLocalT / 0.5, 0, 1));
+  outro.style.opacity = fade.toFixed(3);
+
+  const logoT = clamp(outroLocalT / 0.7, 0, 1);
+  const logoScale = easeOutBack(logoT);
+  const logoFloat = Math.sin(outroLocalT * 1.5) * 8;
+  outroLogoWrap.style.transform = `scale(${logoScale.toFixed(3)}) translateY(${logoFloat.toFixed(2)}px)`;
+
+  const ctaPulse = 1 + Math.sin(outroLocalT * 2.5) * 0.04;
+  outroCta.style.transform = `scale(${ctaPulse.toFixed(3)})`;
+
+  for (let i = 1; i <= 6; i++) {
+    const s = document.getElementById('sparkle-' + i);
+    if (!s) continue;
+    const phase = (outroLocalT * 1.8 + i * 0.3) % 2;
+    if (phase < 1) {
+      const k = phase;
+      s.style.opacity = Math.sin(k * Math.PI).toFixed(3);
+      s.style.transform = `scale(${(0.5 + Math.sin(k * Math.PI) * 1.5).toFixed(3)})`;
+    } else {
+      s.style.opacity = 0;
+    }
+  }
+}
+
+// =============================================================
+// Public API for orchestrator
+// =============================================================
+
+// Called once at startup with 2D array: [[seg0_imgA, seg0_imgB], [seg1_imgA, seg1_imgB], ...]
+window.__setImages = function(segmentImageGroups) {
+  layersHost.innerHTML = '';
+  segmentLayers.length = 0;
+  for (let s = 0; s < segmentImageGroups.length; s++) {
+    const group = segmentImageGroups[s];
+    const layers = [];
+    for (let k = 0; k < group.length; k++) {
+      const div = document.createElement('div');
+      div.className = 'img-layer';
+      div.dataset.segment = s;
+      div.dataset.pose = k;
+      const img = document.createElement('img');
+      img.src = group[k];
+      div.appendChild(img);
+      layersHost.appendChild(div);
+      layers.push({ el: div, img });
+    }
+    segmentLayers.push(layers);
+  }
+  // Show first segment's first pose immediately
+  if (segmentLayers.length && segmentLayers[0].length) {
+    segmentLayers[0][0].el.style.opacity = 1;
+  }
+};
+
+window.__imagesReady = function() {
+  const allLayers = segmentLayers.flat();
+  return Promise.all(
+    allLayers.map(l => new Promise(res => {
+      if (l.img.complete && l.img.naturalWidth > 0) res();
+      else { l.img.onload = res; l.img.onerror = res; }
+    }))
+  );
+};
+
+window.__applyFrame = function(t, timeline) {
+  let seg = null, segIdx = -1;
+  for (let i = 0; i < timeline.length; i++) {
+    if (t >= timeline[i].start && t < timeline[i].end) { seg = timeline[i]; segIdx = i; break; }
+  }
+  if (!seg) {
+    seg = timeline[timeline.length - 1];
+    segIdx = timeline.length - 1;
+  }
+  const localT = t - seg.start;
+  const segDur = seg.end - seg.start;
+
+  if (seg.outro) {
+    applyOutro(true, localT);
+    applySubtitle('', 0, 1);
+    applySpeakerLabel(null, 0, 1);
+    // Hide all segment layers during outro
+    for (let i = 0; i < segmentLayers.length; i++) {
+      const isLast = (i === segmentLayers.length - 1);
+      segmentLayers[i][0].el.style.opacity = 0;
+      segmentLayers[i][1].el.style.opacity = isLast ? 1 : 0;
+    }
+    applyBadge(t);
+    return;
+  }
+  applyOutro(false, 0);
+
+  // Image segment index = segment index (outro skipped above)
+  const imgSegIdx = clamp(segIdx, 0, segmentLayers.length - 1);
+  applyAllSegmentLayers(imgSegIdx, localT, segDur, true);
+
+  applySubtitle(seg.text || '', localT, segDur);
+  applySpeakerLabel(seg, localT, segDur);
+  applyBadge(t);
+};
+
+subtitle.style.opacity = 0;
+outro.style.opacity = 0;
+</script>
+</body>
+</html>

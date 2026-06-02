@@ -25,32 +25,66 @@ const INTRO_PAUSE = 0.25;
 const OUTRO_DURATION = 3.0;
 const SEGMENT_GAP = 0.18;
 
-// Eine warme, natürliche deutsche Erzählerin
-const VOICE = "de-DE-SeraphinaMultilingualNeural";
+// Warme, natürliche, REIN deutsche Stimme (Katja — natürlichste deutsche Edge-TTS).
+// Wichtig: monolinguale Stimme, sonst werden Wörter wie "App" englisch ausgesprochen.
+const VOICE = "de-DE-KatjaNeural";
+const VOICE_RATE = "+0%";
 
 // Charakter-Beschreibungen kommen ab jetzt aus brands.json (Multi-Brand-Setup).
 // Hier nur noch der stilistische Anstrich, der für ALLE Marken gilt.
-const STYLE = "Pixar 3D animated movie style, Disney animation aesthetic, cinematic 3D render, expressive cartoon characters with soft round features, smooth volumetric shading, big eyes with bright catchlights, warm cinematic lighting, soft golden hour glow, vibrant warm pastel color palette, depth of field, ultra detailed Pixar quality, wholesome scene, 9:16 vertical composition, no text, no logos, no watermark";
+// Cartoon-Editorial-Stil — KEIN 3D, KEIN Photorealismus (vom User klar gefordert).
+const STYLE = "modern 3D animated cartoon, polished CG animation, soft cel-shaded 3D characters with big friendly expressive eyes, warm cinematic studio lighting, vibrant clean colors, charming modern Pixar-quality character design, anatomically correct faces with properly placed eyes above mouth and nose between them, two distinct symmetrical eyes per character, well-formed facial features, smooth subsurface skin shading, professional 3D animation look, family-friendly, characters positioned in upper two thirds of frame leaving lower third clear for text, 9:16 vertical composition, full frame edge to edge, no black bars, no letterboxing, no text overlay, no logos, no watermark";
+
+// Drückt FLUX von Realismus weg + verhindert Nahaufnahmen.
+const NEGATIVE_PROMPT = "deformed face, distorted face, broken anatomy, malformed features, eyes inside mouth, mouth above eyes, misplaced features, asymmetric face, extra eyes, missing eye, fused features, melted face, wrong proportions, anatomy error, disfigured, mutated, photorealistic photograph, real photo of person, hyperrealistic skin pores, voxel art, pixelated, low poly, blurry, soft focus, washed out, low contrast, close-up, portrait crop, subject filling the frame, macro shot, extreme zoom";
 
 const SCENE_SETTINGS = {
-  wohnzimmer: "in a sunlit warm Pixar-style cozy living room with a plush sofa, arched window, houseplants, warm dusk light",
-  kueche: "in a bright Pixar-style family kitchen with wooden table, warm morning sunlight through the window",
-  kinderzimmer: "in a colorful Pixar-style cheerful child's bedroom with plush toys, books, soft pastel colors, sunset light",
-  park: "in a vibrant Pixar-style sunny park with blooming flowers, soft green grass, golden afternoon sunlight",
-  buero: "in a cozy Pixar-style home office with a wooden desk, paperwork, a green lamp, warm side light",
+  wohnzimmer: "in a sunlit warm cozy living room with a plush sofa, arched window, houseplants, warm dusk light",
+  kueche: "in a bright family kitchen with wooden table, warm morning sunlight through the window",
+  kinderzimmer: "in a colorful cheerful child's bedroom with plush toys, books, soft pastel colors, sunset light",
+  park: "in a vibrant sunny park with blooming flowers, soft green grass, golden afternoon sunlight",
+  buero: "in a cozy home office with a wooden desk, paperwork, a green lamp, warm side light",
 };
+// Strategie: max 1 Person pro Frame (FLUX-Anatomie kollabiert bei 2+ Cartoon-Gesichtern).
+// 2 Frames Atmosphäre/Objekt (keine Gesichter), 2 Frames Solo-Person.
 const SEGMENT_MOOD = {
-  hook:    "the whole family gathered together looking warmly toward the viewer, hopeful inviting expressions, the dog wagging its tail",
-  problem: "the parents with worried thoughtful faces, official letters and bills on the table, the daughter quiet in the background, soft warm light",
-  loesung: "the family gathered closely around a glowing smartphone, bright hopeful happy smiles, soft magical glow on their faces",
-  cta:     "the family laughing and hugging together joyfully, the father holding a smartphone, the dog jumping happily, golden sunset light",
+  hook:    { text: "an evocative atmospheric scene with everyday family-life objects (open notebook, coffee mug, smartphone, scattered papers, soft natural light), no people in frame, warm inviting still-life composition", noPeople: true },
+  problem: { text: "ONE single adult person alone in the scene, thoughtful concerned expression, looking gently to the side, no other people visible, soft warm light, modern editorial portrait", solo: true },
+  loesung: { text: "close-up of HANDS only holding a smartphone with a glowing simple map or list interface visible on screen, no face, no head visible, just hands and the device, warm soft light", noPeople: true },
+  cta:     { text: "ONE single adult person alone, warm friendly smile looking gently toward the viewer, holding a smartphone, no other people visible, golden sunset light, modern editorial illustration", solo: true },
 };
 
-function buildPrompt(topic, moodOrKey, brandCharacter) {
+// Baut den Charakter-String aus brand.cast + optionalem topic.cast.
+// Bei `solo: true` wird nur EIN Charakter aus default_cast genommen (FLUX-Anatomie-Fix).
+// Bei `noPeople: true` wird leer zurückgegeben.
+function resolveCharacter(brand, topic, moodObj) {
+  if (moodObj && moodObj.noPeople) return "";
+  if (!brand.cast) return brand.character;
+  let castIds = (topic.cast && topic.cast.length) ? topic.cast : (brand.default_cast || Object.keys(brand.cast));
+  if (moodObj && moodObj.solo) {
+    // Nimm den ersten "Erwachsenen" aus dem Cast — bevorzugt Mutter, sonst Vater, sonst erstes Element
+    const preferred = ["mutter", "vater", "oma", "opa"];
+    const pick = preferred.find(p => castIds.includes(p) && brand.cast[p]) || castIds[0];
+    castIds = [pick];
+  }
+  const parts = castIds.map(id => brand.cast[id]).filter(Boolean);
+  const styleAnchor = brand.style_anchor ? `${brand.style_anchor}. ` : "";
+  return `${styleAnchor}Featuring: ${parts.join("; ")}`;
+}
+
+function buildPrompt(topic, moodKey, brandCharacter, moodObj) {
   const setting = SCENE_SETTINGS[topic.scene] || SCENE_SETTINGS.wohnzimmer;
-  // moodOrKey: App-Segment-Key (hook/problem/...) ODER freier Mood-Text (Situations-Reel)
-  const mood = SEGMENT_MOOD[moodOrKey] || moodOrKey || SEGMENT_MOOD.hook;
-  return `${brandCharacter}, ${setting}, ${mood}. ${STYLE}`;
+  let moodText = (moodObj && moodObj.text) || (typeof SEGMENT_MOOD[moodKey] === "string" ? SEGMENT_MOOD[moodKey] : null) || moodKey || (SEGMENT_MOOD.hook.text || SEGMENT_MOOD.hook);
+  moodText = moodText.replace(/\b(big|large|huge|giant)\b/gi, "small");
+  const characterPart = brandCharacter ? ` ${brandCharacter}.` : "";
+  const noPeopleHint = (moodObj && moodObj.noPeople)
+    ? " IMPORTANT: absolutely no people, no faces, no characters in this frame — only objects and atmosphere."
+    : (moodObj && moodObj.solo)
+      ? " IMPORTANT: exactly ONE person in frame, no other people, no crowds, no group, properly drawn face with two clear eyes above the mouth."
+      : "";
+  return `${STYLE}. Wide establishing shot ${setting}, the whole scene and `
+    + `environment clearly visible, filling most of the frame with rich background detail. `
+    + `Scene: ${moodText}.${characterPart}${noPeopleHint}`;
 }
 
 // ---------- helpers ----------
@@ -104,6 +138,15 @@ async function main() {
   const brandsCfg = JSON.parse(await readFile(join(__dirname, "brands.json"), "utf-8"));
   const defaultBrand = brandsCfg.default_brand || "familie";
 
+  // Legacy-Fallback: ältere Skripte lesen brand.character direkt — aus cast/default_cast auto-bauen.
+  for (const b of Object.values(brandsCfg.brands)) {
+    if (b.cast && !b.character) {
+      const ids = b.default_cast || Object.keys(b.cast);
+      const anchor = b.style_anchor ? `${b.style_anchor}. ` : "";
+      b.character = `${anchor}Featuring: ${ids.map(i => b.cast[i]).filter(Boolean).join("; ")}`;
+    }
+  }
+
   if (arg === "--list") {
     for (const t of topics) {
       const brandId = t.brand || defaultBrand;
@@ -119,8 +162,53 @@ async function main() {
   const brand = brandsCfg.brands[brandId];
   if (!brand) throw new Error(`Brand "${brandId}" nicht in brands.json definiert.`);
   const isSituation = topic.typ === "situation";
-  const segTexts = isSituation ? topic.segments
-    : [topic.hook, topic.problem, topic.loesung, topic.cta];
+  // Brand-Wording entschärfen:
+  // - Hook + Problem: keine Marke (oft schon so)
+  // - Lösung: Prefix "Wir haben da eine Lösung für dich." + alle App-Verweise raus
+  // - CTA: Marke darf 1x am Schluss
+  // - Outro-Branding bleibt (visuell)
+  const stripAppRefs = s => s
+    // "in der App." am Satzende → einfach weg (kein "damit." Krücke)
+    .replace(/\s+in\s+der\s+(FamilienApp|App)\s*\./gi, ".")
+    // "Mit der App ..." → "Damit ..."
+    .replace(/\bMit\s+der\s+(FamilienApp|App)\b/gi, "Damit")
+    // "In der App ..." (mitten im Satz) → "Damit"
+    .replace(/\bIn\s+der\s+(FamilienApp|App)\b/g, "Damit")
+    .replace(/\bin\s+der\s+(FamilienApp|App)\b/g, "damit")
+    // Subjekt "Die App / Die FamilienApp" → Pronomen "Sie"
+    .replace(/\bDie\s+(FamilienApp|App)\b/g, "Sie")
+    .replace(/\bdie\s+(FamilienApp|App)\b/g, "sie")
+    .replace(/\bDer\s+(FamilienApp|App)\b/g, "Ihr")
+    .replace(/\bder\s+(FamilienApp|App)\b/g, "ihr")
+    // "FamilienApp" am Satzanfang vor Verb → "Sie" (z.B. "FamilienApp zeigt...")
+    .replace(/(^|[.!?]\s+)FamilienApp\b/g, "$1Sie")
+    // Restliches "FamilienApp" (sehr selten) → "Sie"
+    .replace(/\bFamilienApp\b/g, "Sie")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,!?;:])/g, "$1")
+    .trim();
+  const softenCta = s => s
+    // "kostenlos" raus (User-Vorgabe: keine kostenlos-Bewerbung)
+    .replace(/\bkostenlos(es|en|er|e)?\s*/gi, "")
+    .replace(/\bFamilienApp laden\b/gi, "Hol dir die App")
+    .replace(/\bApp laden\b/gi, "Hol dir die App")
+    .replace(/\bFamilienApp\b/g, "App")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,!?;:])/g, "$1")
+    .trim();
+  let segTexts;
+  if (isSituation) {
+    segTexts = topic.segments.map(stripAppRefs);
+  } else {
+    const loesungBody = stripAppRefs(topic.loesung || "");
+    const loesungFinal = `Wir haben da eine Lösung für dich. ${loesungBody}`.replace(/\s+/g, " ").trim();
+    segTexts = [
+      stripAppRefs(topic.hook || ""),
+      stripAppRefs(topic.problem || ""),
+      loesungFinal,
+      softenCta(topic.cta || ""),
+    ];
+  }
   // App-Reels nutzen die familienzentrierten SEGMENT_MOOD-Defaults; ein Topic darf
   // sie aber per eigenem moods-Array überschreiben (z.B. hund-Marke ohne Familie).
   const moods = isSituation ? topic.moods
@@ -148,9 +236,11 @@ async function main() {
     const imgPath = join(imagesDir, `${i}_seg.jpg`);
     const cached = existsSync(imgPath);
     log(`  [${i+1}/${segTexts.length}]${cached ? " (cache)" : ""}`);
-    await generateImage(buildPrompt(topic, moods[i], brand.character), imgPath, {
-      width: 768, height: 1344, seed: baseSeed + i * 17,
-      model: "flux", nologo: true, enhance: true,
+    const moodObj = (typeof SEGMENT_MOOD[moods[i]] === "object") ? SEGMENT_MOOD[moods[i]] : null;
+    const character = resolveCharacter(brand, topic, moodObj);
+    await generateImage(buildPrompt(topic, moods[i], character, moodObj), imgPath, {
+      width: 896, height: 1568, seed: baseSeed + i * 17,
+      model: "flux", nologo: true, enhance: true, negativePrompt: NEGATIVE_PROMPT,
     });
     imagePaths.push(imgPath);
     if (!cached && i < segTexts.length - 1) await new Promise(r => setTimeout(r, 16000));
@@ -158,7 +248,7 @@ async function main() {
 
   // ---------- 2) TTS + Wort-Timings ----------
   log("Generiere TTS (Seraphina) + Wort-Timings...");
-  const segs = segTexts.map((text, i) => ({ id: String(i), text, voice: VOICE }));
+  const segs = segTexts.map((text, i) => ({ id: String(i), text, voice: VOICE, rate: VOICE_RATE }));
   await writeFile(join(audioDir, "_segments.json"), JSON.stringify(segs, null, 2));
   await run(findPython(), [join(__dirname, "tts.py"), audioDir, join(audioDir, "_segments.json")]);
   const durations = JSON.parse(await readFile(join(audioDir, "durations.json"), "utf-8"));

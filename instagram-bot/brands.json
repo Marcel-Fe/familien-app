@@ -1,18 +1,28 @@
 {
-  "_info": "Zentrale Marken-Konfiguration für den Instagram-Bot. Jedes Topic in topics.json kann optional ein Feld \"brand\" haben. Fehlt es, wird default_brand genutzt.",
+  "_info": "Zentrale Marken-Konfiguration für den Instagram-Bot. Jedes Topic in topics.json kann optional ein Feld \"brand\" haben. Fehlt es, wird default_brand genutzt. Pro Topic auch optional \"cast\": [\"vater\",\"sohn\",\"balu\"] möglich, um nur einen Teil der Familie zu zeigen (sonst default_cast).",
   "default_brand": "familie",
   "brands": {
     "familie": {
       "id": "familie",
       "name": "FamilienApp",
-      "character": "stylized 3D animated Pixar family: mother around 32 with chestnut brown hair in a soft bun, warm hazel eyes, mustard yellow knit cardigan; father around 34 with short dark brown hair, neat short beard, soft sky blue shirt; 8-year-old daughter with chestnut pigtails tied with pink ribbons, pink polka dot dress; chubby cheerful baby with peach onesie; a fluffy black Newfoundland dog with a distinctive white chest patch",
-      "scenes": ["wohnzimmer", "kueche", "kinderzimmer", "park", "buero"],
+      "style_anchor": "modern 3D animated cartoon style, polished CG with soft cel-shading, big friendly expressive eyes, warm colors, modern Pixar-quality character animation aesthetic",
+      "cast": {
+        "vater":   "Papa Tom, 35 years old, modern 3D cartoon character, short dark brown hair, neat short beard, kind warm eyes, friendly smile, average build, wearing a green button-down shirt over a cream t-shirt and dark jeans, polished 3D animation look",
+        "mutter":  "Mama Lea, 33 years old, modern 3D cartoon character, medium-length wavy brown hair, beautiful warm smile, expressive hazel eyes, wearing a beige and cream striped knit sweater and dark jeans, polished 3D animation look",
+        "sohn":    "Max, 8-year-old boy, modern 3D cartoon character, short dark brown hair, bright curious eyes, big smile, wearing a blue hoodie and dark jeans, energetic playful 3D animation look",
+        "tochter": "Mia, 6-year-old girl, modern 3D cartoon character, shoulder-length brown hair, big expressive brown eyes, sweet smile, wearing a pink sweater and dark jeans, adorable 3D animation look",
+        "oma":     "Oma Helga, modern 3D cartoon grandmother, soft silver-gray hair in a neat bob with round glasses, warm gentle smile, wearing a cozy beige cardigan over a cream blouse and a brown skirt, polished 3D animation look",
+        "opa":     "Opa Walter, modern 3D cartoon grandfather, neat gray hair with round glasses and a short trimmed gray beard, gentle kind smile, wearing a brown cardigan over a cream shirt and brown trousers, polished 3D animation look",
+        "balu":    "Balu, modern 3D cartoon Newfoundland dog, a large fluffy Newfoundland with glossy long black fur, exactly ONE small white patch on the chest, warm brown soulful eyes, slightly floppy ears, wearing a red collar, polished 3D animation look"
+      },
+      "default_cast": ["vater", "mutter", "sohn", "tochter", "balu"],
+      "scenes": ["wohnzimmer", "kueche", "kinderzimmer", "park", "buero", "garten"],
       "app_reel": {
         "badge_text": "FamilienApp Tipp",
         "outro_title": "FamilienApp",
         "outro_sub_html": "Alles für deine Familie.<br>In einer App.",
-        "outro_cta": "Jetzt kostenlos laden",
-        "caption_cta": "📲 Lade die FamilienApp kostenlos — Link im Profil!"
+        "outro_cta": "App Store · Google Play",
+        "caption_cta": "📲 FamilienApp — im App Store & Google Play"
       },
       "situation_reel": {
         "badge_text": "@familienapp",
@@ -24,22 +34,22 @@
     },
     "hund": {
       "id": "hund",
-      "name": "Hundeleben",
-      "character": "stylized 3D animated Pixar style scene featuring Balu, a single big fluffy all-black Newfoundland dog wearing a clearly visible bright red collar, big soulful warm brown eyes with bright catchlights, a gentle expressive face with a soft friendly smile and slightly floppy ears; sometimes accompanied by a friendly young German owner in their early 30s only when the scene clearly requires a human; Balu the dog is always the central character",
+      "name": "DogMatch AI",
+      "character": "Balu, modern 3D cartoon Newfoundland dog, a large fluffy Newfoundland with glossy long black fur, exactly ONE small white patch on the chest, warm brown soulful eyes, slightly floppy ears, wearing a red collar, polished 3D animation look; the dog's body language, eyes and mouth fully match the scene mood (alert, concerned, sleeping, happy, focused, sad, curious — whatever the scene needs); sometimes a friendly 3D-cartoon owner appears only when the scene clearly needs a human; Balu is the central character",
       "scenes": ["wohnzimmer", "park", "kueche", "buero"],
       "app_reel": {
         "badge_text": "Hunde-Tipp",
-        "outro_title": "@alltagshelden.offiziell",
+        "outro_title": "DogMatch AI",
         "outro_sub_html": "Tipps für ein<br>glückliches Hundeleben 🐾",
-        "outro_cta": "Folge für mehr",
-        "caption_cta": "🐾 Folge @alltagshelden.offiziell für mehr Hunde-Tipps"
+        "outro_cta": "Bald im App Store & Play Store",
+        "caption_cta": "🐾 DogMatch AI — die App für glückliche Hunde"
       },
       "situation_reel": {
         "badge_text": "🐾 Hundeleben",
-        "outro_title": "@alltagshelden.offiziell",
+        "outro_title": "DogMatch AI",
         "outro_sub_html": "Hundemomente,<br>die jeder Halter kennt 🐾",
-        "outro_cta": "Folge für mehr",
-        "caption_cta": "🐾 Folge @alltagshelden.offiziell für mehr Hunde-Content"
+        "outro_cta": "Bald im App Store & Play Store",
+        "caption_cta": "🐾 DogMatch AI — die App für glückliche Hunde"
       }
     }
   }

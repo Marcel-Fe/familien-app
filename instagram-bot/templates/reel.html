@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>FamilienApp Reel</title>
+<style>
+  :root {
+    --butter:#FFD45E; --coral:#FF7B6B; --berry:#C8628A; --deep:#0E141C; --bone:#F5F1EA;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body {
+    width:1080px; height:1920px; overflow:hidden; background:#000;
+    font-family:"Nunito","Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  .stage { position:relative; width:1080px; height:1920px; overflow:hidden; background:#000; }
+
+  /* ---- image layers (crossfade) ---- */
+  .layer { position:absolute; inset:0; overflow:hidden; opacity:0; will-change:opacity; }
+  .layer img {
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; transform-origin:50% 50%; will-change:transform;
+  }
+
+  /* ---- cinematic darken (verstärkt unten für Text-Lesbarkeit) ---- */
+  .vignette {
+    position:absolute; inset:0; pointer-events:none; z-index:5;
+    background:
+      radial-gradient(ellipse 120% 80% at 50% 50%, transparent 50%, rgba(0,0,0,0.35) 100%),
+      linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.05) 22%,
+        rgba(0,0,0,0) 42%, rgba(0,0,0,0.55) 58%, rgba(0,0,0,0.88) 80%, rgba(0,0,0,0.96) 100%);
+  }
+  /* ---- Text-Schutz-Panel hinter Headline (verhindert Überlappung mit Figuren) ---- */
+  .text-panel {
+    position:absolute; left:0; right:0; bottom:0; height:780px; z-index:9; pointer-events:none;
+    background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 15%,
+      rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.82) 65%, rgba(0,0,0,0.95) 100%);
+  }
+  /* subtle warm color grade */
+  .grade {
+    position:absolute; inset:0; pointer-events:none; z-index:6;
+    background:linear-gradient(135deg, rgba(255,160,80,0.06), rgba(60,40,80,0.05));
+    mix-blend-mode:overlay;
+  }
+  /* film grain (procedural SVG noise) */
+  .grain {
+    position:absolute; inset:-4%; pointer-events:none; z-index:7; opacity:0.13;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.85'/></svg>");
+    mix-blend-mode:overlay;
+  }
+  /* soft top-right lens flare */
+  .flare {
+    position:absolute; top:-6%; right:-8%; width:520px; height:520px; pointer-events:none; z-index:8;
+    background:radial-gradient(circle, rgba(255,210,140,0.28), rgba(255,180,90,0) 60%);
+    filter:blur(2px);
+  }
+
+  /* ---- badge (kleiner Brand-Stempel oben) ---- */
+  .badge {
+    position:absolute; top:80px; left:50%; transform:translateX(-50%);
+    padding:16px 38px; background:rgba(255,255,255,0.96); border-radius:100px;
+    box-shadow:0 14px 38px rgba(0,0,0,0.45), inset 0 -2px 0 rgba(0,0,0,0.04);
+    display:flex; align-items:center; gap:14px; z-index:12;
+    backdrop-filter:blur(8px);
+  }
+  .badge-dot { width:20px; height:20px; border-radius:50%;
+    background:linear-gradient(135deg,var(--berry),var(--coral));
+    box-shadow:0 0 18px rgba(255,123,107,0.85); }
+  .badge-text { font-size:32px; font-weight:900; color:var(--deep); letter-spacing:0.01em; text-transform:uppercase; }
+
+  /* ---- Text-Composition (Kicker + Headline + Accent als ein Block, bottom-aligned) ---- */
+  .text-block {
+    position:absolute; left:64px; right:64px; bottom:240px; z-index:13;
+    display:flex; flex-direction:column; align-items:flex-start; gap:22px;
+  }
+  .kicker {
+    font-size:34px; font-weight:900; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--butter);
+    text-shadow:0 4px 18px rgba(0,0,0,0.6);
+    opacity:0; will-change:opacity,transform;
+    display:flex; align-items:center; gap:18px;
+  }
+  .kicker::after {
+    content:""; display:inline-block; width:64px; height:6px;
+    background:var(--butter); border-radius:6px;
+    box-shadow:0 0 12px rgba(255,212,94,0.7);
+  }
+  .headline {
+    font-size:78px; font-weight:900; line-height:1.06; letter-spacing:-0.02em;
+    color:#fff; text-shadow:0 8px 28px rgba(0,0,0,0.85), 0 2px 0 rgba(0,0,0,0.5);
+    will-change:opacity,transform;
+    text-wrap:balance;
+    width:100%;
+  }
+  .headline .hl-line {
+    display:block; opacity:0; transform:translateY(28px);
+    will-change:opacity,transform;
+  }
+  .headline-accent {
+    width:120px; height:8px; border-radius:8px;
+    background:linear-gradient(90deg, var(--coral), var(--butter));
+    box-shadow:0 0 22px rgba(255,123,107,0.6);
+    opacity:0; will-change:opacity,transform;
+  }
+
+  /* ---- outro (modern, klar, mit Glow) ---- */
+  .outro {
+    position:absolute; inset:0; z-index:30; opacity:0; will-change:opacity;
+    background:
+      radial-gradient(ellipse at 30% 18%, rgba(255,255,255,0.22) 0%, transparent 55%),
+      radial-gradient(ellipse at 75% 88%, rgba(255,210,140,0.18) 0%, transparent 60%),
+      linear-gradient(160deg, var(--berry) 0%, var(--coral) 55%, #FF9466 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:46px;
+    padding:0 70px;
+  }
+  .outro-mark {
+    width:128px; height:8px; border-radius:8px; background:rgba(255,255,255,0.9);
+    box-shadow:0 0 24px rgba(255,255,255,0.6); margin-bottom:6px;
+  }
+  .outro-title {
+    font-size:118px; font-weight:900; color:white; text-align:center;
+    letter-spacing:-0.03em; line-height:1.0;
+    text-shadow:0 8px 0 rgba(0,0,0,0.12), 0 24px 60px rgba(0,0,0,0.35);
+  }
+  .outro-sub {
+    font-size:54px; font-weight:600; color:rgba(255,255,255,0.97);
+    text-align:center; line-height:1.18; padding:0 30px;
+  }
+  .outro-cta {
+    margin-top:24px; padding:38px 76px; background:white; color:var(--berry);
+    font-size:60px; font-weight:900; border-radius:100px;
+    box-shadow:0 18px 54px rgba(0,0,0,0.32), inset 0 -4px 0 rgba(0,0,0,0.08);
+    letter-spacing:-0.01em; will-change:transform;
+  }
+  .outro-glow {
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:1200px; height:1200px; pointer-events:none;
+    background:radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 55%);
+    will-change:opacity,transform;
+  }
+  .spark {
+    position:absolute; width:14px; height:14px; background:white; border-radius:50%;
+    box-shadow:0 0 26px white, 0 0 52px rgba(255,255,255,0.7);
+    opacity:0; will-change:opacity,transform;
+  }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div id="layers"></div>
+  <div class="vignette"></div>
+  <div class="grade"></div>
+  <div class="flare"></div>
+  <div class="grain"></div>
+  <div class="text-panel"></div>
+  <div class="badge"><div class="badge-dot" id="badge-dot"></div><div class="badge-text" id="badge-text">FamilienApp</div></div>
+
+  <div class="text-block">
+    <div class="kicker" id="kicker">Tipp</div>
+    <div class="headline-accent" id="headline-accent"></div>
+    <div class="headline" id="headline"></div>
+  </div>
+
+  <div class="outro" id="outro">
+    <div class="outro-glow" id="outro-glow"></div>
+    <div class="outro-mark"></div>
+    <div class="outro-title" id="outro-title">FamilienApp</div>
+    <div class="outro-sub" id="outro-sub">Alles für deine Familie.<br>In einer App.</div>
+    <div class="outro-cta" id="outro-cta">Jetzt kostenlos laden</div>
+    <div class="spark" id="sp1" style="top:23%;left:19%"></div>
+    <div class="spark" id="sp2" style="top:29%;right:21%"></div>
+    <div class="spark" id="sp3" style="bottom:31%;left:25%"></div>
+    <div class="spark" id="sp4" style="bottom:25%;right:18%"></div>
+    <div class="spark" id="sp5" style="top:51%;left:9%"></div>
+    <div class="spark" id="sp6" style="top:60%;right:11%"></div>
+  </div>
+</div>
+<script>
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const easeOutCubic=t=>1-Math.pow(1-t,3);
+const easeOutBack=t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);};
+const easeInOutCubic=t=>t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const easeOutQuad=t=>1-(1-t)*(1-t);
+const easeInQuad=t=>t*t;
+
+const layersHost=document.getElementById('layers');
+const headline=document.getElementById('headline');
+const headlineAccent=document.getElementById('headline-accent');
+const kicker=document.getElementById('kicker');
+const outro=document.getElementById('outro');
+const outroCta=document.getElementById('outro-cta');
+const outroGlow=document.getElementById('outro-glow');
+const badgeDot=document.getElementById('badge-dot');
+
+let imageLayers=[];
+let TL=[];
+let MODE={ kickers:["TIPP","DAS PROBLEM","DIE LÖSUNG","JETZT LADEN"] };
+
+// Ken-Burns: deterministische Richtung + Zoom-Stärke pro Segment
+function kbDir(i){
+  const r=Math.sin(i*49.17+11.3); const f=r-Math.floor(r);
+  const d=[[-1,-1],[1,-1],[-1,1],[1,1]][Math.floor(f*4)%4];
+  return {x:d[0],y:d[1]};
+}
+
+window.__setImages=function(paths){
+  layersHost.innerHTML=''; imageLayers=[];
+  paths.forEach((p,i)=>{
+    const d=document.createElement('div'); d.className='layer';
+    const im=document.createElement('img'); im.src=p;
+    d.appendChild(im); layersHost.appendChild(d);
+    imageLayers.push({el:d,img:im});
+  });
+  if(imageLayers[0]) imageLayers[0].el.style.opacity=1;
+};
+window.__imagesReady=function(){
+  return Promise.all(imageLayers.map(l=>new Promise(r=>{
+    if(l.img.complete&&l.img.naturalWidth>0) r();
+    else{l.img.onload=r;l.img.onerror=r;}
+  })));
+};
+
+// Segment-Headline aus Wort-Liste bauen — STRIKT max 3 Zeilen, max ~22 Zeichen/Zeile.
+// Lange Voice-Over-Texte werden auf den prägnantesten Teil gekürzt.
+function buildHeadline(words){
+  const text=words.map(w=>w.word).join(' ').replace(/\s+([.,!?;:])/g,'$1');
+  // Versuche zuerst Satz-Split
+  const sentences=text.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+  // Nimm so viele Saetze, wie in 3 Zeilen passen
+  let chosen="";
+  for(const s of sentences){
+    const test=(chosen?chosen+" ":"")+s;
+    if(splitIntoLines(test,22).length<=3) chosen=test;
+    else break;
+  }
+  if(!chosen) chosen=sentences[0] || text;
+  let lines=splitIntoLines(chosen,22);
+  if(lines.length>3){ lines=lines.slice(0,3); /* hartes Limit */ }
+  return lines;
+}
+function splitIntoLines(text,maxLen){
+  const words=text.split(/\s+/), lines=[]; let cur="";
+  for(const w of words){
+    if((cur+" "+w).trim().length<=maxLen){cur=(cur?cur+" ":"")+w;}
+    else{ if(cur)lines.push(cur); cur=w; }
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+window.__setTimeline=function(timeline){
+  TL=timeline;
+  TL.forEach((seg,idx)=>{
+    if(seg.outro) return;
+    seg._lines=buildHeadline(seg.words||[]);
+    seg._kicker=MODE.kickers[idx] || "";
+  });
+};
+
+window.__setMode=function(m){
+  if(!m) return;
+  if(m.badgeText)    document.getElementById('badge-text').textContent=m.badgeText;
+  if(m.outroTitle)   document.getElementById('outro-title').textContent=m.outroTitle;
+  if(m.outroSubHtml) document.getElementById('outro-sub').innerHTML=m.outroSubHtml;
+  if(m.outroCta)     document.getElementById('outro-cta').textContent=m.outroCta;
+  if(Array.isArray(m.kickers)) MODE.kickers=m.kickers;
+};
+
+// ---- Headline-DOM nur neu aufbauen wenn Segment wechselt ----
+function showSegmentHeadline(seg){
+  if(headline._seg===seg) return;
+  headline._seg=seg;
+  headline.innerHTML='';
+  if(!seg||!seg._lines) return;
+  seg._lines.forEach(l=>{
+    const s=document.createElement('span');
+    s.className='hl-line'; s.textContent=l;
+    headline.appendChild(s);
+  });
+  kicker.textContent=seg._kicker||'';
+}
+
+// ---- Bild-Layer mit Crossfade + Ken-Burns ----
+const CROSSFADE=0.6;  // Sekunden Overlap zwischen Segmenten
+function applyImages(activeIdx,localT,segDur,globalT){
+  // Crossfade: in den letzten CROSSFADE s wird das nächste Bild eingeblendet
+  const nextIdx=activeIdx+1<imageLayers.length?activeIdx+1:-1;
+  const fadeStart=segDur-CROSSFADE;
+  let aOpacity=1, bOpacity=0;
+  if(nextIdx>=0 && localT>fadeStart){
+    const k=clamp((localT-fadeStart)/CROSSFADE,0,1);
+    aOpacity=1-k; bOpacity=k;
+  }
+  for(let i=0;i<imageLayers.length;i++){
+    let op=0;
+    if(i===activeIdx) op=aOpacity;
+    else if(i===nextIdx) op=bOpacity;
+    imageLayers[i].el.style.opacity=op.toFixed(3);
+  }
+
+  // Ken-Burns für aktives Bild
+  const L=imageLayers[activeIdx];
+  if(L){
+    const dir=kbDir(activeIdx);
+    const p=clamp(localT/Math.max(0.1,segDur),0,1);
+    const eased=easeInOutCubic(p);
+    const scale=lerp(1.05,1.14,eased);  // dramatischer Zoom 5% -> 14%
+    const tx=dir.x*46*eased, ty=dir.y*28*eased;  // stärkerer Pan
+    L.img.style.transform=`translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${scale.toFixed(4)})`;
+  }
+  // Ken-Burns für eingeblendetes nächstes Bild (Startzustand)
+  if(nextIdx>=0 && bOpacity>0.01){
+    const N=imageLayers[nextIdx], dir=kbDir(nextIdx);
+    const scale=1.05, tx=-dir.x*4, ty=-dir.y*3;
+    N.img.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  }
+}
+
+// ---- Headline-Animation: zeilenweise slide-up + fade ----
+const HL_IN=0.55, HL_OUT=0.45;
+function applyHeadline(seg,localT,segDur){
+  showSegmentHeadline(seg);
+  const lines=headline.children;
+  const stagger=0.12;
+  for(let i=0;i<lines.length;i++){
+    const start=0.20+i*stagger;
+    const t=localT-start;
+    if(t<0){
+      lines[i].style.opacity=0; lines[i].style.transform='translateY(28px)';
+    } else {
+      const kIn=clamp(t/HL_IN,0,1);
+      const e=easeOutCubic(kIn);
+      let op=e, ty=lerp(28,0,e);
+      // Fade-out zum Segment-Ende
+      const tEnd=segDur-localT;
+      if(tEnd<HL_OUT){
+        const kOut=clamp(tEnd/HL_OUT,0,1);
+        op*=easeOutQuad(kOut);
+        ty=lerp(-12,0,kOut);
+      }
+      lines[i].style.opacity=op.toFixed(3);
+      lines[i].style.transform=`translateY(${ty.toFixed(1)}px)`;
+    }
+  }
+  // Kicker
+  const kIn=clamp(localT/0.35,0,1);
+  const kOut=clamp((segDur-localT)/0.35,0,1);
+  const kOp=easeOutCubic(kIn)*easeOutQuad(kOut);
+  kicker.style.opacity=kOp.toFixed(3);
+  kicker.style.transform=`translateY(${lerp(8,0,kIn).toFixed(1)}px)`;
+  // Accent-Strich pulsiert leicht + erscheint zeilengleich
+  const aIn=clamp((localT-0.15)/0.45,0,1);
+  const aOp=easeOutCubic(aIn)*easeOutQuad(kOut);
+  const aw=lerp(40,140,easeOutCubic(aIn));
+  headlineAccent.style.opacity=aOp.toFixed(3);
+  headlineAccent.style.width=aw.toFixed(0)+'px';
+}
+
+function applyBadge(t){
+  const s=1+Math.sin(t*2.4)*0.10;
+  badgeDot.style.transform=`scale(${s.toFixed(3)})`;
+  badgeDot.style.opacity=(0.78+Math.sin(t*2.4)*0.22).toFixed(2);
+}
+
+function applyOutro(active,lt){
+  if(!active){ outro.style.opacity=0; return; }
+  outro.style.opacity=easeOutQuad(clamp(lt/0.5,0,1)).toFixed(3);
+  // CTA breathing
+  outroCta.style.transform=`scale(${(1+Math.sin(lt*2.5)*0.05).toFixed(3)})`;
+  // Glow pulsiert
+  outroGlow.style.opacity=(0.7+Math.sin(lt*1.8)*0.3).toFixed(3);
+  for(let i=1;i<=6;i++){
+    const s=document.getElementById('sp'+i); if(!s) continue;
+    const ph=(lt*1.6+i*0.34)%2;
+    if(ph<1){
+      s.style.opacity=Math.sin(ph*Math.PI).toFixed(3);
+      s.style.transform=`scale(${(0.4+Math.sin(ph*Math.PI)*1.6).toFixed(3)})`;
+    } else s.style.opacity=0;
+  }
+}
+
+window.__applyFrame=function(t){
+  let seg=null,idx=-1;
+  for(let i=0;i<TL.length;i++){
+    if(t>=TL[i].start && t<TL[i].end){ seg=TL[i]; idx=i; break; }
+  }
+  if(!seg){ seg=TL[TL.length-1]; idx=TL.length-1; }
+  const lt=t-seg.start, dur=seg.end-seg.start;
+
+  if(seg.outro){
+    applyOutro(true,lt);
+    headline.style.opacity=0; kicker.style.opacity=0; headlineAccent.style.opacity=0;
+    if(imageLayers.length) for(const L of imageLayers) L.el.style.opacity=0;
+    applyBadge(t);
+    return;
+  }
+  applyOutro(false,0);
+  headline.style.opacity=1;
+  applyImages(clamp(idx,0,imageLayers.length-1),lt,dur,t);
+  applyHeadline(seg,lt,dur);
+  applyBadge(t);
+};
+
+outro.style.opacity=0;
+kicker.style.opacity=0;
+headlineAccent.style.opacity=0;
+</script>
+</body>
+</html>
