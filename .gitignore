@@ -31,6 +31,20 @@ cloudflared.exe
 _user_messages.txt
 Allein Erziehende App.md
 
+# Lokale Agent- / Session-Artefakte
+.claude/
+.planning/
+preview/
+.tmp_*
+.tmp_shots/
+
+# Marketing-Binaerdateien (nur HTML-Flyer versionieren)
+*.docx
+FamilienApp-Flyer*.pdf
+
+# Obsolet (durch GitHub Pages ersetzt, Datei bleibt lokal)
+CLOUDFLARE-PAGES-SETUP.md
+
 # OS
 Thumbs.db
 .DS_Store
