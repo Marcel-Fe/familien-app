@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:1080px; height:1920px; overflow:hidden; }
+  body { font-family:'Segoe UI', -apple-system, Roboto, sans-serif; }
+  #stage { position:relative; width:1080px; height:1920px; overflow:hidden; background:#1E1B4B; }
+  #bg { position:absolute; inset:0; }
+  .blob { position:absolute; border-radius:50%; filter:blur(80px); opacity:.5; }
+  #blob1 { width:680px; height:680px; top:-180px; left:-180px; }
+  #blob2 { width:600px; height:600px; bottom:-200px; right:-160px; }
+  #wordmark {
+    position:absolute; top:110px; left:0; right:0; text-align:center;
+    font-size:46px; font-weight:800; color:#fff; letter-spacing:.5px;
+  }
+  #center { position:absolute; left:90px; right:90px; top:540px; text-align:center; }
+  #iconwrap {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:320px; height:320px; border-radius:90px;
+    background:rgba(255,255,255,.15); border:4px solid rgba(255,255,255,.4);
+  }
+  #icon { font-size:185px; line-height:1; }
+  #title { font-size:90px; font-weight:800; color:#fff; margin-top:80px; line-height:1.1; }
+  #sub { font-size:48px; font-weight:500; color:rgba(255,255,255,.94); margin-top:40px; line-height:1.42; }
+  #dots {
+    position:absolute; bottom:190px; left:0; right:0;
+    display:flex; justify-content:center; gap:24px;
+  }
+  .dot-i { width:24px; height:24px; border-radius:50%; background:rgba(255,255,255,.28); }
+  .dot-i.on { background:#fff; }
+  #bar {
+    position:absolute; bottom:130px; left:90px; right:90px; height:10px;
+    border-radius:10px; background:rgba(255,255,255,.2);
+  }
+  #barfill { height:100%; border-radius:10px; background:#fff; width:0; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg"></div>
+  <div class="blob" id="blob1"></div>
+  <div class="blob" id="blob2"></div>
+  <div id="wordmark">✨ FamilienApp</div>
+  <div id="center">
+    <div id="iconwrap"><div id="icon">💰</div></div>
+    <div id="title">Titel</div>
+    <div id="sub">Untertitel</div>
+  </div>
+  <div id="dots"></div>
+  <div id="bar"><div id="barfill"></div></div>
+</div>
+<script>
+  // Render-Vertrag: generate-app-promo.mjs ruft __setTimeline() einmal
+  // und __applyFrame(t) pro Frame auf. Alles ist eine reine Funktion von t.
+  let TL = [];
+  function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+  function smooth(x){ x = clamp(x,0,1); return x*x*(3-2*x); }
+  function easeOutBack(x){ x = clamp(x,0,1); const c = 1.7;
+    return 1 + (c+1)*Math.pow(x-1,3) + c*Math.pow(x-1,2); }
+
+  window.__setTimeline = function(tl){
+    TL = tl;
+    const dots = document.getElementById('dots');
+    dots.innerHTML = '';
+    tl.forEach(function(){
+      const d = document.createElement('div');
+      d.className = 'dot-i';
+      dots.appendChild(d);
+    });
+  };
+
+  window.__applyFrame = function(t){
+    if (!TL.length) return;
+    let idx = -1;
+    for (let i = 0; i < TL.length; i++) {
+      if (t >= TL[i].start && t < TL[i].end) { idx = i; break; }
+    }
+    if (idx < 0) idx = (t < TL[0].start) ? 0 : TL.length - 1;
+    const s = TL[idx];
+    const sc = s.scene;
+    const dur = s.end - s.start;
+    const lt = clamp(t - s.start, 0, dur);
+    const outP = smooth((dur - lt) / 0.4);
+
+    // Hintergrund + Glow
+    document.getElementById('bg').style.background =
+      'linear-gradient(160deg,' + sc.c1 + ' 0%,' + sc.c2 + ' 100%)';
+    document.getElementById('blob1').style.background = sc.glow;
+    document.getElementById('blob2').style.background = sc.glow;
+
+    // Icon — Pop beim Auftauchen
+    const iconScale = 0.55 + 0.45 * easeOutBack(clamp(lt / 0.65, 0, 1));
+    const iw = document.getElementById('iconwrap');
+    iw.style.transform = 'scale(' + iconScale.toFixed(3) + ')';
+    iw.style.opacity = Math.min(smooth(lt / 0.5), outP);
+    document.getElementById('icon').textContent = sc.icon;
+
+    // Titel — leicht versetzt einblenden
+    const titleP = smooth((lt - 0.15) / 0.5);
+    const ti = document.getElementById('title');
+    ti.textContent = sc.title;
+    ti.style.opacity = Math.min(titleP, outP);
+    ti.style.transform = 'translateY(' + (34 * (1 - titleP)).toFixed(1) + 'px)';
+
+    // Untertitel — noch etwas später
+    const subP = smooth((lt - 0.38) / 0.5);
+    const su = document.getElementById('sub');
+    su.textContent = sc.sub;
+    su.style.opacity = Math.min(subP, outP);
+    su.style.transform = 'translateY(' + (34 * (1 - subP)).toFixed(1) + 'px)';
+
+    // Wortmarke — am Anfang einblenden, danach dauerhaft
+    document.getElementById('wordmark').style.opacity = (idx === 0) ? smooth(t / 0.7) : 1;
+
+    // Fortschritts-Punkte
+    const dots = document.querySelectorAll('.dot-i');
+    for (let i = 0; i < dots.length; i++) dots[i].classList.toggle('on', i === idx);
+
+    // Fortschrittsbalken über das ganze Video
+    const total = TL[TL.length - 1].end;
+    document.getElementById('barfill').style.width =
+      (clamp(t / total, 0, 1) * 100).toFixed(2) + '%';
+  };
+</script>
+</body>
+</html>
