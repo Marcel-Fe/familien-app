@@ -2691,7 +2691,7 @@ function render() {
   content.classList.add('einblenden');
 
   switch (state.sektion) {
-    case 'dashboard':  content.innerHTML = renderDashboard(); break;
+    case 'dashboard':  content.innerHTML = renderDashboard(); setTimeout(d6ZahlAnimieren, 60); break;
     case 'umgebung':   content.innerHTML = renderUmgebung(); setTimeout(initKarte, 100); break;
     case 'leistungen': content.innerHTML = renderLeistungen(); break;
     case 'formular':   content.innerHTML = renderFormularAssistent(); break;
@@ -2735,7 +2735,7 @@ function render() {
     case 'erkennen':       content.innerHTML = renderErkennen(); break;
     case 'erstehilfe':     content.innerHTML = renderErsteHilfe(); break;
     case 'einkaufsliste':  content.innerHTML = renderEinkaufslisteSektion(); break;
-    default:           content.innerHTML = renderDashboard();
+    default:           content.innerHTML = renderDashboard(); setTimeout(d6ZahlAnimieren, 60);
   }
   // Zurück-Button in jeder Sektion außer dem Dashboard
   if (state.sektion !== 'dashboard') {
@@ -2821,6 +2821,7 @@ function renderDashboard() {
     case 'd3': return renderDashboardD3();
     case 'd4': return renderDashboardD4();
     case 'd5': return renderDashboardD5();
+    case 'd6': return renderDashboardD6();
     case 'd1':
     default:   return renderDashboardD1();
   }
@@ -3584,6 +3585,75 @@ function renderDashboardD5() {
 
   ${dashboardSharedUnten(ctx)}
   </div>`;
+}
+
+// Ansicht 6 — „Horizon" (heller Lavendel-Grund, weiße runde Karten, weiche Schatten)
+function renderDashboardD6() {
+  const ctx = dashboardKontext();
+  const { user, bl, kinder, max, z } = ctx;
+  return `
+  <div class="ansicht-d6">
+  ${dashboardInstallBanner(ctx)}
+
+  <div class="d6-banner">
+    <div class="d6-tag">${tagesEmoji()} ${tageszeit()} · ${new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' })}</div>
+    <div class="d6-name">${user.vorname ? `Hallo ${esc(user.vorname)}! 👋` : 'Willkommen! 👋'}</div>
+    <div class="d6-sub">
+      ${bl ? `📍 ${esc(bl.name)}` : ''}${kinder.length > 0 ? ` · 👶 ${kinder.length} ${kinder.length===1?'Kind':'Kinder'}` : ''}
+    </div>
+    ${dashboardHeroChips(max)}
+  </div>
+
+  ${max > 0 && z('zeigBetrag', true) ? `
+  <div class="d6-stat-reihe">
+    <div class="d6-stat">
+      <div class="d6-stat-ic brand">💰</div>
+      <div>
+        <div class="d6-stat-label">Leistungen / Monat</div>
+        <div class="d6-stat-zahl">bis <span id="d6-zahl" data-ziel="${max}">${max.toLocaleString('de-DE')}</span> <small>€</small></div>
+      </div>
+    </div>
+    <div class="d6-stat">
+      <div class="d6-stat-ic">👨‍👩‍👧</div>
+      <div>
+        <div class="d6-stat-label">Familie</div>
+        <div class="d6-stat-zahl">${kinder.length} <small>${kinder.length===1?'Kind':'Kinder'}</small></div>
+      </div>
+    </div>
+  </div>` : ''}
+
+  ${dashboardSharedMitte(ctx)}
+
+  ${z('zeigSchnellzugriff', true) ? `
+  <div class="d6-titel">Schnellzugriff</div>
+  <div class="d6-grid">
+    ${DASHBOARD_SCHNELL.map(k => `
+      <button class="d6-akt" style="--c1:${k.farbe2};--c2:${k.farbe}" onclick="${dashboardSchnellClick(k.s)}">
+        <span class="d6-akt-ic">${k.icon}</span>
+        <div class="d6-akt-l">${k.kurz}</div>
+      </button>`).join('')}
+  </div>` : ''}
+
+  ${dashboardSharedUnten(ctx)}
+  </div>`;
+}
+
+// Lässt den Leistungs-Betrag in Ansicht 6 von 0 hochzählen (dezent lebendig).
+// Bei „Bewegung reduzieren" bleibt der fertige Wert einfach stehen.
+function d6ZahlAnimieren() {
+  const zahlEl = el('d6-zahl');
+  if (!zahlEl) return;
+  const ziel = parseInt(zahlEl.dataset.ziel) || 0;
+  if (ziel <= 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const start = performance.now();
+  const dauer = 900;
+  function tick(now) {
+    const p = Math.min(1, (now - start) / dauer);
+    const eased = 1 - Math.pow(1 - p, 3);
+    zahlEl.textContent = Math.round(ziel * eased).toLocaleString('de-DE');
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // ===== UMGEBUNGSSUCHE =====
@@ -10344,7 +10414,8 @@ function renderEinstellungen() {
         { id:'d2', name:'Ruhig & Edel',      sub:'Hell, dezente Listen',           preview:'linear-gradient(135deg,#FBFAF8,#EDEAE3)', dark:false, text:'#292524' },
         { id:'d3', name:'Kompakt & Praktisch',sub:'Stats-Streifen, 3×3-Grid',       preview:'linear-gradient(135deg,#1E293B,#475569)' },
         { id:'d4', name:'Dark Modern',       sub:'Dunkel, Glasmorphism, Glow',     preview:'radial-gradient(circle at 30% 0%,#6366F1,transparent 60%),radial-gradient(circle at 80% 80%,#EC4899,transparent 65%),#0F172A' },
-        { id:'d5', name:'Senioren-Großdruck',sub:'Große Schrift, hohe Kontraste',  preview:'linear-gradient(135deg,#1E40AF,#FACC15)' }
+        { id:'d5', name:'Senioren-Großdruck',sub:'Große Schrift, hohe Kontraste',  preview:'linear-gradient(135deg,#1E40AF,#FACC15)' },
+        { id:'d6', name:'Horizon',           sub:'Hell, runde Karten, sanft animiert', preview:'linear-gradient(135deg,#868CFF,#4318FF)' }
       ].map(a => {
         const aktiv = (einst.dashboardAnsicht || 'd1') === a.id;
         return `
