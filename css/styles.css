@@ -693,6 +693,10 @@ body {
   color: #5B21B6; margin-bottom: .15rem;
   display: flex; align-items: center; gap: .35rem;
 }
+.ki-datenschutz-hinweis {
+  font-size: .68rem; color: var(--g500);
+  margin: -.35rem 0 .65rem;
+}
 .ki-such-sub {
   font-size: .78rem; color: var(--g700);
   margin-bottom: .65rem;

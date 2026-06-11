@@ -3006,18 +3006,8 @@ function renderDashboardD1() {
   <!-- SCHNELLZUGRIFF — bunte Verlauf-Kacheln (Design 1) -->
   <div class="block-title">📌 Alle Bereiche im Überblick</div>
   <div class="dash-kachel-grid">
-    ${[
-      { icon:'💰', kurz:'Zuschüsse', farbe:'#4F46E5', farbe2:'#6366F1', s:'leistungen' },
-      { icon:'📋', kurz:'Formulare', farbe:'#059669', farbe2:'#10B981', s:'formular' },
-      { icon:'📍', kurz:'Umgebung', farbe:'#2563EB', farbe2:'#3B82F6', s:'umgebung' },
-      { icon:'💡', kurz:'Sparen', farbe:'#DB2777', farbe2:'#EC4899', s:'sparen' },
-      { icon:'📞', kurz:'Beratung', farbe:'#7C3AED', farbe2:'#8B5CF6', s:'beratung' },
-      { icon:'🗓️', kurz:'Kalender', farbe:'#0EA5E9', farbe2:'#38BDF8', s:'kalender' },
-      { icon:'👨‍👩‍👧', kurz:'Familie', farbe:'#0D9488', farbe2:'#14B8A6', s:'familie' },
-      { icon:'💶', kurz:'Budget', farbe:'#B45309', farbe2:'#D97706', s:'extras' },
-      { icon:'🔍', kurz:'Suche', farbe:'#475569', farbe2:'#64748B', s:'suche' }
-    ].map(k => `
-      <button class="dash-kachel" style="background:linear-gradient(135deg,${k.farbe},${k.farbe2})" onclick="${k.s==='extras'?`state.extrasTab='budget';`:''}zuSektion('${k.s}')">
+    ${DASHBOARD_SCHNELL.map(k => `
+      <button class="dash-kachel" style="background:linear-gradient(135deg,${k.farbe},${k.farbe2})" onclick="${dashboardSchnellClick(k.s)}">
         <span class="dash-kachel-icon">${k.icon}</span>
         <span class="dash-kachel-label">${k.kurz}</span>
       </button>`).join('')}
@@ -3375,7 +3365,8 @@ const DASHBOARD_SCHNELL = [
   { icon:'🗓️', kurz:'Kalender', farbe:'#0EA5E9', farbe2:'#38BDF8', s:'kalender' },
   { icon:'👨‍👩‍👧', kurz:'Familie', farbe:'#0D9488', farbe2:'#14B8A6', s:'familie' },
   { icon:'💶', kurz:'Budget',    farbe:'#B45309', farbe2:'#D97706', s:'extras' },
-  { icon:'🔍', kurz:'Suche',     farbe:'#475569', farbe2:'#64748B', s:'suche' }
+  { icon:'🔍', kurz:'Suche',     farbe:'#475569', farbe2:'#64748B', s:'suche' },
+  { icon:'⚙️', kurz:'Einstellungen', farbe:'#334155', farbe2:'#475569', s:'einstellungen' }
 ];
 
 function dashboardSchnellClick(s) {
@@ -4060,7 +4051,11 @@ async function ladeOrte(karte) {
 
   try {
     const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQ)}`);
-    const daten = await res.json();
+    // Overpass liefert bei Ueberlastung HTTP 200 mit XML-Fehlerseite — JSON-Parse absichern
+    const rohtext = await res.text();
+    let daten;
+    try { daten = JSON.parse(rohtext); }
+    catch { throw new Error('Karten-Dienst überlastet'); }
     const orte = daten.elements || [];
     // Flächen (ways/relations, z.B. Parkplätze) liefern die Koordinate als center
     orte.forEach(o => { if (o.lat == null && o.center) { o.lat = o.center.lat; o.lon = o.center.lon; } });
@@ -4152,8 +4147,9 @@ async function ladeOrte(karte) {
       }
     }
   } catch(e) {
-    if (liste) liste.innerHTML = `<div class="ort-leer">⚠️ Fehler beim Laden. Bitte erneut versuchen.</div>`;
-    console.error(e);
+    const ueberlastet = /überlastet/.test(e.message || '');
+    if (liste) liste.innerHTML = `<div class="ort-leer">⚠️ ${ueberlastet ? 'Der Karten-Dienst ist gerade überlastet — bitte in 1–2 Minuten erneut versuchen.' : 'Fehler beim Laden. Bitte erneut versuchen.'}</div>`;
+    console.warn('Umgebungssuche:', e.message || e);
   }
 }
 
@@ -12214,29 +12210,19 @@ function uebersetzungVorlesen() {
   speechSynthesis.speak(u);
 }
 // Spracheingabe: gesprochenen Text in das Übersetzungsfeld schreiben und direkt übersetzen
+// — nutzt den gemeinsamen Helfer spracheErkennen()
 function uebersetzungSprechen() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('⚠️ Spracheingabe nicht unterstützt — bitte Chrome/Edge nutzen'); return; }
-  const feld = el('ueb-text');
-  const btn = el('ueb-mic');
-  const erk = new SR();
-  erk.lang = uebBcp(el('ueb-von')?.value || 'de');
-  erk.interimResults = false;
-  erk.continuous = false;
-  if (btn) btn.classList.add('aktiv');
-  toast('🎤 Jetzt sprechen…');
-  erk.onresult = (e) => {
-    const text = e.results[0][0].transcript;
-    if (feld) feld.value = text;
-    toast('✓ ' + text);
-    uebersetzungStarten();
-  };
-  erk.onerror = (e) => {
-    toast(e.error === 'not-allowed' ? '⚠️ Bitte Mikrofon-Zugriff erlauben' : '⚠️ Spracheingabe fehlgeschlagen');
-    if (btn) btn.classList.remove('aktiv');
-  };
-  erk.onend = () => { if (btn) btn.classList.remove('aktiv'); };
-  try { erk.start(); } catch { if (btn) btn.classList.remove('aktiv'); }
+  spracheErkennen({
+    lang: uebBcp(el('ueb-von')?.value || 'de'),
+    btn: '#ueb-mic',
+    hinweis: '🎤 Jetzt sprechen — zum Stoppen Mikro erneut tippen',
+    onText: text => {
+      const feld = el('ueb-text');
+      if (feld) feld.value = text;
+      toast('✓ ' + text);
+      uebersetzungStarten();
+    }
+  });
 }
 function uebersetzungKopieren() {
   if (!_uebLetztesErgebnis) return;
@@ -14707,35 +14693,18 @@ function symptomEingabeFuelle(text) {
   render();
 }
 
-// Sprach-Eingabe für Symptome (Browser SpeechRecognition)
+// Sprach-Eingabe für Symptome — nutzt den gemeinsamen Helfer spracheErkennen()
 function symptomSpracheStarten() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    toast('Spracheingabe nicht unterstützt — bitte Chrome/Edge nutzen');
-    return;
-  }
-  const erk = new SR();
-  erk.lang = 'de-DE';
-  erk.interimResults = false;
-  erk.continuous = false;
-  toast('🎤 Sprechen Sie jetzt — Symptome beschreiben');
-  const btn = document.querySelector('.symptom-mic-btn');
-  if (btn) btn.classList.add('aktiv');
-  erk.onresult = (e) => {
-    const text = e.results[0][0].transcript;
-    state.symptomEingabe = text;
-    state.symptomTreffer = symptomSuchen(text);
-    toast('✓ ' + text);
-    render();
-  };
-  erk.onerror = () => {
-    toast('⚠️ Spracheingabe fehlgeschlagen');
-    if (btn) btn.classList.remove('aktiv');
-  };
-  erk.onend = () => {
-    if (btn) btn.classList.remove('aktiv');
-  };
-  erk.start();
+  spracheErkennen({
+    btn: '.symptom-mic-btn',
+    hinweis: '🎤 Symptome beschreiben — zum Stoppen Mikro erneut tippen',
+    onText: text => {
+      state.symptomEingabe = text;
+      state.symptomTreffer = symptomSuchen(text);
+      toast('✓ ' + text);
+      render();
+    }
+  });
 }
 
 // ===== ESSENSPLANER =====
@@ -15348,7 +15317,8 @@ function kiSuchBox(id) {
   return `
   <div class="ki-such-box" id="ki-box-${id}">
     <div class="ki-such-titel">🤖 Familien-Assistent <span style="font-size:.65rem;font-weight:800;background:var(--akzent-grad);color:white;padding:.15rem .5rem;border-radius:99px;vertical-align:middle;margin-left:.35rem">KI</span></div>
-    <div class="ki-such-sub">Stell jede Frage — echte KI-Antwort + passende Bereiche aus der App. Auch per Sprache.</div>
+    <div class="ki-such-sub">Stell jede Frage — Antworten aus geprüften App-Inhalten, wenn möglich per Online-KI verfeinert. Auch per Sprache.</div>
+    <div class="ki-datenschutz-hinweis">🔒 Anfragen sind anonym — bitte keine persönlichen Daten (Name, Adresse) eingeben.</div>
     <div class="ki-such-eingabe">
       <input type="text" id="ki-input-${id}" class="ki-such-input"
         placeholder="z.B. Was ist Wohngeld? Was hilft bei Fieber? Wo finde ich Spielplätze?"
@@ -15389,23 +15359,54 @@ function kiVerlaufNutzen(id, idx) {
   kiSuchStarten(id);
 }
 
-function kiSuchSprechen(id) {
+// ===== Gemeinsame Spracherkennung (Web Speech API) =====
+// EIN robuster Helfer fuer alle Sprach-Eingaben (KI-Suche, Symptom-Check, Uebersetzer):
+// klare Fehlermeldungen je Ursache, Stopp per zweitem Tipp aufs Mikro, sauberer Button-Status.
+let _sprachErkennung = null;
+function spracheErkennen(opts) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { toast('⚠️ Spracheingabe nicht unterstützt — bitte Chrome/Edge nutzen'); return; }
+  if (!SR) { toast('⚠️ Spracheingabe wird von diesem Browser nicht unterstützt — bitte Chrome oder Edge nutzen'); return; }
+  // Zweiter Tipp aufs Mikro stoppt die laufende Erkennung
+  if (_sprachErkennung) { try { _sprachErkennung.stop(); } catch {} _sprachErkennung = null; return; }
+  const btn = opts.btn ? document.querySelector(opts.btn) : null;
   const erk = new SR();
-  erk.lang = 'de-DE'; erk.interimResults = false; erk.continuous = false;
-  const btn = document.querySelector(`#ki-box-${id} .ki-mic-btn`);
+  erk.lang = opts.lang || 'de-DE';
+  erk.interimResults = false;
+  erk.continuous = false;
+  _sprachErkennung = erk;
   if (btn) btn.classList.add('aktiv');
-  toast('🎤 Sprich deine Frage...');
+  toast(opts.hinweis || '🎤 Jetzt sprechen — zum Stoppen Mikro erneut tippen');
   erk.onresult = e => {
-    const text = e.results[0][0].transcript;
-    const inp = el(`ki-input-${id}`);
-    if (inp) inp.value = text;
-    kiSuchStarten(id);
+    const text = (e.results[0] && e.results[0][0] ? e.results[0][0].transcript : '').trim();
+    if (text) opts.onText(text);
   };
-  erk.onerror = () => { if (btn) btn.classList.remove('aktiv'); toast('⚠️ Spracheingabe fehlgeschlagen'); };
-  erk.onend = () => { if (btn) btn.classList.remove('aktiv'); };
-  erk.start();
+  erk.onerror = e => {
+    const meldungen = {
+      'not-allowed':         '⚠️ Mikrofon-Zugriff verweigert — bitte über das Schloss-Symbol in der Adresszeile erlauben',
+      'service-not-allowed': '⚠️ Mikrofon-Zugriff verweigert — bitte über das Schloss-Symbol in der Adresszeile erlauben',
+      'no-speech':           '🔇 Nichts gehört — bitte noch einmal sprechen',
+      'audio-capture':       '⚠️ Kein Mikrofon gefunden — bitte Anschluss prüfen',
+      'network':             '⚠️ Die Spracherkennung braucht Internet — bitte Verbindung prüfen',
+      'aborted':             ''   // bewusst gestoppt — keine Meldung noetig
+    };
+    const m = meldungen[e.error] !== undefined ? meldungen[e.error] : '⚠️ Spracheingabe fehlgeschlagen — bitte erneut versuchen';
+    if (m) toast(m);
+  };
+  erk.onend = () => { if (btn) btn.classList.remove('aktiv'); _sprachErkennung = null; };
+  try { erk.start(); }
+  catch { if (btn) btn.classList.remove('aktiv'); _sprachErkennung = null; toast('⚠️ Spracheingabe konnte nicht gestartet werden'); }
+}
+
+function kiSuchSprechen(id) {
+  spracheErkennen({
+    btn: `#ki-box-${id} .ki-mic-btn`,
+    hinweis: '🎤 Sprich deine Frage — zum Stoppen Mikro erneut tippen',
+    onText: text => {
+      const inp = el(`ki-input-${id}`);
+      if (inp) inp.value = text;
+      kiSuchStarten(id);
+    }
+  });
 }
 
 let _kiVorleseText = '';
@@ -15552,17 +15553,20 @@ async function kiSuchStarten(id) {
   const lokalFormatiert = esc(lokal.text).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
   _kiVorleseText = lokal.vorlese || '';
 
-  // Sofort anzeigen: lokale Schnellantwort, KI verfeinert im Hintergrund
+  // Sofort anzeigen: lokale Schnellantwort, KI verfeinert im Hintergrund (wenn verfuegbar)
+  const onlineMoeglich = kiOnlineVerfuegbar();
   box.innerHTML = `
     <div class="ki-antwort-block">
       <div class="ki-antwort-frage">❓ ${esc(frage)}</div>
       <div class="ki-antwort-text" id="ki-stream-${id}">
-        <div class="ki-fallback-hinweis"><span class="ki-typing"><span></span><span></span><span></span></span> Familien-Assistent verfeinert die Antwort…</div>
+        ${onlineMoeglich ? '<div class="ki-fallback-hinweis"><span class="ki-typing"><span></span><span></span><span></span></span> Familien-Assistent verfeinert die Antwort…</div>'
+                         : '<div class="ki-fallback-hinweis">💡 Geprüfte Antwort aus der App-Datenbank</div>'}
         <div>${lokalFormatiert}</div>
       </div>
       <div id="ki-treffer-${id}"></div>
       <div class="ki-antwort-aktionen">
-        <button class="btn btn-sm" id="ki-stop-${id}" onclick="kiAbbrechen()">⏹ Stop</button>
+        ${onlineMoeglich ? `<button class="btn btn-sm" id="ki-stop-${id}" onclick="kiAbbrechen()">⏹ Stop</button>`
+                         : `<button class="btn btn-primary btn-sm" onclick="kiVorlesen()">🔊 Vorlesen</button>`}
         <button class="btn btn-sm" onclick="kiAntwortSchliessen('${id}')">✕ Schließen</button>
       </div>
     </div>`;
@@ -15570,6 +15574,9 @@ async function kiSuchStarten(id) {
   const streamEl = el('ki-stream-' + id);
   const trefferEl = el('ki-treffer-' + id);
   renderKiTreffer(trefferEl, lokaleTreffer);
+
+  // Online-KI pausiert (Anbieter gesperrt/ueberlastet): lokale Antwort ist die Antwort — fertig.
+  if (!onlineMoeglich) return;
 
   // Vorherige Anfrage abbrechen
   if (_kiAbbruchController) try { _kiAbbruchController.abort(); } catch {}
@@ -15619,9 +15626,12 @@ async function kiSuchStarten(id) {
       stopMitVorlesenErsetzen();
       return;
     }
-    // KI-Server nicht erreichbar: lokale Antwort als vollwertige Offline-Antwort zeigen
+    // KI-Server gesperrt/ueberlastet/nicht erreichbar: lokale Antwort als vollwertige Antwort zeigen
     if (streamEl) {
-      streamEl.innerHTML = '<div class="ki-fallback-hinweis">⚡ Offline-Antwort aus der App-Datenbank (KI-Server nicht erreichbar)</div>'
+      const hinweis = err.kiGesperrt
+        ? '💡 Geprüfte Antwort aus der App-Datenbank — die Online-KI ist gerade nicht verfügbar.'
+        : '⚡ Antwort aus der App-Datenbank (Online-KI nicht erreichbar)';
+      streamEl.innerHTML = '<div class="ki-fallback-hinweis">' + hinweis + '</div>'
         + (lokal.einleitung ? '<strong>' + esc(lokal.einleitung) + '</strong><br><br>' : '')
         + lokalFormatiert;
     }
@@ -15635,8 +15645,17 @@ function kiAbbrechen() {
   if (_kiAbbruchController) try { _kiAbbruchController.abort(); } catch {}
 }
 
-// Pollinations.ai — kostenlose KI ohne API-Key, mit Streaming
+// Pollinations.ai — kostenlose KI ohne API-Key.
+// Schutzschalter: Wenn der Dienst gesperrt/ueberlastet antwortet (403 Captcha-Pflicht,
+// wiederholt 429), pausieren wir Online-Anfragen 15 Min. statt sinnlos zu haemmern —
+// die gepruefte lokale Antwort aus der App-Datenbank ist dann die Hauptantwort.
+let _kiOnlineGesperrtBis = 0;
+function kiOnlineVerfuegbar() { return Date.now() >= _kiOnlineGesperrtBis; }
+function kiOnlineSperren(minuten) { _kiOnlineGesperrtBis = Date.now() + minuten * 60000; }
+
 async function kiAPIAnfrage(frage, signal, streamEl) {
+  if (!kiOnlineVerfuegbar()) { const e = new Error('KI-Dienst pausiert'); e.kiGesperrt = true; throw e; }
+
   // POST-Endpoint: System-Prompt im Body statt in der URL — keine ueberlange URL,
   // dadurch deutlich zuverlaessiger als die alte GET-Variante.
   const koerper = JSON.stringify({
@@ -15667,6 +15686,16 @@ async function kiAPIAnfrage(frage, signal, streamEl) {
           body: koerper,
           signal
         });
+        if (res.status === 403) {
+          // Anbieter verlangt Captcha (Turnstile) — anonymer Zugang gesperrt.
+          // Wiederholen ist zwecklos: sofort raus + 15 Min. Pause.
+          kiOnlineSperren(15);
+          const e = new Error('KI-Dienst gesperrt (403)'); e.kiGesperrt = true; throw e;
+        }
+        if (res.status === 429) {
+          // Ueberlastet: max 1 Anfrage pro IP in der Warteschlange — laenger warten statt haemmern
+          const e = new Error('KI-Dienst ueberlastet (429)'); e.ki429 = true; throw e;
+        }
         if (!res.ok) throw new Error('API-Fehler ' + res.status);
 
         const roh = (await res.text()).trim();
@@ -15691,9 +15720,12 @@ async function kiAPIAnfrage(frage, signal, streamEl) {
       } catch (e) {
         letzterFehler = e;
         if (e.name === 'AbortError' || (signal && signal.aborted)) throw e; // Nutzer-Abbruch — nicht wiederholen
-        if (versuch < 3) await new Promise(r => setTimeout(r, 800));
+        if (e.kiGesperrt) throw e; // Captcha-Sperre — Wiederholen bringt nichts
+        if (versuch < 3) await new Promise(r => setTimeout(r, e.ki429 ? 4000 : 800));
       }
     }
+    // Auch nach Backoff dauerhaft ueberlastet → 5 Min. Pause, lokale Antworten uebernehmen
+    if (letzterFehler && letzterFehler.ki429) kiOnlineSperren(5);
     throw letzterFehler;
   } finally {
     clearTimeout(timeout);
