@@ -237,10 +237,9 @@ const NAV = {
   start:     [{s:'dashboard', l:'Übersicht'}],
   geld:      [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'},{s:'formular', l:'Formulare'}],
   unterwegs: [{s:'umgebung', l:'Umgebung'},{s:'routenplaner', l:'Routenplaner'},{s:'wanderwege', l:'Wanderwege'},{s:'regenradar', l:'Regenradar'},{s:'urlaub', l:'Reise-Ideen'}],
-  familie:   [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'notizen', l:'Notizen'},{s:'essensplan', l:'Essensplan'},{s:'einkaufsliste', l:'Einkaufsliste'},{s:'kochbuch', l:'Kochbuch'},{s:'haushalt', l:'Haushalt'},{s:'handwerker', l:'Handwerker'},{s:'kontakte', l:'Kontakte'},{s:'album', l:'Album'},{s:'beratung', l:'Beratung'}],
+  familie:   [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'notizen', l:'Notizen'},{s:'familienchat', l:'Familien-Chat'},{s:'essensplan', l:'Essensplan'},{s:'einkaufsliste', l:'Einkaufsliste'},{s:'kochbuch', l:'Kochbuch'},{s:'haushalt', l:'Haushalt'},{s:'handwerker', l:'Handwerker'},{s:'kontakte', l:'Kontakte'},{s:'album', l:'Album'},{s:'beratung', l:'Beratung'}],
   kinder:    [{s:'basteln', l:'Basteln'},{s:'spielideen', l:'Spielideen'},{s:'hausaufgaben', l:'Hausaufgaben'},{s:'erziehung', l:'Erziehung'}],
   gesund:    [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'},{s:'schwangerschaft', l:'Schwangerschaft'},{s:'erstehilfe', l:'Erste Hilfe'},{s:'medbox', l:'Medikamente'}],
-  senioren:  [{s:'senioren', l:'Senioren'}],
   wissen:    [{s:'wissen', l:'Wissen'},{s:'tipps', l:'Tipps'},{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'uebersetzer', l:'Übersetzer'},{s:'erkennen', l:'Tiere & Pflanzen'},{s:'suche', l:'Suche'}],
   einstellungen: [{s:'einstellungen', l:'Einstellungen'}]
 };
@@ -1403,70 +1402,8 @@ function renderErziehung() {
 }
 
 // ===== SENIOREN =====
-function seniorenTabWaehlen(t) { state.seniorenTab = t; render(); }
-
-function renderSenioren() {
-  const aktivId = state.seniorenTab && SENIOREN_DATEN[state.seniorenTab] ? state.seniorenTab : 'rente';
-  const aktiv = SENIOREN_DATEN[aktivId];
-  const total = Object.values(SENIOREN_DATEN).reduce((s, k) => s + k.tipps.length, 0);
-
-  // Schnellzugriff auf die für Senioren wichtigsten App-Bereiche
-  const quick = [
-    { ic:'🥾', l:'Wanderwege',    s:'wanderwege' },
-    { ic:'🗺️', l:'Ausflugsziele', s:'umgebung' },
-    { ic:'🚑', l:'Erste Hilfe',   s:'erstehilfe' },
-    { ic:'💊', l:'Medikamente',   s:'medbox' },
-    { ic:'📅', l:'Termine',       s:'kalender' }
-  ];
-
-  return `
-  <div class="bereich-hero">
-    <div class="bereich-hero-titel">👵 Senioren</div>
-    <div class="bereich-hero-sub">${total} Tipps · ${Object.keys(SENIOREN_DATEN).length} Themen</div>
-    <div class="bereich-hero-sub-2">Alles für ein gutes Leben im Alter — Rente, Pflege, Gesundheit, Ausflüge und Sicherheit</div>
-  </div>
-
-  <div class="senioren-quick">
-    ${quick.map(q => `
-    <button class="senioren-quick-btn" onclick="zuSektion('${q.s}')">
-      <span class="senioren-quick-ic">${q.ic}</span>
-      <span class="senioren-quick-l">${q.l}</span>
-    </button>`).join('')}
-  </div>
-
-  <div class="ges-tabs">
-    ${Object.entries(SENIOREN_DATEN).map(([id, k]) => `
-    <button class="ges-tab ${aktivId===id?'aktiv':''}"
-      onclick="seniorenTabWaehlen('${id}')"
-      style="${aktivId===id?`background:${k.farbe};border-color:${k.farbe};color:white;`:''}">
-      ${k.icon} ${k.label}
-    </button>`).join('')}
-  </div>
-
-  <div class="info-box gruen" style="margin-bottom:1rem"><span class="ib-icon">${aktiv.icon}</span><div class="ib-text"><strong>${esc(aktiv.label)}:</strong> ${esc(aktiv.intro)}</div></div>
-
-  ${aktivId === 'ausfluege' ? `
-  <div class="senioren-ausflug-aktionen">
-    <button class="btn btn-primary btn-sm" onclick="zuSektion('umgebung')">🗺️ Ziele in der Nähe</button>
-    <button class="btn btn-outline btn-sm" onclick="zuSektion('umgebung')">🚲 Fahrrad-Route</button>
-    <button class="btn btn-outline btn-sm" onclick="zuSektion('umgebung')">🚗 Auto-Route</button>
-  </div>` : ''}
-
-  <div class="ges-tipp-grid">
-    ${aktiv.tipps.map((t, i) => `
-    <div class="ges-tipp-karte" style="--ges-farbe:${aktiv.farbe};--ges-bg:${aktiv.bg}">
-      <div class="ges-tipp-header">
-        <div class="ges-tipp-icon">${aktiv.icon}</div>
-        <div class="ges-tipp-titel">${esc(t.titel)}</div>
-        <div class="ges-tipp-nr">${i+1}</div>
-      </div>
-      <div class="ges-tipp-text">${esc(t.text)}</div>
-      ${t.tipp ? `<div class="ges-tipp-bottom"><span class="ges-tipp-icon-klein">💡</span><span class="ges-tipp-hinweis">${esc(t.tipp)}</span></div>` : ''}
-    </div>`).join('')}
-  </div>
-
-  <div class="info-box blau" style="margin-top:1rem"><span class="ib-icon">📞</span><div class="ib-text"><strong>Beratung:</strong> Der Pflegestützpunkt und das Seniorenbüro deiner Stadt beraten kostenlos zu allen Fragen rund ums Alter.</div></div>`;
-}
+// Senioren-Bereich entfernt (v95): wandert in eine eigene Senioren-/Pflege-App.
+// SENIOREN_DATEN in data.js bleibt vorerst ungenutzt liegen (kein Code-Pfad, kein Fehler).
 
 // ===== Wetter-Widget (Open-Meteo, kein API-Key nötig) =====
 let _wetterCache = null;
@@ -2576,7 +2513,6 @@ const NAV_META = {
   familie:      { icon:'👨‍👩‍👧', label:'Familie & Alltag' },
   kinder:       { icon:'🧒', label:'Kinder' },
   gesund:       { icon:'🩺', label:'Gesundheit' },
-  senioren:     { icon:'👵', label:'Senioren' },
   wissen:       { icon:'📚', label:'Wissen & Mehr' },
   einstellungen:{ icon:'⚙️', label:'Einstellungen' }
 };
@@ -2589,7 +2525,7 @@ function renderMenuDrawer() {
   liste.innerHTML = Object.keys(NAV).map(g => {
     const meta = NAV_META[g] || { icon:'•', label:g };
     const items = NAV[g];
-    // Einzel-Gruppen (Start, Senioren, Einstellungen) — direkter Link
+    // Einzel-Gruppen (Start, Einstellungen) — direkter Link
     if (items.length === 1) {
       const aktiv = state.sektion === items[0].s ? ' aktiv' : '';
       return `<button class="menu-eintrag${aktiv}" onclick="menuUnterKlick('${items[0].s}')">
@@ -2720,10 +2656,10 @@ function render() {
     case 'suche':          content.innerHTML = renderSuche(); break;
     case 'tipps':          content.innerHTML = renderTippsTab(); break;
     case 'notizen':        content.innerHTML = renderNotizen(); break;
+    case 'familienchat':   content.innerHTML = renderFamilienChat(); setTimeout(chatNachUnten, 60); break;
     case 'haushalt':       content.innerHTML = renderHaushalt(); break;
     case 'handwerker':     content.innerHTML = renderHandwerker(); break;
     case 'erziehung':      content.innerHTML = renderErziehung(); break;
-    case 'senioren':       content.innerHTML = renderSenioren(); break;
     case 'album':          content.innerHTML = renderAlbum(); break;
     case 'kontakte':       content.innerHTML = renderKontakte(); break;
     case 'wissen':         content.innerHTML = renderWissen(); break;
@@ -2822,6 +2758,7 @@ function renderDashboard() {
     case 'd4': return renderDashboardD4();
     case 'd5': return renderDashboardD5();
     case 'd6': return renderDashboardD6();
+    case 'd7': return renderDashboardD7();
     case 'd1':
     default:   return renderDashboardD1();
   }
@@ -3626,6 +3563,288 @@ function renderDashboardD6() {
   </div>` : ''}
 
   ${dashboardSharedUnten(ctx)}
+  </div>`;
+}
+
+// Großer Kachel-Hub (Vorschlag 2) — optional statt der kompakten Schnellzugriff-Reihe.
+const ZENTRALE_HUB = [
+  { icon:'🗓️', l:'Kalender',         sub:'Termine & Pläne',    bg:'#EDE9FE', c:'#6D28D9', click:`zuSektion('kalender')` },
+  { icon:'💬', l:'Chat',             sub:'Familienchat',       bg:'#DBEAFE', c:'#2563EB', click:`zuSektion('familienchat')` },
+  { icon:'📍', l:'Umgebung',         sub:'Aktivitäten & Orte', bg:'#DCFCE7', c:'#16A34A', click:`zuSektion('umgebung')` },
+  { icon:'✅', l:'Aufgaben',         sub:'To-Dos & Listen',    bg:'#D1FAE5', c:'#059669', click:`zuSektion('todo')` },
+  { icon:'🏠', l:'Haushalt',         sub:'Pläne & Routinen',   bg:'#FFEDD5', c:'#EA580C', click:`zuSektion('haushalt')` },
+  { icon:'❤️', l:'Gesundheit',       sub:'Infos & Notizen',    bg:'#FEE2E2', c:'#DC2626', click:`zuSektion('gesundheit')` },
+  { icon:'💶', l:'Geld & Zuschüsse', sub:'Übersicht',          bg:'#FEF3C7', c:'#B45309', click:`zuSektion('leistungen')` },
+  { icon:'📄', l:'Formulare',        sub:'Anträge & Vorlagen', bg:'#E0E7FF', c:'#4338CA', click:`zuSektion('formular')` },
+  { icon:'🤖', l:'KI-Assistent',     sub:'Hilfe & Planung',    bg:'#EDE9FE', c:'#7C3AED', click:`zenKiOeffnen()` }
+];
+
+// Ansicht 7 — „Familien-Zentrale" (Vorschlag 1: aufgeräumt, „Was ist heute wichtig?")
+// Bewusst minimal: Begrüßung · HEUTE-Karte · KI-Helfer · 4 Schnellzugriffe · 2 Status-Karten.
+function renderDashboardD7() {
+  const ctx = dashboardKontext();
+  const { user } = ctx;
+  const familienName = user.nachname ? `Familie ${esc(user.nachname)}` : (user.vorname ? esc(user.vorname) : 'Familie');
+  const datum = new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long' });
+  const quick = [
+    { icon:'🗓️', l:'Kalender', c1:'#818CF8', c2:'#4F46E5', s:'kalender' },
+    { icon:'✅', l:'Aufgaben',  c1:'#34D399', c2:'#059669', s:'todo' },
+    { icon:'🛒', l:'Einkauf',   c1:'#FB923C', c2:'#EA580C', s:'einkaufsliste' },
+    { icon:'💬', l:'Chat',      c1:'#60A5FA', c2:'#2563EB', s:'familienchat' }
+  ];
+  const ungelesen = chatUngelesen();
+  return `
+  <div class="zentrale">
+    ${dashboardInstallBanner(ctx)}
+
+    <div class="zen-topbar">
+      <button class="zen-icon-btn" onclick="menuOeffnen()" aria-label="Menü">☰</button>
+      <button class="zen-icon-btn zen-bell" onclick="zuSektion('familienchat')" aria-label="Nachrichten">
+        🔔${ungelesen > 0 ? `<span class="zen-bell-badge">${ungelesen > 9 ? '9+' : ungelesen}</span>` : ''}
+      </button>
+    </div>
+
+    <div class="zen-header">
+      <button class="zen-avatar" onclick="document.getElementById('zen-foto-input').click()" aria-label="Familienfoto ändern">
+        ${ctx.einst.familienfoto ? '' : '👨‍👩‍👧'}
+        <span class="zen-avatar-cam">📷</span>
+      </button>
+      <input type="file" id="zen-foto-input" accept="image/*" onchange="familienfotoUpload(this)" style="display:none">
+      <div class="zen-greet">
+        <div class="zen-willk">Willkommen,</div>
+        <div class="zen-name">${familienName}</div>
+        <div class="zen-tageszeit">${tageszeit()}! ${tagesEmoji()}</div>
+        <div class="zen-datum">${datum}</div>
+      </div>
+    </div>
+
+    ${zentraleHeute()}
+
+    <div class="zen-ki-card">
+      <div class="zen-ki-kopf">
+        <div class="zen-ki-bot">🤖</div>
+        <div class="zen-ki-txt">
+          <div class="zen-ki-titel">KI Familienhelfer</div>
+          <div class="zen-ki-sub">Womit kann ich euch heute helfen?</div>
+        </div>
+        <span class="zen-ki-spark">✨</span>
+      </div>
+      <button class="zen-ki-cta" onclick="zenKiOeffnen()">Plan erstellen</button>
+      <div id="zen-ki-assistent" class="zen-ki-assistent versteckt">${kiSuchBox('dashboard')}</div>
+    </div>
+
+    <div class="zen-section-label">Schnellzugriff</div>
+    ${ctx.z('hubKacheln', true) ? `
+    <div class="zen-hub">
+      ${ZENTRALE_HUB.map(h => `
+        <button class="zen-hub-btn" onclick="${h.click}">
+          <span class="zen-hub-ic" style="background:${h.bg};color:${h.c}">${h.icon}</span>
+          <span class="zen-hub-l">${h.l}</span>
+          <span class="zen-hub-sub">${h.sub}</span>
+        </button>`).join('')}
+    </div>` : `
+    <div class="zen-quick">
+      ${quick.map(q => `
+        <button class="zen-quick-btn" onclick="zuSektion('${q.s}')">
+          <span class="zen-quick-ic" style="--c1:${q.c1};--c2:${q.c2}">${q.icon}</span>
+          <span class="zen-quick-l">${q.l}</span>
+        </button>`).join('')}
+    </div>`}
+
+    ${ctx.z('hubKacheln', true) ? '' : `
+    <div class="zen-status-reihe">
+      <button class="zen-status-card" onclick="zuSektion('umgebung')">
+        <span class="zen-status-ic" style="background:#DCFCE7;color:#16A34A">📍</span>
+        <div class="zen-status-titel">Umgebung</div>
+        <div class="zen-status-sub">Spielplätze &amp; Orte in der Nähe</div>
+      </button>
+      <button class="zen-status-card" onclick="zuSektion('leistungen')">
+        <span class="zen-status-ic" style="background:#FCE7F3;color:#DB2777">📄</span>
+        <div class="zen-status-titel">Zuschüsse &amp; Formulare</div>
+        <div class="zen-status-sub">Anträge mit Ausfüllhilfe</div>
+      </button>
+    </div>`}
+  </div>`;
+}
+
+// HEUTE-Karte für die Familien-Zentrale — echte Termine + Feiertage (14 Tage), max. 4.
+function zentraleHeute() {
+  const heute = new Date();
+  const heute0 = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  const in14 = new Date(heute0); in14.setDate(in14.getDate() + 14);
+  const benutzer = getUser() || {};
+  const bl = benutzer.bundesland || (state.bundesland?.id) || 'by';
+  const manuell = (typeof getTermine === 'function' ? getTermine() : []);
+  const ft = feiertageDeutsch(heute.getFullYear(), bl)
+    .filter(f => f.datum >= heute0 && f.datum <= in14)
+    .map(f => ({ titel:f.name, typ:'feiertag', feiertag:true,
+      datum:`${f.datum.getFullYear()}-${String(f.datum.getMonth()+1).padStart(2,'0')}-${String(f.datum.getDate()).padStart(2,'0')}` }));
+  const alle = [...manuell, ...ft]
+    .filter(t => { const td = new Date(t.datum + 'T00:00:00'); return td >= heute0 && td <= in14; })
+    .sort((a,b) => (a.datum + (a.uhrzeit||'99')).localeCompare(b.datum + (b.uhrzeit||'99')))
+    .slice(0, 4);
+  const mitglieder = (typeof getFamilienMitglieder === 'function' ? getFamilienMitglieder() : []);
+  const inhalt = alle.length === 0
+    ? `<div class="zen-heute-leer">Die nächsten Tage sind frei. 🌿
+         <button class="btn btn-outline btn-sm" onclick="zuSektion('kalender')" style="margin-top:.55rem">Termin hinzufügen</button>
+       </div>`
+    : alle.map(t => {
+        const td = new Date(t.datum + 'T00:00:00');
+        const tageDiff = Math.round((td - heute0) / 86400000);
+        const wann = tageDiff === 0 ? 'Heute' : tageDiff === 1 ? 'Morgen'
+          : td.toLocaleDateString('de-DE', { weekday:'short', day:'2-digit', month:'short' });
+        const tt = (typeof TERMIN_TYPEN_ERWEITERT !== 'undefined')
+          ? (getAlleTerminTypen()[t.typ] || TERMIN_TYPEN_ERWEITERT.sonstiges)
+          : { icon:'📅', farbe:'#64748B' };
+        const person = t.person ? mitglieder.find(m => m.id === t.person) : null;
+        return `
+        <div class="zen-heute-row" onclick="zuSektion('kalender')">
+          <div class="zen-heute-zeit">${esc(t.uhrzeit || wann)}</div>
+          <span class="zen-heute-dot" style="background:${tt.farbe}"></span>
+          <div class="zen-heute-titel">${esc(t.titel)}</div>
+          <div class="zen-heute-person">${person ? '👤 ' + esc(person.name) : (t.uhrzeit ? wann : '')}</div>
+        </div>`;
+      }).join('');
+  return `
+  <div class="zen-card zen-heute">
+    <div class="zen-card-kopf">
+      <span class="zen-card-ic">📅</span>
+      <span class="zen-card-titel">HEUTE</span>
+    </div>
+    ${inhalt}
+    ${alle.length ? `<button class="zen-heute-mehr" onclick="zuSektion('kalender')">Alle Termine anzeigen →</button>` : ''}
+  </div>`;
+}
+
+// KI-Helfer der Familien-Zentrale aus-/einklappen + Fokus aufs Eingabefeld.
+function zenKiOeffnen() {
+  if (state.sektion !== 'dashboard') { zuSektion('dashboard'); setTimeout(zenKiOeffnen, 120); return; }
+  const box = el('zen-ki-assistent');
+  if (!box) return;
+  box.classList.toggle('versteckt');
+  if (!box.classList.contains('versteckt')) {
+    const inp = el('ki-input-dashboard');
+    if (inp) setTimeout(() => { inp.focus(); inp.scrollIntoView({ behavior:'smooth', block:'center' }); }, 50);
+  }
+}
+
+// ===== FAMILIEN-CHAT (lokal — gleicher Speicher wie Pinnwand: NOTIZEN_KEY) =====
+// Multi-Device-Sync würde ein Backend benötigen (bewusst nicht enthalten).
+const CHAT_GELESEN_KEY = 'familienapp_chat_gelesen';
+const CHAT_ICH_KEY = 'familienapp_chat_ich';
+
+function chatSenderAktuell() {
+  try { const s = localStorage.getItem(CHAT_ICH_KEY); if (s) return s; } catch {}
+  const u = getUser() || {};
+  return u.vorname || 'Familie';
+}
+function chatSenderSetzen(name) { try { localStorage.setItem(CHAT_ICH_KEY, name); } catch {} }
+
+function chatFarbeFuer(name) {
+  const palette = ['#FEF3C7','#FCE7F3','#DBEAFE','#D1FAE5','#EDE9FE','#FFEDD5'];
+  let h = 0; const s = name || '';
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return palette[h % palette.length];
+}
+
+function chatUngelesen() {
+  const items = (typeof notizenLaden === 'function') ? notizenLaden() : [];
+  if (!items.length) return 0;
+  let last = 0;
+  try { last = parseInt(localStorage.getItem(CHAT_GELESEN_KEY) || '0') || 0; } catch {}
+  const ich = chatSenderAktuell();
+  return items.filter(n => (n.id || 0) > last && n.autor !== ich).length;
+}
+function chatGelesenMarkieren() {
+  const items = notizenLaden();
+  const maxId = items.reduce((m, n) => Math.max(m, n.id || 0), 0);
+  try { localStorage.setItem(CHAT_GELESEN_KEY, String(maxId)); } catch {}
+}
+
+function chatBildWaehlen(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('⚠️ Bild zu groß (max. 2 MB).'); return; }
+  if (!file.type.startsWith('image/')) { toast('⚠️ Nur Bilddateien'); return; }
+  const reader = new FileReader();
+  reader.onload = e => { state.chatBild = e.target.result; chatBildVorschau(); };
+  reader.onerror = () => toast('⚠️ Bild konnte nicht gelesen werden');
+  reader.readAsDataURL(file);
+}
+function chatBildVorschau() {
+  const p = el('chat-bild-vorschau');
+  if (!p) return;
+  if (state.chatBild) {
+    p.innerHTML = `<img src="${state.chatBild}" alt="Vorschau"><button class="chat-bild-x" onclick="chatBildEntfernen()" aria-label="Bild entfernen">×</button>`;
+    p.classList.remove('versteckt');
+  } else { p.innerHTML = ''; p.classList.add('versteckt'); }
+}
+function chatBildEntfernen() { state.chatBild = null; chatBildVorschau(); }
+
+function chatSenden() {
+  const inp = el('chat-input');
+  const text = (inp?.value || '').trim();
+  const bild = state.chatBild || null;
+  if (!text && !bild) return;
+  const ich = el('chat-sender')?.value || chatSenderAktuell();
+  chatSenderSetzen(ich);
+  const items = notizenLaden();
+  items.unshift({ id: Date.now(), text, autor: ich, farbe: chatFarbeFuer(ich), bild, datum: new Date().toISOString(), chat: true });
+  notizenSpeichern(items);
+  state.chatBild = null;
+  if (inp) inp.value = '';
+  chatGelesenMarkieren();
+  render();
+  setTimeout(chatNachUnten, 80);
+}
+function chatNachUnten() { const f = el('chat-fenster'); if (f) f.scrollTop = f.scrollHeight; }
+
+function bildVollOeffnen(src) {
+  const o = document.createElement('div');
+  o.className = 'bild-voll-overlay';
+  o.onclick = () => o.remove();
+  const img = document.createElement('img');
+  img.src = src; img.alt = 'Bild';
+  o.appendChild(img);
+  document.body.appendChild(o);
+}
+
+function renderFamilienChat() {
+  const items = notizenLaden().slice().sort((a, b) => (a.id || 0) - (b.id || 0));
+  const mitglieder = getFamilienMitgliederNamen();
+  const ich = chatSenderAktuell();
+  chatGelesenMarkieren();
+  const heuteStr = new Date().toDateString();
+  const bubbles = items.length === 0
+    ? `<div class="chat-leer">💬 Noch keine Nachrichten.<br>Schreibt euch die erste!</div>`
+    : items.map(n => {
+        const eigen = n.autor === ich;
+        const d = new Date(n.datum);
+        const zeit = (d.toDateString() === heuteStr ? '' : d.toLocaleDateString('de-DE',{day:'2-digit',month:'short'}) + ' ')
+          + d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+        const farbe = n.farbe || chatFarbeFuer(n.autor);
+        return `
+        <div class="chat-row ${eigen ? 'eigen' : ''}">
+          <div class="chat-bubble" style="${eigen ? '' : `background:${farbe}`}">
+            ${eigen ? '' : `<div class="chat-autor">${esc(n.autor)}</div>`}
+            ${n.bild ? `<img class="chat-bild" src="${n.bild}" alt="Bild" onclick="bildVollOeffnen('${n.bild}')">` : ''}
+            ${n.text ? `<div class="chat-text">${esc(n.text).replace(/\n/g,'<br>')}</div>` : ''}
+            <div class="chat-zeit">${zeit}${eigen ? ` · <span class="chat-del" onclick="notizLoeschen(${n.id})">löschen</span>` : ''}</div>
+          </div>
+        </div>`;
+      }).join('');
+  return `
+  <div class="section-title">💬 Familien-Chat</div>
+  <p class="section-sub">Nachrichten für die ganze Familie — auf diesem Gerät. <span style="color:var(--g500)">Geräte-übergreifender Versand folgt später.</span></p>
+  <div class="chat-fenster" id="chat-fenster">${bubbles}</div>
+  <div id="chat-bild-vorschau" class="chat-bild-vorschau versteckt"></div>
+  <div class="chat-eingabe">
+    <select id="chat-sender" class="chat-sender" onchange="chatSenderSetzen(this.value)" title="Wer schreibt?">
+      ${mitglieder.map(m => `<option value="${esc(m)}" ${m === ich ? 'selected' : ''}>${esc(m)}</option>`).join('')}
+    </select>
+    <label class="chat-foto-btn" title="Bild anhängen">📷<input type="file" accept="image/*" onchange="chatBildWaehlen(this)" style="display:none"></label>
+    <input type="text" id="chat-input" class="chat-text-input" placeholder="Nachricht schreiben…" onkeydown="if(event.key==='Enter')chatSenden()" autocomplete="off">
+    <button class="chat-senden" onclick="chatSenden()" aria-label="Senden">➤</button>
   </div>`;
 }
 
@@ -5483,7 +5702,7 @@ function renderRegSchritt() {
     <div class="reg-feld">
       <label class="reg-label">Ihr Alter (optional)</label>
       <input class="reg-input" id="r-alter" type="number" min="16" max="120" placeholder="z.B. 38" value="${d.alter||''}" onchange="state.regDaten.alter=parseInt(this.value)||null" />
-      <div style="font-size:.75rem;color:#6B7280;margin-top:.3rem">Ab 65 stellt die App automatisch größere Schrift ein und zeigt den Senioren-Bereich.</div>
+      <div style="font-size:.75rem;color:#6B7280;margin-top:.3rem">Ab 65 stellt die App automatisch größere Schrift ein — jederzeit änderbar.</div>
     </div>
     <div class="reg-feld">
       <label class="reg-label">Anzahl Ihrer Kinder</label>
@@ -5578,15 +5797,14 @@ function regAbschliessen() {
   const user = { vorname:d.vorname, plz:d.plz, ort:d.ort, lat:d.lat, lng:d.lng, bundesland:d.bundesland, kinder:d.kinder, alter:d.alter||null, registriert:new Date().toISOString() };
   saveUser(user);
 
-  // Voreinstellung für Senioren: ab 65 größere Schrift + Senioren-Modus aktivieren
+  // Barrierefreiheit: ab 65 automatisch größere Schrift (jederzeit in Einstellungen änderbar)
   if (d.alter && d.alter >= 65) {
     const einst = einstellungenLaden();
-    einst.seniorModus = true;
     einst.schriftGross = true;
     try { localStorage.setItem(EINST_KEY, JSON.stringify(einst)); } catch {}
     state.einstellungen = einst;
     document.documentElement.classList.add('schrift-gross');
-    toast('👵 Senioren-Modus aktiviert — größere Schrift eingestellt');
+    toast('🔠 Größere Schrift aktiviert — leichter lesbar');
   }
 
   if (user.bundesland) state.bundesland = BUNDESLAENDER.find(b=>b.id===user.bundesland) || null;
@@ -10411,7 +10629,8 @@ function renderEinstellungen() {
         { id:'d3', name:'Kompakt & Praktisch',sub:'Stats-Streifen, 3×3-Grid',       preview:'linear-gradient(135deg,#1E293B,#475569)' },
         { id:'d4', name:'Dark Modern',       sub:'Dunkel, Glasmorphism, Glow',     preview:'radial-gradient(circle at 30% 0%,#6366F1,transparent 60%),radial-gradient(circle at 80% 80%,#EC4899,transparent 65%),#0F172A' },
         { id:'d5', name:'Senioren-Großdruck',sub:'Große Schrift, hohe Kontraste',  preview:'linear-gradient(135deg,#1E40AF,#FACC15)' },
-        { id:'d6', name:'Horizon',           sub:'Hell, runde Karten, sanft animiert', preview:'linear-gradient(135deg,#868CFF,#4318FF)' }
+        { id:'d6', name:'Horizon',           sub:'Hell, runde Karten, sanft animiert', preview:'linear-gradient(135deg,#868CFF,#4318FF)' },
+        { id:'d7', name:'Familien-Zentrale', sub:'Aufgeräumt: Heute, Termine, KI-Helfer', preview:'linear-gradient(160deg,#EEF2FF,#E0E7FF 60%,#C7D2FE)', dark:false, text:'#312E81' }
       ].map(a => {
         const aktiv = (einst.dashboardAnsicht || 'd1') === a.id;
         return `
@@ -10474,6 +10693,7 @@ function renderEinstellungen() {
       ${[
         {key:'zeigBetrag',       label:'💸 „Mögliche Leistungen"-Betrag', def:true},
         {key:'zeigSchnellzugriff',label:'📌 Alle Bereiche im Überblick',  def:true},
+        {key:'hubKacheln',       label:'🧩 Großer Kachel-Hub (Familien-Zentrale)', def:true},
         {key:'zeigNaehe',        label:'📍 In Ihrer Nähe',               def:true},
         {key:'zeigLeistungen',   label:'⭐ Top-Leistungen-Cards',         def:true},
         {key:'zeigInstallCard',  label:'📱 App installieren',             def:true},
@@ -15436,7 +15656,7 @@ DEINE EXPERTISE — du beantwortest ALLE Fragen aus diesen Bereichen ausführlic
 • Erziehung & Methoden: Trotzanfälle, Schlaf, Geschwisterstreit, Pubertät, Bildschirmzeit, Grenzen, Bindung. Erziehungsstile (autoritativ = empfohlen) und Methoden (Montessori, Pikler, Positive Discipline, bindungsorientiert). Alters-angepasste Tipps
 • Gesundheit von Kindern und Erwachsenen, Hausmittel, Krankheiten, Erste Hilfe
 • Recht: Sorgerecht, Umgangsrecht, Unterhalt (Düsseldorfer Tabelle), Scheidung, Vaterschaft, Patientenverfügung
-• Schule, Haushalt, Sparen, Rezepte, Urlaub, Veranstaltungen, Alltag, Senioren & Pflege
+• Schule, Haushalt, Sparen, Rezepte, Urlaub, Veranstaltungen, Alltag
 
 GESUNDHEITSFRAGEN — besonders wenn es um ein KRANKES KIND geht:
 Antworte wie eine erfahrene Kinderkrankenschwester — ausführlich, ernst und konkret. Gliedere die Antwort klar:

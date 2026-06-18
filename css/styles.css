@@ -6559,3 +6559,224 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   .ansicht-d6 > *, .ansicht-d6 .d6-banner, .ansicht-d6 .d6-banner::after { animation: none !important; }
   .ansicht-d6 .d6-akt:active { transform: none; }
 }
+
+/* ===== Ansicht 7 — „Familien-Zentrale" (Vorschlag 1) ===== */
+.zentrale {
+  --zen-card: #FFFFFF;
+  --zen-line: #EEF0F6;
+  --zen-ink: #1E2340;
+  --zen-mut: #8A90A6;
+  --zen-acc: #4F46E5;
+  background: linear-gradient(180deg, #F4F5FB 0%, #EEF0FA 100%);
+  margin: -1rem -1rem 0; padding: 1.1rem 1rem 1.6rem;
+  border-radius: 0; min-height: 100%;
+}
+.zentrale > * { animation: zenIn .45s cubic-bezier(.22,.61,.36,1) both; }
+.zentrale > *:nth-child(2) { animation-delay: .05s; }
+.zentrale > *:nth-child(3) { animation-delay: .10s; }
+.zentrale > *:nth-child(4) { animation-delay: .15s; }
+.zentrale > *:nth-child(5) { animation-delay: .20s; }
+.zentrale > *:nth-child(6) { animation-delay: .25s; }
+@keyframes zenIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.zen-header { display: flex; align-items: center; gap: .9rem; padding: .35rem .25rem 1.05rem; }
+.zen-avatar {
+  width: 66px; height: 66px; flex: 0 0 66px; border-radius: 50%;
+  background: var(--familien-foto, linear-gradient(135deg,#C7D2FE,#A5B4FC)) center/cover no-repeat;
+  display: grid; place-items: center; font-size: 1.7rem;
+  box-shadow: 0 4px 14px rgba(79,70,229,.25); border: 3px solid #fff;
+}
+.zen-willk { font-size: .9rem; color: var(--zen-mut); }
+.zen-name { font-size: 1.45rem; font-weight: 800; color: var(--zen-ink); line-height: 1.1; }
+.zen-tageszeit { font-size: 1rem; font-weight: 600; color: var(--zen-ink); margin-top: .15rem; }
+.zen-datum { font-size: .82rem; color: var(--zen-mut); margin-top: .1rem; }
+
+.zen-card {
+  background: var(--zen-card); border-radius: 20px; padding: 1rem 1.1rem;
+  box-shadow: 0 6px 22px rgba(30,35,64,.06); border: 1px solid var(--zen-line);
+  margin-bottom: 1rem;
+}
+.zen-card-kopf { display: flex; align-items: center; gap: .55rem; margin-bottom: .65rem; }
+.zen-card-ic {
+  width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+  background: #EEF0FF; font-size: .95rem;
+}
+.zen-card-titel { font-size: .82rem; font-weight: 800; letter-spacing: .06em; color: var(--zen-mut); }
+
+.zen-heute-row {
+  display: flex; align-items: center; gap: .65rem; padding: .6rem 0; cursor: pointer;
+  border-top: 1px solid var(--zen-line);
+}
+.zen-heute-row:first-of-type { border-top: none; }
+.zen-heute-zeit { font-size: .9rem; font-weight: 700; color: var(--zen-ink); min-width: 52px; }
+.zen-heute-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 9px; }
+.zen-heute-titel { flex: 1; font-size: .95rem; font-weight: 600; color: var(--zen-ink); }
+.zen-heute-person { font-size: .8rem; color: var(--zen-mut); white-space: nowrap; }
+.zen-heute-leer { text-align: center; color: var(--zen-mut); font-size: .9rem; padding: .5rem 0 .2rem; }
+.zen-heute-mehr {
+  display: block; width: 100%; text-align: center; margin-top: .45rem; padding: .4rem;
+  background: none; border: none; color: var(--zen-acc); font-weight: 700; font-size: .88rem; cursor: pointer;
+}
+
+.zen-ki-card {
+  background: linear-gradient(135deg, #EEF0FF, #F5F0FF); border-radius: 20px;
+  padding: 1rem 1.1rem; border: 1px solid #E3E2FB; margin-bottom: 1.1rem;
+  box-shadow: 0 6px 22px rgba(79,70,229,.07);
+}
+.zen-ki-kopf { display: flex; align-items: center; gap: .7rem; margin-bottom: .7rem; }
+.zen-ki-bot {
+  width: 44px; height: 44px; flex: 0 0 44px; border-radius: 13px; display: grid; place-items: center;
+  background: linear-gradient(135deg,#6366F1,#4F46E5); font-size: 1.4rem;
+  box-shadow: 0 4px 12px rgba(79,70,229,.3);
+}
+.zen-ki-titel { font-size: 1rem; font-weight: 800; color: var(--zen-ink); }
+.zen-ki-sub { font-size: .82rem; color: var(--zen-mut); }
+
+.zen-section-label { font-size: .78rem; font-weight: 800; letter-spacing: .06em; color: var(--zen-mut); margin: .2rem .25rem .6rem; }
+.zen-quick { display: grid; grid-template-columns: repeat(4,1fr); gap: .6rem; margin-bottom: 1.1rem; }
+.zen-quick-btn {
+  background: var(--zen-card); border: 1px solid var(--zen-line); border-radius: 17px;
+  padding: .8rem .3rem; display: flex; flex-direction: column; align-items: center; gap: .45rem;
+  cursor: pointer; box-shadow: 0 4px 14px rgba(30,35,64,.05); transition: transform .12s ease;
+}
+.zen-quick-btn:active { transform: scale(.95); }
+.zen-quick-ic {
+  width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 1.35rem;
+  background: linear-gradient(135deg, var(--c1), var(--c2));
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--c2) 35%, transparent);
+}
+.zen-quick-l { font-size: .76rem; font-weight: 700; color: var(--zen-ink); }
+
+.zen-status-reihe { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.zen-status-card {
+  background: var(--zen-card); border: 1px solid var(--zen-line); border-radius: 18px;
+  padding: 1rem; text-align: left; cursor: pointer; box-shadow: 0 4px 14px rgba(30,35,64,.05);
+  transition: transform .12s ease;
+}
+.zen-status-card:active { transform: scale(.97); }
+.zen-status-ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-size: 1.1rem; margin-bottom: .55rem; }
+.zen-status-titel { font-size: .92rem; font-weight: 800; color: var(--zen-ink); line-height: 1.2; }
+.zen-status-sub { font-size: .8rem; color: var(--zen-mut); margin-top: .2rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .zentrale > * { animation: none !important; }
+  .zen-quick-btn:active, .zen-status-card:active { transform: none; }
+}
+
+/* ===== Familien-Zentrale: Erweiterungen (Topbar, Foto, KI-Karte, Hub, Chat) ===== */
+.zen-topbar { display: flex; justify-content: space-between; align-items: center; padding: .1rem .1rem .2rem; }
+.zen-icon-btn {
+  width: 42px; height: 42px; border-radius: 13px; border: none; cursor: pointer;
+  background: rgba(255,255,255,.7); color: var(--zen-ink); font-size: 1.2rem;
+  display: grid; place-items: center; box-shadow: 0 2px 8px rgba(30,35,64,.07); position: relative;
+}
+.zen-icon-btn:active { transform: scale(.93); }
+.zen-bell-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px;
+  background: #EF4444; color: #fff; border-radius: 99px; font-size: .68rem; font-weight: 800;
+  display: grid; place-items: center; border: 2px solid #F4F5FB;
+}
+
+/* Avatar als antippbarer Foto-Button */
+.zen-avatar { cursor: pointer; padding: 0; position: relative; overflow: visible; }
+.zen-avatar-cam {
+  position: absolute; bottom: -2px; right: -2px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--zen-acc); color: #fff; font-size: .72rem; display: grid; place-items: center;
+  border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+
+/* KI-Karte größer + Roboter-Look + ausklappbarer Assistent */
+.zen-ki-card { padding: 1.15rem 1.15rem; }
+.zen-ki-kopf { gap: .85rem; margin-bottom: .9rem; }
+.zen-ki-bot {
+  width: 60px; height: 60px; flex: 0 0 60px; border-radius: 17px; font-size: 2rem;
+}
+.zen-ki-txt { flex: 1; }
+.zen-ki-titel { font-size: 1.12rem; }
+.zen-ki-sub { font-size: .9rem; }
+.zen-ki-spark {
+  width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; font-size: 1rem; box-shadow: 0 2px 8px rgba(79,70,229,.18);
+}
+.zen-ki-cta {
+  width: 100%; padding: .85rem; border: none; border-radius: 14px; cursor: pointer;
+  background: linear-gradient(135deg, #6366F1, #4F46E5); color: #fff; font-size: 1rem; font-weight: 800;
+  box-shadow: 0 6px 16px rgba(79,70,229,.32); transition: transform .12s ease;
+}
+.zen-ki-cta:active { transform: scale(.97); }
+.zen-ki-assistent { margin-top: .85rem; }
+.zen-ki-assistent.versteckt { display: none; }
+.zen-ki-assistent .ki-such-box { margin: 0; }
+
+/* Hub — große 3×3-Kacheln (Vorschlag 2) */
+.zen-hub { display: grid; grid-template-columns: repeat(3,1fr); gap: .65rem; margin-bottom: 1.1rem; }
+.zen-hub-btn {
+  background: var(--zen-card); border: 1px solid var(--zen-line); border-radius: 18px;
+  padding: 1rem .5rem; display: flex; flex-direction: column; align-items: center; gap: .4rem; text-align: center;
+  cursor: pointer; box-shadow: 0 4px 14px rgba(30,35,64,.05); transition: transform .12s ease;
+}
+.zen-hub-btn:active { transform: scale(.95); }
+.zen-hub-ic { width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; font-size: 1.5rem; margin-bottom: .15rem; }
+.zen-hub-l { font-size: .86rem; font-weight: 800; color: var(--zen-ink); line-height: 1.1; }
+.zen-hub-sub { font-size: .68rem; color: var(--zen-mut); }
+
+/* ===== Familien-Chat ===== */
+.chat-fenster {
+  display: flex; flex-direction: column; gap: .55rem; padding: .9rem;
+  background: linear-gradient(180deg,#F4F5FB,#EEF0FA); border-radius: 16px; border: 1px solid #EEF0F6;
+  min-height: 240px; max-height: 56vh; overflow-y: auto; margin-bottom: .7rem;
+}
+.chat-leer { margin: auto; text-align: center; color: #8A90A6; font-size: .92rem; line-height: 1.5; }
+.chat-row { display: flex; }
+.chat-row.eigen { justify-content: flex-end; }
+.chat-bubble {
+  max-width: 80%; padding: .55rem .7rem; border-radius: 16px; background: #fff;
+  box-shadow: 0 2px 6px rgba(30,35,64,.06); border-bottom-left-radius: 5px;
+}
+.chat-row.eigen .chat-bubble {
+  background: linear-gradient(135deg,#6366F1,#4F46E5); color: #fff;
+  border-bottom-left-radius: 16px; border-bottom-right-radius: 5px;
+}
+.chat-autor { font-size: .72rem; font-weight: 800; color: #4338CA; margin-bottom: .15rem; }
+.chat-text { font-size: .95rem; line-height: 1.35; word-break: break-word; }
+.chat-bild { display: block; max-width: 100%; border-radius: 10px; margin-bottom: .3rem; cursor: pointer; }
+.chat-zeit { font-size: .68rem; opacity: .7; margin-top: .25rem; text-align: right; }
+.chat-row.eigen .chat-zeit { color: #E0E7FF; }
+.chat-del { cursor: pointer; text-decoration: underline; }
+.chat-bild-vorschau { position: relative; display: inline-block; margin-bottom: .5rem; }
+.chat-bild-vorschau.versteckt { display: none; }
+.chat-bild-vorschau img { max-height: 90px; border-radius: 10px; display: block; }
+.chat-bild-x {
+  position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%;
+  border: none; background: #EF4444; color: #fff; font-size: 1rem; cursor: pointer; line-height: 1;
+}
+.chat-eingabe { display: flex; align-items: center; gap: .4rem; }
+.chat-sender {
+  flex: 0 0 auto; max-width: 92px; padding: .5rem .4rem; border-radius: 11px;
+  border: 1px solid var(--g300, #D1D5DB); background: #fff; font-size: .82rem;
+}
+.chat-foto-btn {
+  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center;
+  background: #EEF0FF; cursor: pointer; font-size: 1.1rem;
+}
+.chat-text-input {
+  flex: 1; min-width: 0; padding: .6rem .8rem; border-radius: 12px;
+  border: 1px solid var(--g300, #D1D5DB); font-size: .95rem;
+}
+.chat-senden {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
+  background: linear-gradient(135deg,#6366F1,#4F46E5); color: #fff; font-size: 1.2rem;
+  display: grid; place-items: center; box-shadow: 0 4px 12px rgba(79,70,229,.3);
+}
+.chat-senden:active { transform: scale(.92); }
+
+/* Bild-Vollansicht (Lightbox) */
+.bild-voll-overlay {
+  position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.85);
+  display: grid; place-items: center; padding: 1.5rem; cursor: zoom-out;
+}
+.bild-voll-overlay img { max-width: 100%; max-height: 100%; border-radius: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .zen-icon-btn:active, .zen-ki-cta:active, .zen-hub-btn:active, .zen-senden:active { transform: none; }
+}
