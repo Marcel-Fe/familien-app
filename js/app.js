@@ -15397,13 +15397,27 @@ function spracheErkennen(opts) {
   catch { if (btn) btn.classList.remove('aktiv'); _sprachErkennung = null; toast('⚠️ Spracheingabe konnte nicht gestartet werden'); }
 }
 
+// Gespraechsmodus: Wer per Sprache fragt, bekommt die Antwort automatisch vorgelesen.
+let _kiPerSprache = false;
+function kiAutoVorlesen() {
+  if (!_kiPerSprache) return;
+  _kiPerSprache = false;
+  kiVorlesen();
+}
+
 function kiSuchSprechen(id) {
+  // TTS direkt in der Klick-Geste entsperren — Handy-Browser (v.a. iOS) erlauben
+  // speechSynthesis nur nach einer Nutzer-Aktion. Stumme Mini-Ansage genuegt.
+  if (window.speechSynthesis) {
+    try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch {}
+  }
   spracheErkennen({
     btn: `#ki-box-${id} .ki-mic-btn`,
-    hinweis: '🎤 Sprich deine Frage — zum Stoppen Mikro erneut tippen',
+    hinweis: '🎤 Sprich deine Frage — die Antwort wird dir vorgelesen',
     onText: text => {
       const inp = el(`ki-input-${id}`);
       if (inp) inp.value = text;
+      _kiPerSprache = true;
       kiSuchStarten(id);
     }
   });
@@ -15541,8 +15555,10 @@ function renderKiTreffer(trefferEl, treffer) {
 }
 
 async function kiSuchStarten(id) {
-  const frage = (el('ki-input-' + id)?.value || '').trim();
+  const eingabe = el('ki-input-' + id);
+  const frage = (eingabe?.value || '').trim();
   if (!frage) return;
+  if (eingabe) eingabe.value = '';   // Feld leeren — bereit fuer die naechste Frage
   kiVerlaufSpeichern(frage);
   const box = el('ki-antwort-' + id);
   if (!box) return;
@@ -15566,7 +15582,7 @@ async function kiSuchStarten(id) {
       <div id="ki-treffer-${id}"></div>
       <div class="ki-antwort-aktionen">
         ${onlineMoeglich ? `<button class="btn btn-sm" id="ki-stop-${id}" onclick="kiAbbrechen()">⏹ Stop</button>`
-                         : `<button class="btn btn-primary btn-sm" onclick="kiVorlesen()">🔊 Vorlesen</button>`}
+                         : `<button class="btn btn-primary btn-sm" onclick="kiVorlesen()">🔊 Vorlesen</button><button class="btn btn-sm" onclick="kiSuchSprechen('${id}')">🎤 Weiter fragen</button>`}
         <button class="btn btn-sm" onclick="kiAntwortSchliessen('${id}')">✕ Schließen</button>
       </div>
     </div>`;
@@ -15576,7 +15592,7 @@ async function kiSuchStarten(id) {
   renderKiTreffer(trefferEl, lokaleTreffer);
 
   // Online-KI pausiert (Anbieter gesperrt/ueberlastet): lokale Antwort ist die Antwort — fertig.
-  if (!onlineMoeglich) return;
+  if (!onlineMoeglich) { kiAutoVorlesen(); return; }
 
   // Vorherige Anfrage abbrechen
   if (_kiAbbruchController) try { _kiAbbruchController.abort(); } catch {}
@@ -15584,7 +15600,8 @@ async function kiSuchStarten(id) {
 
   const stopMitVorlesenErsetzen = () => {
     const stopBtn = el('ki-stop-' + id);
-    if (stopBtn) stopBtn.outerHTML = '<button class="btn btn-primary btn-sm" onclick="kiVorlesen()">🔊 Vorlesen</button>';
+    if (stopBtn) stopBtn.outerHTML = '<button class="btn btn-primary btn-sm" onclick="kiVorlesen()">🔊 Vorlesen</button>'
+      + `<button class="btn btn-sm" onclick="kiSuchSprechen('${id}')">🎤 Weiter fragen</button>`;
   };
 
   try {
@@ -15617,6 +15634,7 @@ async function kiSuchStarten(id) {
     if (streamEl) streamEl.innerHTML = formatiert;
     renderKiTreffer(trefferEl, lokaleTreffer);
     stopMitVorlesenErsetzen();
+    kiAutoVorlesen();
 
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -15638,6 +15656,7 @@ async function kiSuchStarten(id) {
     _kiVorleseText = lokal.vorlese || '';
     renderKiTreffer(trefferEl, lokaleTreffer);
     stopMitVorlesenErsetzen();
+    kiAutoVorlesen();
   }
 }
 
@@ -15785,6 +15804,12 @@ function kiTextVorlesen(txt) {
 }
 
 function kiVorlesen() {
+  // Toggle: Laeuft schon eine Ansage, stoppt der zweite Tipp das Vorlesen.
+  if (window.speechSynthesis && speechSynthesis.speaking) {
+    kiVorlesenStop();
+    toast('🔇 Vorlesen gestoppt');
+    return;
+  }
   kiTextVorlesen(_kiVorleseText);
 }
 
@@ -16032,8 +16057,16 @@ function kiAntwortFinden(frage) {
     einleitung = 'Zu deiner Frage habe ich folgende Bereiche in der App gefunden:';
     text = 'Schau dir am besten direkt die passenden Sektionen unten an — dort findest du detaillierte Infos, Beispiele und Anleitungen.';
   } else {
-    einleitung = 'Hier ist meine Empfehlung:';
-    text = 'Stell mir deine Frage gern noch einmal etwas genauer — ich helfe bei allen **Familien-Themen**: Zuschüsse & Anträge, Gesundheit & Hausmittel für Kinder, Erziehung, Schwangerschaft, Schule, Sparen, Recht und mehr.\n\n**Beispiele:**\n• „Mein Kind hat Fieber — was tun?"\n• „Wie viel Kindergeld steht mir zu?"\n• „Wie beantrage ich Wohngeld?"\n• „Mein Kind schläft schlecht"\n\nFür persönliche Beratung: bei Gesundheit hilft der Arzt oder der Bereitschaftsdienst **116117**, bei Geld & Anträgen das zuständige Amt, bei schwierigen Lagen findest du unter Familie → Beratung über 50 kostenlose Anlaufstellen.';
+    // Bewusst kurz + abwechselnd formuliert — niemand will immer denselben Text
+    // hoeren, und beim Vorlesen waere eine lange Liste muehsam.
+    const varianten = [
+      'Das habe ich so nicht in meiner Datenbank gefunden. Frag mich gern etwas konkreter — zum Beispiel: „Wie viel Kindergeld steht mir zu?" oder „Was hilft bei Fieber?"',
+      'Dazu habe ich noch keine geprüfte Antwort. Versuch es mit anderen Worten — etwa „Wie beantrage ich Wohngeld?" oder „Mein Kind schläft schlecht".',
+      'Da muss ich passen. Ich kenne mich gut aus mit Zuschüssen, Anträgen, Gesundheit, Erziehung, Schwangerschaft, Schule, Sparen und Recht — frag mich dazu gern noch einmal.'
+    ];
+    einleitung = 'Gute Frage!';
+    text = varianten[Math.floor(Math.random() * varianten.length)]
+      + '\n\nFür persönliche Hilfe: ärztlicher Bereitschaftsdienst **116117**, bei Geld & Anträgen das zuständige Amt — oder unter Familie → Beratung über 50 kostenlose Anlaufstellen.';
   }
 
   // Für Vorlesen aufbereiten (Markdown raus)
