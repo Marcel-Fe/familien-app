@@ -4095,20 +4095,46 @@ function geminiFehlerText(e) {
   return '⚠️ Verbindung zur KI fehlgeschlagen. Prüfe deine Internetverbindung.';
 }
 
-// System-Prompt mit echtem Familien-Kontext → präzise, geerdete Antworten.
+// System-Prompt: antwortet wie ChatGPT (echt, nie abwimmeln) + echter Familien-Kontext.
 function assistentSystemPrompt() {
   const d = assistentDaten();
+  const u = getUser() || {};
+  const ort = state.umgebungStandort?.name || u.ort || '';
   const heute = new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   const termine = d.termineHeute.map(t => `${t.uhrzeit || '—'} ${t.titel}`).join('; ') || 'keine';
   const todos = d.todos.slice(0, 8).map(t => t.text).join('; ') || 'keine';
   return [
-    'Du bist der Familien-Assistent in der FamilienApp (deutsche PWA für Familien).',
-    'Antworte auf Deutsch: freundlich, kurz, präzise und sauber strukturiert (gern knappe Stichpunkte). Keine Floskeln, keine erfundenen Fakten.',
-    `Heute ist ${heute}.`,
-    `Aktuelle Familien-Daten — Termine heute: ${termine}. Offene Aufgaben: ${todos}. Einkaufsliste: ${d.einkauf.length} Artikel. ${d.mahlzeitHeute.length ? 'Heutiges Essen ist geplant.' : 'Für heute ist noch kein Essen geplant.'}`,
-    'Die App enthält: Kalender, Aufgaben/To-Do, Einkaufsliste, Essensplan, Zuschüsse & Formulare mit Ausfüllhilfe, Umgebungssuche, Gesundheit/Hausmittel, Familienchat.',
-    'Bei Planungsfragen gib einen konkreten, optimalen Vorschlag aus den obigen Daten. Verweise bei App-Funktionen auf den passenden Bereich. Fehlen Daten, sag es ehrlich.'
+    'Du bist der Familien-Assistent in der FamilienApp — ein kluger, herzlicher Helfer für Familien in Deutschland, vergleichbar mit ChatGPT.',
+    'WICHTIG: Beantworte JEDE Frage direkt, vollständig und hilfreich mit echtem Inhalt — egal ob Wetter, Kochen, Erziehung, Behörden, Allgemeinwissen, Gesundheit oder Smalltalk.',
+    'Sage NIEMALS, dass etwas „nicht in der Datenbank" sei, und wimmle NICHT mit „dafür gibt es einen Bereich" ab, statt zu antworten. Zuerst echte Antwort.',
+    'Eine passende App-Funktion darfst du als kurzen Zusatz-Tipp NACH der Antwort erwähnen — nie als Ersatz.',
+    'Stelle, wenn sinnvoll, am Ende EINE kurze, themenbezogene Rückfrage, um das Gespräch weiterzuführen (wie ein guter Assistent).',
+    'Antworte auf Deutsch: freundlich, natürlich, präzise, gut lesbar (kurze Absätze/Stichpunkte). Keine erfundenen Fakten — bist du unsicher, sag es ehrlich.',
+    `Heute ist ${heute}.${ort ? ' Standort der Familie: ' + ort + '.' : ''}`,
+    `Familien-Kontext heute — Termine: ${termine}. Offene Aufgaben: ${todos}. Einkaufsliste: ${d.einkauf.length} Artikel. ${d.mahlzeitHeute.length ? 'Essen heute geplant.' : 'Heute noch kein Essen geplant.'}`,
+    'Wenn dir LIVE-DATEN (z. B. aktuelles Wetter oder echte Orte) mitgeliefert werden, nutze sie für konkrete, aktuelle Antworten.'
   ].join('\n');
+}
+
+// Holt bei Bedarf echte Live-Daten (Wetter/Orte) passend zur Frage — für konkrete Antworten.
+async function asLiveKontext(frage) {
+  const q = (frage || '').toLowerCase();
+  const teile = [];
+  try {
+    if (/wetter|regn|regen|sonne|temperatur|kalt|warm|grad|schnee|frier|draußen|draussen|jacke|sonnig|bewölkt|bewoelkt/.test(q) && typeof _wetterFuerKI === 'function') {
+      const w = await _wetterFuerKI(); if (w) teile.push(w);
+    }
+    if (typeof _orteInDerNaeheFuerKI === 'function') {
+      if (/restaurant|essen gehen|café|cafe|lokal|pizzeria|imbiss|essen bestellen/.test(q)) {
+        const o = await _orteInDerNaeheFuerKI('restaurant'); if (o) teile.push(o);
+      } else if (/ausflug|freizeit|spielplatz|park|unternehm|aktivit|museum|zoo|schwimm|wohin/.test(q)) {
+        const o = await _orteInDerNaeheFuerKI('freizeit'); if (o) teile.push(o);
+      } else if (/event|veranstaltung|kino|theater|was geht|was ist los/.test(q)) {
+        const o = await _orteInDerNaeheFuerKI('events'); if (o) teile.push(o);
+      }
+    }
+  } catch {}
+  return teile.join('\n');
 }
 
 // --- Dialog-Zustand + Rendering (echtes Chat-Erlebnis) ---
@@ -4148,8 +4174,10 @@ async function asSenden() {
   try {
     let antwort;
     if (geminiAktiv()) {
+      const live = await asLiveKontext(frage);
+      const sys = assistentSystemPrompt() + (live ? '\n\nLIVE-DATEN (aktuell, nutze sie für die Antwort):\n' + live : '');
       const contents = asVerlauf().filter(m => m.text && !m.bild).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
-      antwort = await geminiAnfrage(contents, assistentSystemPrompt());
+      antwort = await geminiAnfrage(contents, sys);
     } else {
       antwort = asLokaleAntwort(frage);
     }
