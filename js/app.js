@@ -237,7 +237,7 @@ const NAV = {
   start:     [{s:'dashboard', l:'Übersicht'}],
   geld:      [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'},{s:'formular', l:'Formulare'}],
   unterwegs: [{s:'umgebung', l:'Umgebung'},{s:'routenplaner', l:'Routenplaner'},{s:'wanderwege', l:'Wanderwege'},{s:'regenradar', l:'Regenradar'},{s:'urlaub', l:'Reise-Ideen'}],
-  familie:   [{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'notizen', l:'Notizen'},{s:'familienchat', l:'Familien-Chat'},{s:'essensplan', l:'Essensplan'},{s:'einkaufsliste', l:'Einkaufsliste'},{s:'kochbuch', l:'Kochbuch'},{s:'haushalt', l:'Haushalt'},{s:'handwerker', l:'Handwerker'},{s:'kontakte', l:'Kontakte'},{s:'album', l:'Album'},{s:'beratung', l:'Beratung'}],
+  familie:   [{s:'assistent', l:'Familien-Assistent'},{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'notizen', l:'Notizen'},{s:'familienchat', l:'Familien-Chat'},{s:'essensplan', l:'Essensplan'},{s:'einkaufsliste', l:'Einkaufsliste'},{s:'kochbuch', l:'Kochbuch'},{s:'haushalt', l:'Haushalt'},{s:'handwerker', l:'Handwerker'},{s:'kontakte', l:'Kontakte'},{s:'album', l:'Album'},{s:'beratung', l:'Beratung'}],
   kinder:    [{s:'basteln', l:'Basteln'},{s:'spielideen', l:'Spielideen'},{s:'hausaufgaben', l:'Hausaufgaben'},{s:'erziehung', l:'Erziehung'}],
   gesund:    [{s:'gesundheit', l:'Gesundheit'},{s:'symptome', l:'Symptom-Check'},{s:'schwangerschaft', l:'Schwangerschaft'},{s:'erstehilfe', l:'Erste Hilfe'},{s:'medbox', l:'Medikamente'}],
   wissen:    [{s:'wissen', l:'Wissen'},{s:'tipps', l:'Tipps'},{s:'veranstaltungen', l:'Events'},{s:'news', l:'News'},{s:'uebersetzer', l:'Übersetzer'},{s:'erkennen', l:'Tiere & Pflanzen'},{s:'suche', l:'Suche'}],
@@ -2628,6 +2628,7 @@ function render() {
 
   switch (state.sektion) {
     case 'dashboard':  content.innerHTML = renderDashboard(); setTimeout(d6ZahlAnimieren, 60); break;
+    case 'assistent':  content.innerHTML = renderAssistent(); setTimeout(() => { const c = el('as-chat'); if (c) c.scrollTop = c.scrollHeight; }, 60); break;
     case 'umgebung':   content.innerHTML = renderUmgebung(); setTimeout(initKarte, 100); break;
     case 'leistungen': content.innerHTML = renderLeistungen(); break;
     case 'formular':   content.innerHTML = renderFormularAssistent(); break;
@@ -2695,6 +2696,7 @@ function render() {
     const url = window.location.href.split('?')[0];
     qrBildEl.src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(url)}&size=240x240&margin=10&color=4F46E5`;
   }
+  renderBottomNav();
 }
 
 // ===== MODERNES DASHBOARD =====
@@ -3597,40 +3599,43 @@ function renderDashboardD7() {
   <div class="zentrale">
     ${dashboardInstallBanner(ctx)}
 
-    <div class="zen-topbar">
-      <button class="zen-icon-btn" onclick="menuOeffnen()" aria-label="Menü">☰</button>
-      <button class="zen-icon-btn zen-bell" onclick="zuSektion('familienchat')" aria-label="Nachrichten">
-        🔔${ungelesen > 0 ? `<span class="zen-bell-badge">${ungelesen > 9 ? '9+' : ungelesen}</span>` : ''}
-      </button>
-    </div>
+    <div class="zen-banner">
+      <span class="zen-blob zen-blob-1"></span>
+      <span class="zen-blob zen-blob-2"></span>
+      <div class="zen-topbar">
+        <button class="zen-icon-btn" onclick="menuOeffnen()" aria-label="Menü">☰</button>
+        <button class="zen-icon-btn zen-bell" onclick="zuSektion('familienchat')" aria-label="Nachrichten">
+          🔔${ungelesen > 0 ? `<span class="zen-bell-badge">${ungelesen > 9 ? '9+' : ungelesen}</span>` : ''}
+        </button>
+      </div>
 
-    <div class="zen-header">
-      <button class="zen-avatar" onclick="document.getElementById('zen-foto-input').click()" aria-label="Familienfoto ändern">
-        ${ctx.einst.familienfoto ? '' : '👨‍👩‍👧'}
-        <span class="zen-avatar-cam">📷</span>
-      </button>
-      <input type="file" id="zen-foto-input" accept="image/*" onchange="familienfotoUpload(this)" style="display:none">
-      <div class="zen-greet">
-        <div class="zen-willk">Willkommen,</div>
-        <div class="zen-name">${familienName}</div>
-        <div class="zen-tageszeit">${tageszeit()}! ${tagesEmoji()}</div>
-        <div class="zen-datum">${datum}</div>
+      <div class="zen-header">
+        <button class="zen-avatar" onclick="document.getElementById('zen-foto-input').click()" aria-label="Familienfoto ändern">
+          ${ctx.einst.familienfoto ? '' : '👨‍👩‍👧'}
+          <span class="zen-avatar-cam">📷</span>
+        </button>
+        <input type="file" id="zen-foto-input" accept="image/*" onchange="familienfotoUpload(this)" style="display:none">
+        <div class="zen-greet">
+          <div class="zen-willk">Willkommen,</div>
+          <div class="zen-name">${familienName}</div>
+          <div class="zen-tageszeit">${tageszeit()}! ${tagesEmoji()}</div>
+          <div class="zen-datum">${datum}</div>
+        </div>
       </div>
     </div>
 
     ${zentraleHeute()}
 
-    <div class="zen-ki-card">
+    <div class="zen-ki-card" onclick="zuSektion('assistent')">
       <div class="zen-ki-kopf">
-        <div class="zen-ki-bot">🤖</div>
+        <div class="zen-ki-bot">${kiRoboterSVG(50)}</div>
         <div class="zen-ki-txt">
-          <div class="zen-ki-titel">KI Familienhelfer</div>
-          <div class="zen-ki-sub">Womit kann ich euch heute helfen?</div>
+          <div class="zen-ki-titel">Familien-Assistent</div>
+          <div class="zen-ki-sub">Ich habe euren Tag schon vorbereitet — tippen für den Überblick.</div>
         </div>
         <span class="zen-ki-spark">✨</span>
       </div>
-      <button class="zen-ki-cta" onclick="zenKiOeffnen()">Plan erstellen</button>
-      <div id="zen-ki-assistent" class="zen-ki-assistent versteckt">${kiSuchBox('dashboard')}</div>
+      <button class="zen-ki-cta" onclick="event.stopPropagation();zuSektion('assistent')">Tagesplan öffnen</button>
     </div>
 
     <div class="zen-section-label">Schnellzugriff</div>
@@ -3716,17 +3721,8 @@ function zentraleHeute() {
   </div>`;
 }
 
-// KI-Helfer der Familien-Zentrale aus-/einklappen + Fokus aufs Eingabefeld.
-function zenKiOeffnen() {
-  if (state.sektion !== 'dashboard') { zuSektion('dashboard'); setTimeout(zenKiOeffnen, 120); return; }
-  const box = el('zen-ki-assistent');
-  if (!box) return;
-  box.classList.toggle('versteckt');
-  if (!box.classList.contains('versteckt')) {
-    const inp = el('ki-input-dashboard');
-    if (inp) setTimeout(() => { inp.focus(); inp.scrollIntoView({ behavior:'smooth', block:'center' }); }, 50);
-  }
-}
+// Öffnet den vollwertigen Familien-Assistenten (Highlight-Bereich).
+function zenKiOeffnen() { zuSektion('assistent'); }
 
 // ===== FAMILIEN-CHAT (lokal — gleicher Speicher wie Pinnwand: NOTIZEN_KEY) =====
 // Multi-Device-Sync würde ein Backend benötigen (bewusst nicht enthalten).
@@ -3835,7 +3831,13 @@ function renderFamilienChat() {
       }).join('');
   return `
   <div class="section-title">💬 Familien-Chat</div>
-  <p class="section-sub">Nachrichten für die ganze Familie — auf diesem Gerät. <span style="color:var(--g500)">Geräte-übergreifender Versand folgt später.</span></p>
+  <div class="chat-gruppe-banner">
+    <span class="chat-gruppe-ic">👨‍👩‍👧‍👦</span>
+    <div>
+      <strong>Familiengruppe</strong> · alle in der Familie lesen mit
+      <div class="chat-gruppe-sub">Jede Nachricht geht an die ganze Familie. <span style="opacity:.8">Auf diesem Gerät — geräteübergreifend folgt später.</span></div>
+    </div>
+  </div>
   <div class="chat-fenster" id="chat-fenster">${bubbles}</div>
   <div id="chat-bild-vorschau" class="chat-bild-vorschau versteckt"></div>
   <div class="chat-eingabe">
@@ -3846,6 +3848,374 @@ function renderFamilienChat() {
     <input type="text" id="chat-input" class="chat-text-input" placeholder="Nachricht schreiben…" onkeydown="if(event.key==='Enter')chatSenden()" autocomplete="off">
     <button class="chat-senden" onclick="chatSenden()" aria-label="Senden">➤</button>
   </div>`;
+}
+
+// ===== KI-ROBOTER (SVG-Maskottchen — professionell, ersetzt das Emoji) =====
+function kiRoboterSVG(size = 56) {
+  return `<svg class="ki-robo" width="${size}" height="${size}" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="roboBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DDE3F5"/></linearGradient>
+      <linearGradient id="roboFace" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3A3F66"/><stop offset="1" stop-color="#1E2340"/></linearGradient>
+    </defs>
+    <line x1="32" y1="5" x2="32" y2="13" stroke="#A5B4FC" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="32" cy="5" r="3.4" fill="#34D399"/>
+    <rect x="7" y="25" width="5" height="13" rx="2.5" fill="#A5B4FC"/>
+    <rect x="52" y="25" width="5" height="13" rx="2.5" fill="#A5B4FC"/>
+    <rect x="12" y="12" width="40" height="40" rx="13" fill="url(#roboBody)" stroke="#C7D0EC" stroke-width="1.2"/>
+    <rect x="17" y="19" width="30" height="24" rx="10" fill="url(#roboFace)"/>
+    <circle cx="25.5" cy="30" r="3.6" fill="#5EEAD4"/>
+    <circle cx="38.5" cy="30" r="3.6" fill="#5EEAD4"/>
+    <path d="M26 37 Q32 41 38 37" stroke="#5EEAD4" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  </svg>`;
+}
+
+// ===== FAMILIEN-ASSISTENT (lokaler, vorausschauender Planer) =====
+// Liest echte App-Daten (Termine, Aufgaben, Essensplan, Einkauf, Feiertage) und
+// erstellt sauber + sofort einen Tages-/Wochen-Überblick. Keine Cloud, keine Schätzungen.
+function assistentDaten() {
+  const heute = new Date();
+  const heute0 = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  const benutzer = getUser() || {};
+  const bl = benutzer.bundesland || (state.bundesland?.id) || 'by';
+  const in7 = new Date(heute0); in7.setDate(in7.getDate() + 7);
+  const termine = (typeof getTermine === 'function' ? getTermine() : [])
+    .filter(t => t.datum)
+    .map(t => ({ ...t, _d: new Date(t.datum + 'T00:00:00') }));
+  const termineHeute = termine.filter(t => t._d.getTime() === heute0.getTime())
+    .sort((a, b) => (a.uhrzeit || '99').localeCompare(b.uhrzeit || '99'));
+  const termineWoche = termine.filter(t => t._d > heute0 && t._d <= in7)
+    .sort((a, b) => (a.datum + (a.uhrzeit || '99')).localeCompare(b.datum + (b.uhrzeit || '99')));
+  const todos = (typeof todoLaden === 'function' ? todoLaden() : []).filter(t => !t.erledigt);
+  const todosHoch = todos.filter(t => t.prio === 'hoch');
+  const einkauf = (typeof listeleden === 'function' ? listeleden() : []).filter(i => !i.erledigt);
+  const tageIds = ['mo','di','mi','do','fr','sa','so'];
+  const ti = (heute.getDay() + 6) % 7;
+  const wochenStart = (typeof essensplanWocheStart === 'function') ? essensplanWocheStart(0) : heute0;
+  const wsISO = wochenStart.toISOString().split('T')[0];
+  const plan = (typeof essensplanLaden === 'function') ? essensplanLaden() : {};
+  const mahlzeitHeute = ['mittag','abend'].filter(m => plan[`${tageIds[ti]}-${m}-${wsISO}-${ti}`]);
+  const in3 = new Date(heute0); in3.setDate(in3.getDate() + 3);
+  let feiertag = null;
+  try {
+    feiertag = (feiertageDeutsch(heute.getFullYear(), bl) || [])
+      .filter(f => f.datum >= heute0 && f.datum <= in3)
+      .sort((a, b) => a.datum - b.datum)[0] || null;
+  } catch {}
+  return { heute0, benutzer, termineHeute, termineWoche, todos, todosHoch, einkauf, mahlzeitHeute, feiertag };
+}
+
+function assistentVorschlaege(d) {
+  const v = [];
+  if (d.termineHeute.length >= 3) v.push({ icon:'⏳', text:`${d.termineHeute.length} Termine heute — plant kurze Pufferzeiten zwischen den Wegen ein.` });
+  if (d.todosHoch.length) v.push({ icon:'🔥', text:`${d.todosHoch.length} wichtige Aufgabe${d.todosHoch.length>1?'n':''} offen: „${esc(d.todosHoch[0].text)}"${d.todosHoch.length>1?' u.a.':''}.`, go:`zuSektion('todo')` });
+  if (d.mahlzeitHeute.length === 0) v.push({ icon:'🍽️', text:'Für heute ist noch kein Essen geplant — soll ich den Essensplan öffnen?', go:`zuSektion('essensplan')` });
+  if (d.einkauf.length >= 1) v.push({ icon:'🛒', text:`${d.einkauf.length} Sache${d.einkauf.length>1?'n':''} stehen auf der Einkaufsliste.`, go:`zuSektion('einkaufsliste')` });
+  if (d.feiertag) v.push({ icon:'🎉', text:`${esc(d.feiertag.name)} steht an (${d.feiertag.datum.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'})}).` });
+  if (v.length === 0) v.push({ icon:'✅', text:'Alles im Griff — heute steht nichts Dringendes an. Genießt den Tag!' });
+  return v;
+}
+
+function assistentGruss() {
+  const u = getUser() || {};
+  return `${tageszeit()}, ${u.vorname ? esc(u.vorname) : 'zusammen'}!`;
+}
+
+function assistentBriefingHTML(kompakt) {
+  const d = assistentDaten();
+  const stat = [
+    { ic:'📅', n:d.termineHeute.length, l:'Termine heute', go:`zuSektion('kalender')` },
+    { ic:'✅', n:d.todos.length, l:'offene Aufgaben', go:`zuSektion('todo')` },
+    { ic:'🛒', n:d.einkauf.length, l:'Einkauf', go:`zuSektion('einkaufsliste')` }
+  ];
+  const vorschlaege = assistentVorschlaege(d);
+  return `
+    <div class="as-stats">
+      ${stat.map(s => `
+        <button class="as-stat" onclick="${s.go}">
+          <div class="as-stat-n">${s.n}</div>
+          <div class="as-stat-l">${s.ic} ${s.l}</div>
+        </button>`).join('')}
+    </div>
+    <div class="as-vorschlaege">
+      ${vorschlaege.map(v => `
+        <div class="as-vorschlag" ${v.go ? `onclick="${v.go}" role="button"` : ''}>
+          <span class="as-v-ic">${v.icon}</span>
+          <span class="as-v-text">${v.text}</span>
+          ${v.go ? '<span class="as-v-pfeil">›</span>' : ''}
+        </div>`).join('')}
+    </div>
+    ${!kompakt && d.termineHeute.length ? `
+    <div class="as-block-titel">Heute</div>
+    <div class="as-termine">
+      ${d.termineHeute.map(t => {
+        const tt = (typeof TERMIN_TYPEN_ERWEITERT !== 'undefined') ? (getAlleTerminTypen()[t.typ] || TERMIN_TYPEN_ERWEITERT.sonstiges) : { icon:'📅', farbe:'#64748B' };
+        return `<div class="as-termin"><span class="as-t-zeit">${esc(t.uhrzeit || '–')}</span><span class="as-t-dot" style="background:${tt.farbe}"></span><span class="as-t-titel">${esc(t.titel)}</span></div>`;
+      }).join('')}
+    </div>` : ''}
+    ${!kompakt && d.termineWoche.length ? `
+    <div class="as-block-titel">Diese Woche</div>
+    <div class="as-termine">
+      ${d.termineWoche.slice(0, 5).map(t => {
+        const wt = t._d.toLocaleDateString('de-DE', { weekday:'short' });
+        return `<div class="as-termin"><span class="as-t-zeit">${wt} ${t.uhrzeit ? esc(t.uhrzeit) : ''}</span><span class="as-t-titel">${esc(t.titel)}</span></div>`;
+      }).join('')}
+    </div>` : ''}
+  `;
+}
+
+function renderAssistent() {
+  return `
+  <div class="assistent">
+    <div class="as-hero">
+      <div class="as-hero-robo">${kiRoboterSVG(72)}</div>
+      <div class="as-hero-txt">
+        <div class="as-hero-gruss">${assistentGruss()} 👋</div>
+        <div class="as-hero-sub">Ich denke für euch mit und halte den Tag zusammen.</div>
+      </div>
+    </div>
+
+    <div class="as-card">
+      <div class="as-card-titel">📋 Euer Überblick</div>
+      ${assistentBriefingHTML(false)}
+    </div>
+
+    <div class="as-card as-tun">
+      <div class="as-card-titel">⚡ Das erledige ich für euch</div>
+      <button class="as-tun-btn" onclick="assistentTagPlanen()">🗓️ Meinen Tag planen</button>
+      <button class="as-tun-btn" onclick="assistentEssenAutoPlan()">🍽️ Woche-Essen automatisch planen</button>
+      <div id="as-plan"></div>
+    </div>
+
+    <div class="as-aktionen">
+      <button class="as-akt" onclick="zuSektion('kalender')">📅 Kalender</button>
+      <button class="as-akt" onclick="zuSektion('essensplan')">🍽️ Essensplan</button>
+      <button class="as-akt" onclick="zuSektion('einkaufsliste')">🛒 Einkauf</button>
+      <button class="as-akt" onclick="zuSektion('familienchat')">💬 Familie</button>
+    </div>
+
+    <div class="as-frage-titel">💬 Sprich mit mir</div>
+    <div class="as-chat" id="as-chat">${asVerlaufHTML()}</div>
+    <div class="as-eingabe">
+      <label class="as-foto-btn" title="Dokument scannen">📄<input type="file" accept="image/*" onchange="asDokumentScan(this)" style="display:none"></label>
+      <input type="text" id="as-input" class="as-text-input" placeholder="Frag mich alles…" onkeydown="if(event.key==='Enter')asSenden()" autocomplete="off">
+      <button class="as-mic" onclick="asSprechen()" aria-label="Sprechen">🎤</button>
+      <button class="as-send" onclick="asSenden()" aria-label="Senden">➤</button>
+    </div>
+    ${geminiAktiv()
+      ? '<div class="as-ki-status on">🟢 Intelligente KI aktiv (Gemini)</div>'
+      : '<div class="as-ki-status off" onclick="zuSektion(\'einstellungen\')">⚪ Lokaler Modus · tippen, um die intelligente KI zu aktivieren</div>'}
+  </div>`;
+}
+
+// Erstellt aus echten Daten einen optimalen Tagesplan und zeigt ihn an.
+function assistentTagPlanen() {
+  const d = assistentDaten();
+  const cont = el('as-plan');
+  if (!cont) return;
+  const mitglieder = (typeof getFamilienMitglieder === 'function' ? getFamilienMitglieder() : []);
+  const zeilen = [];
+  zeilen.push('☀️ <strong>Morgens</strong> — Frühstück, Schul-/Arbeitssachen & Taschen packen.');
+  if (d.termineHeute.length) {
+    d.termineHeute.forEach(t => {
+      const p = t.person ? mitglieder.find(m => m.id === t.person) : null;
+      zeilen.push(`🕘 <strong>${esc(t.uhrzeit || '—')}</strong> ${esc(t.titel)}${p ? ` · ${esc(p.name)}` : ''} — vorher 10–15 Min Puffer einplanen.`);
+    });
+  } else {
+    zeilen.push('🗓️ Keine festen Termine heute — guter Tag für To-dos oder Familienzeit.');
+  }
+  if (d.todos.length) {
+    const top = d.todos.slice(0, 3).map(t => esc(t.text)).join(', ');
+    zeilen.push(`✅ <strong>Freie Zeit nutzen für:</strong> ${top}.`);
+  }
+  if (d.mahlzeitHeute.length === 0) zeilen.push('🍽️ <strong>Abendessen festlegen</strong> — am besten gleich planen (Knopf oben).');
+  if (d.einkauf.length) zeilen.push(`🛒 <strong>Unterwegs erledigen:</strong> ${d.einkauf.length} Sache${d.einkauf.length > 1 ? 'n' : ''} von der Einkaufsliste.`);
+  zeilen.push('🌙 <strong>Abends</strong> — kurz auf morgen schauen, dann zur Ruhe kommen.');
+  cont.innerHTML = `
+    <div class="as-plan-box">
+      <div class="as-plan-titel">🗓️ Dein optimaler Tagesplan</div>
+      ${zeilen.map(z => `<div class="as-plan-zeile">${z}</div>`).join('')}
+    </div>`;
+  cont.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// Echte Aktion: füllt leere Abend-Slots der laufenden Woche mit zufälligen Rezepten.
+function assistentEssenAutoPlan() {
+  if (typeof REZEPTE === 'undefined' || !REZEPTE.length) { toast('Keine Rezepte verfügbar.'); return; }
+  const tageIds = ['mo','di','mi','do','fr','sa','so'];
+  const ws = essensplanWocheStart(0);
+  const wsISO = ws.toISOString().split('T')[0];
+  const plan = essensplanLaden();
+  let gefuellt = 0;
+  for (let i = 0; i < 7; i++) {
+    const slot = `${tageIds[i]}-abend-${wsISO}-${i}`;
+    if (!plan[slot]) { plan[slot] = REZEPTE[Math.floor(Math.random() * REZEPTE.length)].id; gefuellt++; }
+  }
+  essensplanSpeichern(plan);
+  toast(gefuellt ? `🍽️ ${gefuellt} Abende mit Rezepten gefüllt!` : '🍽️ Diese Woche ist abends schon alles geplant.');
+  const cont = el('as-plan');
+  if (cont) cont.innerHTML = `<div class="as-plan-box"><div class="as-plan-titel">🍽️ Essensplan aktualisiert</div><div class="as-plan-zeile">${gefuellt ? `Ich habe ${gefuellt} freie Abende dieser Woche mit Rezepten gefüllt.` : 'Diese Woche war abends schon alles geplant.'} <span style="color:var(--g500)">Im Essensplan kannst du alles ändern.</span></div><button class="btn btn-outline btn-sm" style="margin-top:.5rem" onclick="zuSektion('essensplan')">Essensplan ansehen</button></div>`;
+}
+
+// ===== GEMINI-KI (BYOK — Schlüssel bleibt nur lokal auf dem Gerät) =====
+const GEMINI_KEY_LS = 'familienapp_gemini_key';
+function geminiKeyLaden() { try { return localStorage.getItem(GEMINI_KEY_LS) || ''; } catch { return ''; } }
+function geminiKeySetzen(v) { try { (v && v.trim()) ? localStorage.setItem(GEMINI_KEY_LS, v.trim()) : localStorage.removeItem(GEMINI_KEY_LS); } catch {} }
+function geminiAktiv() { return !!geminiKeyLaden(); }
+function geminiKeySpeichern() {
+  const v = el('gemini-key-input')?.value || '';
+  geminiKeySetzen(v);
+  toast(v.trim() ? '🤖 KI-Schlüssel gespeichert — der Assistent ist jetzt intelligent!' : 'Schlüssel entfernt.');
+  const st = el('gemini-key-status');
+  if (st) { st.textContent = v.trim() ? '✓ KI aktiv' : 'Noch kein Schlüssel — Assistent antwortet lokal.'; st.style.color = v.trim() ? 'var(--gruen)' : 'var(--g500)'; }
+}
+
+async function geminiAnfrage(contents, systemPrompt) {
+  const key = geminiKeyLaden();
+  if (!key) throw new Error('kein-key');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
+  const body = { contents, generationConfig: { temperature: 0.6, maxOutputTokens: 900 } };
+  if (systemPrompt) body.system_instruction = { parts: [{ text: systemPrompt }] };
+  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (!res.ok) {
+    if (res.status === 400 || res.status === 403) throw new Error('key-ungueltig');
+    if (res.status === 429) throw new Error('ausgelastet');
+    throw new Error('http-' + res.status);
+  }
+  const data = await res.json();
+  const text = (data?.candidates?.[0]?.content?.parts || []).map(p => p.text).filter(Boolean).join('');
+  if (!text) throw new Error('leer');
+  return text.trim();
+}
+
+function geminiFehlerText(e) {
+  const m = (e && e.message) || '';
+  if (m === 'key-ungueltig') return '⚠️ Der KI-Schlüssel scheint ungültig. Bitte in den Einstellungen prüfen.';
+  if (m === 'ausgelastet') return '⏳ Die KI ist gerade ausgelastet — versuch es gleich nochmal.';
+  if (m === 'kein-key') return 'ℹ️ Für intelligente Antworten bitte in den Einstellungen einen Gemini-Schlüssel eintragen.';
+  return '⚠️ Verbindung zur KI fehlgeschlagen. Prüfe deine Internetverbindung.';
+}
+
+// System-Prompt mit echtem Familien-Kontext → präzise, geerdete Antworten.
+function assistentSystemPrompt() {
+  const d = assistentDaten();
+  const heute = new Date().toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const termine = d.termineHeute.map(t => `${t.uhrzeit || '—'} ${t.titel}`).join('; ') || 'keine';
+  const todos = d.todos.slice(0, 8).map(t => t.text).join('; ') || 'keine';
+  return [
+    'Du bist der Familien-Assistent in der FamilienApp (deutsche PWA für Familien).',
+    'Antworte auf Deutsch: freundlich, kurz, präzise und sauber strukturiert (gern knappe Stichpunkte). Keine Floskeln, keine erfundenen Fakten.',
+    `Heute ist ${heute}.`,
+    `Aktuelle Familien-Daten — Termine heute: ${termine}. Offene Aufgaben: ${todos}. Einkaufsliste: ${d.einkauf.length} Artikel. ${d.mahlzeitHeute.length ? 'Heutiges Essen ist geplant.' : 'Für heute ist noch kein Essen geplant.'}`,
+    'Die App enthält: Kalender, Aufgaben/To-Do, Einkaufsliste, Essensplan, Zuschüsse & Formulare mit Ausfüllhilfe, Umgebungssuche, Gesundheit/Hausmittel, Familienchat.',
+    'Bei Planungsfragen gib einen konkreten, optimalen Vorschlag aus den obigen Daten. Verweise bei App-Funktionen auf den passenden Bereich. Fehlen Daten, sag es ehrlich.'
+  ].join('\n');
+}
+
+// --- Dialog-Zustand + Rendering (echtes Chat-Erlebnis) ---
+function asVerlauf() { if (!Array.isArray(state.asVerlauf)) state.asVerlauf = []; return state.asVerlauf; }
+function asVerlaufHTML() {
+  const v = asVerlauf();
+  if (v.length === 0) {
+    return `<div class="as-chat-intro">${kiRoboterSVG(40)}<div>Hallo! Frag mich z. B. „Plane meinen Tag", „Was hilft bei Fieber?" — oder schick mir ein Foto von einem Antrag.${geminiAktiv() ? '' : '<br><span style="color:#8A90A6">Tipp: Für intelligente Antworten in den Einstellungen den Gemini-Schlüssel eintragen.</span>'}</div></div>`;
+  }
+  return v.map(m => `
+    <div class="as-msg ${m.role === 'user' ? 'eigen' : ''}">
+      <div class="as-bubble">
+        ${m.bild ? `<img class="as-msg-bild" src="${m.bild}" alt="Dokument">` : ''}
+        ${m.text ? esc(m.text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') : ''}
+      </div>
+    </div>`).join('');
+}
+function asChatRender() { const c = el('as-chat'); if (c) { c.innerHTML = asVerlaufHTML(); c.scrollTop = c.scrollHeight; } }
+function asNachricht(role, text, bild) { asVerlauf().push({ role, text, bild: bild || null }); asChatRender(); }
+function asTippt(on) {
+  const c = el('as-chat'); if (!c) return;
+  let t = el('as-tippt');
+  if (on) {
+    if (!t) { t = document.createElement('div'); t.id = 'as-tippt'; t.className = 'as-msg';
+      t.innerHTML = '<div class="as-bubble as-tippt-bubble"><span></span><span></span><span></span></div>'; c.appendChild(t); }
+    c.scrollTop = c.scrollHeight;
+  } else if (t) { t.remove(); }
+}
+
+async function asSenden() {
+  const inp = el('as-input');
+  const frage = (inp?.value || '').trim();
+  if (!frage) return;
+  inp.value = '';
+  asNachricht('user', frage);
+  asTippt(true);
+  try {
+    let antwort;
+    if (geminiAktiv()) {
+      const contents = asVerlauf().filter(m => m.text && !m.bild).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
+      antwort = await geminiAnfrage(contents, assistentSystemPrompt());
+    } else {
+      antwort = asLokaleAntwort(frage);
+    }
+    asTippt(false);
+    asNachricht('model', antwort);
+  } catch (e) {
+    asTippt(false);
+    asNachricht('model', geminiAktiv() ? (geminiFehlerText(e) + '\n\n' + asLokaleAntwort(frage)) : asLokaleAntwort(frage));
+  }
+}
+
+function asLokaleAntwort(frage) {
+  try {
+    const r = (typeof kiAntwortFinden === 'function') ? kiAntwortFinden(frage) : null;
+    if (r) { const t = [r.einleitung, r.text].filter(Boolean).join('\n\n'); if (t) return t; }
+  } catch {}
+  return 'Dafür habe ich gerade keine passende Antwort. Mit einem Gemini-Schlüssel (Einstellungen) werde ich richtig schlau. 🙂';
+}
+
+function asSprechen() {
+  if (typeof spracheErkennen !== 'function') return;
+  spracheErkennen({ onText: t => { const inp = el('as-input'); if (inp) { inp.value = t; asSenden(); } } });
+}
+
+async function asDokumentScan(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('⚠️ Bitte ein Foto/Bild wählen.'); return; }
+  if (file.size > 4 * 1024 * 1024) { toast('⚠️ Bild zu groß (max. 4 MB).'); return; }
+  if (!geminiAktiv()) { toast('📄 Für Dokumente bitte erst den Gemini-Schlüssel in den Einstellungen eintragen.'); zuSektion('einstellungen'); return; }
+  const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+  asNachricht('user', '📄 Dokument zum Erklären gesendet', dataUrl);
+  asTippt(true);
+  try {
+    const b64 = String(dataUrl).split(',')[1];
+    const prompt = 'Das ist das Foto eines Dokuments oder Behörden-Antrags einer Familie in Deutschland. Erkläre einfach und kurz: 1) Worum geht es? 2) Welche Angaben werden verlangt? 3) Welche Unterlagen muss man typischerweise beilegen / was fehlt häufig? 4) Worauf achten / Fristen? Klar strukturiert, auf Deutsch.';
+    const contents = [{ role:'user', parts: [ { text: prompt }, { inline_data: { mime_type: file.type, data: b64 } } ] }];
+    const antwort = await geminiAnfrage(contents, 'Du erklärst Familien deutsche Behörden-Dokumente: korrekt, einfach, hilfreich.');
+    asTippt(false);
+    asNachricht('model', antwort);
+  } catch (e) {
+    asTippt(false);
+    asNachricht('model', geminiFehlerText(e));
+  }
+}
+
+// ===== UNTERE 5-TAB-NAVIGATION =====
+function renderBottomNav() {
+  const cont = el('bottom-nav');
+  if (!cont) return;
+  const map = { dashboard:'start', kalender:'kalender', assistent:'assistent', todo:'todo', einstellungen:'profil' };
+  const aktiv = map[state.sektion] || '';
+  const tabs = [
+    { id:'start',     icon:'🏠', l:'Start',     go:`zuSektion('dashboard')` },
+    { id:'kalender',  icon:'📅', l:'Kalender',  go:`zuSektion('kalender')` },
+    { id:'assistent', center:true, l:'Assistent', go:`zuSektion('assistent')` },
+    { id:'todo',      icon:'✅', l:'Aufgaben',  go:`zuSektion('todo')` },
+    { id:'profil',    icon:'👤', l:'Profil',    go:`zuSektion('einstellungen')` }
+  ];
+  cont.innerHTML = tabs.map(t => t.center
+    ? `<button class="bn-item bn-center ${aktiv===t.id?'aktiv':''}" onclick="${t.go}" aria-label="${t.l}">${kiRoboterSVG(36)}</button>`
+    : `<button class="bn-item ${aktiv===t.id?'aktiv':''}" onclick="${t.go}">
+         <span class="bn-ic">${t.icon}</span><span class="bn-l">${t.l}</span>
+       </button>`
+  ).join('');
+  cont.classList.remove('versteckt');
 }
 
 // Lässt den Leistungs-Betrag in Ansicht 6 von 0 hochzählen (dezent lebendig).
@@ -10683,6 +11053,18 @@ function renderEinstellungen() {
     </label>
     ${einst.familienfoto && einst.familienfoto.startsWith('data:') ? '<div style="font-size:.76rem;color:var(--gruen);margin-top:.5rem;font-weight:600">✓ Eigenes Foto aktiv</div>' : ''}
     <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Das Bild erscheint beim Start der App hinter dem Logo. Eigene Fotos werden nur auf deinem Gerät gespeichert (max. 2 MB).</div></div>
+  </div>
+
+  <!-- KI-Assistent (Gemini) -->
+  <div class="einst-gruppe">
+    <div class="einst-gruppe-titel">🤖 KI-Assistent (Gemini)</div>
+    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.6rem">Macht den Familien-Assistenten richtig intelligent: Dialog wie ChatGPT + Dokumente per Foto erklären. Dein Schlüssel bleibt <strong>nur auf diesem Gerät</strong>. Kostenlosen Schlüssel holen: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></div>
+    <div style="display:flex;gap:.5rem">
+      <input type="password" id="gemini-key-input" class="reg-input" style="flex:1" placeholder="Gemini API-Schlüssel einfügen" value="${esc(geminiKeyLaden())}" autocomplete="off">
+      <button class="btn btn-primary" onclick="geminiKeySpeichern()">Speichern</button>
+    </div>
+    <div id="gemini-key-status" style="font-size:.76rem;margin-top:.5rem;font-weight:600;color:${geminiAktiv()?'var(--gruen)':'var(--g500)'}">${geminiAktiv()?'✓ KI aktiv':'Noch kein Schlüssel — Assistent antwortet lokal.'}</div>
+    <div class="info-box blau" style="margin-top:.6rem"><span class="ib-icon">🔒</span><div class="ib-text">Datenschutz: Chat-Fragen und gescannte Dokumente werden zur Beantwortung an Google Gemini gesendet. Schick keine sensiblen Originaldaten, wenn du das nicht möchtest.</div></div>
   </div>
 
   <!-- Dashboard-Karten -->

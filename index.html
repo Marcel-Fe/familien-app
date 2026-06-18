@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/styles.css?v=96" />
+  <link rel="stylesheet" href="css/styles.css?v=99" />
 </head>
 <body>
 
@@ -127,7 +127,6 @@
         <button class="menu-eintrag" data-gruppe="familie" onclick="menuKlick('familie')"><span class="menu-icon-emoji">👨‍👩‍👧</span> <span class="menu-eintrag-label">Familie &amp; Alltag</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="kinder" onclick="menuKlick('kinder')"><span class="menu-icon-emoji">🧒</span> <span class="menu-eintrag-label">Kinder</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="gesund" onclick="menuKlick('gesund')"><span class="menu-icon-emoji">🩺</span> <span class="menu-eintrag-label">Gesundheit</span> <span class="menu-pfeil">›</span></button>
-        <button class="menu-eintrag" data-gruppe="senioren" onclick="menuKlick('senioren')"><span class="menu-icon-emoji">👵</span> <span class="menu-eintrag-label">Senioren</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="wissen" onclick="menuKlick('wissen')"><span class="menu-icon-emoji">📚</span> <span class="menu-eintrag-label">Wissen &amp; Mehr</span> <span class="menu-pfeil">›</span></button>
         <button class="menu-eintrag" data-gruppe="einstellungen" onclick="menuKlick('einstellungen')"><span class="menu-icon-emoji">⚙️</span> <span class="menu-eintrag-label">Einstellungen</span> <span class="menu-pfeil">›</span></button>
       </nav>
@@ -143,6 +142,9 @@
     <footer class="footer">
       <p>🏠 FamilienApp · Alle Angaben ohne Gewähr · Daten bleiben auf Ihrem Gerät</p>
     </footer>
+
+    <!-- Untere 5-Tab-Navigation (per JS gefüllt: renderBottomNav) -->
+    <nav id="bottom-nav" class="bottom-nav versteckt" aria-label="Hauptnavigation"></nav>
 
   </div><!-- /#app -->
 
@@ -173,8 +175,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="js/data.js?v=96"></script>
-  <script src="js/app.js?v=96"></script>
+  <script src="js/data.js?v=99"></script>
+  <script src="js/app.js?v=99"></script>
   <script>
     // Scroll-to-Top Button-Sichtbarkeit
     window.addEventListener('scroll', () => {
@@ -202,7 +204,7 @@
             nw.addEventListener('statechange', () => {
               if (nw.state === 'activated') {
                 caches.keys().then(keys => Promise.all(
-                  keys.filter(k => !k.includes('familienapp-v96')).map(k => caches.delete(k))
+                  keys.filter(k => !k.includes('familienapp-v99')).map(k => caches.delete(k))
                 )).then(() => location.reload());
               }
             });
