@@ -4171,13 +4171,15 @@ function assistentSystemPrompt() {
     'Eine passende App-Funktion darfst du als kurzen Zusatz-Tipp NACH der Antwort erwähnen — nie als Ersatz.',
     'Stelle, wenn sinnvoll, am Ende EINE kurze, themenbezogene Rückfrage, um das Gespräch weiterzuführen (wie ein guter Assistent).',
     'Wirst du um Planung oder Sortierung gebeten (Tag, Woche, Aufgaben, Mahlzeiten, Dokumente), erstelle einen konkreten, fertig nutzbaren Plan auf Basis der Familien-Daten und biete an, ihn umzusetzen.',
-    'Du kannst echte Aktionen in der App ausführen: Termin eintragen, Aufgabe hinzufügen, Einkaufsartikel hinzufügen. Denke aktiv mit und schlage so etwas auch von dir aus vor, wenn es hilft.',
+    'Du kannst echte Aktionen in der App ausführen: Termin eintragen, Aufgabe hinzufügen, Einkaufsartikel hinzufügen, Essen in den Wochenplan eintragen, eine Notiz an die Familien-Pinnwand schreiben. Denke aktiv mit und schlage so etwas auch von dir aus vor, wenn es hilft.',
     'WICHTIG bei Aktionen: Fehlt eine Pflichtangabe (z. B. Datum oder Uhrzeit für einen Termin), stelle ZUERST eine kurze, gezielte Gegenfrage und führe NICHTS aus.',
-    'Hast du alle nötigen Infos, schreibe eine kurze Bestätigung und hänge als ALLERLETZTE Zeile genau EINEN Befehl an (danach nichts mehr), exakt in einem dieser Formate:',
+    'Hast du alle nötigen Infos, schreibe eine kurze Bestätigung und hänge die Befehle ans Ende an — pro Aktion eine eigene Zeile am Schluss, danach nichts mehr. Mehrere Aktionen in einer Antwort sind erlaubt (z. B. einen Wochen-Essensplan auf einmal). Exakt diese Formate:',
     '@@AKTION termin|titel=…|datum=YYYY-MM-DD|uhrzeit=HH:MM@@',
     '@@AKTION aufgabe|text=…|prio=normal@@   (prio: normal oder hoch)',
     '@@AKTION einkauf|artikel=Brot, Milch@@',
-    'Rechne relative Datumsangaben (heute, morgen, „Dienstag") selbst in YYYY-MM-DD um — das heutige Datum steht oben. Gib den @@AKTION@@-Befehl NUR aus, wenn der Nutzer die Aktion wirklich möchte und alle Pflichtangaben vorliegen.',
+    '@@AKTION essensplan|tag=mo|mahlzeit=abend|gericht=…@@   (tag: mo/di/mi/do/fr/sa/so; mahlzeit: fruehstueck/mittag/abend; ohne tag = heute)',
+    '@@AKTION notiz|text=…@@   (Nachricht an die Familien-Pinnwand)',
+    'Rechne relative Datumsangaben (heute, morgen, „Dienstag") selbst in YYYY-MM-DD um — das heutige Datum steht oben. Gib einen @@AKTION@@-Befehl NUR aus, wenn der Nutzer die Aktion wirklich möchte und alle Pflichtangaben vorliegen.',
     'Antworte auf Deutsch: freundlich, natürlich, präzise, gut lesbar (kurze Absätze/Stichpunkte). Keine erfundenen Fakten — bist du unsicher, sag es ehrlich.',
     `Heute ist ${heute}.${ort ? ' Standort der Familie: ' + ort + '.' : ''}`,
     `Familien-Kontext heute — Termine: ${termine}. Offene Aufgaben: ${todos}. Einkaufsliste: ${d.einkauf.length} Artikel. ${d.mahlzeitHeute.length ? 'Essen heute geplant.' : 'Heute noch kein Essen geplant.'}`,
@@ -4233,41 +4235,68 @@ function asTippt(on) {
   } else if (t) { t.remove(); }
 }
 
-// Führt einen von der KI angehängten @@AKTION …@@-Befehl real in der App aus.
-// Format: @@AKTION termin|titel=…|datum=YYYY-MM-DD|uhrzeit=HH:MM@@ (oder aufgabe / einkauf)
+// Führt von der KI angehängte @@AKTION …@@-Befehle real in der App aus.
+// Mehrere Aktionen pro Antwort möglich. Typen: termin / aufgabe / einkauf / essensplan / notiz.
 function asAktionAusfuehren(text) {
-  const m = text.match(/@@\s*AKTION\s+([\s\S]+?)@@/i);
-  if (!m) return { text: text, hinweis: '' };
-  const clean = text.replace(m[0], '').trim();
-  const teile = m[1].trim().split('|').map(s => s.trim());
-  const typ = (teile.shift() || '').toLowerCase();
-  const p = {};
-  teile.forEach(kv => { const i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i).trim().toLowerCase()] = kv.slice(i + 1).trim(); });
-  let hinweis = '';
-  try {
-    if (typ.includes('termin') && p.titel) {
-      const arr = JSON.parse(localStorage.getItem('familienapp_termine') || '[]');
-      arr.push({ id: Date.now(), titel: p.titel, datum: p.datum || '', uhrzeit: p.uhrzeit || '', typ: p.typ || 'sonstiges', notiz: '', updatedAt: Date.now() });
-      localStorage.setItem('familienapp_termine', JSON.stringify(arr));
-      const wann = [p.datum ? new Date(p.datum + 'T00:00:00').toLocaleDateString('de-DE') : '', p.uhrzeit || ''].filter(Boolean).join(' · ');
-      hinweis = `✓ Im Kalender eingetragen: „${p.titel}"${wann ? ' (' + wann + ')' : ''}.`;
-      toast('📅 Termin eingetragen');
-    } else if ((typ.includes('aufgabe') || typ.includes('todo')) && p.text) {
-      const arr = (typeof todoLaden === 'function') ? todoLaden() : JSON.parse(localStorage.getItem('familienapp_todo') || '[]');
-      arr.push({ id: Date.now(), text: p.text, prio: (p.prio === 'hoch' ? 'hoch' : 'normal'), erledigt: false, datum: new Date().toISOString(), erinnerung: null });
-      (typeof todoSpeichern === 'function') ? todoSpeichern(arr) : localStorage.setItem('familienapp_todo', JSON.stringify(arr));
-      hinweis = `✓ Zur Aufgabenliste hinzugefügt: „${p.text}".`;
-      toast('✅ Aufgabe hinzugefügt');
-    } else if (typ.includes('einkauf') && (p.artikel || p.text)) {
-      const art = p.artikel || p.text;
-      const arr = (typeof listeleden === 'function') ? listeleden() : JSON.parse(localStorage.getItem('einkaufsliste') || '[]');
-      art.split(',').map(s => s.trim()).filter(Boolean).forEach((a, i) => arr.push({ id: Date.now() + i, text: a, menge: '', erledigt: false }));
-      (typeof listeSpeichern === 'function') ? listeSpeichern(arr) : localStorage.setItem('einkaufsliste', JSON.stringify(arr));
-      hinweis = `✓ Auf die Einkaufsliste gesetzt: ${art}.`;
-      toast('🛒 Einkaufsliste ergänzt');
-    }
-  } catch (e) { hinweis = ''; }
-  return { text: clean, hinweis };
+  const treffer = [...text.matchAll(/@@\s*AKTION\s+([\s\S]+?)@@/gi)];
+  if (!treffer.length) return { text: text, hinweis: '' };
+  let clean = text;
+  const hinweise = [];
+  const tageNamen = { mo:'Montag', di:'Dienstag', mi:'Mittwoch', do:'Donnerstag', fr:'Freitag', sa:'Samstag', so:'Sonntag' };
+  treffer.forEach((m, idx) => {
+    clean = clean.replace(m[0], '');
+    const teile = m[1].trim().split('|').map(s => s.trim());
+    const typ = (teile.shift() || '').toLowerCase();
+    const p = {};
+    teile.forEach(kv => { const i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i).trim().toLowerCase()] = kv.slice(i + 1).trim(); });
+    try {
+      if (typ.includes('termin') && p.titel) {
+        const arr = JSON.parse(localStorage.getItem('familienapp_termine') || '[]');
+        arr.push({ id: Date.now() + idx, titel: p.titel, datum: p.datum || '', uhrzeit: p.uhrzeit || '', typ: p.typ || 'sonstiges', notiz: '', updatedAt: Date.now() });
+        localStorage.setItem('familienapp_termine', JSON.stringify(arr));
+        const wann = [p.datum ? new Date(p.datum + 'T00:00:00').toLocaleDateString('de-DE') : '', p.uhrzeit || ''].filter(Boolean).join(' · ');
+        hinweise.push(`✓ Im Kalender eingetragen: „${p.titel}"${wann ? ' (' + wann + ')' : ''}.`);
+        toast('📅 Termin eingetragen');
+      } else if ((typ.includes('aufgabe') || typ.includes('todo')) && p.text) {
+        const arr = (typeof todoLaden === 'function') ? todoLaden() : JSON.parse(localStorage.getItem('familienapp_todo') || '[]');
+        arr.push({ id: Date.now() + idx, text: p.text, prio: (p.prio === 'hoch' ? 'hoch' : 'normal'), erledigt: false, datum: new Date().toISOString(), erinnerung: null });
+        (typeof todoSpeichern === 'function') ? todoSpeichern(arr) : localStorage.setItem('familienapp_todo', JSON.stringify(arr));
+        hinweise.push(`✓ Zur Aufgabenliste hinzugefügt: „${p.text}".`);
+        toast('✅ Aufgabe hinzugefügt');
+      } else if (typ.includes('einkauf') && (p.artikel || p.text)) {
+        const art = p.artikel || p.text;
+        const arr = (typeof listeleden === 'function') ? listeleden() : JSON.parse(localStorage.getItem('einkaufsliste') || '[]');
+        art.split(',').map(s => s.trim()).filter(Boolean).forEach((a, i) => arr.push({ id: Date.now() + idx * 100 + i, text: a, menge: '', erledigt: false }));
+        (typeof listeSpeichern === 'function') ? listeSpeichern(arr) : localStorage.setItem('einkaufsliste', JSON.stringify(arr));
+        hinweise.push(`✓ Auf die Einkaufsliste gesetzt: ${art}.`);
+        toast('🛒 Einkaufsliste ergänzt');
+      } else if (typ.includes('essensplan') && p.gericht && typeof essensplanLaden === 'function') {
+        const tageIds = ['mo','di','mi','do','fr','sa','so'];
+        const heuteIdx = (new Date().getDay() + 6) % 7;
+        let tag = (p.tag || '').toLowerCase().slice(0, 2);
+        let ti = tageIds.indexOf(tag);
+        if (ti < 0) { ti = heuteIdx; tag = tageIds[ti]; }
+        const ml = (p.mahlzeit || 'abend').toLowerCase();
+        const mahlId = (ml.includes('früh') || ml.includes('frueh') || ml.includes('morgen')) ? 'fruehstueck' : (ml.includes('mittag') ? 'mittag' : 'abend');
+        const mahlName = mahlId === 'fruehstueck' ? 'Frühstück' : (mahlId === 'mittag' ? 'Mittag' : 'Abend');
+        const wsISO = essensplanWocheStart(0).toISOString().split('T')[0];
+        const slotId = `${tag}-${mahlId}-${wsISO}-${ti}`;
+        const rez = (typeof REZEPTE !== 'undefined') ? REZEPTE.find(r => r.name.toLowerCase() === p.gericht.toLowerCase()) || REZEPTE.find(r => r.name.toLowerCase().includes(p.gericht.toLowerCase())) : null;
+        const plan = essensplanLaden();
+        plan[slotId] = rez ? rez.id : { text: p.gericht };
+        essensplanSpeichern(plan);
+        hinweise.push(`✓ Essensplan ${tageNamen[tag]} (${mahlName}): ${rez ? rez.name : p.gericht}.`);
+        toast('🍽️ Essensplan ergänzt');
+      } else if ((typ.includes('notiz') || typ.includes('pinnwand')) && p.text && typeof notizenLaden === 'function') {
+        const arr = notizenLaden();
+        arr.unshift({ id: Date.now() + idx, text: p.text, autor: 'Assistent', farbe: '#EDE9FE', datum: new Date().toISOString() });
+        notizenSpeichern(arr);
+        hinweise.push(`✓ An die Familien-Pinnwand geschrieben: „${p.text}".`);
+        toast('📌 Notiz angepinnt');
+      }
+    } catch (e) { /* einzelne Aktion ignorieren, Rest läuft weiter */ }
+  });
+  return { text: clean.trim(), hinweis: hinweise.join('\n') };
 }
 
 async function asSenden() {
@@ -14967,7 +14996,7 @@ function renderDatenschutz() {
   return `
   <h2>Datenschutzerklärung</h2>
   <p style="background:#D1FAE5;padding:.85rem;border-radius:.5rem;border-left:4px solid #059669;margin:1rem 0">
-    <strong>✓ Privacy-First:</strong> Diese App speichert ALLE Daten ausschließlich auf Ihrem eigenen Gerät (localStorage). Es werden KEINE Daten an einen Server übertragen, KEIN Tracking, KEINE Analytik, KEINE Cookies von uns.
+    <strong>✓ Privacy-First:</strong> Ihre persönlichen Daten (Profil, Termine, Listen, Fotos) speichert die App ausschließlich auf Ihrem eigenen Gerät (localStorage) — KEIN Tracking, KEINE Analytik, KEINE Cookies von uns. <strong>Einzige Ausnahme:</strong> Wenn Sie den KI-Assistenten nutzen, werden Ihre Eingaben zur Verarbeitung an Google übertragen (Details unter Punkt 4).
   </p>
 
   <h3>1. Verantwortliche Stelle</h3>
@@ -15000,13 +15029,24 @@ function renderDatenschutz() {
   </ul>
   <p>Die genannten Anbieter haben eigene Datenschutzerklärungen. Wir empfehlen, diese zu prüfen.</p>
 
-  <h3>4. Geräte-Berechtigungen</h3>
+  <h3>4. KI-Assistent (Google Gemini)</h3>
+  <p>Die App enthält einen optionalen KI-Assistenten. Er ist nur aktiv, wenn ein Zugang (Schlüssel) hinterlegt ist und Sie ihn bewusst nutzen. Stellen Sie eine Frage im Chat oder schicken ein Dokument-Foto zum Erklären, werden diese Eingaben zur Verarbeitung an Google übertragen:</p>
+  <ul>
+    <li><strong>Anbieter:</strong> Google Ireland Ltd. / Google LLC — Dienst „Gemini API".</li>
+    <li><strong>Was übertragen wird:</strong> Ihre Chat-Eingaben, von Ihnen hochgeladene Dokument-Fotos sowie ein technischer Kontext (z. B. heutiges Datum, ungefähre Region, Titel anstehender Termine/Aufgaben), damit die Antwort passt.</li>
+    <li><strong>Zweck:</strong> Erzeugung der KI-Antwort. Eine Übertragung erfolgt ausschließlich auf Ihre aktive Eingabe hin — nie im Hintergrund.</li>
+    <li><strong>Server-Standort:</strong> Die Verarbeitung kann auf Servern außerhalb der EU (insbesondere in den USA) erfolgen.</li>
+  </ul>
+  <p><strong>Bitte geben Sie keine sensiblen personenbezogenen Daten</strong> (vollständige Namen, Adressen, Geburtsdaten, Konto- oder Gesundheitsdaten) in den Assistenten ein oder fotografieren sie — die App weist vor der Eingabe darauf hin.</p>
+  <p>Rechtsgrundlage ist Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die Sie durch das aktive Nutzen des Assistenten erteilen. Zusätzlich gelten die <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Datenschutzbestimmungen von Google</a>. Nutzen Sie den Assistenten nicht, werden keine dieser Daten übertragen.</p>
+
+  <h3>5. Geräte-Berechtigungen</h3>
   <ul>
     <li><strong>Standort:</strong> Wird nur abgefragt, wenn Sie auf "GPS" klicken. Nutzung lokal — wir senden den Standort an externe APIs (nicht an uns).</li>
     <li><strong>Kamera/Fotos:</strong> Nur beim Hochladen eines Familienfotos. Wird nur lokal gespeichert.</li>
   </ul>
 
-  <h3>5. Ihre Rechte (DSGVO)</h3>
+  <h3>6. Ihre Rechte (DSGVO)</h3>
   <p>Sie haben jederzeit das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung Ihrer Daten. Da wir keine Daten speichern, können Sie diese Rechte selbst ausüben:</p>
   <ul>
     <li>Daten ansehen: Einstellungen → "Daten exportieren"</li>
@@ -15014,13 +15054,13 @@ function renderDatenschutz() {
     <li>App-Daten komplett entfernen: Browser-Cache leeren oder PWA deinstallieren</li>
   </ul>
 
-  <h3>6. Cookies</h3>
+  <h3>7. Cookies</h3>
   <p>Wir verwenden keine Tracking-Cookies. Lediglich technisch notwendiger localStorage zur Speicherung Ihrer Einstellungen auf Ihrem Gerät.</p>
 
-  <h3>7. Kontakt für Datenschutz</h3>
+  <h3>8. Kontakt für Datenschutz</h3>
   <p>Bei Fragen zum Datenschutz: [E-Mail-Adresse aus Impressum]</p>
 
-  <h3>8. Stand der Datenschutzerklärung</h3>
+  <h3>9. Stand der Datenschutzerklärung</h3>
   <p>Diese Datenschutzerklärung wurde zuletzt aktualisiert: ${new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})}.</p>`;
 }
 
@@ -15780,15 +15820,18 @@ function renderEssensplan() {
         <div class="essensplan-mahlzeiten">
           ${mahlzeiten.map(m => {
             const slotId = `${t.id}-${m.id}-${start.toISOString().split('T')[0]}-${ti}`;
-            const rezeptId = plan[slotId];
-            const rezept = rezeptId ? REZEPTE.find(r => r.id === rezeptId) : null;
-            if (rezept) {
+            const val = plan[slotId];
+            const rezept = (val && typeof val !== 'object') ? REZEPTE.find(r => r.id === val) : null;
+            const customName = (val && typeof val === 'object') ? (val.text || '') : '';
+            if (rezept || customName) {
+              const name = rezept ? rezept.name : customName;
+              const bild = rezept ? `<div class="essensplan-mahlzeit-bild" style="background-image:url('${rezept.bild}')"></div>` : '';
               return `
               <div class="essensplan-mahlzeit belegt" onclick="essensplanRezeptZuweisen('${slotId}')">
-                <div class="essensplan-mahlzeit-bild" style="background-image:url('${rezept.bild}')"></div>
+                ${bild}
                 <div class="essensplan-mahlzeit-info">
                   <div class="essensplan-mahlzeit-typ">${m.name}</div>
-                  <div class="essensplan-mahlzeit-name">${esc(rezept.name)}</div>
+                  <div class="essensplan-mahlzeit-name">${esc(name)}</div>
                 </div>
                 <button class="essensplan-mahlzeit-del" onclick="event.stopPropagation();essensplanEntfernen('${slotId}')">✕</button>
               </div>`;
