@@ -4215,13 +4215,25 @@ function asVerlaufHTML() {
   if (v.length === 0) {
     return `<div class="as-chat-intro">${kiRoboterSVG(40)}<div>Hallo! Frag mich z. B. „Plane meinen Tag", „Was hilft bei Fieber?" — oder schick mir ein Foto von einem Antrag.${geminiAktiv() ? '' : '<br><span style="color:#8A90A6">Tipp: Für intelligente Antworten in den Einstellungen den Gemini-Schlüssel eintragen.</span>'}</div></div>`;
   }
-  return v.map(m => `
+  return v.map((m, i) => `
     <div class="as-msg ${m.role === 'user' ? 'eigen' : ''}">
       <div class="as-bubble">
         ${m.bild ? `<img class="as-msg-bild" src="${m.bild}" alt="Dokument">` : ''}
         ${m.text ? esc(m.text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') : ''}
       </div>
+      ${(m.role !== 'user' && m.text) ? `<button class="as-vorlesen" onclick="asVorlesen(${i})" aria-label="Antwort vorlesen" title="Vorlesen / Stopp">🔊 Vorlesen</button>` : ''}
     </div>`).join('');
+}
+
+// Liest eine Assistenten-Antwort laut vor (Toggle: erneuter Tipp stoppt). Klick-sicher.
+function asVorlesen(i) {
+  const m = asVerlauf()[i];
+  if (!m || !m.text) return;
+  if (window.speechSynthesis && speechSynthesis.speaking) {
+    try { (typeof kiVorlesenStop === 'function') ? kiVorlesenStop() : speechSynthesis.cancel(); } catch {}
+    return;
+  }
+  if (typeof kiTextVorlesen === 'function') kiTextVorlesen(m.text);
 }
 function asChatRender() { const c = el('as-chat'); if (c) { c.innerHTML = asVerlaufHTML(); c.scrollTop = c.scrollHeight; } }
 function asNachricht(role, text, bild) { asVerlauf().push({ role, text, bild: bild || null }); asChatRender(); }
@@ -4304,6 +4316,9 @@ async function asSenden() {
   const frage = (inp?.value || '').trim();
   if (!frage) return;
   inp.value = '';
+  // Sprachmodus (wie ChatGPT): nur wenn per Mikro gefragt, wird die Antwort vorgelesen.
+  const vorlesen = !!state.asAutoSprich;
+  state.asAutoSprich = false;
   asNachricht('user', frage);
   asTippt(true);
   try {
@@ -4317,13 +4332,15 @@ async function asSenden() {
       antwort = asLokaleAntwort(frage);
     }
     asTippt(false);
+    let gezeigt;
     if (geminiAktiv()) {
       const akt = asAktionAusfuehren(antwort);
-      const txt = [akt.text, akt.hinweis].filter(Boolean).join('\n\n');
-      asNachricht('model', txt || antwort);
+      gezeigt = [akt.text, akt.hinweis].filter(Boolean).join('\n\n') || antwort;
     } else {
-      asNachricht('model', antwort);
+      gezeigt = antwort;
     }
+    asNachricht('model', gezeigt);
+    if (vorlesen && gezeigt && typeof kiTextVorlesen === 'function') { try { kiTextVorlesen(gezeigt); } catch {} }
   } catch (e) {
     asTippt(false);
     // KI aktiv → echte Fehlermeldung zeigen (NICHT lokal abwimmeln). Nur ohne KI: lokaler Fallback.
@@ -4341,7 +4358,14 @@ function asLokaleAntwort(frage) {
 
 function asSprechen() {
   if (typeof spracheErkennen !== 'function') return;
-  spracheErkennen({ onText: t => { const inp = el('as-input'); if (inp) { inp.value = t; asSenden(); } } });
+  // Per Sprache gefragt → Antwort soll vorgelesen werden (ChatGPT-Sprachmodus).
+  state.asAutoSprich = true;
+  // speechSynthesis im Nutzer-Gesten-Kontext "aufwecken", sonst blockiert der Browser das spätere Vorlesen.
+  try { if (window.speechSynthesis) { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } } catch {}
+  spracheErkennen({
+    onText: t => { const inp = el('as-input'); if (inp) { inp.value = t; asSenden(); } },
+    onAbbruch: () => { state.asAutoSprich = false; }
+  });
 }
 
 async function asDokumentScan(input) {
@@ -16369,6 +16393,7 @@ function spracheErkennen(opts) {
     };
     const m = meldungen[e.error] !== undefined ? meldungen[e.error] : '⚠️ Spracheingabe fehlgeschlagen — bitte erneut versuchen';
     if (m) toast(m);
+    if (typeof opts.onAbbruch === 'function') opts.onAbbruch(e.error);
   };
   erk.onend = () => { if (btn) btn.classList.remove('aktiv'); _sprachErkennung = null; };
   try { erk.start(); }
