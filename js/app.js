@@ -15060,6 +15060,7 @@ function renderDatenschutz() {
     <li><strong>Was übertragen wird:</strong> Ihre Chat-Eingaben, von Ihnen hochgeladene Dokument-Fotos sowie ein technischer Kontext (z. B. heutiges Datum, ungefähre Region, Titel anstehender Termine/Aufgaben), damit die Antwort passt.</li>
     <li><strong>Zweck:</strong> Erzeugung der KI-Antwort. Eine Übertragung erfolgt ausschließlich auf Ihre aktive Eingabe hin — nie im Hintergrund.</li>
     <li><strong>Server-Standort:</strong> Die Verarbeitung kann auf Servern außerhalb der EU (insbesondere in den USA) erfolgen.</li>
+    <li><strong>Datennutzung durch Google:</strong> Wird der kostenlose Tarif der Gemini-API genutzt, kann Google Ihre Eingaben (einschließlich gescannter Dokument-Fotos) zur Verbesserung seiner Dienste verwenden und stichprobenartig durch Mitarbeitende prüfen lassen. Geben Sie deshalb keine sensiblen Originaldaten ein.</li>
   </ul>
   <p><strong>Bitte geben Sie keine sensiblen personenbezogenen Daten</strong> (vollständige Namen, Adressen, Geburtsdaten, Konto- oder Gesundheitsdaten) in den Assistenten ein oder fotografieren sie — die App weist vor der Eingabe darauf hin.</p>
   <p>Rechtsgrundlage ist Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die Sie durch das aktive Nutzen des Assistenten erteilen. Zusätzlich gelten die <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Datenschutzbestimmungen von Google</a>. Nutzen Sie den Assistenten nicht, werden keine dieser Daten übertragen.</p>
