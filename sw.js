@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'familienapp-v102';
+const CACHE_VERSION = 'familienapp-v103';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;

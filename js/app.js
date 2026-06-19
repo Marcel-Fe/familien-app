@@ -124,6 +124,8 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   } catch(e) {}
   setTimeout(splashSchliessen, 3000);
+  // Familienordner-Cache laden (für Ablauf-Erinnerungen im Assistenten)
+  if (typeof ordnerCacheLaden === 'function') ordnerCacheLaden();
 });
 
 // ===== HILFSFUNKTIONEN =====
@@ -235,7 +237,7 @@ function zeigeRegistrierung() {
 // 9 Hauptkategorien — jede mit ihren Sektionen als Untermenü
 const NAV = {
   start:     [{s:'dashboard', l:'Übersicht'}],
-  geld:      [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'},{s:'formular', l:'Formulare'}],
+  geld:      [{s:'leistungen', l:'Zuschüsse'},{s:'sparen', l:'Sparen'},{s:'extras', l:'Budget'},{s:'formular', l:'Formulare'},{s:'familienordner', l:'Familienordner'}],
   unterwegs: [{s:'umgebung', l:'Umgebung'},{s:'routenplaner', l:'Routenplaner'},{s:'wanderwege', l:'Wanderwege'},{s:'regenradar', l:'Regenradar'},{s:'urlaub', l:'Reise-Ideen'}],
   familie:   [{s:'assistent', l:'Familien-Assistent'},{s:'familie', l:'Freizeit'},{s:'kalender', l:'Kalender'},{s:'todo', l:'To-Do'},{s:'checkliste', l:'Checklisten'},{s:'notizen', l:'Notizen'},{s:'familienchat', l:'Familien-Chat'},{s:'essensplan', l:'Essensplan'},{s:'einkaufsliste', l:'Einkaufsliste'},{s:'kochbuch', l:'Kochbuch'},{s:'haushalt', l:'Haushalt'},{s:'handwerker', l:'Handwerker'},{s:'kontakte', l:'Kontakte'},{s:'album', l:'Album'},{s:'beratung', l:'Beratung'}],
   kinder:    [{s:'basteln', l:'Basteln'},{s:'spielideen', l:'Spielideen'},{s:'hausaufgaben', l:'Hausaufgaben'},{s:'erziehung', l:'Erziehung'}],
@@ -2629,6 +2631,7 @@ function render() {
   switch (state.sektion) {
     case 'dashboard':  content.innerHTML = renderDashboard(); setTimeout(d6ZahlAnimieren, 60); break;
     case 'assistent':  content.innerHTML = renderAssistent(); setTimeout(() => { const c = el('as-chat'); if (c) c.scrollTop = c.scrollHeight; }, 60); break;
+    case 'familienordner': content.innerHTML = renderFamilienordner(); setTimeout(ordnerListeRendern, 30); break;
     case 'umgebung':   content.innerHTML = renderUmgebung(); setTimeout(initKarte, 100); break;
     case 'leistungen': content.innerHTML = renderLeistungen(); break;
     case 'formular':   content.innerHTML = renderFormularAssistent(); break;
@@ -3578,6 +3581,7 @@ const ZENTRALE_HUB = [
   { icon:'❤️', l:'Gesundheit',       sub:'Infos & Notizen',    bg:'#FEE2E2', c:'#DC2626', click:`zuSektion('gesundheit')` },
   { icon:'💶', l:'Geld & Zuschüsse', sub:'Übersicht',          bg:'#FEF3C7', c:'#B45309', click:`zuSektion('leistungen')` },
   { icon:'📄', l:'Formulare',        sub:'Anträge & Vorlagen', bg:'#E0E7FF', c:'#4338CA', click:`zuSektion('formular')` },
+  { icon:'📁', l:'Familienordner',   sub:'Dokumente sicher',   bg:'#E0F2FE', c:'#0369A1', click:`zuSektion('familienordner')` },
   { icon:'🤖', l:'KI-Assistent',     sub:'Hilfe & Planung',    bg:'#EDE9FE', c:'#7C3AED', click:`zenKiOeffnen()` }
 ];
 
@@ -3919,6 +3923,8 @@ function assistentDaten() {
 
 function assistentVorschlaege(d) {
   const v = [];
+  const baldDocs = (typeof ordnerBaldAblaufend === 'function') ? ordnerBaldAblaufend(30) : [];
+  if (baldDocs.length) { const t = ordnerTageBisAblauf(baldDocs[0]); v.push({ icon:'📁', text:`Dokument „${esc(baldDocs[0].titel)}" ${t < 0 ? 'ist abgelaufen' : (t === 0 ? 'läuft heute ab' : 'läuft in ' + t + ' Tagen ab')}.`, go:`zuSektion('familienordner')` }); }
   if (d.termineHeute.length >= 3) v.push({ icon:'⏳', text:`${d.termineHeute.length} Termine heute — plant kurze Pufferzeiten zwischen den Wegen ein.` });
   if (d.todosHoch.length) v.push({ icon:'🔥', text:`${d.todosHoch.length} wichtige Aufgabe${d.todosHoch.length>1?'n':''} offen: „${esc(d.todosHoch[0].text)}"${d.todosHoch.length>1?' u.a.':''}.`, go:`zuSektion('todo')` });
   if (d.mahlzeitHeute.length === 0) v.push({ icon:'🍽️', text:'Für heute ist noch kein Essen geplant — soll ich den Essensplan öffnen?', go:`zuSektion('essensplan')` });
@@ -4164,6 +4170,7 @@ function assistentSystemPrompt() {
     'Sage NIEMALS, dass etwas „nicht in der Datenbank" sei, und wimmle NICHT mit „dafür gibt es einen Bereich" ab, statt zu antworten. Zuerst echte Antwort.',
     'Eine passende App-Funktion darfst du als kurzen Zusatz-Tipp NACH der Antwort erwähnen — nie als Ersatz.',
     'Stelle, wenn sinnvoll, am Ende EINE kurze, themenbezogene Rückfrage, um das Gespräch weiterzuführen (wie ein guter Assistent).',
+    'Wirst du um Planung oder Sortierung gebeten (Tag, Woche, Aufgaben, Mahlzeiten, Dokumente), erstelle einen konkreten, fertig nutzbaren Plan auf Basis der Familien-Daten und biete an, ihn umzusetzen.',
     'Antworte auf Deutsch: freundlich, natürlich, präzise, gut lesbar (kurze Absätze/Stichpunkte). Keine erfundenen Fakten — bist du unsicher, sag es ehrlich.',
     `Heute ist ${heute}.${ort ? ' Standort der Familie: ' + ort + '.' : ''}`,
     `Familien-Kontext heute — Termine: ${termine}. Offene Aufgaben: ${todos}. Einkaufsliste: ${d.einkauf.length} Artikel. ${d.mahlzeitHeute.length ? 'Essen heute geplant.' : 'Heute noch kein Essen geplant.'}`,
@@ -4263,14 +4270,21 @@ async function asDokumentScan(input) {
   if (!file) return;
   if (!file.type.startsWith('image/')) { toast('⚠️ Bitte ein Foto/Bild wählen.'); return; }
   if (file.size > 4 * 1024 * 1024) { toast('⚠️ Bild zu groß (max. 4 MB).'); return; }
-  if (!geminiAktiv()) { toast('📄 Für Dokumente bitte erst den Gemini-Schlüssel in den Einstellungen eintragen.'); zuSektion('einstellungen'); return; }
+  if (!geminiAktiv()) { toast('📄 Für Dokumente bitte erst die KI in den Einstellungen aktivieren.'); zuSektion('einstellungen'); return; }
   const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
-  asNachricht('user', '📄 Dokument zum Erklären gesendet', dataUrl);
+  asBildErklaeren(dataUrl, 'Dokument zum Erklären gesendet');
+}
+
+// Schickt ein Dokument-Bild an die KI und erklärt es im Assistenten-Chat (geteilt: Scan + Ordner).
+async function asBildErklaeren(dataUrl, labelText) {
+  if (!geminiAktiv()) { toast('📄 Für Dokumente bitte erst die KI in den Einstellungen aktivieren.'); return; }
+  asNachricht('user', '📄 ' + (labelText || 'Dokument erklären'), dataUrl);
   asTippt(true);
   try {
     const b64 = String(dataUrl).split(',')[1];
+    const mime = (String(dataUrl).match(/^data:(.*?);/) || [])[1] || 'image/jpeg';
     const prompt = 'Das ist das Foto eines Dokuments oder Behörden-Antrags einer Familie in Deutschland. Erkläre einfach und kurz: 1) Worum geht es? 2) Welche Angaben werden verlangt? 3) Welche Unterlagen muss man typischerweise beilegen / was fehlt häufig? 4) Worauf achten / Fristen? Klar strukturiert, auf Deutsch.';
-    const contents = [{ role:'user', parts: [ { text: prompt }, { inline_data: { mime_type: file.type, data: b64 } } ] }];
+    const contents = [{ role:'user', parts: [ { text: prompt }, { inline_data: { mime_type: mime, data: b64 } } ] }];
     const antwort = await geminiAnfrage(contents, 'Du erklärst Familien deutsche Behörden-Dokumente: korrekt, einfach, hilfreich.');
     asTippt(false);
     asNachricht('model', antwort);
@@ -4278,6 +4292,176 @@ async function asDokumentScan(input) {
     asTippt(false);
     asNachricht('model', geminiFehlerText(e));
   }
+}
+
+// ===== DIGITALER FAMILIENORDNER (Dokumente in IndexedDB; KI erklärt + Ablauf-Erinnerung) =====
+const ORDNER_KATEGORIEN = [
+  { id:'geburt',       icon:'📜', label:'Geburtsurkunden' },
+  { id:'impf',         icon:'💉', label:'Impfpässe' },
+  { id:'versicherung', icon:'🛡️', label:'Versicherungen' },
+  { id:'vertrag',      icon:'📑', label:'Verträge' },
+  { id:'schule',       icon:'🎒', label:'Schulunterlagen' },
+  { id:'kita',         icon:'🧸', label:'Kita-Dokumente' },
+  { id:'arzt',         icon:'🩺', label:'Arztberichte' },
+  { id:'behoerde',     icon:'🏛️', label:'Behörden & Anträge' },
+  { id:'sonstige',     icon:'📂', label:'Sonstiges' }
+];
+function ordnerKat(id) { return ORDNER_KATEGORIEN.find(k => k.id === id) || ORDNER_KATEGORIEN[ORDNER_KATEGORIEN.length - 1]; }
+
+let _ordnerCache = [];
+let _ordnerNeuBild = null;
+function ordnerDBOeffnen() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('familienapp_ordner', 1);
+    req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains('dokumente')) db.createObjectStore('dokumente', { keyPath:'id' }); };
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function ordnerAlle() {
+  try {
+    const db = await ordnerDBOeffnen();
+    return await new Promise((res, rej) => {
+      const req = db.transaction('dokumente','readonly').objectStore('dokumente').getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = () => rej(req.error);
+    });
+  } catch { return []; }
+}
+async function ordnerSpeichernDoc(doc) {
+  const db = await ordnerDBOeffnen();
+  return new Promise((res, rej) => { const tx = db.transaction('dokumente','readwrite'); tx.objectStore('dokumente').put(doc); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); });
+}
+async function ordnerLoeschenDoc(id) {
+  const db = await ordnerDBOeffnen();
+  return new Promise((res, rej) => { const tx = db.transaction('dokumente','readwrite'); tx.objectStore('dokumente').delete(id); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); });
+}
+async function ordnerCacheLaden() { try { _ordnerCache = await ordnerAlle(); } catch { _ordnerCache = []; } }
+
+function ordnerTageBisAblauf(doc) {
+  if (!doc.ablauf) return null;
+  const d = new Date(doc.ablauf + 'T00:00:00');
+  if (isNaN(d.getTime())) return null;
+  const heute = new Date(); const h0 = new Date(heute.getFullYear(), heute.getMonth(), heute.getDate());
+  return Math.round((d - h0) / 86400000);
+}
+function ordnerAblaufBadge(doc) {
+  const t = ordnerTageBisAblauf(doc);
+  if (t === null) return '';
+  if (t < 0) return `<span class="ord-badge rot">Abgelaufen seit ${Math.abs(t)} T.</span>`;
+  if (t === 0) return `<span class="ord-badge rot">Läuft heute ab</span>`;
+  if (t <= 30) return `<span class="ord-badge orange">Läuft in ${t} Tagen ab</span>`;
+  return `<span class="ord-badge gruen">Gültig bis ${new Date(doc.ablauf + 'T00:00:00').toLocaleDateString('de-DE')}</span>`;
+}
+function ordnerBaldAblaufend(tage = 30) {
+  return _ordnerCache.filter(d => { const t = ordnerTageBisAblauf(d); return t !== null && t <= tage; })
+    .sort((a, b) => ordnerTageBisAblauf(a) - ordnerTageBisAblauf(b));
+}
+
+function renderFamilienordner() {
+  return `
+  <div class="ordner">
+    <div class="section-title">📁 Familienordner</div>
+    <p class="section-sub">Alle wichtigen Dokumente sicher an einem Ort — nur auf deinem Gerät. Die KI erklärt sie und erinnert an Ablaufdaten.</p>
+
+    <button class="btn btn-primary" style="width:100%;margin-bottom:1rem" onclick="ordnerFormularUmschalten()">➕ Dokument hinzufügen</button>
+
+    <div id="ordner-formular" class="ord-formular versteckt">
+      <input type="text" id="ord-titel" class="reg-input" placeholder="Titel (z. B. Haftpflicht Allianz)" autocomplete="off">
+      <select id="ord-kat" class="reg-select" style="width:100%;margin-top:.5rem">
+        ${ORDNER_KATEGORIEN.map(k => `<option value="${k.id}">${k.icon} ${k.label}</option>`).join('')}
+      </select>
+      <label style="font-size:.78rem;font-weight:700;display:block;margin:.6rem 0 .2rem">Ablaufdatum (optional — für Erinnerung)</label>
+      <input type="date" id="ord-ablauf" class="reg-input">
+      <label class="ord-foto-label">📷 Foto/Scan wählen<input type="file" id="ord-bild" accept="image/*" style="display:none" onchange="ordnerBildVorschau()"></label>
+      <div id="ord-bild-vorschau" class="ord-bild-vorschau versteckt"></div>
+      <textarea id="ord-notiz" class="reg-input" rows="2" placeholder="Notiz (optional)" style="margin-top:.5rem;resize:vertical;width:100%"></textarea>
+      <button class="btn btn-primary" style="width:100%;margin-top:.6rem" onclick="ordnerDokSpeichern()">Speichern</button>
+    </div>
+
+    <div id="ordner-liste"><div class="ord-laden">Lädt…</div></div>
+  </div>`;
+}
+
+function ordnerFormularUmschalten() { const f = el('ordner-formular'); if (f) f.classList.toggle('versteckt'); }
+function ordnerBildVorschau() {
+  const inp = el('ord-bild'); const file = inp?.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('⚠️ Bitte ein Bild wählen.'); return; }
+  if (file.size > 6 * 1024 * 1024) { toast('⚠️ Bild zu groß (max. 6 MB).'); inp.value = ''; return; }
+  const r = new FileReader();
+  r.onload = () => { _ordnerNeuBild = r.result; const v = el('ord-bild-vorschau'); if (v) { v.innerHTML = `<img src="${r.result}" alt="Vorschau">`; v.classList.remove('versteckt'); } };
+  r.readAsDataURL(file);
+}
+async function ordnerDokSpeichern() {
+  const titel = (el('ord-titel')?.value || '').trim();
+  if (!titel) { toast('Bitte einen Titel eingeben.'); return; }
+  const doc = {
+    id: Date.now(), titel,
+    kategorie: el('ord-kat')?.value || 'sonstige',
+    ablauf: el('ord-ablauf')?.value || '',
+    notiz: (el('ord-notiz')?.value || '').trim(),
+    bild: _ordnerNeuBild || null,
+    erstellt: new Date().toISOString()
+  };
+  try {
+    await ordnerSpeichernDoc(doc);
+    _ordnerNeuBild = null;
+    await ordnerCacheLaden();
+    toast('✓ Dokument gespeichert');
+    zuSektion('familienordner');
+  } catch (e) { toast('⚠️ Speichern fehlgeschlagen.'); }
+}
+async function ordnerDokLoeschen(id) {
+  if (!confirm('Dieses Dokument wirklich löschen?')) return;
+  await ordnerLoeschenDoc(id);
+  await ordnerCacheLaden();
+  ordnerListeRendern();
+  toast('Dokument gelöscht');
+}
+
+async function ordnerListeRendern() {
+  const cont = el('ordner-liste');
+  if (!cont) return;
+  const docs = await ordnerAlle();
+  _ordnerCache = docs;
+  if (docs.length === 0) {
+    cont.innerHTML = `<div class="ord-leer">📂 Noch keine Dokumente.<br>Tippe oben auf „Dokument hinzufügen".</div>`;
+    return;
+  }
+  const bald = ordnerBaldAblaufend(30);
+  const warn = bald.length ? `
+    <div class="ord-warnungen">
+      <div class="ord-warn-titel">⏰ Ablauf-Erinnerungen</div>
+      ${bald.map(d => { const t = ordnerTageBisAblauf(d); return `<div class="ord-warn-zeile">${ordnerKat(d.kategorie).icon} <strong>${esc(d.titel)}</strong> — ${t < 0 ? 'abgelaufen' : (t === 0 ? 'läuft heute ab' : 'läuft in ' + t + ' Tagen ab')}</div>`; }).join('')}
+    </div>` : '';
+  const sortiert = docs.slice().sort((a, b) => (b.erstellt || '').localeCompare(a.erstellt || ''));
+  const karten = sortiert.map(d => {
+    const k = ordnerKat(d.kategorie);
+    return `
+    <div class="ord-karte">
+      ${d.bild ? `<img class="ord-thumb" src="${d.bild}" alt="${esc(d.titel)}" onclick="bildVollOeffnen('${d.bild}')">` : `<div class="ord-thumb ord-thumb-leer">${k.icon}</div>`}
+      <div class="ord-info">
+        <div class="ord-titel">${esc(d.titel)}</div>
+        <div class="ord-kat">${k.icon} ${k.label}</div>
+        ${ordnerAblaufBadge(d)}
+        ${d.notiz ? `<div class="ord-notiz">${esc(d.notiz)}</div>` : ''}
+        <div class="ord-aktionen">
+          ${d.bild ? `<button class="btn btn-outline btn-sm" onclick="ordnerKiErklaeren(${d.id})">🤖 KI erklären</button>` : ''}
+          <button class="btn btn-outline btn-sm" onclick="ordnerDokLoeschen(${d.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  cont.innerHTML = warn + `<div class="ord-grid">${karten}</div>`;
+}
+
+async function ordnerKiErklaeren(id) {
+  const doc = _ordnerCache.find(d => d.id === id) || (await ordnerAlle()).find(d => d.id === id);
+  if (!doc || !doc.bild) { toast('Kein Bild zum Erklären vorhanden.'); return; }
+  if (!geminiAktiv()) { toast('Für KI-Erklärung bitte die KI aktivieren (Einstellungen).'); zuSektion('einstellungen'); return; }
+  zuSektion('assistent');
+  setTimeout(() => asBildErklaeren(doc.bild, 'Dokument: ' + doc.titel), 180);
 }
 
 // ===== UNTERE 5-TAB-NAVIGATION =====

@@ -6967,3 +6967,32 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
 .zen-premium-pfeil { font-size: 1.4rem; color: #6B4200; font-weight: 800; }
 .zentrale .recht-footer { margin-top: .4rem; }
 @media (prefers-reduced-motion: reduce) { .zen-premium:active { transform: none; } }
+
+/* ===== Digitaler Familienordner ===== */
+.ord-formular { background: #F8F7FF; border: 1px solid #ECEBFB; border-radius: 14px; padding: 1rem; margin-bottom: 1rem; }
+.ord-foto-label {
+  display: inline-flex; align-items: center; gap: .4rem; margin-top: .6rem; padding: .55rem .9rem;
+  background: #EEF0FF; border-radius: 11px; cursor: pointer; font-size: .88rem; font-weight: 700; color: #4338CA;
+}
+.ord-bild-vorschau { margin-top: .6rem; }
+.ord-bild-vorschau.versteckt { display: none; }
+.ord-bild-vorschau img { max-height: 120px; border-radius: 10px; display: block; }
+.ord-laden, .ord-leer { text-align: center; color: #8A90A6; font-size: .92rem; padding: 1.4rem; line-height: 1.5; }
+
+.ord-warnungen { background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 14px; padding: .8rem 1rem; margin-bottom: 1rem; }
+.ord-warn-titel { font-weight: 800; font-size: .9rem; color: #C2410C; margin-bottom: .4rem; }
+.ord-warn-zeile { font-size: .86rem; color: #7C2D12; padding: .2rem 0; }
+
+.ord-grid { display: flex; flex-direction: column; gap: .7rem; }
+.ord-karte { display: flex; gap: .8rem; background: #fff; border: 1px solid #EEF0F6; border-radius: 16px; padding: .8rem; box-shadow: 0 4px 14px rgba(30,35,64,.05); }
+.ord-thumb { width: 70px; height: 70px; flex: 0 0 70px; border-radius: 12px; object-fit: cover; cursor: pointer; background: #F1F2F8; }
+.ord-thumb-leer { display: grid; place-items: center; font-size: 1.8rem; cursor: default; }
+.ord-info { flex: 1; min-width: 0; }
+.ord-titel { font-weight: 800; font-size: .98rem; color: #1E2340; }
+.ord-kat { font-size: .78rem; color: #6B7180; margin: .15rem 0; }
+.ord-notiz { font-size: .8rem; color: #6B7180; margin-top: .25rem; }
+.ord-badge { display: inline-block; font-size: .72rem; font-weight: 800; padding: .15rem .5rem; border-radius: 99px; }
+.ord-badge.rot { background: #FEE2E2; color: #B91C1C; }
+.ord-badge.orange { background: #FFEDD5; color: #C2410C; }
+.ord-badge.gruen { background: #DCFCE7; color: #15803D; }
+.ord-aktionen { display: flex; gap: .4rem; margin-top: .5rem; flex-wrap: wrap; }
