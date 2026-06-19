@@ -25,13 +25,19 @@ export default async function handler(req, res) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return res.status(500).json({ error: 'GEMINI_API_KEY ist nicht gesetzt (ENV-Variable).' });
 
-  const body = JSON.stringify(req.body || {});
+  const basis = (req.body && typeof req.body === 'object') ? req.body : {};
   let letzte = { status: 502, data: { error: 'Verbindung zur KI fehlgeschlagen.' } };
   for (const model of MODELS) {
+    // Internes "Thinking" abschalten, wo unterstuetzt (2.5 / latest) -> spart deutlich Tokens/Kosten.
+    let payload = basis;
+    if (/2\.5|flash-latest/.test(model)) {
+      const gc = basis.generationConfig || {};
+      payload = { ...basis, generationConfig: { ...gc, thinkingConfig: { ...(gc.thinkingConfig || {}), thinkingBudget: 0 } } };
+    }
     try {
       const upstream = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
       );
       const data = await upstream.json();
       // Modell weg/unbekannt → naechstes probieren. Sonst (Erfolg oder echter Fehler) zurueckgeben.
