@@ -4171,6 +4171,13 @@ function assistentSystemPrompt() {
     'Eine passende App-Funktion darfst du als kurzen Zusatz-Tipp NACH der Antwort erwähnen — nie als Ersatz.',
     'Stelle, wenn sinnvoll, am Ende EINE kurze, themenbezogene Rückfrage, um das Gespräch weiterzuführen (wie ein guter Assistent).',
     'Wirst du um Planung oder Sortierung gebeten (Tag, Woche, Aufgaben, Mahlzeiten, Dokumente), erstelle einen konkreten, fertig nutzbaren Plan auf Basis der Familien-Daten und biete an, ihn umzusetzen.',
+    'Du kannst echte Aktionen in der App ausführen: Termin eintragen, Aufgabe hinzufügen, Einkaufsartikel hinzufügen. Denke aktiv mit und schlage so etwas auch von dir aus vor, wenn es hilft.',
+    'WICHTIG bei Aktionen: Fehlt eine Pflichtangabe (z. B. Datum oder Uhrzeit für einen Termin), stelle ZUERST eine kurze, gezielte Gegenfrage und führe NICHTS aus.',
+    'Hast du alle nötigen Infos, schreibe eine kurze Bestätigung und hänge als ALLERLETZTE Zeile genau EINEN Befehl an (danach nichts mehr), exakt in einem dieser Formate:',
+    '@@AKTION termin|titel=…|datum=YYYY-MM-DD|uhrzeit=HH:MM@@',
+    '@@AKTION aufgabe|text=…|prio=normal@@   (prio: normal oder hoch)',
+    '@@AKTION einkauf|artikel=Brot, Milch@@',
+    'Rechne relative Datumsangaben (heute, morgen, „Dienstag") selbst in YYYY-MM-DD um — das heutige Datum steht oben. Gib den @@AKTION@@-Befehl NUR aus, wenn der Nutzer die Aktion wirklich möchte und alle Pflichtangaben vorliegen.',
     'Antworte auf Deutsch: freundlich, natürlich, präzise, gut lesbar (kurze Absätze/Stichpunkte). Keine erfundenen Fakten — bist du unsicher, sag es ehrlich.',
     `Heute ist ${heute}.${ort ? ' Standort der Familie: ' + ort + '.' : ''}`,
     `Familien-Kontext heute — Termine: ${termine}. Offene Aufgaben: ${todos}. Einkaufsliste: ${d.einkauf.length} Artikel. ${d.mahlzeitHeute.length ? 'Essen heute geplant.' : 'Heute noch kein Essen geplant.'}`,
@@ -4226,6 +4233,43 @@ function asTippt(on) {
   } else if (t) { t.remove(); }
 }
 
+// Führt einen von der KI angehängten @@AKTION …@@-Befehl real in der App aus.
+// Format: @@AKTION termin|titel=…|datum=YYYY-MM-DD|uhrzeit=HH:MM@@ (oder aufgabe / einkauf)
+function asAktionAusfuehren(text) {
+  const m = text.match(/@@\s*AKTION\s+([\s\S]+?)@@/i);
+  if (!m) return { text: text, hinweis: '' };
+  const clean = text.replace(m[0], '').trim();
+  const teile = m[1].trim().split('|').map(s => s.trim());
+  const typ = (teile.shift() || '').toLowerCase();
+  const p = {};
+  teile.forEach(kv => { const i = kv.indexOf('='); if (i > 0) p[kv.slice(0, i).trim().toLowerCase()] = kv.slice(i + 1).trim(); });
+  let hinweis = '';
+  try {
+    if (typ.includes('termin') && p.titel) {
+      const arr = JSON.parse(localStorage.getItem('familienapp_termine') || '[]');
+      arr.push({ id: Date.now(), titel: p.titel, datum: p.datum || '', uhrzeit: p.uhrzeit || '', typ: p.typ || 'sonstiges', notiz: '', updatedAt: Date.now() });
+      localStorage.setItem('familienapp_termine', JSON.stringify(arr));
+      const wann = [p.datum ? new Date(p.datum + 'T00:00:00').toLocaleDateString('de-DE') : '', p.uhrzeit || ''].filter(Boolean).join(' · ');
+      hinweis = `✓ Im Kalender eingetragen: „${p.titel}"${wann ? ' (' + wann + ')' : ''}.`;
+      toast('📅 Termin eingetragen');
+    } else if ((typ.includes('aufgabe') || typ.includes('todo')) && p.text) {
+      const arr = (typeof todoLaden === 'function') ? todoLaden() : JSON.parse(localStorage.getItem('familienapp_todo') || '[]');
+      arr.push({ id: Date.now(), text: p.text, prio: (p.prio === 'hoch' ? 'hoch' : 'normal'), erledigt: false, datum: new Date().toISOString(), erinnerung: null });
+      (typeof todoSpeichern === 'function') ? todoSpeichern(arr) : localStorage.setItem('familienapp_todo', JSON.stringify(arr));
+      hinweis = `✓ Zur Aufgabenliste hinzugefügt: „${p.text}".`;
+      toast('✅ Aufgabe hinzugefügt');
+    } else if (typ.includes('einkauf') && (p.artikel || p.text)) {
+      const art = p.artikel || p.text;
+      const arr = (typeof listeleden === 'function') ? listeleden() : JSON.parse(localStorage.getItem('einkaufsliste') || '[]');
+      art.split(',').map(s => s.trim()).filter(Boolean).forEach((a, i) => arr.push({ id: Date.now() + i, text: a, menge: '', erledigt: false }));
+      (typeof listeSpeichern === 'function') ? listeSpeichern(arr) : localStorage.setItem('einkaufsliste', JSON.stringify(arr));
+      hinweis = `✓ Auf die Einkaufsliste gesetzt: ${art}.`;
+      toast('🛒 Einkaufsliste ergänzt');
+    }
+  } catch (e) { hinweis = ''; }
+  return { text: clean, hinweis };
+}
+
 async function asSenden() {
   const inp = el('as-input');
   const frage = (inp?.value || '').trim();
@@ -4244,7 +4288,13 @@ async function asSenden() {
       antwort = asLokaleAntwort(frage);
     }
     asTippt(false);
-    asNachricht('model', antwort);
+    if (geminiAktiv()) {
+      const akt = asAktionAusfuehren(antwort);
+      const txt = [akt.text, akt.hinweis].filter(Boolean).join('\n\n');
+      asNachricht('model', txt || antwort);
+    } else {
+      asNachricht('model', antwort);
+    }
   } catch (e) {
     asTippt(false);
     // KI aktiv → echte Fehlermeldung zeigen (NICHT lokal abwimmeln). Nur ohne KI: lokaler Fallback.
