@@ -6945,3 +6945,25 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   .as-send:active, .as-mic:active, .as-foto-btn:active { transform: none; }
   .as-tippt-bubble span { animation: none; }
 }
+
+/* ===== v101: Foto größer, Motivationsspruch, Premium-Teaser, Footer ===== */
+.zen-avatar { width: 104px; height: 104px; flex: 0 0 104px; font-size: 2.8rem; }
+.zen-avatar-cam { width: 30px; height: 30px; font-size: .9rem; }
+.zen-spruch {
+  position: relative; z-index: 1; margin-top: 1rem; padding: .7rem .9rem;
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.22); border-radius: 14px;
+  color: #fff; font-size: .9rem; font-weight: 600; line-height: 1.4; backdrop-filter: blur(4px);
+}
+.zen-premium {
+  display: flex; align-items: center; gap: .8rem; width: 100%; text-align: left; cursor: pointer;
+  margin: 0 0 1rem; padding: .9rem 1rem; border: none; border-radius: 18px;
+  background: linear-gradient(135deg,#FBBF24,#F59E0B); box-shadow: 0 6px 18px rgba(245,158,11,.3);
+}
+.zen-premium:active { transform: scale(.98); }
+.zen-premium-ic { font-size: 1.7rem; flex: 0 0 auto; }
+.zen-premium-txt { flex: 1; }
+.zen-premium-titel { font-size: 1rem; font-weight: 800; color: #4A2C00; }
+.zen-premium-sub { font-size: .8rem; color: #6B4200; margin-top: .1rem; }
+.zen-premium-pfeil { font-size: 1.4rem; color: #6B4200; font-weight: 800; }
+.zentrale .recht-footer { margin-top: .4rem; }
+@media (prefers-reduced-motion: reduce) { .zen-premium:active { transform: none; } }

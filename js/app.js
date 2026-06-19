@@ -2753,7 +2753,7 @@ function dashboardHeroChips(max) {
 // Dispatcher: wählt eine von 5 Dashboard-Ansichten (Layout-Presets).
 // Die fünf Funktionen liefern dasselbe Daten-Set, aber in verschiedenen Looks.
 function renderDashboard() {
-  const ansicht = (einstellungenLaden().dashboardAnsicht) || 'd1';
+  const ansicht = (einstellungenLaden().dashboardAnsicht) || 'd7';
   switch (ansicht) {
     case 'd2': return renderDashboardD2();
     case 'd3': return renderDashboardD3();
@@ -3107,7 +3107,7 @@ function renderDashboardD1() {
       <a href="#" onclick="event.preventDefault();zuSektion('lizenz')">Premium</a>
     </div>
     <div class="recht-footer-text">
-      Alle Daten lokal · Kein Server · DSGVO-konform · ${new Date().getFullYear()}
+      Deine Daten bleiben auf dem Gerät · KI-Anfragen nur bei aktiver Nutzung · ${new Date().getFullYear()}
     </div>
   </div>`;
 }
@@ -3289,7 +3289,7 @@ function dashboardFooterBlock() {
       <a href="#" onclick="event.preventDefault();zuSektion('lizenz')">Premium</a>
     </div>
     <div class="recht-footer-text">
-      Alle Daten lokal · Kein Server · DSGVO-konform · ${new Date().getFullYear()}
+      Deine Daten bleiben auf dem Gerät · KI-Anfragen nur bei aktiver Nutzung · ${new Date().getFullYear()}
     </div>
   </div>`;
 }
@@ -3622,6 +3622,7 @@ function renderDashboardD7() {
           <div class="zen-datum">${datum}</div>
         </div>
       </div>
+      <div class="zen-spruch">✨ ${esc(motivationsZitat())}</div>
     </div>
 
     ${zentraleHeute()}
@@ -3669,6 +3670,18 @@ function renderDashboardD7() {
         <div class="zen-status-sub">Anträge mit Ausfüllhilfe</div>
       </button>
     </div>`}
+
+    ${istPremium() ? '' : `
+    <button class="zen-premium" onclick="zuSektion('lizenz')">
+      <span class="zen-premium-ic">⭐</span>
+      <div class="zen-premium-txt">
+        <div class="zen-premium-titel">FamilienApp Premium</div>
+        <div class="zen-premium-sub">KI-Assistent, Familienordner & mehr — ab 9,99 € einmalig</div>
+      </div>
+      <span class="zen-premium-pfeil">›</span>
+    </button>`}
+
+    ${dashboardFooterBlock()}
   </div>`;
 }
 
@@ -4058,9 +4071,22 @@ function assistentEssenAutoPlan() {
 
 // ===== GEMINI-KI (BYOK — Schlüssel bleibt nur lokal auf dem Gerät) =====
 const GEMINI_KEY_LS = 'familienapp_gemini_key';
+const KI_PROXY_LS = 'familienapp_ki_proxy';
+// PROFI-MODUS (für Verkauf): hier die deployte Proxy-URL eintragen → alle Nutzer bekommen die KI,
+// ohne eigenen Schlüssel. Schlüssel liegt sicher als ENV-Variable auf dem Server. Siehe ki-proxy/README.md.
+const KI_PROXY_DEFAULT = '';
 function geminiKeyLaden() { try { return localStorage.getItem(GEMINI_KEY_LS) || ''; } catch { return ''; } }
 function geminiKeySetzen(v) { try { (v && v.trim()) ? localStorage.setItem(GEMINI_KEY_LS, v.trim()) : localStorage.removeItem(GEMINI_KEY_LS); } catch {} }
-function geminiAktiv() { return !!geminiKeyLaden(); }
+function kiProxyURLGespeichert() { try { return (localStorage.getItem(KI_PROXY_LS) || '').trim(); } catch { return ''; } }
+function kiProxyURL() { return kiProxyURLGespeichert() || KI_PROXY_DEFAULT; }
+function kiProxySpeichern() {
+  const v = (el('ki-proxy-input')?.value || '').trim();
+  try { v ? localStorage.setItem(KI_PROXY_LS, v) : localStorage.removeItem(KI_PROXY_LS); } catch {}
+  toast(v ? '🤖 KI-Server gespeichert.' : 'KI-Server entfernt.');
+  render();
+}
+// KI ist aktiv, sobald ein Server-Proxy (Profi) ODER ein lokaler Test-Schlüssel vorhanden ist.
+function geminiAktiv() { return !!(kiProxyURL() || geminiKeyLaden()); }
 function geminiKeySpeichern() {
   const v = el('gemini-key-input')?.value || '';
   geminiKeySetzen(v);
@@ -4070,11 +4096,13 @@ function geminiKeySpeichern() {
 }
 
 async function geminiAnfrage(contents, systemPrompt) {
+  const proxy = kiProxyURL();
   const key = geminiKeyLaden();
-  if (!key) throw new Error('kein-key');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
+  if (!proxy && !key) throw new Error('kein-key');
   const body = { contents, generationConfig: { temperature: 0.6, maxOutputTokens: 900 } };
   if (systemPrompt) body.system_instruction = { parts: [{ text: systemPrompt }] };
+  // Profi: über eigenen Server-Proxy (Schlüssel bleibt geheim). Sonst: direkt mit Test-Schlüssel.
+  const url = proxy || `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
   const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
   if (!res.ok) {
     if (res.status === 400 || res.status === 403) throw new Error('key-ungueltig');
@@ -11030,7 +11058,7 @@ function renderEinstellungen() {
         { id:'d6', name:'Horizon',           sub:'Hell, runde Karten, sanft animiert', preview:'linear-gradient(135deg,#868CFF,#4318FF)' },
         { id:'d7', name:'Familien-Zentrale', sub:'Aufgeräumt: Heute, Termine, KI-Helfer', preview:'linear-gradient(160deg,#EEF2FF,#E0E7FF 60%,#C7D2FE)', dark:false, text:'#312E81' }
       ].map(a => {
-        const aktiv = (einst.dashboardAnsicht || 'd1') === a.id;
+        const aktiv = (einst.dashboardAnsicht || 'd7') === a.id;
         return `
         <button class="ansicht-karte ${aktiv?'aktiv':''}" onclick="einstellungDashboardAnsicht('${a.id}')">
           <div class="ansicht-preview" style="background:${a.preview}">
@@ -11083,16 +11111,31 @@ function renderEinstellungen() {
     <div class="info-box blau" style="margin-top:.75rem"><span class="ib-icon">ℹ️</span><div class="ib-text">Das Bild erscheint beim Start der App hinter dem Logo. Eigene Fotos werden nur auf deinem Gerät gespeichert (max. 2 MB).</div></div>
   </div>
 
-  <!-- KI-Assistent (Gemini) -->
+  <!-- KI-Assistent -->
   <div class="einst-gruppe">
-    <div class="einst-gruppe-titel">🤖 KI-Assistent (Gemini)</div>
-    <div style="font-size:.78rem;color:var(--g700);margin-bottom:.6rem">Macht den Familien-Assistenten richtig intelligent: Dialog wie ChatGPT + Dokumente per Foto erklären. Dein Schlüssel bleibt <strong>nur auf diesem Gerät</strong>. Kostenlosen Schlüssel holen: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></div>
-    <div style="display:flex;gap:.5rem">
-      <input type="password" id="gemini-key-input" class="reg-input" style="flex:1" placeholder="Gemini API-Schlüssel einfügen" value="${esc(geminiKeyLaden())}" autocomplete="off">
-      <button class="btn btn-primary" onclick="geminiKeySpeichern()">Speichern</button>
-    </div>
-    <div id="gemini-key-status" style="font-size:.76rem;margin-top:.5rem;font-weight:600;color:${geminiAktiv()?'var(--gruen)':'var(--g500)'}">${geminiAktiv()?'✓ KI aktiv':'Noch kein Schlüssel — Assistent antwortet lokal.'}</div>
-    <div class="info-box blau" style="margin-top:.6rem"><span class="ib-icon">🔒</span><div class="ib-text">Datenschutz: Chat-Fragen und gescannte Dokumente werden zur Beantwortung an Google Gemini gesendet. Schick keine sensiblen Originaldaten, wenn du das nicht möchtest.</div></div>
+    <div class="einst-gruppe-titel">🤖 KI-Assistent</div>
+    ${geminiAktiv()
+      ? '<div class="info-box gruen"><span class="ib-icon">✓</span><div class="ib-text"><strong>KI ist aktiv.</strong> Der Familien-Assistent antwortet intelligent — du musst nichts einrichten.</div></div>'
+      : '<div class="info-box blau"><span class="ib-icon">ℹ️</span><div class="ib-text">Der intelligente KI-Assistent ist serverseitig noch nicht aktiviert. Bis dahin antwortet der Assistent lokal. <em>(Eigentümer: unten den KI-Server eintragen.)</em></div></div>'}
+    <details style="margin-top:.65rem">
+      <summary style="cursor:pointer;font-weight:700;font-size:.85rem;color:var(--g700)">Erweitert · für Entwickler/Eigentümer</summary>
+      <div style="margin-top:.7rem">
+        <label style="font-size:.8rem;font-weight:700;display:block">KI-Server (Proxy-URL) — empfohlen für die Veröffentlichung</label>
+        <div style="font-size:.74rem;color:var(--g500);margin:.25rem 0 .45rem">Dein Schlüssel liegt sicher auf dem Server, Nutzer tragen nichts ein. Einrichtung: Ordner <code>ki-proxy/</code> im Projekt (kostenlos via Vercel).</div>
+        <div style="display:flex;gap:.5rem">
+          <input type="text" id="ki-proxy-input" class="reg-input" style="flex:1" placeholder="https://dein-proxy.vercel.app/api/gemini" value="${esc(kiProxyURLGespeichert())}" autocomplete="off">
+          <button class="btn btn-primary" onclick="kiProxySpeichern()">OK</button>
+        </div>
+        <label style="font-size:.8rem;font-weight:700;margin-top:.9rem;display:block">Oder direkter Gemini-Schlüssel — nur zum Testen, NICHT für den Verkauf</label>
+        <div style="font-size:.74rem;color:var(--g500);margin:.25rem 0 .45rem">Schlüssel würde im Browser sichtbar. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Schlüssel holen</a></div>
+        <div style="display:flex;gap:.5rem">
+          <input type="password" id="gemini-key-input" class="reg-input" style="flex:1" placeholder="Gemini API-Schlüssel" value="${esc(geminiKeyLaden())}" autocomplete="off">
+          <button class="btn btn-outline" onclick="geminiKeySpeichern()">OK</button>
+        </div>
+        <div id="gemini-key-status" style="font-size:.74rem;margin-top:.45rem;color:var(--g500)">${geminiAktiv()?'✓ KI aktiv':'inaktiv'}</div>
+      </div>
+    </details>
+    <div class="info-box blau" style="margin-top:.6rem"><span class="ib-icon">🔒</span><div class="ib-text">Datenschutz: Chat-Fragen und gescannte Dokumente werden zur Beantwortung an die KI (Google Gemini) gesendet.</div></div>
   </div>
 
   <!-- Dashboard-Karten -->
