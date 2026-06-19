@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Datenschutzerklärung — FamilienApp</title>
+  <meta name="robots" content="index, follow" />
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6; color: #1f2937; max-width: 760px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.15rem; margin-top: 2rem; }
+    a { color: #4F46E5; }
+    .hinweis { background:#D1FAE5; padding:.85rem; border-radius:.5rem; border-left:4px solid #059669; margin:1rem 0; }
+    ul { padding-left: 1.25rem; }
+    footer { margin-top: 3rem; font-size: .85rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <h1>Datenschutzerklärung</h1>
+  <p class="hinweis">
+    <strong>✓ Privacy-First:</strong> Ihre persönlichen Daten (Profil, Termine, Listen, Fotos) speichert die App ausschließlich auf Ihrem eigenen Gerät (localStorage) — KEIN Tracking, KEINE Analytik, KEINE Cookies von uns. <strong>Einzige Ausnahme:</strong> Wenn Sie den KI-Assistenten nutzen, werden Ihre Eingaben zur Verarbeitung an Google übertragen (Details unter Punkt 4).
+  </p>
+
+  <h2>1. Verantwortliche Stelle</h2>
+  <p>[Vorname Nachname]<br>[Straße &amp; Hausnummer]<br>[PLZ Ort]<br>E-Mail: marcelfehse22@gmx.de</p>
+
+  <h2>2. Welche Daten werden verarbeitet?</h2>
+  <p><strong>Auf Ihrem Gerät gespeichert (localStorage):</strong></p>
+  <ul>
+    <li>Profil-Daten: Vorname, PLZ, Bundesland, Anzahl/Alter Kinder</li>
+    <li>Standort-Koordinaten (nur wenn Sie GPS verwenden)</li>
+    <li>Termine, Einkaufslisten, To-Dos, Checklisten-Fortschritt</li>
+    <li>Eigene Rezepte, Familienmitglieder, Lieblings-Bereiche, App-Einstellungen</li>
+    <li>Eingestelltes Familienfoto (als Daten-URL) und Dokumente im Familienordner</li>
+    <li>Aktivierte Lizenz-Codes</li>
+  </ul>
+  <p><strong>Diese Daten verlassen niemals Ihr Gerät.</strong> Wenn Sie die App löschen, sind sie weg.</p>
+
+  <h2>3. Externe Dienste</h2>
+  <p>Beim Nutzen bestimmter Funktionen werden Anfragen an externe Server gesendet. Die Anbieter erhalten dann Ihre IP-Adresse:</p>
+  <ul>
+    <li><strong>OpenStreetMap (Karte):</strong> tile.openstreetmap.org — bei Anzeige der Karte</li>
+    <li><strong>Nominatim (Geocoding):</strong> nominatim.openstreetmap.org — bei Adress-Suche</li>
+    <li><strong>Overpass API:</strong> overpass-api.de — bei Umgebungssuche</li>
+    <li><strong>OSRM (Routing):</strong> router.project-osrm.org — bei Routenberechnung</li>
+    <li><strong>Bundesagentur für Arbeit:</strong> arbeitsagentur.de — bei Job-Suche</li>
+    <li><strong>RSS-Feeds (News):</strong> tagesschau.de, sportschau.de, kicker.de etc.</li>
+    <li><strong>CORS-Proxies:</strong> allorigins.win, corsproxy.io — als technische Vermittler</li>
+    <li><strong>Bilder:</strong> images.unsplash.com, images.pexels.com</li>
+    <li><strong>QR-Code:</strong> api.qrserver.com</li>
+  </ul>
+  <p>Die genannten Anbieter haben eigene Datenschutzerklärungen. Wir empfehlen, diese zu prüfen.</p>
+
+  <h2>4. KI-Assistent (Google Gemini)</h2>
+  <p>Die App enthält einen optionalen KI-Assistenten. Er ist nur aktiv, wenn Sie ihn bewusst nutzen. Stellen Sie eine Frage im Chat oder schicken ein Dokument-Foto zum Erklären, werden diese Eingaben zur Verarbeitung an Google übertragen:</p>
+  <ul>
+    <li><strong>Anbieter:</strong> Google Ireland Ltd. / Google LLC — Dienst „Gemini API". Die App ruft Google nicht direkt, sondern über einen eigenen Server-Proxy, der den Zugangsschlüssel geheim hält.</li>
+    <li><strong>Was übertragen wird:</strong> Ihre Chat-Eingaben, von Ihnen hochgeladene Dokument-Fotos sowie ein technischer Kontext (z. B. heutiges Datum, ungefähre Region, Titel anstehender Termine/Aufgaben), damit die Antwort passt.</li>
+    <li><strong>Zweck:</strong> Erzeugung der KI-Antwort. Eine Übertragung erfolgt ausschließlich auf Ihre aktive Eingabe hin — nie im Hintergrund.</li>
+    <li><strong>Server-Standort:</strong> Die Verarbeitung kann auf Servern außerhalb der EU (insbesondere in den USA) erfolgen.</li>
+  </ul>
+  <p><strong>Bitte geben Sie keine sensiblen personenbezogenen Daten</strong> (vollständige Namen, Adressen, Geburtsdaten, Konto- oder Gesundheitsdaten) in den Assistenten ein oder fotografieren sie — die App weist vor der Eingabe darauf hin.</p>
+  <p>Rechtsgrundlage ist Ihre Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die Sie durch das aktive Nutzen des Assistenten erteilen. Zusätzlich gelten die <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Datenschutzbestimmungen von Google</a>. Nutzen Sie den Assistenten nicht, werden keine dieser Daten übertragen.</p>
+
+  <h2>5. Geräte-Berechtigungen</h2>
+  <ul>
+    <li><strong>Standort:</strong> Wird nur abgefragt, wenn Sie auf „GPS" klicken. Nutzung lokal — der Standort geht an externe Karten-APIs (nicht an uns).</li>
+    <li><strong>Kamera/Fotos:</strong> Nur beim Hochladen eines Familienfotos oder eines Dokuments. Wird lokal gespeichert; an die KI nur, wenn Sie ein Dokument zum Erklären senden.</li>
+  </ul>
+
+  <h2>6. Ihre Rechte (DSGVO)</h2>
+  <p>Sie haben jederzeit das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung Ihrer Daten. Da wir keine Daten speichern, können Sie diese Rechte selbst ausüben:</p>
+  <ul>
+    <li>Daten ansehen: Einstellungen → „Daten exportieren"</li>
+    <li>Daten löschen: Einstellungen → „Alles löschen &amp; abmelden"</li>
+    <li>App-Daten komplett entfernen: Browser-Cache leeren oder PWA deinstallieren</li>
+  </ul>
+
+  <h2>7. Cookies</h2>
+  <p>Wir verwenden keine Tracking-Cookies. Lediglich technisch notwendiger localStorage zur Speicherung Ihrer Einstellungen auf Ihrem Gerät.</p>
+
+  <h2>8. Kontakt für Datenschutz</h2>
+  <p>Bei Fragen zum Datenschutz: marcelfehse22@gmx.de</p>
+
+  <footer>
+    <p>FamilienApp — <a href="./">zur App</a>. Diese Seite dient als öffentlich erreichbare Datenschutzerklärung (z. B. für App Store / Google Play).</p>
+  </footer>
+</body>
+</html>

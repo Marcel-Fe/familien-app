@@ -23,6 +23,7 @@ cloudflared.exe
 /screenshot.mjs
 /splash-test.mjs
 /ss*.mjs
+/store-screenshots.mjs
 /test-*.mjs
 /ux-pruefung.mjs
 /surge-deploy.js
