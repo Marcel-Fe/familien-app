@@ -5,7 +5,9 @@
 // Deploy: siehe ../README.md  (kostenlos, ca. 5 Minuten)
 // ENV-Variable setzen: GEMINI_API_KEY = dein Google-Gemini-Schlüssel
 
-const MODEL = 'gemini-2.0-flash';
+// Mehrere Modelle in Reihenfolge — faellt ein Modell weg (404), wird das naechste probiert.
+// So bricht der Dienst nicht, wenn Google ein Modell abschaltet.
+const MODELS = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash-001'];
 // Optional: auf deine App-Domain einschränken (empfohlen, sobald die App live ist).
 const ERLAUBTE_ORIGINS = ['https://marcel-fe.github.io', 'http://localhost:8000'];
 
@@ -23,14 +25,21 @@ export default async function handler(req, res) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return res.status(500).json({ error: 'GEMINI_API_KEY ist nicht gesetzt (ENV-Variable).' });
 
-  try {
-    const upstream = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body || {}) }
-    );
-    const data = await upstream.json();
-    return res.status(upstream.status).json(data);
-  } catch (e) {
-    return res.status(502).json({ error: 'Verbindung zur KI fehlgeschlagen.' });
+  const body = JSON.stringify(req.body || {});
+  let letzte = { status: 502, data: { error: 'Verbindung zur KI fehlgeschlagen.' } };
+  for (const model of MODELS) {
+    try {
+      const upstream = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+      );
+      const data = await upstream.json();
+      // Modell weg/unbekannt → naechstes probieren. Sonst (Erfolg oder echter Fehler) zurueckgeben.
+      if (upstream.status === 404) { letzte = { status: 404, data }; continue; }
+      return res.status(upstream.status).json(data);
+    } catch (e) {
+      letzte = { status: 502, data: { error: 'Verbindung zur KI fehlgeschlagen.' } };
+    }
   }
+  return res.status(letzte.status).json(letzte.data);
 }
