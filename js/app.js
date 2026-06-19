@@ -3680,7 +3680,7 @@ function renderDashboardD7() {
       <span class="zen-premium-ic">⭐</span>
       <div class="zen-premium-txt">
         <div class="zen-premium-titel">FamilienApp Premium</div>
-        <div class="zen-premium-sub">KI-Assistent, Familienordner & mehr — ab 9,99 € einmalig</div>
+        <div class="zen-premium-sub">KI-Assistent, Familienordner & mehr — ab 4,99 €/Monat</div>
       </div>
       <span class="zen-premium-pfeil">›</span>
     </button>`}
@@ -15265,7 +15265,7 @@ function renderLizenz() {
   <div class="card">
     <div style="font-weight:800;margin-bottom:.65rem">Ihre Premium-Vorteile</div>
     <ul style="line-height:1.9;font-size:.9rem">
-      <li>✓ Werbefrei für immer</li>
+      <li>✓ Werbefrei</li>
       <li>✓ Daten-Export & Import</li>
       <li>✓ Eigene Rezepte unbegrenzt im Kochbuch</li>
       <li>✓ Bevorzugter Support</li>
@@ -15284,34 +15284,34 @@ function renderLizenz() {
   </div>
 
   <div class="card" style="margin-top:1rem;border-left:4px solid #EC4899">
-    <h3 style="margin-bottom:.5rem">Premium kaufen</h3>
+    <h3 style="margin-bottom:.5rem">Premium abonnieren</h3>
     <p style="font-size:.9rem;color:var(--g700);margin-bottom:.75rem">
-      Noch keine Lizenz? Premium dauerhaft freischalten:
+      Noch keine Lizenz? Premium im Abo freischalten — 14 Tage kostenlos testen, jederzeit kündbar:
     </p>
     <div class="grid-2">
       <div class="card" style="border-left:4px solid #4F46E5">
-        <div style="font-weight:800;font-size:1.1rem">Einmal-Zahlung</div>
-        <div style="font-size:1.6rem;font-weight:900;color:var(--p1);margin:.4rem 0">9,99 €</div>
-        <div style="font-size:.78rem;color:var(--g500)">Lebenslang nutzen</div>
+        <div style="font-weight:800;font-size:1.1rem">Monatlich</div>
+        <div style="font-size:1.6rem;font-weight:900;color:var(--p1);margin:.4rem 0">4,99 €<span style="font-size:.9rem;font-weight:700;color:var(--g500)"> / Monat</span></div>
+        <div style="font-size:.78rem;color:var(--g500)">14 Tage gratis testen · jederzeit kündbar</div>
         <ul style="font-size:.8rem;line-height:1.7;margin-top:.5rem">
           <li>✓ Alle Funktionen</li>
           <li>✓ Werbefrei</li>
-          <li>✓ Updates inklusive</li>
+          <li>✓ Bis 5 Familienmitglieder</li>
         </ul>
       </div>
       <div class="card" style="border-left:4px solid #EC4899">
-        <div style="font-weight:800;font-size:1.1rem">Familien-Lizenz</div>
-        <div style="font-size:1.6rem;font-weight:900;color:#EC4899;margin:.4rem 0">14,99 €</div>
-        <div style="font-size:.78rem;color:var(--g500)">Bis 5 Geräte</div>
+        <div style="font-weight:800;font-size:1.1rem">Jährlich</div>
+        <div style="font-size:1.6rem;font-weight:900;color:#EC4899;margin:.4rem 0">49,99 €<span style="font-size:.9rem;font-weight:700;color:var(--g500)"> / Jahr</span></div>
+        <div style="font-size:.78rem;color:var(--g500)">Günstigster Preis · −17 %</div>
         <ul style="font-size:.8rem;line-height:1.7;margin-top:.5rem">
-          <li>✓ Wie Einmal-Zahlung</li>
-          <li>✓ 5 Familienmitglieder</li>
-          <li>✓ Cloud-Sync (geplant)</li>
+          <li>✓ Wie Monatlich</li>
+          <li>✓ Bis 5 Familienmitglieder</li>
+          <li>✓ Günstigster Preis</li>
         </ul>
       </div>
     </div>
     <p style="font-size:.78rem;color:var(--g500);margin-top:.85rem;text-align:center">
-      Kauf-Integration wird in Kürze verfügbar sein. Bei Interesse: <a href="mailto:[E-Mail]?subject=Premium-Lizenz">Kontakt aufnehmen</a>
+      Kauf-Integration wird in Kürze verfügbar sein. Bei Interesse: <a href="mailto:[E-Mail]?subject=Premium-Abo">Kontakt aufnehmen</a>
     </p>
   </div>
 
@@ -15325,7 +15325,8 @@ function renderLizenz() {
   <div class="card" style="margin-top:1rem;background:var(--g50)">
     <h3 style="margin-bottom:.5rem;font-size:.95rem">FAQ</h3>
     <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Wie bekomme ich einen Lizenz-Code?</summary><p style="font-size:.85rem;margin-top:.4rem">Aktuell läuft die Bezahlung manuell — bitte E-Mail an [Kontakt-Adresse]. Eine integrierte Bezahlung folgt.</p></details>
-    <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Funktioniert die Lizenz auf mehreren Geräten?</summary><p style="font-size:.85rem;margin-top:.4rem">Einmal-Lizenz: 1 Gerät. Familien-Lizenz: bis zu 5 Geräte (gleicher Code mehrfach eingeben).</p></details>
+    <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Funktioniert die Lizenz auf mehreren Geräten?</summary><p style="font-size:.85rem;margin-top:.4rem">Das Premium-Abo gilt für deine Familie — bis zu 5 Geräte (gleicher Code mehrfach eingeben).</p></details>
+    <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Kann ich jederzeit kündigen?</summary><p style="font-size:.85rem;margin-top:.4rem">Ja. Das Abo ist monatlich oder jährlich kündbar — nach dem Ende bleibt die kostenlose Basis-Version voll nutzbar.</p></details>
     <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Was passiert, wenn ich das Gerät wechsle?</summary><p style="font-size:.85rem;margin-top:.4rem">Code einfach auf neuem Gerät neu eingeben. Profil-Daten via Einstellungen → Daten exportieren übertragen.</p></details>
   </div>`;
 }
