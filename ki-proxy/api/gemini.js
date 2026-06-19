@@ -7,7 +7,7 @@
 
 const MODEL = 'gemini-2.0-flash';
 // Optional: auf deine App-Domain einschränken (empfohlen, sobald die App live ist).
-const ERLAUBTE_ORIGINS = ['*']; // z. B. ['https://marcel-fe.github.io']
+const ERLAUBTE_ORIGINS = ['https://marcel-fe.github.io', 'http://localhost:8000'];
 
 export default async function handler(req, res) {
   const origin = req.headers.origin || '';

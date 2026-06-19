@@ -4080,7 +4080,7 @@ const GEMINI_KEY_LS = 'familienapp_gemini_key';
 const KI_PROXY_LS = 'familienapp_ki_proxy';
 // PROFI-MODUS (für Verkauf): hier die deployte Proxy-URL eintragen → alle Nutzer bekommen die KI,
 // ohne eigenen Schlüssel. Schlüssel liegt sicher als ENV-Variable auf dem Server. Siehe ki-proxy/README.md.
-const KI_PROXY_DEFAULT = '';
+const KI_PROXY_DEFAULT = 'https://familien-app-chi.vercel.app/api/gemini';
 function geminiKeyLaden() { try { return localStorage.getItem(GEMINI_KEY_LS) || ''; } catch { return ''; } }
 function geminiKeySetzen(v) { try { (v && v.trim()) ? localStorage.setItem(GEMINI_KEY_LS, v.trim()) : localStorage.removeItem(GEMINI_KEY_LS); } catch {} }
 function kiProxyURLGespeichert() { try { return (localStorage.getItem(KI_PROXY_LS) || '').trim(); } catch { return ''; } }
