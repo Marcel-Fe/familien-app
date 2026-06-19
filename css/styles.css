@@ -6848,6 +6848,13 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
 .as-akt { background: #fff; border: 1px solid #E6E8F2; border-radius: 14px; padding: .85rem; font-size: .9rem; font-weight: 700; color: #1E2340; cursor: pointer; box-shadow: 0 3px 10px rgba(30,35,64,.05); transition: transform .12s ease; }
 .as-akt:active { transform: scale(.97); }
 .as-frage-titel { font-size: 1.02rem; font-weight: 800; color: #1E2340; margin: .4rem .1rem .65rem; }
+.as-frage-kopf { display: flex; align-items: center; justify-content: space-between; margin: .4rem .1rem .65rem; }
+.as-frage-kopf .as-frage-titel { margin: 0; }
+.as-loeschen {
+  padding: .28rem .6rem; font-size: .78rem; font-weight: 600; color: #B91C1C;
+  background: #FEF2F2; border: 1px solid #FECACA; border-radius: 999px; cursor: pointer;
+}
+.as-loeschen:hover { background: #FEE2E2; }
 
 @media (prefers-reduced-motion: reduce) {
   .bn-center:active, .as-akt:active, .as-stat:active, .bn-center.aktiv { transform: none; }

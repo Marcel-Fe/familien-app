@@ -4012,7 +4012,10 @@ function renderAssistent() {
       <button class="as-akt" onclick="zuSektion('familienchat')">💬 Familie</button>
     </div>
 
-    <div class="as-frage-titel">💬 Sprich mit mir</div>
+    <div class="as-frage-kopf">
+      <span class="as-frage-titel">💬 Sprich mit mir</span>
+      <button class="as-loeschen" onclick="asVerlaufLoeschen()" title="Chat-Verlauf löschen">🗑️ Verlauf löschen</button>
+    </div>
     <div class="as-chat" id="as-chat">${asVerlaufHTML()}</div>
     <div class="as-eingabe">
       <label class="as-foto-btn" title="Dokument scannen">📄<input type="file" accept="image/*" onchange="asDokumentScan(this)" style="display:none"></label>
@@ -4209,7 +4212,31 @@ async function asLiveKontext(frage) {
 }
 
 // --- Dialog-Zustand + Rendering (echtes Chat-Erlebnis) ---
-function asVerlauf() { if (!Array.isArray(state.asVerlauf)) state.asVerlauf = []; return state.asVerlauf; }
+const AS_VERLAUF_LS = 'familienapp_as_verlauf';
+function asVerlauf() {
+  if (!Array.isArray(state.asVerlauf)) {
+    try { state.asVerlauf = JSON.parse(localStorage.getItem(AS_VERLAUF_LS) || '[]'); } catch { state.asVerlauf = []; }
+    if (!Array.isArray(state.asVerlauf)) state.asVerlauf = [];
+  }
+  return state.asVerlauf;
+}
+// Verlauf dauerhaft sichern (wie ChatGPT). Bilder werden nicht persistiert (Speicher schonen),
+// nur die letzten 50 Nachrichten — verhindert localStorage-Überlauf.
+function asVerlaufSpeichern() {
+  try {
+    const schlank = asVerlauf().slice(-50).map(m => ({ role: m.role, text: m.text || '', bild: null }));
+    localStorage.setItem(AS_VERLAUF_LS, JSON.stringify(schlank));
+  } catch {}
+}
+// Gesamten Chat löschen ("Neuer Chat").
+function asVerlaufLoeschen() {
+  if (!asVerlauf().length) { toast('Der Chat ist bereits leer.'); return; }
+  state.asVerlauf = [];
+  try { localStorage.removeItem(AS_VERLAUF_LS); } catch {}
+  if (window.speechSynthesis) { try { speechSynthesis.cancel(); } catch {} }
+  asChatRender();
+  toast('🗑️ Chat-Verlauf gelöscht');
+}
 function asVerlaufHTML() {
   const v = asVerlauf();
   if (v.length === 0) {
@@ -4236,7 +4263,7 @@ function asVorlesen(i) {
   if (typeof kiTextVorlesen === 'function') kiTextVorlesen(m.text);
 }
 function asChatRender() { const c = el('as-chat'); if (c) { c.innerHTML = asVerlaufHTML(); c.scrollTop = c.scrollHeight; } }
-function asNachricht(role, text, bild) { asVerlauf().push({ role, text, bild: bild || null }); asChatRender(); }
+function asNachricht(role, text, bild) { asVerlauf().push({ role, text, bild: bild || null }); asVerlaufSpeichern(); asChatRender(); }
 function asTippt(on) {
   const c = el('as-chat'); if (!c) return;
   let t = el('as-tippt');
