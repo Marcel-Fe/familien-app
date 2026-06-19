@@ -11211,18 +11211,78 @@ function familienfotoSetzen(url) {
 function familienfotoUpload(input) {
   const file = input.files?.[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) { toast('⚠️ Foto zu groß (max. 2 MB).'); return; }
+  if (file.size > 12 * 1024 * 1024) { toast('⚠️ Foto zu groß (max. 12 MB).'); return; }
   if (!file.type.startsWith('image/')) { toast('⚠️ Nur Bilddateien'); return; }
   const reader = new FileReader();
-  reader.onload = e => {
-    const einst = einstellungenLaden();
-    einst.familienfoto = e.target.result;
-    einstellungenSpeichern(einst);
-    familienfotoAnwenden(e.target.result);
-    render();
-  };
+  reader.onload = e => fotoZuschneidenOeffnen(e.target.result);
   reader.onerror = () => toast('⚠️ Foto konnte nicht gelesen werden');
   reader.readAsDataURL(file);
+  input.value = ''; // gleiches Foto erneut wählbar
+}
+
+// ===== FAMILIENFOTO ZUSCHNEIDEN (runder Ausschnitt: verschieben + zoomen) =====
+let _fotoCrop = null;
+function fotoZuschneidenOeffnen(dataUrl) {
+  const img = new Image();
+  img.onload = () => {
+    document.getElementById('foto-crop-overlay')?.remove();
+    const S = 280;
+    const ov = document.createElement('div');
+    ov.id = 'foto-crop-overlay';
+    ov.className = 'foto-crop-overlay';
+    ov.innerHTML = `
+      <div class="foto-crop-box">
+        <div class="foto-crop-titel">Foto anpassen</div>
+        <div class="foto-crop-hint">Ziehen zum Verschieben · Regler zum Zoomen</div>
+        <div class="foto-crop-buehne" style="width:${S}px;height:${S}px">
+          <canvas id="foto-crop-canvas" width="${S}" height="${S}"></canvas>
+          <div class="foto-crop-kreis"></div>
+        </div>
+        <input id="foto-crop-zoom" type="range" min="1" max="3" step="0.01" value="1" class="foto-crop-zoom" aria-label="Zoom">
+        <div class="foto-crop-aktionen">
+          <button class="btn btn-outline" onclick="fotoZuschneidenAbbrechen()">Abbrechen</button>
+          <button class="btn btn-primary" onclick="fotoZuschneidenUebernehmen()">Übernehmen</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    const canvas = document.getElementById('foto-crop-canvas');
+    _fotoCrop = { img, S, ctx: canvas.getContext('2d'), baseScale: S / Math.min(img.naturalWidth, img.naturalHeight), zoom: 1, ox: 0, oy: 0, drag: null };
+    fotoCropZeichnen(true);
+    const zoomInp = document.getElementById('foto-crop-zoom');
+    zoomInp.oninput = () => { _fotoCrop.zoom = parseFloat(zoomInp.value); fotoCropZeichnen(false); };
+    canvas.style.touchAction = 'none';
+    canvas.onpointerdown = e => { _fotoCrop.drag = { x: e.clientX, y: e.clientY, ox: _fotoCrop.ox, oy: _fotoCrop.oy }; try { canvas.setPointerCapture(e.pointerId); } catch {} };
+    canvas.onpointermove = e => { if (!_fotoCrop.drag) return; _fotoCrop.ox = _fotoCrop.drag.ox + (e.clientX - _fotoCrop.drag.x); _fotoCrop.oy = _fotoCrop.drag.oy + (e.clientY - _fotoCrop.drag.y); fotoCropZeichnen(false); };
+    canvas.onpointerup = canvas.onpointercancel = () => { _fotoCrop.drag = null; };
+  };
+  img.onerror = () => toast('⚠️ Foto konnte nicht geladen werden');
+  img.src = dataUrl;
+}
+function fotoCropZeichnen(zentrieren) {
+  const c = _fotoCrop; if (!c) return;
+  const eff = c.baseScale * c.zoom;
+  const dw = c.img.naturalWidth * eff, dh = c.img.naturalHeight * eff;
+  if (zentrieren) { c.ox = (c.S - dw) / 2; c.oy = (c.S - dh) / 2; }
+  // Bild muss den Ausschnitt immer vollständig füllen
+  c.ox = Math.min(0, Math.max(c.S - dw, c.ox));
+  c.oy = Math.min(0, Math.max(c.S - dh, c.oy));
+  c.ctx.clearRect(0, 0, c.S, c.S);
+  c.ctx.drawImage(c.img, c.ox, c.oy, dw, dh);
+}
+function fotoZuschneidenAbbrechen() {
+  document.getElementById('foto-crop-overlay')?.remove();
+  _fotoCrop = null;
+}
+function fotoZuschneidenUebernehmen() {
+  const c = _fotoCrop; if (!c) return;
+  const OUT = 480, k = OUT / c.S, eff = c.baseScale * c.zoom;
+  const cv = document.createElement('canvas'); cv.width = OUT; cv.height = OUT;
+  const cx = cv.getContext('2d');
+  cx.drawImage(c.img, c.ox * k, c.oy * k, c.img.naturalWidth * eff * k, c.img.naturalHeight * eff * k);
+  let url;
+  try { url = cv.toDataURL('image/jpeg', 0.85); } catch { toast('⚠️ Zuschneiden fehlgeschlagen'); return; }
+  fotoZuschneidenAbbrechen();
+  familienfotoSetzen(url);
 }
 
 function schriftSetzen(groesse) {

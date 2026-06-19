@@ -2201,6 +2201,28 @@ body {
   background: rgba(79,70,229,.45); color: #fff;
   font-size: 1.4rem; font-weight: 800; border-radius: 10px;
 }
+/* Familienfoto zuschneiden (runder Ausschnitt) */
+.foto-crop-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(15,17,33,.72); display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.foto-crop-box {
+  background: #fff; border-radius: 18px; padding: 1.1rem 1.1rem 1rem;
+  box-shadow: 0 16px 50px rgba(0,0,0,.4); max-width: 340px; width: 100%; text-align: center;
+}
+.foto-crop-titel { font-weight: 800; font-size: 1.05rem; color: #1E2340; }
+.foto-crop-hint { font-size: .8rem; color: #8A90A6; margin: .25rem 0 .8rem; }
+.foto-crop-buehne {
+  position: relative; overflow: hidden; border-radius: 12px;
+  margin: 0 auto; touch-action: none; background: #1E2340;
+}
+.foto-crop-buehne canvas { display: block; cursor: grab; }
+.foto-crop-buehne canvas:active { cursor: grabbing; }
+.foto-crop-kreis { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 2000px rgba(0,0,0,.45); pointer-events: none; }
+.foto-crop-zoom { width: 100%; margin: .9rem 0 .2rem; accent-color: #4F46E5; }
+.foto-crop-aktionen { display: flex; gap: .6rem; margin-top: .6rem; }
+.foto-crop-aktionen .btn { flex: 1; }
 /* Splash mit Familienfoto als Hintergrund */
 #splash.hat-foto {
   background-image:
