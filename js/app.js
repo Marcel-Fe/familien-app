@@ -4095,31 +4095,58 @@ function geminiKeySpeichern() {
   if (st) { st.textContent = v.trim() ? '✓ KI aktiv' : 'Noch kein Schlüssel — Assistent antwortet lokal.'; st.style.color = v.trim() ? 'var(--gruen)' : 'var(--g500)'; }
 }
 
+function geminiTextAus(data) {
+  return (data?.candidates?.[0]?.content?.parts || []).map(p => p.text).filter(Boolean).join('').trim();
+}
+
 async function geminiAnfrage(contents, systemPrompt) {
   const proxy = kiProxyURL();
   const key = geminiKeyLaden();
   if (!proxy && !key) throw new Error('kein-key');
   const body = { contents, generationConfig: { temperature: 0.6, maxOutputTokens: 900 } };
   if (systemPrompt) body.system_instruction = { parts: [{ text: systemPrompt }] };
-  // Profi: über eigenen Server-Proxy (Schlüssel bleibt geheim). Sonst: direkt mit Test-Schlüssel.
-  const url = proxy || `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
-  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  if (!res.ok) {
-    if (res.status === 400 || res.status === 403) throw new Error('key-ungueltig');
-    if (res.status === 429) throw new Error('ausgelastet');
-    throw new Error('http-' + res.status);
+
+  // Profi-Weg: eigener Server-Proxy (Schlüssel bleibt geheim).
+  if (proxy) {
+    const res = await fetch(proxy, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error('GEMINI:' + (data?.error?.message || data?.error || ('Server-Fehler ' + res.status)));
+    const t = geminiTextAus(data);
+    if (!t) throw new Error('GEMINI:leere Antwort vom Server');
+    return t;
   }
-  const data = await res.json();
-  const text = (data?.candidates?.[0]?.content?.parts || []).map(p => p.text).filter(Boolean).join('');
-  if (!text) throw new Error('leer');
-  return text.trim();
+
+  // Direkt mit Test-Schlüssel: mehrere Modelle durchprobieren, echte Google-Meldung melden.
+  const modelle = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-1.5-flash'];
+  let letzterFehler = 'unbekannt';
+  for (const m of modelle) {
+    let res, data;
+    try {
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`,
+        { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      data = await res.json().catch(() => ({}));
+    } catch (e) { letzterFehler = 'Netzwerkfehler — Internet prüfen'; continue; }
+    if (res.ok) {
+      const t = geminiTextAus(data);
+      if (t) return t;
+      letzterFehler = 'leere Antwort'; continue;
+    }
+    const msg = data?.error?.message || ('HTTP ' + res.status);
+    letzterFehler = msg;
+    // Ungültiger Schlüssel / Rechte: sofort melden (nächstes Modell hilft nicht).
+    if (/API[_ ]?key not valid|API_KEY_INVALID|invalid.*key|PERMISSION_DENIED|not been used|disabled/i.test(msg)) {
+      throw new Error('KEY:' + msg);
+    }
+    // 404 (Modell unbekannt) / 429 (Kontingent): nächstes Modell probieren.
+  }
+  throw new Error('GEMINI:' + letzterFehler);
 }
 
 function geminiFehlerText(e) {
   const m = (e && e.message) || '';
-  if (m === 'key-ungueltig') return '⚠️ Der KI-Schlüssel scheint ungültig. Bitte in den Einstellungen prüfen.';
-  if (m === 'ausgelastet') return '⏳ Die KI ist gerade ausgelastet — versuch es gleich nochmal.';
-  if (m === 'kein-key') return 'ℹ️ Für intelligente Antworten bitte in den Einstellungen einen Gemini-Schlüssel eintragen.';
+  if (m === 'kein-key') return 'ℹ️ Für intelligente Antworten bitte in den Einstellungen einen Schlüssel/KI-Server eintragen.';
+  if (m.startsWith('KEY:')) return '⚠️ Google lehnt den Zugriff ab:\n„' + m.slice(4) + '"\n\nMeist: Schlüssel ungültig, oder die „Generative Language API" ist im Google-Projekt nicht aktiviert.';
+  if (m.startsWith('GEMINI:')) return '⚠️ Die KI antwortet nicht. Google meldet:\n„' + m.slice(7) + '"\n\nHäufige Ursachen: Tages-/Minuten-Kontingent erschöpft, oder die kostenlose Nutzung ist in deiner Region nur mit hinterlegtem Abrechnungskonto möglich.';
   return '⚠️ Verbindung zur KI fehlgeschlagen. Prüfe deine Internetverbindung.';
 }
 
@@ -4213,7 +4240,8 @@ async function asSenden() {
     asNachricht('model', antwort);
   } catch (e) {
     asTippt(false);
-    asNachricht('model', geminiAktiv() ? (geminiFehlerText(e) + '\n\n' + asLokaleAntwort(frage)) : asLokaleAntwort(frage));
+    // KI aktiv → echte Fehlermeldung zeigen (NICHT lokal abwimmeln). Nur ohne KI: lokaler Fallback.
+    asNachricht('model', geminiAktiv() ? geminiFehlerText(e) : asLokaleAntwort(frage));
   }
 }
 
