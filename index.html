@@ -31,14 +31,15 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="css/styles.css?v=113" />
+  <link rel="stylesheet" href="css/styles.css?v=114" />
 </head>
 <body>
 
   <!-- ===== Splash-Screen ===== -->
   <div id="splash" class="splash-overlay">
     <div class="splash-content">
-      <div class="splash-logo-wrap">
+      <img id="splash-foto" class="splash-foto versteckt" alt="Familienfoto" />
+      <div class="splash-logo-wrap" id="splash-logo-wrap">
         <svg class="splash-logo-svg" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="sLg" x1="0" y1="0" x2="1" y2="1">
@@ -175,8 +176,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="js/data.js?v=113"></script>
-  <script src="js/app.js?v=113"></script>
+  <script src="js/data.js?v=114"></script>
+  <script src="js/app.js?v=114"></script>
   <script>
     // Scroll-to-Top Button-Sichtbarkeit
     window.addEventListener('scroll', () => {
@@ -204,7 +205,7 @@
             nw.addEventListener('statechange', () => {
               if (nw.state === 'activated') {
                 caches.keys().then(keys => Promise.all(
-                  keys.filter(k => !k.includes('familienapp-v113')).map(k => caches.delete(k))
+                  keys.filter(k => !k.includes('familienapp-v114')).map(k => caches.delete(k))
                 )).then(() => location.reload());
               }
             });

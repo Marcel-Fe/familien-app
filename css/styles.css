@@ -2226,10 +2226,16 @@ body {
 /* Splash mit Familienfoto als Hintergrund */
 #splash.hat-foto {
   background-image:
-    linear-gradient(150deg, rgba(30,27,75,.74) 0%, rgba(109,40,217,.56) 55%, rgba(236,72,153,.5) 100%),
+    linear-gradient(150deg, rgba(30,27,75,.58) 0%, rgba(109,40,217,.42) 55%, rgba(236,72,153,.4) 100%),
     var(--familien-foto, none);
   background-size: cover;
   background-position: center;
+}
+/* Familienfoto als großer, klarer runder Avatar auf dem Splash */
+.splash-foto {
+  width: 140px; height: 140px; border-radius: 50%; object-fit: cover;
+  border: 4px solid rgba(255,255,255,.9); box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  margin-bottom: 1.1rem;
 }
 
 /* ===== News ===== */

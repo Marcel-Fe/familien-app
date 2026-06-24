@@ -121,6 +121,11 @@ window.addEventListener('DOMContentLoaded', () => {
       document.documentElement.style.setProperty('--familien-foto', `url('${String(einst.familienfoto).replace(/'/g, "\\'")}')`);
       const sp = document.getElementById('splash');
       if (sp) sp.classList.add('hat-foto');
+      // Foto als runden Avatar groß und klar auf dem Splash zeigen (statt nur dunkler Hintergrund)
+      const foto = document.getElementById('splash-foto');
+      const logo = document.getElementById('splash-logo-wrap');
+      if (foto) { foto.src = einst.familienfoto; foto.classList.remove('versteckt'); }
+      if (logo) logo.classList.add('versteckt');
     }
   } catch(e) {}
   setTimeout(splashSchliessen, 3000);
@@ -7949,8 +7954,8 @@ function renderKalender() {
     <div class="news-hero-inhalt">
       <div style="font-size:1.4rem;font-weight:800;margin-bottom:.3rem">Familien-Kalender</div>
       <div style="font-size:.85rem;opacity:.9">Alle Termine — pro Person filterbar · ${mitglieder.length} Familienmitglieder</div>
-      <button class="btn btn-primary btn-sm" style="margin-top:.6rem" onclick="kalenderTeilen('whatsapp')" title="Alle Termine als Liste über WhatsApp an die Familie senden">
-        📤 An Familie senden
+      <button class="btn btn-primary btn-sm" style="margin-top:.6rem" onclick="kalenderTeilen(navigator.share ? 'native' : 'whatsapp')" title="Den kompletten Kalender (alle Termine) an die Familie senden — sie tippen den Link an und haben alle Termine">
+        📤 Ganzen Kalender teilen
       </button>
     </div>
   </div>
@@ -11437,21 +11442,20 @@ function _stimmeBeste(pool, namensListe) {
 }
 
 function stimmeFuer(lang) {
+  if (!window.speechSynthesis) return null;
   const wahl = einstellungenLaden().stimme || 'auto';
-  if (wahl === 'auto' || !window.speechSynthesis) return null;
   const voices = window.speechSynthesis.getVoices() || [];
   if (!voices.length) return null;
+  const sprache = String(lang || 'de').slice(0, 2).toLowerCase();
+  const passend = voices.filter(v => (v.lang || '').toLowerCase().startsWith(sprache));
+  const pool = passend.length ? passend : voices;
   // Abwärtskompatibel: konkrete Stimme per Name gewählt
   const direkt = voices.find(v => v.name === wahl);
   if (direkt) return direkt;
-  // 'w' = weiblich, 'm' = männlich — beste verfügbare wählen
-  if (wahl === 'w' || wahl === 'm') {
-    const sprache = String(lang || 'de').slice(0, 2).toLowerCase();
-    const passend = voices.filter(v => (v.lang || '').toLowerCase().startsWith(sprache));
-    const pool = passend.length ? passend : voices;
-    return _stimmeBeste(pool, wahl === 'm' ? _STIMME_MAENNLICH : _STIMME_WEIBLICH);
-  }
-  return null;
+  // 'w' = weiblich, 'm' = männlich — beste passende wählen
+  if (wahl === 'w' || wahl === 'm') return _stimmeBeste(pool, wahl === 'm' ? _STIMME_MAENNLICH : _STIMME_WEIBLICH);
+  // 'auto' (Standard): automatisch die natürlichste verfügbare Stimme nehmen — kein Roboter-Standard mehr
+  return _stimmeBeste(pool, []);
 }
 // Auf eine SpeechSynthesisUtterance die gewählte Stimme anwenden
 function stimmeAnwenden(u) {
@@ -15041,7 +15045,7 @@ function renderImpressum() {
   <h3>Kontakt</h3>
   <p>
     Telefon: [Telefonnummer]<br>
-    E-Mail: [E-Mail-Adresse]
+    E-Mail: marcelfehse22@gmx.de
   </p>
   <h3>Umsatzsteuer-ID</h3>
   <p>Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: [USt-IdNr. einfügen, falls vorhanden]</p>
@@ -15130,7 +15134,7 @@ function renderDatenschutz() {
   <p>Wir verwenden keine Tracking-Cookies. Lediglich technisch notwendiger localStorage zur Speicherung Ihrer Einstellungen auf Ihrem Gerät.</p>
 
   <h3>8. Kontakt für Datenschutz</h3>
-  <p>Bei Fragen zum Datenschutz: [E-Mail-Adresse aus Impressum]</p>
+  <p>Bei Fragen zum Datenschutz: marcelfehse22@gmx.de</p>
 
   <h3>9. Stand der Datenschutzerklärung</h3>
   <p>Diese Datenschutzerklärung wurde zuletzt aktualisiert: ${new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})}.</p>`;
@@ -15358,7 +15362,7 @@ function renderLizenz() {
       </div>
     </div>
     <p style="font-size:.78rem;color:var(--g500);margin-top:.85rem;text-align:center">
-      Kauf-Integration wird in Kürze verfügbar sein. Bei Interesse: <a href="mailto:[E-Mail]?subject=Premium-Abo">Kontakt aufnehmen</a>
+      Kauf-Integration wird in Kürze verfügbar sein. Bei Interesse: <a href="mailto:marcelfehse22@gmx.de?subject=Premium-Abo">Kontakt aufnehmen</a>
     </p>
   </div>
 
@@ -15371,7 +15375,7 @@ function renderLizenz() {
 
   <div class="card" style="margin-top:1rem;background:var(--g50)">
     <h3 style="margin-bottom:.5rem;font-size:.95rem">FAQ</h3>
-    <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Wie bekomme ich einen Lizenz-Code?</summary><p style="font-size:.85rem;margin-top:.4rem">Aktuell läuft die Bezahlung manuell — bitte E-Mail an [Kontakt-Adresse]. Eine integrierte Bezahlung folgt.</p></details>
+    <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Wie bekomme ich einen Lizenz-Code?</summary><p style="font-size:.85rem;margin-top:.4rem">Aktuell läuft die Bezahlung manuell — bitte E-Mail an marcelfehse22@gmx.de. Eine integrierte Bezahlung folgt.</p></details>
     <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Funktioniert die Lizenz auf mehreren Geräten?</summary><p style="font-size:.85rem;margin-top:.4rem">Das Premium-Abo gilt für deine Familie — bis zu 5 Geräte (gleicher Code mehrfach eingeben).</p></details>
     <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Kann ich jederzeit kündigen?</summary><p style="font-size:.85rem;margin-top:.4rem">Ja. Das Abo ist monatlich oder jährlich kündbar — nach dem Ende bleibt die kostenlose Basis-Version voll nutzbar.</p></details>
     <details style="margin:.4rem 0"><summary style="cursor:pointer;font-weight:700">Was passiert, wenn ich das Gerät wechsle?</summary><p style="font-size:.85rem;margin-top:.4rem">Code einfach auf neuem Gerät neu eingeben. Profil-Daten via Einstellungen → Daten exportieren übertragen.</p></details>
