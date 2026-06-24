@@ -5987,63 +5987,6 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   color: #047857;
 }
 
-/* ===== Tiere & Pflanzen erkennen ===== */
-.erkennen-upload {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .25rem;
-  padding: 2rem 1rem;
-  border: 2px dashed var(--g200);
-  border-radius: 16px;
-  background: #F9FAFB;
-  cursor: pointer;
-  text-align: center;
-}
-.erkennen-upload-icon { font-size: 2.4rem; }
-.erkennen-upload-text { font-weight: 800; font-size: 1rem; }
-.erkennen-upload-sub { font-size: .82rem; color: var(--g500); }
-.erkennen-vorschau {
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: .75rem;
-  background: #000;
-}
-.erkennen-vorschau img {
-  display: block;
-  width: 100%;
-  max-height: 320px;
-  object-fit: contain;
-}
-.erkennen-aktionen {
-  display: flex;
-  gap: .5rem;
-}
-.erkennen-laden {
-  padding: 1.4rem 1rem;
-  text-align: center;
-  font-weight: 700;
-  color: var(--g500);
-}
-.erkennen-ergebnis {
-  background: #ECFDF5;
-  border: 1px solid #A7F3D0;
-  border-radius: 14px;
-  padding: .9rem 1rem;
-}
-.erkennen-ergebnis-titel {
-  font-weight: 800;
-  font-size: .95rem;
-  color: #047857;
-  margin-bottom: .4rem;
-}
-.erkennen-ergebnis-text {
-  font-size: .95rem;
-  line-height: 1.6;
-  color: #14532D;
-}
-.erkennen-ergebnis-text strong { color: #065F46; }
-
 /* ===== Erste Hilfe ===== */
 .eh-notruf {
   display: flex;
@@ -6877,6 +6820,28 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
   background: #FEF2F2; border: 1px solid #FECACA; border-radius: 999px; cursor: pointer;
 }
 .as-loeschen:hover { background: #FEE2E2; }
+/* Neuer-Chat-Knopf + Chat-Auswahl (wie ChatGPT) */
+.as-neuchat {
+  padding: .28rem .7rem; font-size: .78rem; font-weight: 700; color: #4F46E5;
+  background: #EEF0FE; border: 1px solid #DFE1FB; border-radius: 999px; cursor: pointer;
+}
+.as-neuchat:hover { background: #E0E3FC; }
+.as-chatleiste {
+  display: flex; gap: .4rem; overflow-x: auto; padding: .1rem .1rem .5rem;
+  -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+}
+.as-chatchip {
+  display: inline-flex; align-items: center; gap: .35rem; flex: 0 0 auto; max-width: 170px;
+  padding: .32rem .35rem .32rem .7rem; border-radius: 999px; cursor: pointer;
+  background: #F3F4F8; border: 1px solid #E5E7EE; color: #2A2F4A; font-size: .8rem;
+}
+.as-chatchip.aktiv { background: #EEF0FE; border-color: #C7CBF6; color: #3730A3; font-weight: 700; }
+.as-chatchip-t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.as-chatchip-x {
+  flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(0,0,0,.08); color: #555; font-size: .9rem; line-height: 1; display: grid; place-items: center;
+}
+.as-chatchip-x:hover { background: #FECACA; color: #B91C1C; }
 
 @media (prefers-reduced-motion: reduce) {
   .bn-center:active, .as-akt:active, .as-stat:active, .bn-center.aktiv { transform: none; }
