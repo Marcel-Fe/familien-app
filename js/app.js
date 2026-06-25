@@ -3639,12 +3639,12 @@ function renderDashboardD7() {
       <div class="zen-ki-kopf">
         <div class="zen-ki-bot">${kiRoboterSVG(50)}</div>
         <div class="zen-ki-txt">
-          <div class="zen-ki-titel">Familien-Assistent</div>
-          <div class="zen-ki-sub">Ich habe euren Tag schon vorbereitet — tippen für den Überblick.</div>
+          <div class="zen-ki-titel">KI-Assistent</div>
+          <div class="zen-ki-sub">Frag mich alles — Anträge, Termine, Tipps. Ich antworte wie ein Profi.</div>
         </div>
         <span class="zen-ki-spark">✨</span>
       </div>
-      <button class="zen-ki-cta" onclick="event.stopPropagation();zuSektion('assistent')">Tagesplan öffnen</button>
+      <button class="zen-ki-cta" onclick="event.stopPropagation();zuSektion('assistent')">💬 KI-Assistent fragen</button>
     </div>
 
     <div class="zen-section-label">Schnellzugriff</div>
@@ -3989,14 +3989,32 @@ function assistentBriefingHTML(kompakt) {
 function renderAssistent() {
   return `
   <div class="assistent">
-    <div class="as-hero">
-      <div class="as-hero-robo">${kiRoboterSVG(72)}</div>
+    <div class="as-hero as-hero-kompakt">
+      <div class="as-hero-robo">${kiRoboterSVG(48)}</div>
       <div class="as-hero-txt">
         <div class="as-hero-gruss">${assistentGruss()} 👋</div>
-        <div class="as-hero-sub">Ich denke für euch mit und halte den Tag zusammen.</div>
+        <div class="as-hero-sub">Frag mich alles — ich denke mit wie ein Profi.</div>
       </div>
     </div>
 
+    <!-- Chat direkt oben: kein Scrollen nötig -->
+    <div class="as-frage-kopf">
+      <span class="as-frage-titel">💬 Dein Chat</span>
+      <button class="as-neuchat" onclick="asNeuerChat()" title="Neues Gespräch starten">＋ Neuer Chat</button>
+    </div>
+    ${asChatLeisteHTML() ? `<div class="as-chatleiste">${asChatLeisteHTML()}</div>` : ''}
+    <div class="as-chat" id="as-chat">${asVerlaufHTML()}</div>
+    <div class="as-eingabe">
+      <label class="as-foto-btn" title="Dokument scannen">📄<input type="file" accept="image/*" onchange="asDokumentScan(this)" style="display:none"></label>
+      <input type="text" id="as-input" class="as-text-input" placeholder="Frag mich alles…" onkeydown="if(event.key==='Enter')asSenden()" autocomplete="off">
+      <button class="as-mic" onclick="asSprechen()" aria-label="Sprechen">🎤</button>
+      <button class="as-send" onclick="asSenden()" aria-label="Senden">➤</button>
+    </div>
+    ${geminiAktiv()
+      ? '<div class="as-ki-status on">🟢 Intelligente KI aktiv (Gemini)</div>'
+      : '<div class="as-ki-status off" onclick="zuSektion(\'einstellungen\')">⚪ Lokaler Modus · tippen, um die intelligente KI zu aktivieren</div>'}
+
+    <!-- Überblick & Aktionen darunter -->
     <div class="as-card">
       <div class="as-card-titel">📋 Euer Überblick</div>
       ${assistentBriefingHTML(false)}
@@ -4015,22 +4033,6 @@ function renderAssistent() {
       <button class="as-akt" onclick="zuSektion('einkaufsliste')">🛒 Einkauf</button>
       <button class="as-akt" onclick="zuSektion('familienchat')">💬 Familie</button>
     </div>
-
-    <div class="as-frage-kopf">
-      <span class="as-frage-titel">💬 Sprich mit mir</span>
-      <button class="as-neuchat" onclick="asNeuerChat()" title="Neues Gespräch starten">＋ Neuer Chat</button>
-    </div>
-    ${asChatLeisteHTML() ? `<div class="as-chatleiste">${asChatLeisteHTML()}</div>` : ''}
-    <div class="as-chat" id="as-chat">${asVerlaufHTML()}</div>
-    <div class="as-eingabe">
-      <label class="as-foto-btn" title="Dokument scannen">📄<input type="file" accept="image/*" onchange="asDokumentScan(this)" style="display:none"></label>
-      <input type="text" id="as-input" class="as-text-input" placeholder="Frag mich alles…" onkeydown="if(event.key==='Enter')asSenden()" autocomplete="off">
-      <button class="as-mic" onclick="asSprechen()" aria-label="Sprechen">🎤</button>
-      <button class="as-send" onclick="asSenden()" aria-label="Senden">➤</button>
-    </div>
-    ${geminiAktiv()
-      ? '<div class="as-ki-status on">🟢 Intelligente KI aktiv (Gemini)</div>'
-      : '<div class="as-ki-status off" onclick="zuSektion(\'einstellungen\')">⚪ Lokaler Modus · tippen, um die intelligente KI zu aktivieren</div>'}
   </div>`;
 }
 
@@ -4173,7 +4175,10 @@ function assistentSystemPrompt() {
   const termine = d.termineHeute.map(t => `${t.uhrzeit || '—'} ${t.titel}`).join('; ') || 'keine';
   const todos = d.todos.slice(0, 8).map(t => t.text).join('; ') || 'keine';
   return [
-    'Du bist der Familien-Assistent in der FamilienApp — ein kluger, herzlicher Helfer für Familien in Deutschland, vergleichbar mit ChatGPT.',
+    'Du bist der Familien-Assistent in der FamilienApp — ein hochkompetenter, herzlicher Profi-Helfer für Familien in Deutschland, auf dem Niveau eines erfahrenen Beraters und vergleichbar mit ChatGPT.',
+    'Antworte wie ein echter Experte: fachlich korrekt und auf dem aktuellen Stand in deutschen Behörden-/Sozialleistungen (Jobcenter, Bürgergeld, Wohngeld, Kindergeld, Elterngeld, Unterhalt, BuT), Recht, Steuern, Gesundheit, Erziehung, Finanzen und Alltag. Denke das Problem zu Ende, nenne konkrete Schritte, Beträge, Fristen und Zuständigkeiten, wenn relevant.',
+    'Sei präzise und ehrlich: Wenn etwas vom Einzelfall abhängt oder du unsicher bist, sage es klar und nenne die zuständige Stelle. Erfinde niemals Paragraphen, Beträge oder Fakten.',
+    'Struktur: kurze, klare Sätze; bei mehrschrittigen Themen nummerierte Schritte oder Stichpunkte; das Wichtigste zuerst. Lieber konkret und umsetzbar als allgemein.',
     'WICHTIG: Beantworte JEDE Frage direkt, vollständig und hilfreich mit echtem Inhalt — egal ob Wetter, Kochen, Erziehung, Behörden, Allgemeinwissen, Gesundheit oder Smalltalk.',
     'Sage NIEMALS, dass etwas „nicht in der Datenbank" sei, und wimmle NICHT mit „dafür gibt es einen Bereich" ab, statt zu antworten. Zuerst echte Antwort.',
     'Eine passende App-Funktion darfst du als kurzen Zusatz-Tipp NACH der Antwort erwähnen — nie als Ersatz.',
@@ -4427,7 +4432,7 @@ async function asSenden() {
       const live = await asLiveKontext(frage);
       const sys = assistentSystemPrompt() + (live ? '\n\nLIVE-DATEN (aktuell, nutze sie für die Antwort):\n' + live : '');
       const contents = asVerlauf().filter(m => m.text && !m.bild).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
-      antwort = await geminiAnfrage(contents, sys);
+      antwort = await geminiAnfrage(contents, sys, 1200);
     } else {
       antwort = asLokaleAntwort(frage);
     }
@@ -11454,8 +11459,8 @@ function stimmeFuer(lang) {
   if (direkt) return direkt;
   // 'w' = weiblich, 'm' = männlich — beste passende wählen
   if (wahl === 'w' || wahl === 'm') return _stimmeBeste(pool, wahl === 'm' ? _STIMME_MAENNLICH : _STIMME_WEIBLICH);
-  // 'auto' (Standard): automatisch die natürlichste verfügbare Stimme nehmen — kein Roboter-Standard mehr
-  return _stimmeBeste(pool, []);
+  // 'auto' (Standard): System-Standardstimme verwenden — auf den meisten Geräten die natürlichste.
+  return null;
 }
 // Auf eine SpeechSynthesisUtterance die gewählte Stimme anwenden
 function stimmeAnwenden(u) {

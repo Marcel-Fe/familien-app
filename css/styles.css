@@ -6789,6 +6789,11 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
 .as-hero-robo { width: 72px; height: 72px; flex: 0 0 72px; background: rgba(255,255,255,.15); border-radius: 20px; display: grid; place-items: center; }
 .as-hero-gruss { font-size: 1.3rem; font-weight: 800; line-height: 1.15; }
 .as-hero-sub { font-size: .9rem; opacity: .92; margin-top: .2rem; }
+/* Kompakter Hero im chat-first Layout — mehr Platz für den Chat, kein Scrollen */
+.as-hero-kompakt { padding: .7rem .9rem; margin-bottom: .7rem; }
+.as-hero-kompakt .as-hero-robo { width: 48px; height: 48px; flex-basis: 48px; border-radius: 14px; }
+.as-hero-kompakt .as-hero-gruss { font-size: 1.05rem; }
+.as-hero-kompakt .as-hero-sub { font-size: .82rem; }
 
 .as-card { background: #fff; border: 1px solid #EEF0F6; border-radius: 20px; padding: 1.1rem; box-shadow: 0 6px 22px rgba(30,35,64,.06); margin-bottom: 1rem; }
 .as-card-titel { font-size: 1rem; font-weight: 800; color: #1E2340; margin-bottom: .85rem; }
