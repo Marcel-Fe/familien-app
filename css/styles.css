@@ -7008,3 +7008,17 @@ html.schrift-gross button, html.schrift-xl button { min-height: 48px; }
 .ord-badge.orange { background: #FFEDD5; color: #C2410C; }
 .ord-badge.gruen { background: #DCFCE7; color: #15803D; }
 .ord-aktionen { display: flex; gap: .4rem; margin-top: .5rem; flex-wrap: wrap; }
+.ord-karte-antwort { border-color: #DDD6FE; background: #FBFAFF; }
+
+/* ===== Antwortschreiben (KI erstellt Antwort auf ein Dokument) ===== */
+.as-aktion-row { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; margin: .1rem 0 .7rem; }
+.as-aktion-hinweis { font-size: .74rem; color: var(--g500); }
+.antwort-box { max-width: 540px; max-height: 90vh; overflow: auto; text-align: left; }
+.antwort-bezug { font-size: .84rem; color: var(--g700); margin-bottom: .9rem; }
+.antwort-label { display: block; font-size: .78rem; font-weight: 700; margin-bottom: .25rem; color: var(--g700); }
+.antwort-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .6rem; }
+.antwort-chip { border: 1.5px solid var(--g300); background: var(--weiss); color: var(--g700); border-radius: 99px; padding: .35rem .7rem; font-size: .76rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+.antwort-chip:hover { background: var(--lila-hell); border-color: var(--lila); color: var(--lila); }
+.antwort-aktionen { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+.antwort-aktionen .btn { flex: 1 1 45%; }
+.antwort-hinweis { font-size: .74rem; color: var(--g500); margin-top: .7rem; line-height: 1.45; }

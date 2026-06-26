@@ -118,10 +118,8 @@ window.addEventListener('DOMContentLoaded', () => {
   try {
     const einst = JSON.parse(localStorage.getItem('familienapp_einstellungen') || '{}');
     if (einst.familienfoto) {
-      document.documentElement.style.setProperty('--familien-foto', `url('${String(einst.familienfoto).replace(/'/g, "\\'")}')`);
-      const sp = document.getElementById('splash');
-      if (sp) sp.classList.add('hat-foto');
-      // Foto als runden Avatar groß und klar auf dem Splash zeigen (statt nur dunkler Hintergrund)
+      // Foto NUR als runden Avatar auf dem Farbverlauf zeigen — kein zusätzliches
+      // Vollflächen-Hintergrundbild (das wirkte beschnitten/verzerrt hinter dem Avatar).
       const foto = document.getElementById('splash-foto');
       const logo = document.getElementById('splash-logo-wrap');
       if (foto) { foto.src = einst.familienfoto; foto.classList.remove('versteckt'); }
@@ -4006,7 +4004,8 @@ function renderAssistent() {
     <div class="as-chat" id="as-chat">${asVerlaufHTML()}</div>
     <div class="as-eingabe">
       <label class="as-foto-btn" title="Dokument scannen">📄<input type="file" accept="image/*" onchange="asDokumentScan(this)" style="display:none"></label>
-      <input type="text" id="as-input" class="as-text-input" placeholder="Frag mich alles…" onkeydown="if(event.key==='Enter')asSenden()" autocomplete="off">
+      <button class="as-foto-btn" onclick="asBildErstellen()" title="Bild erstellen (kostet Guthaben)" aria-label="Bild erstellen">🎨</button>
+      <input type="text" id="as-input" class="as-text-input" placeholder="Frag mich alles — oder beschreibe ein Bild…" onkeydown="if(event.key==='Enter')asSenden()" autocomplete="off">
       <button class="as-mic" onclick="asSprechen()" aria-label="Sprechen">🎤</button>
       <button class="as-send" onclick="asSenden()" aria-label="Senden">➤</button>
     </div>
@@ -4187,6 +4186,87 @@ function geminiFehlerText(e) {
 function geminiFehlerTransient(e) {
   const m = (e && e.message) || '';
   return !(m === 'kein-key' || m.startsWith('KEY:') || /quota|RESOURCE_EXHAUSTED|billing|exceeded|limit:\s*0/i.test(m));
+}
+
+// ===== BILD-ERZEUGUNG (kostet Guthaben — Tageslimit pro Gerät schützt das Budget) =====
+const BILD_LIMIT_TAG = 10;
+const BILD_ZAEHLER_LS = 'familienapp_bild_zaehler';
+function bildKontingent() {
+  const heute = new Date().toISOString().slice(0, 10);
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(BILD_ZAEHLER_LS) || '{}'); } catch {}
+  if (st.tag !== heute) st = { tag: heute, anzahl: 0 };
+  return st;
+}
+function bildKontingentRest() { return Math.max(0, BILD_LIMIT_TAG - (bildKontingent().anzahl || 0)); }
+function bildKontingentPlus() {
+  const st = bildKontingent(); st.anzahl = (st.anzahl || 0) + 1;
+  try { localStorage.setItem(BILD_ZAEHLER_LS, JSON.stringify(st)); } catch {}
+}
+
+// Holt ein erzeugtes Bild über den Proxy (Bild-Modus). Gibt eine data-URL zurück.
+async function geminiBildAnfrage(prompt) {
+  const proxy = kiProxyURL();
+  if (!proxy) throw new Error('kein-key');
+  const body = { bildModus: true, contents: [{ role: 'user', parts: [{ text: prompt }] }] };
+  let letzterFehler = 'Bild konnte nicht erstellt werden';
+  for (let v = 0; v < 2; v++) {
+    try {
+      const res = await fetch(proxy, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        const img = geminiBildAus(data);
+        if (img) return img;
+        letzterFehler = 'leere Antwort';
+      } else {
+        const msg = data?.error?.message || data?.error || ('Server-Fehler ' + res.status);
+        if (/quota|RESOURCE_EXHAUSTED|billing|exceeded|key not valid|PERMISSION|disabled|not been used|404|NOT_FOUND|unsupported/i.test(String(msg))) {
+          throw new Error('GEMINI:' + msg);
+        }
+        letzterFehler = msg;
+      }
+    } catch (e) {
+      if (String(e.message || '').startsWith('GEMINI:')) throw e;
+      letzterFehler = 'Netzwerkfehler';
+    }
+    if (v < 1) await new Promise(r => setTimeout(r, 800));
+  }
+  throw new Error('GEMINI:' + letzterFehler);
+}
+function geminiBildAus(data) {
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  for (const p of parts) {
+    const d = p.inline_data || p.inlineData;
+    if (d && d.data) return 'data:' + (d.mime_type || d.mimeType || 'image/png') + ';base64,' + d.data;
+  }
+  return null;
+}
+function geminiBildFehlerText(e) {
+  const m = (e && e.message) || '';
+  if (/quota|RESOURCE_EXHAUSTED|billing|exceeded/i.test(m)) return '⚠️ Mein KI-Guthaben für Bilder ist gerade aufgebraucht. Bitte später noch einmal.';
+  if (/key not valid|PERMISSION|disabled|not been used|404|NOT_FOUND|unsupported/i.test(m)) return 'ℹ️ Das Bilder-Erstellen ist für diesen KI-Zugang noch nicht freigeschaltet.';
+  return '😅 Das Bild hat gerade nicht geklappt. Bitte gleich nochmal versuchen.';
+}
+
+// Erstellt aus dem Eingabefeld ein Bild und zeigt es im Chat.
+async function asBildErstellen() {
+  const inp = el('as-input');
+  const prompt = (inp?.value || '').trim();
+  if (!prompt) { toast('Schreib kurz ins Feld, was ich malen soll — z. B. „ein Fuchs im Wald".'); return; }
+  if (!geminiAktiv()) { toast('Für Bilder bitte erst die KI aktivieren (Einstellungen).'); zuSektion('einstellungen'); return; }
+  if (bildKontingentRest() <= 0) { toast('🎨 Heutiges Bild-Limit (' + BILD_LIMIT_TAG + '/Tag) erreicht — morgen geht es weiter.'); return; }
+  if (inp) inp.value = '';
+  asNachricht('user', '🎨 Bild: ' + prompt);
+  asTippt(true);
+  try {
+    const bild = await geminiBildAnfrage('Erstelle ein ansprechendes Bild zu dieser Beschreibung: ' + prompt);
+    asTippt(false);
+    bildKontingentPlus();
+    asNachricht('model', 'Hier ist dein Bild zu „' + prompt + '". (Heute noch ' + bildKontingentRest() + ' Bilder übrig.)', bild);
+  } catch (e) {
+    asTippt(false);
+    asNachricht('model', geminiBildFehlerText(e));
+  }
 }
 
 // System-Prompt: antwortet wie ChatGPT (echt, nie abwimmeln) + echter Familien-Kontext.
@@ -4559,6 +4639,7 @@ async function asBildErklaeren(dataUrl, labelText) {
     const antwort = await geminiAnfrage(contents, 'Du hilfst Familien, deutsche Behörden-Post zu verstehen: korrekt, einfach, konkret und ermutigend. Keine erfundenen Angaben.', 1500);
     asTippt(false);
     asNachricht('model', antwort);
+    asAntwortAktion(bild, labelText);
   } catch (e) {
     asTippt(false);
     asNachricht('model', geminiFehlerText(e));
@@ -4633,7 +4714,7 @@ function renderFamilienordner() {
   return `
   <div class="ordner">
     <div class="section-title">📁 Familienordner</div>
-    <p class="section-sub">Alle wichtigen Dokumente sicher an einem Ort — nur auf deinem Gerät. Die KI erklärt sie und erinnert an Ablaufdaten.</p>
+    <p class="section-sub">Alle wichtigen Dokumente sicher an einem Ort — nur auf deinem Gerät. Die KI erklärt sie, erinnert an Ablaufdaten und schreibt auf Wunsch eine fertige Antwort zum Senden.</p>
 
     <button class="btn btn-primary" style="width:100%;margin-bottom:1rem" onclick="ordnerFormularUmschalten()">➕ Dokument hinzufügen</button>
 
@@ -4708,6 +4789,7 @@ async function ordnerListeRendern() {
     </div>` : '';
   const sortiert = docs.slice().sort((a, b) => (b.erstellt || '').localeCompare(a.erstellt || ''));
   const karten = sortiert.map(d => {
+    if (d.typ === 'antwort') return ordnerAntwortKarte(d);
     const k = ordnerKat(d.kategorie);
     return `
     <div class="ord-karte">
@@ -4719,6 +4801,7 @@ async function ordnerListeRendern() {
         ${d.notiz ? `<div class="ord-notiz">${esc(d.notiz)}</div>` : ''}
         <div class="ord-aktionen">
           ${d.bild ? `<button class="btn btn-outline btn-sm" onclick="ordnerKiErklaeren(${d.id})">🤖 KI erklären</button>` : ''}
+          ${d.bild ? `<button class="btn btn-outline btn-sm" onclick="ordnerAntwortErstellen(${d.id})">✍️ Antwort</button>` : ''}
           <button class="btn btn-outline btn-sm" onclick="ordnerDokLoeschen(${d.id})">🗑️</button>
         </div>
       </div>
@@ -4733,6 +4816,221 @@ async function ordnerKiErklaeren(id) {
   if (!geminiAktiv()) { toast('Für KI-Erklärung bitte die KI aktivieren (Einstellungen).'); zuSektion('einstellungen'); return; }
   zuSektion('assistent');
   setTimeout(() => asBildErklaeren(doc.bild, 'Dokument: ' + doc.titel), 180);
+}
+
+// ===== ANTWORTSCHREIBEN — KI erstellt eine Antwort auf ein Dokument =====
+// Ablage als eigenes Antwort-Dokument im Familienordner (typ:'antwort') mit „gesendet am …".
+let _antwortCtx = null;
+
+// Zeigt im Chat direkt nach einer Dokument-Erklärung den Knopf „Antwort schreiben".
+function asAntwortAktion(bild, label) {
+  const c = el('as-chat'); if (!c || !bild) return;
+  const titel = String(label || '').replace(/^Dokument:\s*/, '').replace(/\s*zum Erklären gesendet$/, '').trim() || 'Schreiben';
+  const row = document.createElement('div');
+  row.className = 'as-aktion-row';
+  row.innerHTML = '<button class="btn btn-primary btn-sm">✍️ Auf dieses Schreiben antworten</button>'
+    + '<div class="as-aktion-hinweis">Die KI erstellt dir ein fertiges Antwortschreiben zum Senden.</div>';
+  row.querySelector('button').onclick = () => antwortModalOeffnen(bild, titel, 'behoerde');
+  c.appendChild(row);
+  c.scrollTop = c.scrollHeight;
+}
+
+// Antwort auf ein bereits im Familienordner gespeichertes Dokument starten.
+async function ordnerAntwortErstellen(id) {
+  const doc = _ordnerCache.find(d => d.id === id) || (await ordnerAlle()).find(d => d.id === id);
+  if (!doc) { toast('Dokument nicht gefunden.'); return; }
+  if (!doc.bild) { toast('Für eine Antwort braucht das Dokument ein Foto/Scan.'); return; }
+  if (!geminiAktiv()) { toast('Für Antwortschreiben bitte erst die KI aktivieren (Einstellungen).'); zuSektion('einstellungen'); return; }
+  antwortModalOeffnen(doc.bild, doc.titel || 'Schreiben', doc.kategorie || 'behoerde');
+}
+
+function antwortModalOeffnen(bild, titel, kategorie) {
+  _antwortCtx = { bild: bild || null, titel: titel || 'Schreiben', kategorie: kategorie || 'behoerde', savedId: null, gesendetAm: '' };
+  antwortModalSchliessen();
+  const chips = ['Ich lege Widerspruch ein', 'Ich bestätige den Termin', 'Ich kann den Termin nicht — bitte neuen Termin', 'Ich reiche fehlende Unterlagen nach', 'Ich habe eine Rückfrage'];
+  const html = `
+  <div class="modal-overlay" id="antwort-modal" onclick="if(event.target===this)antwortModalSchliessen()">
+    <div class="modal-box antwort-box">
+      <div class="modal-titel">✍️ Antwort schreiben</div>
+      <div class="antwort-bezug">Bezug: <strong>${esc(titel || 'Schreiben')}</strong></div>
+
+      <div id="antwort-schritt1">
+        <label class="antwort-label">Was möchtest du antworten?</label>
+        <div class="antwort-chips">
+          ${chips.map(c => `<button type="button" class="antwort-chip" onclick="antwortChip(this)">${esc(c)}</button>`).join('')}
+        </div>
+        <textarea id="antwort-anliegen" class="reg-input" rows="3" placeholder="Dein Anliegen in eigenen Worten — z. B. „Ich lege Widerspruch gegen den Bescheid vom … ein, weil …&quot;" style="width:100%;resize:vertical"></textarea>
+        <button class="btn btn-primary" style="width:100%;margin-top:.7rem" id="antwort-erstellen-btn" onclick="antwortErstellen()">✨ Schreiben erstellen</button>
+      </div>
+
+      <div id="antwort-schritt2" class="versteckt">
+        <label class="antwort-label">Empfänger-E-Mail (optional)</label>
+        <input type="email" id="antwort-empfaenger" class="reg-input" placeholder="z. B. amt@stadt.de — leer lassen, wenn unbekannt" autocomplete="off" style="width:100%">
+        <label class="antwort-label" style="margin-top:.6rem">Betreff</label>
+        <input type="text" id="antwort-betreff" class="reg-input" style="width:100%">
+        <label class="antwort-label" style="margin-top:.6rem">Dein Schreiben (du kannst es noch ändern)</label>
+        <textarea id="antwort-text" class="reg-input" rows="12" style="width:100%;resize:vertical;font-size:.86rem;line-height:1.5"></textarea>
+        <div class="antwort-aktionen">
+          <button class="btn btn-primary btn-sm" onclick="antwortPerEmail()">📧 Per E-Mail senden</button>
+          <button class="btn btn-outline btn-sm" onclick="antwortDrucken()">🖨️ Drucken / PDF</button>
+          <button class="btn btn-outline btn-sm" onclick="antwortKopieren()">📋 Kopieren</button>
+          <button class="btn btn-outline btn-sm" onclick="antwortSpeichern(false)">💾 Entwurf speichern</button>
+        </div>
+        <div class="antwort-hinweis">Beim Senden/Drucken wird das Schreiben im Familienordner mit „gesendet am …" abgelegt. Bitte vorher die Platzhalter [ ] ausfüllen und alles prüfen — die KI kann sich irren.</div>
+      </div>
+
+      <button class="btn" style="width:100%;margin-top:1rem" onclick="antwortModalSchliessen()">Schließen</button>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+function antwortModalSchliessen() { const m = el('antwort-modal'); if (m) m.remove(); }
+function antwortChip(btn) { const ta = el('antwort-anliegen'); if (ta) { ta.value = btn.textContent; ta.focus(); } }
+
+async function antwortErstellen() {
+  if (!_antwortCtx) return;
+  const anliegen = (el('antwort-anliegen')?.value || '').trim();
+  if (!anliegen) { toast('Bitte kurz beschreiben, was du antworten möchtest.'); return; }
+  if (!geminiAktiv()) { toast('Bitte erst die KI aktivieren (Einstellungen).'); return; }
+  const btn = el('antwort-erstellen-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '✨ Erstelle dein Schreiben…'; }
+  try {
+    const prompt =
+      'Eine Familie in Deutschland hat das abgebildete Schreiben/Dokument erhalten (Foto) und möchte darauf antworten.\n' +
+      'Anliegen der Person: "' + anliegen + '".\n' +
+      'Schreibe ein vollständiges, höfliches und sachlich korrektes Antwortschreiben auf Deutsch, das direkt verschickt werden kann. ' +
+      'Beziehe dich konkret auf das Schreiben (Absender/Behörde, Datum, Aktenzeichen, Betreff), soweit im Foto erkennbar. ' +
+      'Nutze für unbekannte persönliche Angaben Platzhalter in eckigen Klammern: [Dein Name], [Deine Anschrift], [Aktenzeichen], [Ort, Datum]. ' +
+      'Erfinde keine Tatsachen. Wenn ein Widerspruch sinnvoll ist, formuliere ihn fristwahrend und höflich.\n' +
+      'Gib in der ERSTEN Zeile NUR den Betreff aus, exakt im Format: BETREFF: <kurzer Betreff>\n' +
+      'Danach eine Leerzeile, dann das komplette Schreiben (Absender-Platzhalter, Datum, Empfänger soweit erkennbar, Betreffzeile, Anrede, Text, Grußformel, [Dein Name]).';
+    let contents;
+    if (_antwortCtx.bild) {
+      const b64 = String(_antwortCtx.bild).split(',')[1];
+      const mime = (String(_antwortCtx.bild).match(/^data:(.*?);/) || [])[1] || 'image/jpeg';
+      contents = [{ role: 'user', parts: [ { text: prompt }, { inline_data: { mime_type: mime, data: b64 } } ] }];
+    } else {
+      contents = [{ role: 'user', parts: [ { text: prompt } ] }];
+    }
+    const antwort = await geminiAnfrage(contents, 'Du bist erfahren im Schriftverkehr mit deutschen Behörden, Ämtern, Schulen und Versicherungen. Du schreibst korrekte, höfliche, fristwahrende Briefe in einfacher, klarer Sprache. Keine erfundenen Angaben.', 1300);
+    const parsed = antwortParse(antwort);
+    if (el('antwort-betreff')) el('antwort-betreff').value = parsed.betreff;
+    if (el('antwort-text')) el('antwort-text').value = parsed.body;
+    el('antwort-schritt1')?.classList.add('versteckt');
+    el('antwort-schritt2')?.classList.remove('versteckt');
+  } catch (e) {
+    toast(geminiFehlerText(e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Schreiben erstellen'; }
+  }
+}
+
+function antwortParse(roh) {
+  const text = String(roh || '').trim();
+  const m = text.match(/^\s*BETREFF:\s*(.+)$/im);
+  let betreff = m ? m[1].trim() : '';
+  let body = text;
+  if (m) body = text.slice(text.indexOf(m[0]) + m[0].length).replace(/^\s+/, '');
+  if (!betreff) betreff = 'Antwort auf Ihr Schreiben';
+  return { betreff, body };
+}
+
+function antwortPerEmail() {
+  const empf = (el('antwort-empfaenger')?.value || '').trim();
+  const betreff = (el('antwort-betreff')?.value || '').trim();
+  const body = (el('antwort-text')?.value || '').trim();
+  if (!body) { toast('Kein Text vorhanden.'); return; }
+  const url = 'mailto:' + empf + '?subject=' + encodeURIComponent(betreff) + '&body=' + encodeURIComponent(body);
+  window.location.href = url;
+  antwortSpeichern(true);
+}
+function antwortDrucken() {
+  const betreff = (el('antwort-betreff')?.value || '').trim();
+  const body = (el('antwort-text')?.value || '').trim();
+  if (!body) { toast('Kein Text vorhanden.'); return; }
+  const w = window.open('', '_blank');
+  if (!w) { toast('Bitte Pop-ups erlauben, um zu drucken.'); return; }
+  w.document.write('<!doctype html><html lang="de"><head><meta charset="utf-8"><title>' + esc(betreff || 'Schreiben') + '</title>'
+    + '<style>body{font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.6;white-space:pre-wrap;margin:2.5cm}</style></head><body>'
+    + esc(body) + '</body></html>');
+  w.document.close(); w.focus();
+  setTimeout(() => { try { w.print(); } catch {} }, 350);
+  antwortSpeichern(true);
+}
+function antwortKopieren() {
+  const body = (el('antwort-text')?.value || '').trim();
+  if (!body) return;
+  const fertig = () => toast('📋 Schreiben kopiert');
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(body).then(fertig).catch(() => antwortKopierenFallback(body));
+  else antwortKopierenFallback(body);
+}
+function antwortKopierenFallback(text) {
+  const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('📋 Schreiben kopiert'); } catch { toast('Kopieren nicht möglich.'); }
+  ta.remove();
+}
+
+async function antwortSpeichern(gesendet) {
+  if (!_antwortCtx) return;
+  const betreff = (el('antwort-betreff')?.value || '').trim() || 'Antwortschreiben';
+  const body = (el('antwort-text')?.value || '').trim();
+  if (!body) { toast('Kein Text zum Speichern.'); return; }
+  const empf = (el('antwort-empfaenger')?.value || '').trim();
+  if (gesendet && !_antwortCtx.gesendetAm) _antwortCtx.gesendetAm = new Date().toISOString();
+  if (!_antwortCtx.savedId) _antwortCtx.savedId = Date.now();
+  const doc = {
+    id: _antwortCtx.savedId,
+    typ: 'antwort',
+    titel: 'Antwort: ' + (_antwortCtx.titel || 'Schreiben'),
+    kategorie: _antwortCtx.kategorie || 'behoerde',
+    bezugTitel: _antwortCtx.titel || '',
+    betreff, text: body, empfaenger: empf,
+    gesendetAm: _antwortCtx.gesendetAm || '',
+    bild: null,
+    erstellt: new Date().toISOString()
+  };
+  try {
+    await ordnerSpeichernDoc(doc);
+    await ordnerCacheLaden();
+    if (el('ordner-liste')) ordnerListeRendern();
+    toast(_antwortCtx.gesendetAm ? '✓ Gesendet & im Familienordner gespeichert' : '✓ Als Entwurf gespeichert');
+  } catch { toast('⚠️ Speichern fehlgeschlagen.'); }
+}
+
+// Gespeichertes Antwortschreiben wieder öffnen (ansehen / erneut senden). Braucht keine KI.
+async function antwortAnsehen(id) {
+  const doc = _ordnerCache.find(d => d.id === id) || (await ordnerAlle()).find(d => d.id === id);
+  if (!doc) { toast('Antwort nicht gefunden.'); return; }
+  antwortModalOeffnen(null, doc.bezugTitel || doc.titel || 'Schreiben', doc.kategorie || 'behoerde');
+  _antwortCtx.savedId = doc.id;
+  _antwortCtx.gesendetAm = doc.gesendetAm || '';
+  if (el('antwort-empfaenger')) el('antwort-empfaenger').value = doc.empfaenger || '';
+  if (el('antwort-betreff')) el('antwort-betreff').value = doc.betreff || '';
+  if (el('antwort-text')) el('antwort-text').value = doc.text || '';
+  el('antwort-schritt1')?.classList.add('versteckt');
+  el('antwort-schritt2')?.classList.remove('versteckt');
+}
+
+// Karte für ein gespeichertes Antwortschreiben im Familienordner.
+function ordnerAntwortKarte(d) {
+  const gesendet = d.gesendetAm ? new Date(d.gesendetAm) : null;
+  const badge = gesendet
+    ? `<span class="ord-badge gruen">✓ gesendet am ${gesendet.toLocaleDateString('de-DE')}</span>`
+    : `<span class="ord-badge orange">Entwurf — noch nicht gesendet</span>`;
+  return `
+    <div class="ord-karte ord-karte-antwort">
+      <div class="ord-thumb ord-thumb-leer">✉️</div>
+      <div class="ord-info">
+        <div class="ord-titel">${esc(d.titel || 'Antwortschreiben')}</div>
+        <div class="ord-kat">✍️ Antwortschreiben${d.bezugTitel ? ' · Bezug: ' + esc(d.bezugTitel) : ''}</div>
+        ${badge}
+        ${d.betreff ? `<div class="ord-notiz">Betreff: ${esc(d.betreff)}</div>` : ''}
+        <div class="ord-aktionen">
+          <button class="btn btn-outline btn-sm" onclick="antwortAnsehen(${d.id})">👁️ Ansehen / Senden</button>
+          <button class="btn btn-outline btn-sm" onclick="ordnerDokLoeschen(${d.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ===== UNTERE 5-TAB-NAVIGATION =====
@@ -16466,13 +16764,21 @@ function spracheErkennen(opts) {
   const erk = new SR();
   erk.lang = opts.lang || 'de-DE';
   erk.interimResults = false;
-  erk.continuous = false;
+  // continuous: hört über Sprechpausen hinweg weiter, statt beim ersten Stocken abzubrechen.
+  // Erst wenn der Nutzer fertig ist (Mikro erneut tippen oder längere Stille) wird gearbeitet.
+  erk.continuous = true;
   _sprachErkennung = erk;
   if (btn) btn.classList.add('aktiv');
   toast(opts.hinweis || '🎤 Jetzt sprechen — zum Stoppen Mikro erneut tippen');
+  // Alle erkannten Teilstücke sammeln; die fertige Gesamt-Eingabe wird erst am Ende verwendet.
+  let gesammelt = '';
   erk.onresult = e => {
-    const text = (e.results[0] && e.results[0][0] ? e.results[0][0].transcript : '').trim();
-    if (text) opts.onText(text);
+    let txt = '';
+    for (let i = 0; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal && r[0]) txt += r[0].transcript + ' ';
+    }
+    if (txt.trim()) gesammelt = txt.trim();
   };
   erk.onerror = e => {
     const meldungen = {
@@ -16487,7 +16793,12 @@ function spracheErkennen(opts) {
     if (m) toast(m);
     if (typeof opts.onAbbruch === 'function') opts.onAbbruch(e.error);
   };
-  erk.onend = () => { if (btn) btn.classList.remove('aktiv'); _sprachErkennung = null; };
+  erk.onend = () => {
+    if (btn) btn.classList.remove('aktiv');
+    _sprachErkennung = null;
+    // Erst jetzt — wenn wirklich fertig zugehört wurde — die komplette Eingabe verarbeiten.
+    if (gesammelt) opts.onText(gesammelt);
+  };
   try { erk.start(); }
   catch { if (btn) btn.classList.remove('aktiv'); _sprachErkennung = null; toast('⚠️ Spracheingabe konnte nicht gestartet werden'); }
 }
