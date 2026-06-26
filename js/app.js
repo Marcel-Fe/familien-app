@@ -4122,48 +4122,71 @@ async function geminiAnfrage(contents, systemPrompt, maxTokens) {
   const body = { contents, generationConfig: { temperature: 0.6, maxOutputTokens: maxTokens || 900 } };
   if (systemPrompt) body.system_instruction = { parts: [{ text: systemPrompt }] };
 
+  const warte = ms => new Promise(r => setTimeout(r, ms));
+  const istAuthFehler = s => /API[_ ]?key not valid|API_KEY_INVALID|invalid.*key|PERMISSION_DENIED|not been used|disabled/i.test(s);
+
   // Profi-Weg: eigener Server-Proxy (Schlüssel bleibt geheim).
+  // Bis zu 3 Versuche bei kurzen Aussetzern (429/5xx/Netz/leere Antwort) — damit die KI immer antwortet.
   if (proxy) {
-    const res = await fetch(proxy, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error('GEMINI:' + (data?.error?.message || data?.error || ('Server-Fehler ' + res.status)));
-    const t = geminiTextAus(data);
-    if (!t) throw new Error('GEMINI:leere Antwort vom Server');
-    return t;
+    let letzterFehler = 'unbekannt';
+    for (let v = 0; v < 3; v++) {
+      try {
+        const res = await fetch(proxy, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          const t = geminiTextAus(data);
+          if (t) return t;
+          letzterFehler = 'leere Antwort';
+        } else {
+          letzterFehler = data?.error?.message || data?.error || ('Server-Fehler ' + res.status);
+          if (istAuthFehler(letzterFehler)) throw new Error('KEY:' + letzterFehler); // Retry hilft nicht
+        }
+      } catch (e) {
+        if (String(e.message || '').startsWith('KEY:')) throw e;
+        letzterFehler = 'Netzwerkfehler';
+      }
+      if (v < 2) await warte(700 * (v + 1)); // kurzer Backoff
+    }
+    throw new Error('GEMINI:' + letzterFehler);
   }
 
-  // Direkt mit Test-Schlüssel: mehrere Modelle durchprobieren, echte Google-Meldung melden.
+  // Direkt mit Test-Schlüssel: mehrere Modelle, zwei Durchläufe bei transienten Fehlern.
   const modelle = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-1.5-flash'];
   let letzterFehler = 'unbekannt';
-  for (const m of modelle) {
-    let res, data;
-    try {
-      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`,
-        { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-      data = await res.json().catch(() => ({}));
-    } catch (e) { letzterFehler = 'Netzwerkfehler — Internet prüfen'; continue; }
-    if (res.ok) {
-      const t = geminiTextAus(data);
-      if (t) return t;
-      letzterFehler = 'leere Antwort'; continue;
+  for (let runde = 0; runde < 2; runde++) {
+    for (const m of modelle) {
+      let res, data;
+      try {
+        res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(key)}`,
+          { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        data = await res.json().catch(() => ({}));
+      } catch (e) { letzterFehler = 'Netzwerkfehler — Internet prüfen'; continue; }
+      if (res.ok) {
+        const t = geminiTextAus(data);
+        if (t) return t;
+        letzterFehler = 'leere Antwort'; continue;
+      }
+      const msg = data?.error?.message || ('HTTP ' + res.status);
+      letzterFehler = msg;
+      if (istAuthFehler(msg)) throw new Error('KEY:' + msg); // Schlüssel/Rechte: sofort melden
     }
-    const msg = data?.error?.message || ('HTTP ' + res.status);
-    letzterFehler = msg;
-    // Ungültiger Schlüssel / Rechte: sofort melden (nächstes Modell hilft nicht).
-    if (/API[_ ]?key not valid|API_KEY_INVALID|invalid.*key|PERMISSION_DENIED|not been used|disabled/i.test(msg)) {
-      throw new Error('KEY:' + msg);
-    }
-    // 404 (Modell unbekannt) / 429 (Kontingent): nächstes Modell probieren.
+    if (runde < 1) await warte(800);
   }
   throw new Error('GEMINI:' + letzterFehler);
 }
 
+// Kurze, freundliche Fehlermeldung — keine technische Fehlerwand mehr.
 function geminiFehlerText(e) {
   const m = (e && e.message) || '';
-  if (m === 'kein-key') return 'ℹ️ Für intelligente Antworten bitte in den Einstellungen einen Schlüssel/KI-Server eintragen.';
-  if (m.startsWith('KEY:')) return '⚠️ Google lehnt den Zugriff ab:\n„' + m.slice(4) + '"\n\nMeist: Schlüssel ungültig, oder die „Generative Language API" ist im Google-Projekt nicht aktiviert.';
-  if (m.startsWith('GEMINI:')) return '⚠️ Die KI antwortet nicht. Google meldet:\n„' + m.slice(7) + '"\n\nHäufige Ursachen: Tages-/Minuten-Kontingent erschöpft, oder die kostenlose Nutzung ist in deiner Region nur mit hinterlegtem Abrechnungskonto möglich.';
-  return '⚠️ Verbindung zur KI fehlgeschlagen. Prüfe deine Internetverbindung.';
+  if (m === 'kein-key') return 'ℹ️ Für intelligente Antworten bitte in den Einstellungen einen KI-Zugang eintragen.';
+  if (m.startsWith('KEY:')) return '⚠️ Die KI ist gerade nicht richtig verbunden. Bitte in den Einstellungen den KI-Zugang prüfen.';
+  if (/quota|RESOURCE_EXHAUSTED|billing|exceeded|limit:\s*0/i.test(m)) return '⚠️ Mein KI-Guthaben ist im Moment aufgebraucht. Bitte später noch einmal versuchen.';
+  return '😅 Da hat es gerade kurz gehakt. Bitte stell die Frage gleich noch einmal — meist klappt es dann sofort.';
+}
+// True bei behebbaren Aussetzern (kein Schlüssel-/Guthaben-Problem) → lokaler Fallback sinnvoll.
+function geminiFehlerTransient(e) {
+  const m = (e && e.message) || '';
+  return !(m === 'kein-key' || m.startsWith('KEY:') || /quota|RESOURCE_EXHAUSTED|billing|exceeded|limit:\s*0/i.test(m));
 }
 
 // System-Prompt: antwortet wie ChatGPT (echt, nie abwimmeln) + echter Familien-Kontext.
@@ -4448,8 +4471,19 @@ async function asSenden() {
     if (vorlesen && gezeigt && typeof kiTextVorlesen === 'function') { try { kiTextVorlesen(gezeigt); } catch {} }
   } catch (e) {
     asTippt(false);
-    // KI aktiv → echte Fehlermeldung zeigen (NICHT lokal abwimmeln). Nur ohne KI: lokaler Fallback.
-    asNachricht('model', geminiAktiv() ? geminiFehlerText(e) : asLokaleAntwort(frage));
+    // Ziel: immer eine hilfreiche Antwort. Bei kurzem Aussetzer erst lokale Antwort versuchen,
+    // sonst eine freundliche Kurzmeldung (keine technische Fehlerwand).
+    let gezeigt;
+    if (!geminiAktiv()) {
+      gezeigt = asLokaleAntwort(frage);
+    } else if (geminiFehlerTransient(e)) {
+      const lokal = asLokaleAntwort(frage);
+      gezeigt = (lokal && !/keine passende Antwort/i.test(lokal)) ? lokal : geminiFehlerText(e);
+    } else {
+      gezeigt = geminiFehlerText(e);
+    }
+    asNachricht('model', gezeigt);
+    if (vorlesen && gezeigt && typeof kiTextVorlesen === 'function') { try { kiTextVorlesen(gezeigt); } catch {} }
   }
 }
 
